@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #070b12;
+  --card: #0d1320;
+  --card-alt: #111827;
+  --border: #1e2d42;
+  --green: #14f195;
+  --amber: #f7b731;
+  --red: #ff5c5c;
+  --blue: #5c9eff;
+  --text-primary: #f0f4ff;
+  --text-secondary: #7a8fa6;
+  --text-muted: #4a5568;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: "DM Sans", sans-serif;
+  min-height: 100vh;
+  scroll-behavior: smooth;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+@keyframes pulse-green {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(20, 241, 149, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(20, 241, 149, 0);
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fade-up {
+  animation: fadeUp 0.4s ease forwards;
+}
+
+.pulse-green {
+  animation: pulse-green 2s infinite;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Wallet adapter overrides */
+.wallet-adapter-button {
+  background: var(--green) !important;
+  color: #000 !important;
+  font-family: "DM Sans", sans-serif !important;
+  font-weight: 600 !important;
+  border-radius: 12px !important;
+}
+
+.wallet-adapter-modal-wrapper {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 20px !important;
+}
