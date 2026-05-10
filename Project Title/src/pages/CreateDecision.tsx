@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Vote, ArrowLeft, CheckCircle2, Info } from 'lucide-react';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { Vote, ArrowLeft, CheckCircle2, Info, Loader2 } from 'lucide-react';
 import Layout from '@/components/Layout';
-import { MOCK_COMMUNITIES, formatKSh } from '@/lib/constants';
+import { MOCK_COMMUNITIES } from '@/lib/constants';
+import { formatKSh } from '@/lib/utils';
+import { useWalletGuard } from '@/hooks/useWalletGuard';
 
 const CreateDecision: React.FC = () => {
   const navigate = useNavigate();
   const { communityId } = useParams<{ communityId: string }>();
-  const { connected } = useWallet();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { requireWallet, isReady } = useWalletGuard({ action: 'propose decisions' });
   const [isCreated, setIsCreated] = useState(false);
   const [form, setForm] = useState({
     title: '',
@@ -18,6 +18,7 @@ const CreateDecision: React.FC = () => {
     fundingAmount: '',
     duration: '7',
   });
+  const [isPending, setIsPending] = useState(false);
 
   const community = MOCK_COMMUNITIES.find((c) => c.id === communityId) || MOCK_COMMUNITIES[0];
 
@@ -25,17 +26,17 @@ const CreateDecision: React.FC = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const isValid = form.title.trim() && form.description.trim() && form.fundingAmount;
+  const isValid = !!(form.title.trim() && form.description.trim() && form.fundingAmount);
   const overBudget = Number(form.fundingAmount) > community.fundBalance;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isValid || !connected || overBudget) return;
-
-    setIsSubmitting(true);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setIsSubmitting(false);
-    setIsCreated(true);
+    if (!isValid || overBudget) return;
+    await requireWallet(async () => {
+      setIsPending(true);
+      setIsPending(false);
+      setIsCreated(true);
+    });
   };
 
   if (isCreated) {
@@ -197,21 +198,21 @@ const CreateDecision: React.FC = () => {
               </div>
 
               {/* Submit */}
-              {!connected ? (
+              {!isReady ? (
                 <div className="baraza-card p-4 text-center">
                   <p className="text-xs text-muted-foreground">
-                    Sign in to propose a decision
+                    Connect your wallet to propose a decision
                   </p>
                 </div>
               ) : (
                 <button
                   type="submit"
-                  disabled={!isValid || isSubmitting || overBudget}
+                  disabled={!isValid || isPending || overBudget}
                   className="w-full btn-primary text-sm py-3.5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {isSubmitting ? (
+                  {isPending ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                       Submitting...
                     </>
                   ) : (
@@ -228,3 +229,4 @@ const CreateDecision: React.FC = () => {
 };
 
 export default CreateDecision;
+                 

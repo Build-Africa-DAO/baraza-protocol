@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Users, ArrowLeft, CheckCircle2 } from 'lucide-react';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { Users, ArrowLeft, CheckCircle2, Loader2 } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { COMMUNITY_TYPES } from '@/lib/constants';
+import { useWalletGuard } from '@/hooks/useWalletGuard';
+import { useBarazaContract } from '@/hooks/useBarazaContract';
 
 const CreateCommunity: React.FC = () => {
   const navigate = useNavigate();
-  const { connected } = useWallet();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { requireWallet, isReady } = useWalletGuard({ action: 'create a community' });
+  const { createCommunity, isPending } = useBarazaContract();
   const [isCreated, setIsCreated] = useState(false);
   const [form, setForm] = useState({
     name: '',
@@ -22,17 +23,16 @@ const CreateCommunity: React.FC = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const isValid = form.name.trim() && form.type && form.fee && form.description.trim();
+  const isValid = !!(form.name.trim() && form.type && form.fee && form.description.trim());
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isValid || !connected) return;
-
-    setIsSubmitting(true);
-    // Simulate on-chain community creation
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setIsSubmitting(false);
-    setIsCreated(true);
+    if (!isValid) return;
+    await requireWallet(async () => {
+      const feeLamports = Number(form.fee) * 1000;
+      const communityId = await createCommunity(form.name, feeLamports);
+      if (communityId) setIsCreated(true);
+    });
   };
 
   if (isCreated) {
@@ -180,21 +180,21 @@ const CreateCommunity: React.FC = () => {
               </div>
 
               {/* Submit */}
-              {!connected ? (
+              {!isReady ? (
                 <div className="baraza-card p-4 text-center">
                   <p className="text-xs text-muted-foreground mb-1">
-                    Sign in to create your community
+                    Connect your wallet to create a community
                   </p>
                 </div>
               ) : (
                 <button
                   type="submit"
-                  disabled={!isValid || isSubmitting}
+                  disabled={!isValid || isPending}
                   className="w-full btn-warm text-sm py-3.5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {isSubmitting ? (
+                  {isPending ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-warm-foreground/30 border-t-warm-foreground rounded-full animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                       Creating...
                     </>
                   ) : (
@@ -205,9 +205,4 @@ const CreateCommunity: React.FC = () => {
             </motion.form>
           </div>
         </div>
-      </section>
-    </Layout>
-  );
-};
-
-export default CreateCommunity;
+      

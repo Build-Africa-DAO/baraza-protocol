@@ -3,21 +3,25 @@ import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Users, TrendingUp, Vote, History, PlusCircle, CreditCard,
-  ArrowLeft, Calendar
+  ArrowLeft, Calendar, Loader2
 } from 'lucide-react';
 import Layout from '@/components/Layout';
 import DecisionCard from '@/components/DecisionCard';
 import MembershipCard from '@/components/MembershipCard';
-import { MOCK_COMMUNITIES, MOCK_DECISIONS, formatKSh } from '@/lib/constants';
+import { MOCK_COMMUNITIES, MOCK_DECISIONS } from '@/lib/constants';
+import { formatKSh } from '@/lib/utils';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletGuard } from '@/hooks/useWalletGuard';
+import { useBarazaContract } from '@/hooks/useBarazaContract';
 
 const CommunityDashboard: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { connected, publicKey } = useWallet();
+  const { publicKey } = useWallet();
+  const { requireWallet, isReady } = useWalletGuard({ action: 'join this community' });
+  const { joinCommunity, isPending } = useBarazaContract();
   const [activeTab, setActiveTab] = useState<'decisions' | 'membership'>('decisions');
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [isMember, setIsMember] = useState(false);
-  const [isJoining, setIsJoining] = useState(false);
 
   const community = MOCK_COMMUNITIES.find((c) => c.id === id) || MOCK_COMMUNITIES[0];
   const decisions = MOCK_DECISIONS.filter((d) => d.communityId === community.id);
@@ -25,12 +29,14 @@ const CommunityDashboard: React.FC = () => {
   const pastDecisions = decisions.filter((d) => d.status === 'completed');
 
   const handleJoin = async () => {
-    if (!connected) return;
-    setIsJoining(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setIsJoining(false);
-    setIsMember(true);
-    setShowJoinModal(false);
+    await requireWallet(async () => {
+      const feeLamports = community.membershipFee * 1000; // KSh to lamports approximation
+      const success = await joinCommunity(community.id, feeLamports);
+      if (success) {
+        setIsMember(true);
+        setShowJoinModal(false);
+      }
+    });
   };
 
   const stats = [
@@ -104,7 +110,7 @@ const CommunityDashboard: React.FC = () => {
                 </span>
               </div>
             </div>
-            {connected && !isMember && (
+            {isReady && !isMember && (
               <button
                 onClick={() => setShowJoinModal(true)}
                 className="btn-warm text-sm flex items-center gap-2"
@@ -244,12 +250,12 @@ const CommunityDashboard: React.FC = () => {
                   <p className="text-xs text-muted-foreground mb-4">
                     Join this community to get your membership card and start participating in decisions.
                   </p>
-                  {connected ? (
+                  {isReady ? (
                     <button onClick={() => setShowJoinModal(true)} className="btn-warm text-sm">
                       Join for {formatKSh(community.membershipFee)}/month
                     </button>
                   ) : (
-                    <p className="text-xs text-muted-foreground">Sign in to join this community</p>
+                    <p className="text-xs text-muted-foreground">Connect your wallet to join this community</p>
                   )}
                 </div>
               )}
@@ -297,24 +303,9 @@ const CommunityDashboard: React.FC = () => {
               </button>
               <button
                 onClick={handleJoin}
-                disabled={isJoining}
-                className="flex-1 btn-warm text-sm flex items-center justify-center gap-2"
+                disabled={isPending}
+                className="flex-1 btn-warm text-sm flex items-center justify-center gap-2 disabled:opacity-60"
               >
-                {isJoining ? (
+                {isPending ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-warm-foreground/30 border-t-warm-foreground rounded-full animate-spin" />
-                    Joining...
-                  </>
-                ) : (
-                  'Pay & Join'
-                )}
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
-    </Layout>
-  );
-};
-
-export default CommunityDashboard;
+                    <Loader2 className="w-4

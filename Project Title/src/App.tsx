@@ -1,47 +1,54 @@
-import React, { useMemo } from 'react';
+import React, { lazy, Suspense, useMemo, useCallback } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
+import {
+  PhantomWalletAdapter,
+  SolflareWalletAdapter,
+  BackpackWalletAdapter,
+  BraveWalletAdapter,
+  CoinbaseWalletAdapter,
+} from '@solana/wallet-adapter-wallets';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { clusterApiUrl } from '@solana/web3.js';
-
-import Index from './pages/Index';
-import Communities from './pages/Communities';
-import CreateCommunity from './pages/CreateCommunity';
-import CommunityDashboard from './pages/CommunityDashboard';
-import CreateDecision from './pages/CreateDecision';
-import NotFound from './pages/NotFound';
+import { Skeleton } from '@/components/ui/skeleton';
 
 import '@solana/wallet-adapter-react-ui/styles.css';
 
-const App = () => {
-    const network = WalletAdapterNetwork.Devnet;
-    const endpoint = useMemo(() => clusterApiUrl(network), [network]);
+// Lazy load heavy pages for better initial bundle size
+const Index = lazy(() => import('./pages/Index'));
+const Communities = lazy(() => import('./pages/Communities'));
+const CreateCommunity = lazy(() => import('./pages/CreateCommunity'));
+const CommunityDashboard = lazy(() => import('./pages/CommunityDashboard'));
+const CreateDecision = lazy(() => import('./pages/CreateDecision'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
-    const wallets = useMemo(
-        () => [new PhantomWalletAdapter(), new SolflareWalletAdapter()],
-        []
-    );
+// Public RPC endpoints with fallback priority
+const RPC_ENDPOINTS = [
+  import.meta.env.VITE_RPC_ENDPOINT,
+  'https://api.devnet.solana.com',
+  clusterApiUrl(WalletAdapterNetwork.Devnet),
+].filter(Boolean) as string[];
 
-    return (
-        <ConnectionProvider endpoint={endpoint}>
-            <WalletProvider wallets={wallets} autoConnect>
-                <WalletModalProvider>
-                    <Routes>
-                        <Route path="/" element={<Index />} />
-                        <Route path="/communities" element={<Communities />} />
-                        <Route path="/create" element={<CreateCommunity />} />
-                        <Route path="/dashboard/:id" element={<CommunityDashboard />} />
-                        <Route path="/create-decision/:communityId" element={<CreateDecision />} />
-                        <Route path="*" element={<NotFound />} />
-                    </Routes>
-                    <Toaster />
-                </WalletModalProvider>
-            </WalletProvider>
-        </ConnectionProvider>
-    );
-};
+function PageSkeleton() {
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="space-y-4 w-full max-w-md px-4">
+        <Skeleton className="h-8 w-3/4 mx-auto" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-5/6" />
+        <Skeleton className="h-40 w-full rounded-xl mt-8" />
+      </div>
+    </div>
+  );
+}
 
-export default App;
+const App: React.FC = () => {
+  const endpoint = useMemo(() => RPC_ENDPOINTS[0], []);
+
+  const wallets = useMemo(
+    () => [
+      new PhantomWalletAdapter(),
+      new SolflareWalletAdapter(),
+      new BackpackWalletAdapter(),
