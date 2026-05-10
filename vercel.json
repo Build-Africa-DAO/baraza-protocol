@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd app && npm install --legacy-peer-deps && npm run build",
+  "buildCommand": "npm --prefix app install --legacy-peer-deps && npm --prefix app run build",
   "outputDirectory": "app/dist",
   "installCommand": "echo skip",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
