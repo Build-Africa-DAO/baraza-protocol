@@ -308,4 +308,19 @@ const CommunityDashboard: React.FC = () => {
               >
                 {isPending ? (
                   <>
-                    <Loader2 className="w-4
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Processing…
+                  </>
+                ) : (
+                  `Pay ${formatKSh(community.membershipFee)}`
+                )}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </Layout>
+  );
+};
+
+export default Commu

@@ -159,4 +159,25 @@ const DecisionCard: React.FC<DecisionCardProps> = ({
             return (
               <button
                 key={side}
-                onClick={() => handleVote(si
+                onClick={() => handleVote(side)}
+                disabled={!canVote || isVoting}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+                  isThisSide ? activeClass : isOtherSide ? 'opacity-40 ' + idleClass : idleClass
+                }`}
+              >
+                {isVoting && isThisSide ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Icon className="w-3.5 h-3.5" />
+                )}
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default DecisionCard;

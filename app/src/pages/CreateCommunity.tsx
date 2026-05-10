@@ -204,5 +204,9 @@ const CreateCommunity: React.FC = () => {
               )}
             </motion.form>
           </div>
-        </div>
-      
+      </section>
+    </Layout>
+  );
+};
+
+export default CreateCommunity;
