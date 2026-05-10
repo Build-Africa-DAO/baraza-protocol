@@ -6,74 +6,70 @@
 
 @layer base {
   :root {
-    /* Baraza Design System — Dark Ocean Theme */
-    /* Background: #023047 → hsl(200, 97%, 14%) */
-    --background: 200 97% 14%;
-    --foreground: 199 40% 90%;
+    /* ── Baraza Design System v2 — Dark Ocean ── */
 
-    /* Card surfaces — slightly lighter than bg */
-    --card: 200 60% 17%;
-    --card-foreground: 199 40% 92%;
+    /* Backgrounds */
+    --background: 200 97% 14%;       /* #023047 deep navy */
+    --foreground: 199 35% 92%;       /* near-white */
 
-    /* Popover */
+    --card: 200 55% 17%;
+    --card-foreground: 199 35% 92%;
+
     --popover: 200 60% 15%;
-    --popover-foreground: 199 40% 92%;
+    --popover-foreground: 199 35% 92%;
 
-    /* Primary — Teal accent #219EBC → hsl(193, 70%, 43%) */
-    --primary: 193 70% 43%;
-    --primary-foreground: 200 97% 8%;
+    /* Brand Colours */
+    --primary: 193 70% 43%;          /* #219EBC teal */
+    --primary-foreground: 200 97% 6%;
 
-    /* Secondary — Soft blue #8ECAE6 → hsl(199, 65%, 73%) */
-    --secondary: 199 65% 73%;
+    --secondary: 199 65% 73%;        /* #8ECAE6 sky */
     --secondary-foreground: 200 97% 10%;
 
-    /* Muted */
-    --muted: 200 40% 20%;
-    --muted-foreground: 199 30% 60%;
+    --muted: 200 38% 20%;
+    --muted-foreground: 199 25% 58%;
 
-    /* Accent — Warm gold #FFB703 → hsl(44, 100%, 50%) */
-    --accent: 44 100% 50%;
-    --accent-foreground: 200 97% 8%;
+    --accent: 44 100% 50%;           /* #FFB703 gold */
+    --accent-foreground: 200 97% 6%;
 
-    /* Destructive / Orange #FB8500 → hsl(33, 97%, 49%) */
-    --destructive: 33 97% 49%;
+    --destructive: 33 97% 49%;       /* #FB8500 orange */
     --destructive-foreground: 0 0% 100%;
 
-    /* Borders & inputs */
-    --border: 200 40% 22%;
-    --input: 200 40% 22%;
+    --border: 200 35% 22%;
+    --input: 200 35% 22%;
     --ring: 193 70% 43%;
 
-    --radius: 0.75rem;
+    --radius: 0.875rem;
+
+    /* Extended surfaces */
+    --warm: 44 100% 50%;
+    --warm-foreground: 200 97% 6%;
+    --orange: 33 97% 49%;
+    --soft-blue: 199 65% 73%;
+    --surface: 200 48% 19%;
+    --surface-hover: 200 42% 23%;
 
     /* Sidebar */
     --sidebar-background: 200 70% 12%;
-    --sidebar-foreground: 199 40% 85%;
+    --sidebar-foreground: 199 35% 85%;
     --sidebar-primary: 193 70% 43%;
-    --sidebar-primary-foreground: 200 97% 8%;
-    --sidebar-accent: 200 40% 20%;
-    --sidebar-accent-foreground: 199 40% 85%;
-    --sidebar-border: 200 40% 22%;
+    --sidebar-primary-foreground: 200 97% 6%;
+    --sidebar-accent: 200 38% 20%;
+    --sidebar-accent-foreground: 199 35% 85%;
+    --sidebar-border: 200 35% 22%;
     --sidebar-ring: 193 70% 43%;
 
-    /* Custom tokens */
-    --warm: 44 100% 50%;
-    --warm-foreground: 200 97% 8%;
-    --orange: 33 97% 49%;
-    --soft-blue: 199 65% 73%;
-    --surface: 200 50% 19%;
-    --surface-hover: 200 45% 23%;
-
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(193, 70%, 43%) 0%, hsl(199, 65%, 73%) 100%);
-    --gradient-warm: linear-gradient(135deg, hsl(44, 100%, 50%) 0%, hsl(33, 97%, 49%) 100%);
-    --gradient-surface: linear-gradient(180deg, hsl(200, 60%, 17%) 0%, hsl(200, 70%, 12%) 100%);
-    --gradient-hero: linear-gradient(160deg, hsl(200, 97%, 14%) 0%, hsl(200, 70%, 10%) 50%, hsl(200, 97%, 14%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(193,70%,43%) 0%, hsl(199,65%,73%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(44,100%,50%) 0%, hsl(33,97%,49%) 100%);
+    --gradient-surface: linear-gradient(180deg, hsl(200,55%,17%) 0%, hsl(200,65%,13%) 100%);
+    --gradient-hero: radial-gradient(ellipse 80% 60% at 50% -10%, hsl(193,70%,43%,0.15) 0%, transparent 70%),
+                     linear-gradient(180deg, hsl(200,97%,14%) 0%, hsl(200,80%,11%) 100%);
 
     /* Shadows */
-    --shadow-card: 0 4px 24px -4px hsl(200 97% 6% / 0.5);
-    --shadow-glow: 0 0 40px hsl(193 70% 43% / 0.15);
-    --shadow-warm: 0 4px 20px hsl(44 100% 50% / 0.25);
+    --shadow-card:  0 4px 24px -4px hsl(200 97% 6% / 0.55);
+    --shadow-glow:  0 0 40px hsl(193 70% 43% / 0.18);
+    --shadow-warm:  0 4px 24px hsl(44 100% 50% / 0.28);
+    --shadow-deep:  0 20px 60px -10px hsl(200 97% 6% / 0.8);
   }
 }
 
@@ -81,7 +77,6 @@
   * {
     border-color: hsl(var(--border));
   }
-
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
@@ -89,91 +84,100 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Unbounded', system-ui, sans-serif;
   }
 }
 
 @layer components {
-  /* Baraza button variants */
+  /* ── Buttons ── */
   .btn-primary {
+    display: inline-flex;
+    align-items: center;
     background: var(--gradient-primary);
     color: hsl(var(--primary-foreground));
     border-radius: var(--radius);
     font-weight: 600;
+    font-size: 0.875rem;
     padding: 0.625rem 1.5rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border: none;
+    transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+    cursor: pointer;
   }
-
   .btn-primary:hover {
-    opacity: 0.9;
+    opacity: 0.92;
     transform: translateY(-1px);
     box-shadow: var(--shadow-glow);
   }
+  .btn-primary:active { transform: translateY(0); }
 
   .btn-warm {
+    display: inline-flex;
+    align-items: center;
     background: var(--gradient-warm);
     color: hsl(var(--warm-foreground));
     border-radius: var(--radius);
     font-weight: 700;
+    font-size: 0.875rem;
     padding: 0.625rem 1.5rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border: none;
+    transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+    cursor: pointer;
   }
-
   .btn-warm:hover {
-    opacity: 0.9;
+    opacity: 0.92;
     transform: translateY(-1px);
     box-shadow: var(--shadow-warm);
   }
+  .btn-warm:active { transform: translateY(0); }
 
   .btn-ghost {
+    display: inline-flex;
+    align-items: center;
     background: transparent;
     color: hsl(var(--foreground));
     border-radius: var(--radius);
     font-weight: 500;
+    font-size: 0.875rem;
     padding: 0.625rem 1.5rem;
-    transition: all 0.2s ease;
     border: 1px solid hsl(var(--border));
+    transition: all 0.2s ease;
+    cursor: pointer;
   }
-
   .btn-ghost:hover {
     background: hsl(var(--surface));
-    border-color: hsl(var(--primary));
+    border-color: hsl(var(--primary) / 0.5);
+    color: hsl(var(--foreground));
   }
 
-  /* Card styles */
+  /* ── Cards ── */
   .baraza-card {
     background: hsl(var(--card));
     border: 1px solid hsl(var(--border));
     border-radius: var(--radius);
     box-shadow: var(--shadow-card);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
   }
-
   .baraza-card:hover {
-    border-color: hsl(var(--primary) / 0.4);
+    border-color: hsl(var(--primary) / 0.35);
     box-shadow: var(--shadow-glow);
   }
 
-  /* Glass surface */
   .glass-surface {
-    background: hsl(var(--card) / 0.6);
+    background: hsl(var(--card) / 0.65);
     backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border: 1px solid hsl(var(--border) / 0.5);
     border-radius: var(--radius);
   }
 
-  /* Gradient text */
+  /* ── Text Gradients ── */
   .text-gradient-primary {
     background: var(--gradient-primary);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-
   .text-gradient-warm {
     background: var(--gradient-warm);
     -webkit-background-clip: text;
@@ -181,7 +185,25 @@
     background-clip: text;
   }
 
-  /* Wallet button override */
+  /* ── Glow helpers ── */
+  .glow-primary { box-shadow: var(--shadow-glow); }
+  .glow-warm    { box-shadow: var(--shadow-warm); }
+
+  /* ── Progress ── */
+  .baraza-progress {
+    height: 6px;
+    border-radius: 9999px;
+    background: hsl(var(--muted));
+    overflow: hidden;
+  }
+  .baraza-progress-fill {
+    height: 100%;
+    border-radius: 9999px;
+    background: var(--gradient-primary);
+    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  /* ── Wallet adapter overrides ── */
   .wallet-adapter-button-trigger {
     background: var(--gradient-primary) !important;
     color: hsl(var(--primary-foreground)) !important;
@@ -191,119 +213,103 @@
     font-size: 0.875rem !important;
     height: 2.5rem !important;
     padding: 0 1.25rem !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transition: all 0.25s cubic-bezier(0.4,0,0.2,1) !important;
     border: none !important;
   }
-
   .wallet-adapter-button-trigger:hover {
     opacity: 0.9 !important;
     box-shadow: var(--shadow-glow) !important;
   }
-
   .wallet-adapter-button-trigger:not([disabled]):hover {
     background: var(--gradient-primary) !important;
   }
-
   .wallet-adapter-modal-wrapper {
     background: hsl(var(--card)) !important;
     border: 1px solid hsl(var(--border)) !important;
     border-radius: 1rem !important;
     font-family: 'DM Sans', system-ui, sans-serif !important;
   }
-
   .wallet-adapter-modal-title {
     font-family: 'Unbounded', system-ui, sans-serif !important;
     color: hsl(var(--foreground)) !important;
   }
-
   .wallet-adapter-modal-list li {
     background: hsl(var(--surface)) !important;
     border-radius: var(--radius) !important;
     margin-bottom: 0.5rem !important;
   }
-
   .wallet-adapter-modal-list li:hover {
     background: hsl(var(--surface-hover)) !important;
   }
-
   .wallet-adapter-modal-button-close {
     background: hsl(var(--surface)) !important;
   }
-
   .wallet-adapter-modal-overlay {
-    background: hsl(200, 97%, 6%, 0.8) !important;
+    background: hsl(200, 97%, 6%, 0.85) !important;
   }
-
   .wallet-adapter-dropdown-list {
     background: hsl(var(--card)) !important;
     border: 1px solid hsl(var(--border)) !important;
     border-radius: var(--radius) !important;
   }
-
   .wallet-adapter-dropdown-list-item {
     color: hsl(var(--foreground)) !important;
     font-family: 'DM Sans', system-ui, sans-serif !important;
   }
-
   .wallet-adapter-dropdown-list-item:hover {
     background: hsl(var(--surface)) !important;
   }
 
-  /* Progress bar */
-  .baraza-progress {
-    height: 8px;
-    border-radius: 9999px;
-    background: hsl(var(--muted));
-    overflow: hidden;
-  }
-
-  .baraza-progress-fill {
-    height: 100%;
-    border-radius: 9999px;
-    background: var(--gradient-primary);
-    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  /* Glow effects */
-  .glow-primary {
-    box-shadow: var(--shadow-glow);
-  }
-
-  .glow-warm {
-    box-shadow: var(--shadow-warm);
-  }
-
-  /* Scrollbar */
-  ::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: hsl(var(--background));
-  }
-
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: hsl(var(--background)); }
   ::-webkit-scrollbar-thumb {
     background: hsl(var(--muted));
     border-radius: 9999px;
   }
-
   ::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--primary) / 0.5);
   }
 }
 
-/* Animations */
+/* ── Keyframes ── */
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-10px); }
 }
-
 @keyframes pulse-glow {
   0%, 100% { box-shadow: 0 0 20px hsl(193 70% 43% / 0.2); }
-  50% { box-shadow: 0 0 40px hsl(193 70% 43% / 0.4); }
+  50%       { box-shadow: 0 0 50px hsl(193 70% 43% / 0.5); }
 }
-
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
+  0%   { background-position: -200% 0; }
   100% { background-position: 200% 0; }
+}
+@keyframes shining {
+  0%   { background-position: 0 0; }
+  100% { background-position: -200% 0; }
+}
+@keyframes shimmer-spin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes border-beam {
+  0%   { offset-distance: 0%; }
+  100% { offset-distance: 100%; }
+}
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(calc(-100% - var(--gap, 1rem))); }
+}
+@keyframes marquee-vertical {
+  from { transform: translateY(0); }
+  to   { transform: translateY(calc(-100% - var(--gap, 1rem))); }
+}
+@keyframes gradient-move {
+  0%, 100% { background-position: 0% 50%; }
+  50%       { background-position: 100% 50%; }
+}
+@keyframes ripple {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50%       { transform: translate(-50%, -50%) scale(0.92); }
 }

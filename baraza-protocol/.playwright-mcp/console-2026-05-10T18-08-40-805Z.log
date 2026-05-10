@@ -1,0 +1,35 @@
+[   10592ms] [INFO] [O11Y] [DatadogRUM] Initialized {service: claude-ai, env: production, version: 840b6402e9} @ https://assets-proxy.anthropic.com/claude-ai/v2/assets/v1/c6eedc03a-CvREKl-O.js:1
+[   15039ms] [ERROR] Cross-Origin-Opener-Policy policy would block the window.closed call. @ https://accounts.google.com/gsi/client:135
+[   15043ms] [ERROR] Cross-Origin-Opener-Policy policy would block the window.closed call. @ https://accounts.google.com/gsi/client:135
+[   15321ms] [ERROR] Not signed in with the identity provider. @ https://claude.ai/login:0
+[   20405ms] [ERROR] [GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token. @ https://assets-proxy.anthropic.com/claude-ai/v2/assets/v1/c6eedc03a-CvREKl-O.js:1
+[  556801ms] [WARNING] [GSI_LOGGER]: google.accounts.id.initialize() is called multiple times. This could cause unexpected behavior and only the last initialized instance will be used. @ https://accounts.google.com/gsi/client:84
+[  556836ms] [ERROR] Not signed in with the identity provider. @ https://claude.ai/login:0
+[  558355ms] [ERROR] [GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token. @ https://assets-proxy.anthropic.com/claude-ai/v2/assets/v1/c6eedc03a-CvREKl-O.js:1
+[ 1102392ms] [WARNING] [GSI_LOGGER]: google.accounts.id.initialize() is called multiple times. This could cause unexpected behavior and only the last initialized instance will be used. @ https://accounts.google.com/gsi/client:84
+[ 1102426ms] [ERROR] Not signed in with the identity provider. @ https://claude.ai/login:0
+[ 1119485ms] [ERROR] [GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token. @ https://assets-proxy.anthropic.com/claude-ai/v2/assets/v1/c6eedc03a-CvREKl-O.js:1
+[ 1648749ms] [WARNING] [GSI_LOGGER]: google.accounts.id.initialize() is called multiple times. This could cause unexpected behavior and only the last initialized instance will be used. @ https://accounts.google.com/gsi/client:84
+[ 1648783ms] [ERROR] Not signed in with the identity provider. @ https://claude.ai/login:0
+[ 1708790ms] [ERROR] [GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token. @ https://assets-proxy.anthropic.com/claude-ai/v2/assets/v1/c6eedc03a-CvREKl-O.js:1
+[ 2193427ms] [WARNING] [GSI_LOGGER]: google.accounts.id.initialize() is called multiple times. This could cause unexpected behavior and only the last initialized instance will be used. @ https://accounts.google.com/gsi/client:84
+[ 2193459ms] [ERROR] Not signed in with the identity provider. @ https://claude.ai/login:0
+[ 2200612ms] [ERROR] [GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token. @ https://assets-proxy.anthropic.com/claude-ai/v2/assets/v1/c6eedc03a-CvREKl-O.js:1
+[ 2738680ms] [WARNING] [GSI_LOGGER]: google.accounts.id.initialize() is called multiple times. This could cause unexpected behavior and only the last initialized instance will be used. @ https://accounts.google.com/gsi/client:84
+[ 2738713ms] [ERROR] Not signed in with the identity provider. @ https://claude.ai/login:0
+[ 2740406ms] [ERROR] [GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token. @ https://assets-proxy.anthropic.com/claude-ai/v2/assets/v1/c6eedc03a-CvREKl-O.js:1
+[ 3283933ms] [WARNING] [GSI_LOGGER]: google.accounts.id.initialize() is called multiple times. This could cause unexpected behavior and only the last initialized instance will be used. @ https://accounts.google.com/gsi/client:84
+[ 3283960ms] [ERROR] Not signed in with the identity provider. @ https://claude.ai/login:0
+[ 3293749ms] [ERROR] [GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token. @ https://assets-proxy.anthropic.com/claude-ai/v2/assets/v1/c6eedc03a-CvREKl-O.js:1
+[ 3828991ms] [WARNING] [GSI_LOGGER]: google.accounts.id.initialize() is called multiple times. This could cause unexpected behavior and only the last initialized instance will be used. @ https://accounts.google.com/gsi/client:84
+[ 3829018ms] [ERROR] Not signed in with the identity provider. @ https://claude.ai/login:0
+[ 3849114ms] [ERROR] [GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token. @ https://assets-proxy.anthropic.com/claude-ai/v2/assets/v1/c6eedc03a-CvREKl-O.js:1
+[ 4374138ms] [WARNING] [GSI_LOGGER]: google.accounts.id.initialize() is called multiple times. This could cause unexpected behavior and only the last initialized instance will be used. @ https://accounts.google.com/gsi/client:84
+[ 4374158ms] [ERROR] Not signed in with the identity provider. @ https://claude.ai/login:0
+[ 4389418ms] [ERROR] [GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token. @ https://assets-proxy.anthropic.com/claude-ai/v2/assets/v1/c6eedc03a-CvREKl-O.js:1
+[ 4919191ms] [WARNING] [GSI_LOGGER]: google.accounts.id.initialize() is called multiple times. This could cause unexpected behavior and only the last initialized instance will be used. @ https://accounts.google.com/gsi/client:84
+[ 4919198ms] [ERROR] Not signed in with the identity provider. @ https://claude.ai/login:0
+[ 4919448ms] [ERROR] [GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token. @ https://assets-proxy.anthropic.com/claude-ai/v2/assets/v1/c6eedc03a-CvREKl-O.js:1
+[ 5464370ms] [WARNING] [GSI_LOGGER]: google.accounts.id.initialize() is called multiple times. This could cause unexpected behavior and only the last initialized instance will be used. @ https://accounts.google.com/gsi/client:84
+[ 5464406ms] [ERROR] Not signed in with the identity provider. @ https://claude.ai/login:0
+[ 5469006ms] [ERROR] [GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token. @ https://assets-proxy.anthropic.com/claude-ai/v2/assets/v1/c6eedc03a-CvREKl-O.js:1

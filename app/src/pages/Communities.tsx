@@ -1,64 +1,94 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Search, PlusCircle, Filter } from 'lucide-react';
-import Layout from '@/components/Layout';
-import CommunityCard from '@/components/CommunityCard';
-import { MOCK_COMMUNITIES, COMMUNITY_TYPES } from '@/lib/constants';
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Search, PlusCircle, SlidersHorizontal } from "lucide-react";
+import Layout from "@/components/Layout";
+import CommunityCard from "@/components/CommunityCard";
+import { MOCK_COMMUNITIES, COMMUNITY_TYPES } from "@/lib/constants";
+import { ShimmerButton } from "@/components/ui/shimmer-button";
+import { DotPattern } from "@/components/ui/dot-pattern";
+import { cn } from "@/lib/utils";
 
-const Communities: React.FC = () => {
-  const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
+export default function Communities() {
+  const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all");
 
   const filtered = MOCK_COMMUNITIES.filter((c) => {
-    const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase()) ||
+    const matchesSearch =
+      c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.description.toLowerCase().includes(search.toLowerCase());
-    const matchesType = typeFilter === 'all' || c.type === typeFilter;
+    const matchesType = typeFilter === "all" || c.type === typeFilter;
     return matchesSearch && matchesType;
   });
 
   return (
     <Layout>
-      <section className="py-10 md:py-16">
-        <div className="container mx-auto px-4">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-            <div>
-              <motion.h1
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="font-display text-2xl md:text-3xl font-bold text-foreground"
-              >
-                Communities
-              </motion.h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Find a group to join or explore what communities are doing
-              </p>
-            </div>
-            <Link to="/create" className="btn-warm flex items-center gap-2 text-sm">
-              <PlusCircle className="w-4 h-4" />
-              Start a Group
-            </Link>
-          </div>
+      {/* Page header */}
+      <section className="relative pt-28 pb-12 overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-64 bg-primary/6 blur-[80px] rounded-full" />
+          <DotPattern
+            width={24}
+            height={24}
+            cr={1}
+            className="fill-primary/6 [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,black,transparent)]"
+          />
+        </div>
 
-          {/* Search & filter */}
+        <div className="container mx-auto px-4 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="max-w-2xl"
+          >
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-2">
+              Discover
+            </p>
+            <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-3">
+              Communities
+            </h1>
+            <p className="text-muted-foreground">
+              Find a group to join, or explore how communities are using Baraza.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      <section className="pb-16">
+        <div className="container mx-auto px-4">
+          {/* Controls */}
           <div className="flex flex-col sm:flex-row gap-3 mb-8">
+            {/* Search */}
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search communities..."
-                className="w-full bg-surface rounded-xl pl-10 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary/50 border border-border transition-all"
+                placeholder="Search communities by name or type…"
+                className={cn(
+                  "w-full bg-surface border border-border rounded-xl",
+                  "pl-10 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground",
+                  "outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-all",
+                )}
+                aria-label="Search communities"
               />
             </div>
-            <div className="relative">
-              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+
+            {/* Type filter */}
+            <div className="relative flex-shrink-0">
+              <SlidersHorizontal className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                className="appearance-none bg-surface rounded-xl pl-10 pr-8 py-2.5 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary/50 border border-border cursor-pointer"
+                className={cn(
+                  "appearance-none bg-surface border border-border rounded-xl",
+                  "pl-10 pr-8 py-3 text-sm text-foreground",
+                  "outline-none focus:ring-1 focus:ring-primary/40 cursor-pointer transition-all",
+                  "min-w-[160px]",
+                )}
+                aria-label="Filter by type"
               >
                 <option value="all">All Types</option>
                 {COMMUNITY_TYPES.map((t) => (
@@ -66,34 +96,64 @@ const Communities: React.FC = () => {
                 ))}
               </select>
             </div>
+
+            {/* Start CTA */}
+            <Link to="/create" tabIndex={-1}>
+              <ShimmerButton
+                background="linear-gradient(135deg, hsl(44,100%,50%), hsl(33,97%,49%))"
+                shimmerColor="rgba(255,255,255,0.5)"
+                className="text-sm font-bold px-5 py-3 rounded-xl whitespace-nowrap"
+              >
+                <PlusCircle className="w-4 h-4" />
+                Start a Group
+              </ShimmerButton>
+            </Link>
           </div>
+
+          {/* Results count */}
+          {search || typeFilter !== "all" ? (
+            <p className="text-xs text-muted-foreground mb-5">
+              {filtered.length} {filtered.length === 1 ? "community" : "communities"} found
+            </p>
+          ) : null}
 
           {/* Grid */}
           {filtered.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filtered.map((community, idx) => (
                 <motion.div
                   key={community.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.05 }}
+                  transition={{ delay: idx * 0.04, duration: 0.35 }}
+                  className="h-full"
                 >
                   <CommunityCard {...community} />
                 </motion.div>
               ))}
             </div>
           ) : (
-            <div className="baraza-card p-10 text-center">
-              <p className="text-muted-foreground text-sm">No communities found matching your search.</p>
-              <Link to="/create" className="btn-primary mt-4 inline-flex items-center gap-2 text-sm">
-                <PlusCircle className="w-4 h-4" /> Create One
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="baraza-card p-12 text-center"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Search className="w-6 h-6 text-primary" />
+              </div>
+              <p className="font-display text-base font-semibold text-foreground mb-1">
+                No communities found
+              </p>
+              <p className="text-sm text-muted-foreground mb-6">
+                Try a different search term or filter.
+              </p>
+              <Link to="/create" className="btn-primary inline-flex items-center gap-2 text-sm">
+                <PlusCircle className="w-4 h-4" /> Create a Community
               </Link>
-            </div>
+            </motion.div>
           )}
         </div>
       </section>
     </Layout>
   );
-};
-
-export default Communities;
+}

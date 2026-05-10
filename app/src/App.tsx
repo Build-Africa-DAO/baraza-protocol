@@ -6,8 +6,6 @@ import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import {
   PhantomWalletAdapter,
   SolflareWalletAdapter,
-  BackpackWalletAdapter,
-  BraveWalletAdapter,
   CoinbaseWalletAdapter,
 } from '@solana/wallet-adapter-wallets';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
@@ -47,8 +45,6 @@ const App: React.FC = () => {
     () => [
       new PhantomWalletAdapter(),
       new SolflareWalletAdapter(),
-      new BackpackWalletAdapter(),
-      new BraveWalletAdapter(),
       new CoinbaseWalletAdapter(),
     ],
     []
@@ -63,9 +59,9 @@ const App: React.FC = () => {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/communities" element={<Communities />} />
-              <Route path="/communities/create" element={<CreateCommunity />} />
-              <Route path="/communities/:id" element={<CommunityDashboard />} />
-              <Route path="/communities/:id/decisions/create" element={<CreateDecision />} />
+              <Route path="/create" element={<CreateCommunity />} />
+              <Route path="/dashboard/:id" element={<CommunityDashboard />} />
+              <Route path="/dashboard/:id/decisions/create" element={<CreateDecision />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

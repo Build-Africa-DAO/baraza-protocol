@@ -1,7 +1,8 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Users, TrendingUp, MessageSquare } from 'lucide-react';
-import { formatKSh } from '@/lib/constants';
+import { Link } from "react-router-dom";
+import { Users, TrendingUp, MessageSquare } from "lucide-react";
+import { MagicCard } from "@/components/ui/magic-card";
+import { formatKSh } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 interface CommunityCardProps {
   id: string;
@@ -15,75 +16,79 @@ interface CommunityCardProps {
   image: string;
 }
 
-const typeColors: Record<string, string> = {
-  savings: 'bg-primary/15 text-primary',
-  cooperative: 'bg-accent/15 text-accent',
-  professional: 'bg-secondary/15 text-secondary-foreground',
-  housing: 'bg-destructive/15 text-destructive',
-  welfare: 'bg-primary/15 text-primary',
-  investment: 'bg-accent/15 text-accent',
-  other: 'bg-muted text-muted-foreground',
+const typeConfig: Record<string, { bg: string; text: string; dot: string }> = {
+  savings:      { bg: "bg-primary/12",      text: "text-primary",     dot: "bg-primary" },
+  cooperative:  { bg: "bg-accent/12",       text: "text-accent",      dot: "bg-accent" },
+  professional: { bg: "bg-secondary/12",    text: "text-secondary",   dot: "bg-secondary" },
+  housing:      { bg: "bg-orange/12",       text: "text-orange",      dot: "bg-orange" },
+  welfare:      { bg: "bg-primary/12",      text: "text-primary",     dot: "bg-primary" },
+  investment:   { bg: "bg-accent/12",       text: "text-accent",      dot: "bg-accent" },
+  other:        { bg: "bg-muted",           text: "text-muted-foreground", dot: "bg-muted-foreground" },
 };
 
-const CommunityCard: React.FC<CommunityCardProps> = ({
-  id,
-  name,
-  type,
-  description,
-  membershipFee,
-  memberCount,
-  fundBalance,
-  activeDecisions,
-  image,
-}) => {
+export default function CommunityCard({
+  id, name, type, description, membershipFee, memberCount, fundBalance, activeDecisions, image,
+}: CommunityCardProps) {
+  const tc = typeConfig[type] ?? typeConfig.other;
+
   return (
-    <Link to={`/dashboard/${id}`} className="block">
-      <div className="baraza-card p-5 h-full flex flex-col">
-        {/* Header */}
-        <div className="flex items-start gap-3 mb-4">
-          <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center flex-shrink-0">
-            <span className="font-display text-sm font-bold text-primary">{image}</span>
+    <Link to={`/dashboard/${id}`} className="block h-full">
+      <MagicCard className="h-full" gradientColor="#219EBC" gradientSize={200} gradientOpacity={0.06}>
+        <div className={cn(
+          "h-full flex flex-col p-5",
+          "bg-card border border-border/60 rounded-xl",
+          "transition-all duration-300",
+          "hover:border-primary/30 hover:shadow-[0_0_24px_hsl(193_70%_43%/0.12)]",
+        )}>
+          {/* Header */}
+          <div className="flex items-start gap-3 mb-4">
+            <div className="w-11 h-11 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0 text-lg">
+              {image}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-display text-sm font-semibold text-foreground truncate leading-tight">
+                {name}
+              </h3>
+              <span className={cn("inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium capitalize", tc.bg, tc.text)}>
+                <span className={cn("w-1.5 h-1.5 rounded-full", tc.dot)} />
+                {type}
+              </span>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-display text-sm font-semibold text-foreground truncate">{name}</h3>
-            <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-medium capitalize ${typeColors[type] || typeColors.other}`}>
-              {type}
-            </span>
+
+          {/* Description */}
+          <p className="text-xs text-muted-foreground leading-relaxed mb-4 line-clamp-2 flex-1">
+            {description}
+          </p>
+
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-1.5 pt-4 border-t border-border/40">
+            <div className="flex flex-col items-center text-center gap-0.5">
+              <Users className="w-3.5 h-3.5 text-primary" />
+              <span className="text-xs font-semibold text-foreground tabular-nums">{memberCount}</span>
+              <span className="text-[9px] text-muted-foreground">Members</span>
+            </div>
+            <div className="flex flex-col items-center text-center gap-0.5">
+              <TrendingUp className="w-3.5 h-3.5 text-accent" />
+              <span className="text-[11px] font-semibold text-foreground tabular-nums truncate w-full text-center">
+                {formatKSh(fundBalance)}
+              </span>
+              <span className="text-[9px] text-muted-foreground">Fund</span>
+            </div>
+            <div className="flex flex-col items-center text-center gap-0.5">
+              <MessageSquare className="w-3.5 h-3.5 text-secondary" />
+              <span className="text-xs font-semibold text-foreground tabular-nums">{activeDecisions}</span>
+              <span className="text-[9px] text-muted-foreground">Votes</span>
+            </div>
+          </div>
+
+          {/* Fee */}
+          <div className="mt-3.5 flex items-center justify-between">
+            <span className="text-[10px] text-muted-foreground">Monthly fee</span>
+            <span className="text-xs font-bold text-accent tabular-nums">{formatKSh(membershipFee)}</span>
           </div>
         </div>
-
-        {/* Description */}
-        <p className="text-xs text-muted-foreground leading-relaxed mb-4 line-clamp-2 flex-1">
-          {description}
-        </p>
-
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-2 pt-4 border-t border-border/50">
-          <div className="flex flex-col items-center text-center">
-            <Users className="w-3.5 h-3.5 text-primary mb-1" />
-            <span className="text-xs font-semibold text-foreground">{memberCount}</span>
-            <span className="text-[10px] text-muted-foreground">Members</span>
-          </div>
-          <div className="flex flex-col items-center text-center">
-            <TrendingUp className="w-3.5 h-3.5 text-accent mb-1" />
-            <span className="text-xs font-semibold text-foreground">{formatKSh(fundBalance)}</span>
-            <span className="text-[10px] text-muted-foreground">Fund</span>
-          </div>
-          <div className="flex flex-col items-center text-center">
-            <MessageSquare className="w-3.5 h-3.5 text-secondary mb-1" />
-            <span className="text-xs font-semibold text-foreground">{activeDecisions}</span>
-            <span className="text-[10px] text-muted-foreground">Decisions</span>
-          </div>
-        </div>
-
-        {/* Fee */}
-        <div className="mt-4 flex items-center justify-between">
-          <span className="text-[10px] text-muted-foreground">Membership</span>
-          <span className="text-xs font-semibold text-accent">{formatKSh(membershipFee)}/month</span>
-        </div>
-      </div>
+      </MagicCard>
     </Link>
   );
-};
-
-export default CommunityCard;
+}

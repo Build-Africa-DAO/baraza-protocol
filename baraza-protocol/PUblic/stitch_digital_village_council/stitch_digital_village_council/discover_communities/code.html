@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-dim": "#111415",
+                    "secondary-container": "#3c4962",
+                    "on-tertiary-fixed-variant": "#374767",
+                    "secondary-fixed": "#d6e3ff",
+                    "surface-container": "#1d2021",
+                    "surface": "#111415",
+                    "outline-variant": "#4d4635",
+                    "on-secondary-container": "#abb9d6",
+                    "surface-container-lowest": "#0c0f10",
+                    "primary-container": "#d4af37",
+                    "surface-container-high": "#282a2b",
+                    "on-primary-fixed-variant": "#574500",
+                    "on-secondary-fixed": "#0d1c32",
+                    "on-primary-fixed": "#241a00",
+                    "tertiary-fixed": "#d8e2ff",
+                    "on-tertiary": "#20304f",
+                    "inverse-on-surface": "#2e3132",
+                    "tertiary-fixed-dim": "#b6c6ed",
+                    "outline": "#99907c",
+                    "surface-tint": "#e9c349",
+                    "on-surface": "#e1e3e4",
+                    "secondary-fixed-dim": "#b9c7e4",
+                    "surface-container-highest": "#323536",
+                    "inverse-primary": "#735c00",
+                    "tertiary": "#becef5",
+                    "on-error-container": "#ffdad6",
+                    "on-background": "#e1e3e4",
+                    "surface-variant": "#323536",
+                    "on-secondary": "#233148",
+                    "surface-container-low": "#191c1d",
+                    "on-surface-variant": "#d0c5af",
+                    "surface-bright": "#373a3b",
+                    "on-secondary-fixed-variant": "#39475f",
+                    "inverse-surface": "#e1e3e4",
+                    "on-error": "#690005",
+                    "primary-fixed-dim": "#e9c349",
+                    "secondary": "#b9c7e4",
+                    "background": "#111415",
+                    "on-primary": "#3c2f00",
+                    "error": "#ffb4ab",
+                    "on-tertiary-fixed": "#091b39",
+                    "primary-fixed": "#ffe088",
+                    "tertiary-container": "#a3b3d8",
+                    "on-primary-container": "#554300",
+                    "error-container": "#93000a",
+                    "primary": "#f2ca50",
+                    "on-tertiary-container": "#354565"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "card-padding": "24px",
+                    "margin-mobile": "16px",
+                    "unit": "8px",
+                    "container-max": "1200px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Manrope"],
+                    "label-md": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-xl": ["Manrope"],
+                    "mobile-h1": ["Manrope"],
+                    "body-lg": ["Inter"],
+                    "headline-lg": ["Manrope"]
+            },
+            "fontSize": {
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-xl": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "mobile-h1": ["28px", {"lineHeight": "34px", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        .card-shadow {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        }
+        .gold-glow {
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen pb-24">
+<!-- TopAppBar -->
+<header class="bg-surface-dim dark:bg-surface-dim shadow-sm docked full-width top-0 sticky z-40">
+<div class="flex justify-between items-center w-full px-margin-mobile py-unit max-w-container-max mx-auto h-16">
+<div class="flex items-center gap-4">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary">Baraza</span>
+<nav class="hidden md:flex gap-6 ml-8">
+<a class="text-primary font-bold border-b-2 border-primary py-1 font-label-md text-label-md" href="#">Discover</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary-fixed-dim transition-colors font-label-md text-label-md" href="#">My Barazas</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary-fixed-dim transition-colors font-label-md text-label-md" href="#">Proposals</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="md:hidden text-on-surface">
+<span class="material-symbols-outlined">search</span>
+</button>
+<div class="hidden md:flex bg-surface-container-highest rounded-full px-4 py-2 items-center gap-2 w-64 border border-outline-variant">
+<span class="material-symbols-outlined text-on-surface-variant">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-md font-body-md w-full placeholder:text-on-surface-variant" placeholder="Search communities..." type="text"/>
+</div>
+<button class="bg-primary text-on-primary px-6 py-2 rounded-lg font-label-md text-label-md hover:opacity-80 transition-all font-bold">Sign In</button>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="max-w-container-max mx-auto px-margin-mobile py-gutter">
+<!-- Welcome Hero Section -->
+<section class="mb-12 relative overflow-hidden rounded-xl bg-surface-container-low p-gutter md:p-12">
+<div class="relative z-10 max-w-2xl">
+<h1 class="font-headline-xl text-headline-xl mb-4 text-on-surface">Discover your <span class="text-primary">Digital Ubuntu</span>.</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-8">Join trusted local communities, participate in shared governance, and manage communal funds with absolute transparency and security.</p>
+<div class="flex flex-wrap gap-4">
+<button class="bg-primary text-on-primary font-bold px-8 py-3 rounded-lg font-label-md text-label-md hover:scale-95 transition-all gold-glow">Explore All</button>
+<button class="border border-primary text-primary font-bold px-8 py-3 rounded-lg font-label-md text-label-md hover:bg-primary/5 transition-all">Create Baraza</button>
+</div>
+</div>
+<div class="absolute right-0 top-0 h-full w-1/3 opacity-20 pointer-events-none hidden lg:block">
+<img alt="" class="object-contain h-full w-full" data-alt="A sophisticated abstract geometric pattern of interlocking gold and bronze circles, representing a network of connections and community unity. The style is professional and corporate with a metallic tactile finish, set against a deep navy blue background. Soft ambient lighting highlights the intricate textures of the membership card aesthetics." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCS047Bxw7FSPMprLvkbq3dsnWImrYBcIVBHsogCbKIO8DQnZgtQDPoMrPoNRpOr9-jihH9PKhKdHuZcKgn6314sFSFiJf7Xm3DqBu7stQvb9bOn6jSM-bL-21CjfRefhdsflrfe2Nu5F-NE57p2kQsYOwsD24jte5BsoJ6rxbXBiWuf_FvQ2Dni6Yjmy1I_PyJXk_cmZQOVq-yx2qs0pGhKzUBZSiUXi_ZN0Q96_SrYkxJTjsieXDOwGq8vwqUtgu6vMTAuPeyAls"/>
+</div>
+</section>
+<!-- Filters and Tab Header -->
+<section class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+<div class="flex p-1 bg-surface-container rounded-xl border border-outline-variant w-fit">
+<button class="bg-secondary-container text-on-secondary-container px-6 py-2 rounded-lg font-label-md text-label-md font-bold">Discover New</button>
+<button class="text-on-surface-variant px-6 py-2 rounded-lg font-label-md text-label-md hover:bg-surface-variant/50 transition-all">My Communities</button>
+</div>
+<div class="flex gap-4 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
+<button class="whitespace-nowrap px-4 py-1 rounded-full bg-surface-container-high border border-outline-variant text-on-surface-variant font-label-md text-label-md">Financials</button>
+<button class="whitespace-nowrap px-4 py-1 rounded-full bg-surface-container-high border border-outline-variant text-on-surface-variant font-label-md text-label-md">Agriculture</button>
+<button class="whitespace-nowrap px-4 py-1 rounded-full bg-surface-container-high border border-outline-variant text-on-surface-variant font-label-md text-label-md">Residential</button>
+<button class="whitespace-nowrap px-4 py-1 rounded-full bg-surface-container-high border border-outline-variant text-on-surface-variant font-label-md text-label-md">Welfare</button>
+</div>
+</section>
+<!-- Grid of Membership Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+<!-- Card 1: Kilimani Residents -->
+<div class="bg-[#112240] rounded-xl overflow-hidden card-shadow border-t-4 border-primary group hover:-translate-y-1 transition-transform">
+<div class="p-card-padding">
+<div class="flex justify-between items-start mb-6">
+<div class="bg-surface-container-highest p-3 rounded-xl border border-outline-variant">
+<span class="material-symbols-outlined text-primary text-3xl">location_city</span>
+</div>
+<span class="bg-primary/10 text-primary text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">Premium Access</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Kilimani Residents</h3>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2 mb-6">Promoting security, beautification, and neighborly cohesion within the heart of Kilimani ward.</p>
+<div class="space-y-4 pt-6 border-t border-outline-variant">
+<div class="flex justify-between items-center">
+<span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">group</span> Members
+                            </span>
+<span class="font-headline-md text-headline-md text-on-surface">1,240</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">payments</span> Fund Balance
+                            </span>
+<span class="font-headline-md text-headline-md text-primary font-bold">KES 4.2M</span>
+</div>
+</div>
+<div class="mt-8">
+<div class="w-full bg-surface-container-lowest h-2 rounded-full overflow-hidden mb-2">
+<div class="bg-primary h-full w-3/4 rounded-full"></div>
+</div>
+<div class="flex justify-between text-[11px] font-bold uppercase text-on-surface-variant tracking-widest">
+<span>Q3 Security Goal</span>
+<span>75% Funded</span>
+</div>
+</div>
+<button class="w-full mt-8 border border-primary text-primary font-bold py-3 rounded-lg font-label-md text-label-md group-hover:bg-primary group-hover:text-on-primary transition-all">Request Membership</button>
+</div>
+</div>
+<!-- Card 2: Chama X -->
+<div class="bg-[#112240] rounded-xl overflow-hidden card-shadow border-t-4 border-primary group hover:-translate-y-1 transition-transform">
+<div class="p-card-padding">
+<div class="flex justify-between items-start mb-6">
+<div class="bg-surface-container-highest p-3 rounded-xl border border-outline-variant">
+<span class="material-symbols-outlined text-primary text-3xl">diversity_3</span>
+</div>
+<span class="bg-surface-variant/30 text-on-surface-variant text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">Invitation Only</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Chama X Investment</h3>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2 mb-6">Strategic wealth creation through collaborative real estate and high-yield fixed income portfolios.</p>
+<div class="space-y-4 pt-6 border-t border-outline-variant">
+<div class="flex justify-between items-center">
+<span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">group</span> Members
+                            </span>
+<span class="font-headline-md text-headline-md text-on-surface">45</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">payments</span> Fund Balance
+                            </span>
+<span class="font-headline-md text-headline-md text-primary font-bold">KES 18.7M</span>
+</div>
+</div>
+<div class="mt-8">
+<div class="w-full bg-surface-container-lowest h-2 rounded-full overflow-hidden mb-2">
+<div class="bg-primary h-full w-full rounded-full opacity-60"></div>
+</div>
+<div class="flex justify-between text-[11px] font-bold uppercase text-on-surface-variant tracking-widest">
+<span>Portfolio Health</span>
+<span>Robust</span>
+</div>
+</div>
+<button class="w-full mt-8 border border-primary text-primary font-bold py-3 rounded-lg font-label-md text-label-md group-hover:bg-primary group-hover:text-on-primary transition-all">Join Waitlist</button>
+</div>
+</div>
+<!-- Card 3: Small Scale Farmers Union -->
+<div class="bg-[#112240] rounded-xl overflow-hidden card-shadow border-t-4 border-primary group hover:-translate-y-1 transition-transform">
+<div class="p-card-padding">
+<div class="flex justify-between items-start mb-6">
+<div class="bg-surface-container-highest p-3 rounded-xl border border-outline-variant">
+<span class="material-symbols-outlined text-primary text-3xl">agriculture</span>
+</div>
+<span class="bg-primary/10 text-primary text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">Public Union</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Small Scale Farmers Union</h3>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2 mb-6">Collective bargaining, input financing, and market access for regional vegetable growers.</p>
+<div class="space-y-4 pt-6 border-t border-outline-variant">
+<div class="flex justify-between items-center">
+<span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">group</span> Members
+                            </span>
+<span class="font-headline-md text-headline-md text-on-surface">3,850</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">payments</span> Fund Balance
+                            </span>
+<span class="font-headline-md text-headline-md text-primary font-bold">KES 1.2M</span>
+</div>
+</div>
+<div class="mt-8">
+<div class="w-full bg-surface-container-lowest h-2 rounded-full overflow-hidden mb-2">
+<div class="bg-primary h-full w-1/4 rounded-full"></div>
+</div>
+<div class="flex justify-between text-[11px] font-bold uppercase text-on-surface-variant tracking-widest">
+<span>Silo Project</span>
+<span>25% Complete</span>
+</div>
+</div>
+<button class="w-full mt-8 border border-primary text-primary font-bold py-3 rounded-lg font-label-md text-label-md group-hover:bg-primary group-hover:text-on-primary transition-all">Apply to Join</button>
+</div>
+</div>
+<!-- Card 4: Upper Hill Business District -->
+<div class="bg-[#112240] rounded-xl overflow-hidden card-shadow border-t-4 border-primary group hover:-translate-y-1 transition-transform">
+<div class="p-card-padding">
+<div class="flex justify-between items-start mb-6">
+<div class="bg-surface-container-highest p-3 rounded-xl border border-outline-variant">
+<span class="material-symbols-outlined text-primary text-3xl">apartment</span>
+</div>
+<span class="bg-primary/10 text-primary text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">Business</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Upper Hill Alliance</h3>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2 mb-6">A corporate coalition focusing on infrastructure advocacy and sustainable urban planning.</p>
+<div class="space-y-4 pt-6 border-t border-outline-variant">
+<div class="flex justify-between items-center">
+<span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">group</span> Members
+                            </span>
+<span class="font-headline-md text-headline-md text-on-surface">156</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">payments</span> Fund Balance
+                            </span>
+<span class="font-headline-md text-headline-md text-primary font-bold">KES 12.4M</span>
+</div>
+</div>
+<div class="mt-8">
+<div class="w-full bg-surface-container-lowest h-2 rounded-full overflow-hidden mb-2">
+<div class="bg-primary h-full w-1/2 rounded-full"></div>
+</div>
+<div class="flex justify-between text-[11px] font-bold uppercase text-on-surface-variant tracking-widest">
+<span>Park Solar Project</span>
+<span>50% Funded</span>
+</div>
+</div>
+<button class="w-full mt-8 border border-primary text-primary font-bold py-3 rounded-lg font-label-md text-label-md group-hover:bg-primary group-hover:text-on-primary transition-all">Request Membership</button>
+</div>
+</div>
+<!-- Card 5: Sacred Heart Welfare -->
+<div class="bg-[#112240] rounded-xl overflow-hidden card-shadow border-t-4 border-primary group hover:-translate-y-1 transition-transform">
+<div class="p-card-padding">
+<div class="flex justify-between items-start mb-6">
+<div class="bg-surface-container-highest p-3 rounded-xl border border-outline-variant">
+<span class="material-symbols-outlined text-primary text-3xl">volunteer_activism</span>
+</div>
+<span class="bg-primary/10 text-primary text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">Social Union</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Sacred Heart Welfare</h3>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2 mb-6">Support network for health emergencies, education bursaries, and elder care within the parish.</p>
+<div class="space-y-4 pt-6 border-t border-outline-variant">
+<div class="flex justify-between items-center">
+<span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">group</span> Members
+                            </span>
+<span class="font-headline-md text-headline-md text-on-surface">620</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">payments</span> Fund Balance
+                            </span>
+<span class="font-headline-md text-headline-md text-primary font-bold">KES 450K</span>
+</div>
+</div>
+<div class="mt-8">
+<div class="w-full bg-surface-container-lowest h-2 rounded-full overflow-hidden mb-2">
+<div class="bg-primary h-full w-4/5 rounded-full"></div>
+</div>
+<div class="flex justify-between text-[11px] font-bold uppercase text-on-surface-variant tracking-widest">
+<span>Emergency Fund</span>
+<span>Ready</span>
+</div>
+</div>
+<button class="w-full mt-8 border border-primary text-primary font-bold py-3 rounded-lg font-label-md text-label-md group-hover:bg-primary group-hover:text-on-primary transition-all">Request Membership</button>
+</div>
+</div>
+<!-- Card 6: Lake Victoria Fishermen -->
+<div class="bg-[#112240] rounded-xl overflow-hidden card-shadow border-t-4 border-primary group hover:-translate-y-1 transition-transform">
+<div class="p-card-padding">
+<div class="flex justify-between items-start mb-6">
+<div class="bg-surface-container-highest p-3 rounded-xl border border-outline-variant">
+<span class="material-symbols-outlined text-primary text-3xl">set_meal</span>
+</div>
+<span class="bg-primary/10 text-primary text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">Guild</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Lake Vic Fishermen</h3>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2 mb-6">Protecting the waters, standardizing equipment, and ensuring fair price points for all members.</p>
+<div class="space-y-4 pt-6 border-t border-outline-variant">
+<div class="flex justify-between items-center">
+<span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">group</span> Members
+                            </span>
+<span class="font-headline-md text-headline-md text-on-surface">2,100</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">payments</span> Fund Balance
+                            </span>
+<span class="font-headline-md text-headline-md text-primary font-bold">KES 890K</span>
+</div>
+</div>
+<div class="mt-8">
+<div class="w-full bg-surface-container-lowest h-2 rounded-full overflow-hidden mb-2">
+<div class="bg-primary h-full w-1/3 rounded-full"></div>
+</div>
+<div class="flex justify-between text-[11px] font-bold uppercase text-on-surface-variant tracking-widest">
+<span>Equipment Loan</span>
+<span>In Progress</span>
+</div>
+</div>
+<button class="w-full mt-8 border border-primary text-primary font-bold py-3 rounded-lg font-label-md text-label-md group-hover:bg-primary group-hover:text-on-primary transition-all">Request Membership</button>
+</div>
+</div>
+</div>
+<!-- Pagination or Load More -->
+<div class="mt-12 flex justify-center">
+<button class="flex items-center gap-2 text-on-surface-variant font-label-md text-label-md hover:text-primary transition-colors">
+                Load more communities <span class="material-symbols-outlined">expand_more</span>
+</button>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 pb-safe bg-surface-container dark:bg-surface-container shadow-[0_-4px_12px_rgba(0,0,0,0.15)] rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant/50 transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">home</span>
+<span>Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary dark:text-primary bg-secondary-container/20 rounded-xl px-4 py-1 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">explore</span>
+<span>Discover</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant/50 transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">how_to_vote</span>
+<span>Proposals</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant/50 transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">person</span>
+<span>Profile</span>
+</a>
+</nav>
+</body></html>

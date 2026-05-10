@@ -1,17 +1,16 @@
-import React from 'react';
-import Layout from '@/components/Layout';
-import HeroSection from '@/components/HeroSection';
-import FeaturesSection from '@/components/FeaturesSection';
-import CTASection from '@/components/CTASection';
+import Layout from "@/components/Layout";
+import HeroSection from "@/components/HeroSection";
+import FeaturesSection from "@/components/FeaturesSection";
+import { CommunityMarquee } from "@/components/CommunityMarquee";
+import CTASection from "@/components/CTASection";
 
-const Index: React.FC = () => {
+export default function Index() {
   return (
     <Layout>
       <HeroSection />
+      <CommunityMarquee />
       <FeaturesSection />
       <CTASection />
     </Layout>
   );
-};
-
-export default Index;
+}
