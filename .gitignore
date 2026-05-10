@@ -1,0 +1,11 @@
+.vercel
+node_modules/
+.next/
+*.zip
+*.png
+dist/
+build/
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
