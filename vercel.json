@@ -1,7 +1,7 @@
 {
-  "buildCommand": "cd \"Project Title\" && npm install --legacy-peer-deps && npm run build",
+  "buildCommand": "npm --prefix 'Project Title' install --legacy-peer-deps && npm --prefix 'Project Title' run build",
   "outputDirectory": "Project Title/dist",
-  "installCommand": "echo 'deps handled in buildCommand'",
+  "installCommand": "echo skip",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
   "headers": [
     {
@@ -11,3 +11,4 @@
       ]
     }
   ]
+}
