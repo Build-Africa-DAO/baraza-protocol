@@ -1,0 +1,14 @@
+{
+  "buildCommand": "cd 'Project Title' && npm install --legacy-peer-deps && npm run build",
+  "outputDirectory": "Project Title/dist",
+  "installCommand": "echo 'deps handled in buildCommand'",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    }
+  ]
+}
