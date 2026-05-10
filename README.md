@@ -14,13 +14,13 @@
 
 **On-chain governance rooted in African tradition.**
 
-*Baraza (Swahili / Pan-African) — the community council where decisions are made,*  
+*Baraza (Swahili / Pan-African) — the community council where decisions are made,*
 *futures planned, and communities govern themselves.*
 
 [Live App](https://baraza-protocol.vercel.app) · [Report Bug](https://github.com/Azizudinly/baraza-protocol/issues) · [Request Feature](https://github.com/Azizudinly/baraza-protocol/issues)
 
-> Built by [Aziz Motomoto](https://github.com/Azizudinly) · Founder, [BuildaDAO](https://buildadao.xyz) · East Africa Coordinator, PizzaDAO  
-> Dev3pack Global Hackathon 2026 · Nairobi Hub  
+> Built by [Aziz Motomoto](https://github.com/Azizudinly) · Founder, [BuildaDAO](https://buildadao.xyz) · East Africa Coordinator, PizzaDAO
+> Dev3pack Global Hackathon 2026 · Nairobi Hub
 > **First deployment: Global Pizza Party 6 · The Mall Westlands, Nairobi · May 22 2026 · 500+ attendees**
 
 </div>
@@ -149,13 +149,14 @@ Open [http://localhost:3000](http://localhost:3000)
 
 | Variable | Required | Description |
 |---|---|---|
-| `VITE_RPC_ENDPOINT` | No | Custom Solana RPC (falls back to public devnet) |
-| `VITE_PROGRAM_ID` | No | Baraza Anchor program ID |
-| `VITE_SUPABASE_URL` | No | Supabase URL for off-chain metadata |
-| `VITE_SUPABASE_ANON_KEY` | No | Supabase anon key |
-| `PRIVY_APP_ID` | Yes (mobile) | Privy app ID for invisible wallets |
-| `YELLOW_CARD_API_KEY` | Yes (mobile) | Yellow Card M-Pesa bridge |
-| `AFRICAS_TALKING_API_KEY` | Yes (mobile) | Africa's Talking SMS + USSD |
+| `NEXT_PUBLIC_SOLANA_NETWORK` | No | Solana network (devnet / mainnet-beta) |
+| `NEXT_PUBLIC_RPC_URL` | No | Custom Solana RPC (falls back to public devnet) |
+| `NEXT_PUBLIC_PRIVY_APP_ID` | Yes (mobile) | Privy app ID for invisible wallets |
+| `ORGANIZER_WALLET` | Yes (payments) | Organizer Solflare wallet public key |
+| `LIFI_API_KEY` | Yes (bridge) | LI.FI cross-chain bridge API key |
+| `AT_API_KEY` | Yes (mobile) | Africa's Talking API key |
+| `AT_USERNAME` | Yes (mobile) | Africa's Talking username |
+| `NEXT_PUBLIC_FACILITATOR_URL` | No | x402 stream payments facilitator URL |
 
 > ⚠️ Never commit `.env.local` — it is gitignored by default.
 
@@ -170,10 +171,7 @@ baraza-protocol/
 │   ├── page.tsx                         # App entry point
 │   ├── providers.tsx                    # Solana wallet + Privy providers
 │   └── globals.css                      # Global styles + CSS design tokens
-├── baraza-protocol/                     # Core protocol logic
-├── stitch_digital_village_council/      # Council UI layer
 ├── components/
-│   ├── ui/                              # Radix UI primitives
 │   ├── WalletConnectModal.tsx           # Wallet modal (Solana only, deduped)
 │   ├── WalletStatus.tsx                 # Wallet dropdown + chain check
 │   ├── Header.tsx                       # Navigation
@@ -229,8 +227,8 @@ baraza-protocol/
 
 ## Smart Contract
 
-> **Current status:** Mock data with Solana transaction scaffolding.  
-> Production requires deploying the Anchor program and setting `VITE_PROGRAM_ID`.
+> **Current status:** Mock data with Solana transaction scaffolding.
+> Production requires deploying the Anchor program and setting `NEXT_PUBLIC_PROGRAM_ID`.
 
 See [CONTRACT_INTEGRATION.md](./docs/CONTRACT_INTEGRATION.md) for Anchor integration details.
 
