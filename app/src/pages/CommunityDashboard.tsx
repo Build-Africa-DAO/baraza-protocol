@@ -323,4 +323,4 @@ const CommunityDashboard: React.FC = () => {
   );
 };
 
-export default Commu
+export default CommunityDashboard;

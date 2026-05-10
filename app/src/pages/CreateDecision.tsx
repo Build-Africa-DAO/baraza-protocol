@@ -229,4 +229,3 @@ const CreateDecision: React.FC = () => {
 };
 
 export default CreateDecision;
-                 
