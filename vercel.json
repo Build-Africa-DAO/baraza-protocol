@@ -1,6 +1,6 @@
 {
-  "buildCommand": "npm --prefix 'Project Title' install --legacy-peer-deps && npm --prefix 'Project Title' run build",
-  "outputDirectory": "Project Title/dist",
+  "buildCommand": "cd app && npm install --legacy-peer-deps && npm run build",
+  "outputDirectory": "app/dist",
   "installCommand": "echo skip",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
   "headers": [
