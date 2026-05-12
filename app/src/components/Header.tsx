@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Users, LayoutDashboard, PlusCircle, Home, ChevronRight } from "lucide-react";
-import WalletStatus from "@/components/WalletStatus";
 import { BrandLogo } from "@/components/BrandLogo";
 import { cn } from "@/lib/utils";
 
@@ -12,7 +11,11 @@ const navLinks = [
   { path: "/dashboard/1", label: "Dashboard", icon: LayoutDashboard },
 ];
 
-export default function Header() {
+interface HeaderProps {
+  walletSlot?: ReactNode;
+}
+
+export default function Header({ walletSlot }: HeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
@@ -31,7 +34,7 @@ export default function Header() {
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
         scrolled
-          ? "glass-surface border-b border-border/50 shadow-[0_2px_20px_hsl(200_97%_6%/0.4)]"
+          ? "glass-surface border-b border-border/50 shadow-[0_2px_20px_hsl(254_31%_8%/0.45)]"
           : "bg-transparent border-b border-transparent",
       )}
     >
@@ -79,9 +82,7 @@ export default function Header() {
             <ChevronRight className="w-3.5 h-3.5" />
           </Link>
 
-          <div className="hidden sm:block">
-            <WalletStatus />
-          </div>
+          {walletSlot && <div className="hidden sm:block">{walletSlot}</div>}
 
           {/* Mobile toggle */}
           <button
@@ -119,7 +120,7 @@ export default function Header() {
               );
             })}
             <div className="pt-3 border-t border-border/50 mt-1 flex flex-col gap-2">
-              <WalletStatus />
+              {walletSlot}
               <Link to="/create" className="btn-warm text-sm text-center py-2.5 flex items-center justify-center gap-2">
                 Start a Group <ChevronRight className="w-4 h-4" />
               </Link>

@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Vote, ArrowLeft, CheckCircle2, Info, Loader2 } from 'lucide-react';
-import Layout from '@/components/Layout';
-import { MOCK_COMMUNITIES } from '@/lib/constants';
+import { Vote, ArrowLeft, Info, Loader2 } from 'lucide-react';
+import WalletLayout from '@/components/WalletLayout';
 import { formatKSh } from '@/lib/utils';
 import { useWalletGuard } from '@/hooks/useWalletGuard';
+import { useToast } from '@/hooks/use-toast';
+import { useCommunity } from '@/hooks/useCommunities';
 
 const CreateDecision: React.FC = () => {
   const navigate = useNavigate();
-  const { communityId } = useParams<{ communityId: string }>();
+  const { id } = useParams<{ id: string }>();
   const { requireWallet, isReady } = useWalletGuard({ action: 'propose decisions' });
-  const [isCreated, setIsCreated] = useState(false);
+  const { toast } = useToast();
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -20,13 +21,46 @@ const CreateDecision: React.FC = () => {
   });
   const [isPending, setIsPending] = useState(false);
 
-  const community = MOCK_COMMUNITIES.find((c) => c.id === communityId) || MOCK_COMMUNITIES[0];
+  const { community, isLoading, error } = useCommunity(id);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const isValid = !!(form.title.trim() && form.description.trim() && form.fundingAmount);
+
+  if (isLoading) {
+    return (
+      <WalletLayout>
+        <section className="py-20">
+          <div className="container mx-auto px-4">
+            <div className="baraza-card h-48 max-w-lg mx-auto animate-pulse" />
+          </div>
+        </section>
+      </WalletLayout>
+    );
+  }
+
+  if (!community) {
+    return (
+      <WalletLayout>
+        <section className="py-20">
+          <div className="container mx-auto px-4 text-center">
+            <h1 className="font-display text-2xl font-bold text-foreground mb-3">
+              Community not found
+            </h1>
+            <p className="text-sm text-muted-foreground mb-6">
+              {error?.message ?? 'This proposal cannot be created because the community is not available in the current data.'}
+            </p>
+            <Link to="/communities" className="btn-primary text-sm inline-flex">
+              View Communities
+            </Link>
+          </div>
+        </section>
+      </WalletLayout>
+    );
+  }
+
   const overBudget = Number(form.fundingAmount) > community.fundBalance;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,48 +68,20 @@ const CreateDecision: React.FC = () => {
     if (!isValid || overBudget) return;
     await requireWallet(async () => {
       setIsPending(true);
-      setIsPending(false);
-      setIsCreated(true);
+      try {
+        toast({
+          title: 'Proposal creation is not wired yet',
+          description: 'Persistence and governance instructions are required before a proposal can be opened for voting.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsPending(false);
+      }
     });
   };
 
-  if (isCreated) {
-    return (
-      <Layout>
-        <section className="py-20">
-          <div className="container mx-auto px-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="max-w-md mx-auto text-center"
-            >
-              <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-6">
-                <CheckCircle2 className="w-8 h-8 text-primary" />
-              </div>
-              <h2 className="font-display text-2xl font-bold text-foreground mb-3">
-                Decision Proposed!
-              </h2>
-              <p className="text-sm text-muted-foreground mb-2">
-                "{form.title}" is now open for voting.
-              </p>
-              <p className="text-xs text-muted-foreground mb-8">
-                Community members have {form.duration} days to vote.
-              </p>
-              <button
-                onClick={() => navigate(`/dashboard/${community.id}`)}
-                className="btn-primary text-sm"
-              >
-                Back to Dashboard
-              </button>
-            </motion.div>
-          </div>
-        </section>
-      </Layout>
-    );
-  }
-
   return (
-    <Layout>
+    <WalletLayout>
       <section className="py-10 md:py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-lg mx-auto">
@@ -224,7 +230,7 @@ const CreateDecision: React.FC = () => {
           </div>
         </div>
       </section>
-    </Layout>
+    </WalletLayout>
   );
 };
 

@@ -1,17 +1,7 @@
-import React, { lazy, Suspense, useMemo } from 'react';
+import React, { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
-import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
-import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import {
-  PhantomWalletAdapter,
-  SolflareWalletAdapter,
-  CoinbaseWalletAdapter,
-} from '@solana/wallet-adapter-wallets';
-import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
-import { clusterApiUrl } from '@solana/web3.js';
 import { Skeleton } from '@/components/ui/skeleton';
-import '@solana/wallet-adapter-react-ui/styles.css';
 
 const Index = lazy(() => import('./pages/Index'));
 const Communities = lazy(() => import('./pages/Communities'));
@@ -19,12 +9,7 @@ const CreateCommunity = lazy(() => import('./pages/CreateCommunity'));
 const CommunityDashboard = lazy(() => import('./pages/CommunityDashboard'));
 const CreateDecision = lazy(() => import('./pages/CreateDecision'));
 const NotFound = lazy(() => import('./pages/NotFound'));
-
-const RPC_ENDPOINTS = [
-  import.meta.env.VITE_RPC_ENDPOINT,
-  'https://api.devnet.solana.com',
-  clusterApiUrl(WalletAdapterNetwork.Devnet),
-].filter(Boolean) as string[];
+const WalletProviders = lazy(() => import('@/components/WalletProviders'));
 
 function PageSkeleton() {
   return (
@@ -40,35 +25,29 @@ function PageSkeleton() {
 }
 
 const App: React.FC = () => {
-  const endpoint = useMemo(() => RPC_ENDPOINTS[0], []);
-  const wallets = useMemo(
-    () => [
-      new PhantomWalletAdapter(),
-      new SolflareWalletAdapter(),
-      new CoinbaseWalletAdapter(),
-    ],
-    []
+  const protectedRoute = (element: React.ReactNode) => (
+    <Suspense fallback={<PageSkeleton />}>
+      <WalletProviders>{element}</WalletProviders>
+    </Suspense>
   );
-  const onError = (error: Error) => console.error('[Wallet Error]', error.message);
 
   return (
-    <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect onError={onError}>
-        <WalletModalProvider>
-          <Suspense fallback={<PageSkeleton />}>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/communities" element={<Communities />} />
-              <Route path="/create" element={<CreateCommunity />} />
-              <Route path="/dashboard/:id" element={<CommunityDashboard />} />
-              <Route path="/dashboard/:id/decisions/create" element={<CreateDecision />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-          <Toaster />
-        </WalletModalProvider>
-      </WalletProvider>
-    </ConnectionProvider>
+    <>
+      <Suspense fallback={<PageSkeleton />}>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/communities" element={<Communities />} />
+          <Route path="/create" element={protectedRoute(<CreateCommunity />)} />
+          <Route path="/dashboard/:id" element={protectedRoute(<CommunityDashboard />)} />
+          <Route
+            path="/dashboard/:id/decisions/create"
+            element={protectedRoute(<CreateDecision />)}
+          />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
+      <Toaster />
+    </>
   );
 };
 

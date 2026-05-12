@@ -1,183 +1,186 @@
 import { motion } from "framer-motion";
-import { Users, Vote, PiggyBank, Eye, MessageCircle, ShieldCheck, Zap } from "lucide-react";
-import { BentoGrid, BentoCard } from "@/components/ui/bento-grid";
-import { BorderBeam } from "@/components/ui/border-beam";
+import {
+  ArrowRight,
+  CheckCircle2,
+  CircleDollarSign,
+  Eye,
+  FileCheck2,
+  LockKeyhole,
+  Vote,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const features = [
+const workflow = [
   {
-    Icon: Users,
-    name: "Create Your Group",
-    description: "Set up your Chama, SACCO, or welfare group in minutes. Name it, set a membership fee, and invite members.",
-    className: "lg:col-span-1",
-    iconClassName: "text-primary",
+    icon: CircleDollarSign,
+    label: "Collect",
+    title: "Dues land in one shared treasury",
+    description:
+      "Set monthly contributions, record member payments, and keep balances visible without chasing private ledgers.",
+    metric: "91%",
+    metricLabel: "dues collected",
   },
   {
-    Icon: PiggyBank,
-    name: "Pool Funds Transparently",
-    description: "Every contribution is recorded on-chain. Members see every deposit, withdrawal, and balance in real time — no hidden ledgers.",
-    className: "lg:col-span-2",
-    iconClassName: "text-accent",
-    featured: true,
+    icon: Vote,
+    label: "Govern",
+    title: "Every spending request becomes a vote",
+    description:
+      "Members review proposals, support or object, and see quorum progress before funds can move.",
+    metric: "64%",
+    metricLabel: "quorum reached",
   },
   {
-    Icon: Vote,
-    name: "Democratic Voting",
-    description: "Propose spending. Every member votes — support or object. Decisions only pass when the community agrees.",
-    className: "lg:col-span-2",
-    iconClassName: "text-secondary",
-    featured: true,
+    icon: LockKeyhole,
+    label: "Release",
+    title: "Payouts follow the group rule",
+    description:
+      "Smart contracts enforce approval thresholds so treasury movement matches the community decision.",
+    metric: "17h",
+    metricLabel: "vote window left",
   },
   {
-    Icon: Eye,
-    name: "Full Transparency",
-    description: "Every shilling is tracked. Fund balance, history, and outcomes are visible to all members.",
-    className: "lg:col-span-1",
-    iconClassName: "text-primary",
-  },
-  {
-    Icon: ShieldCheck,
-    name: "Secure by Design",
-    description: "No middlemen. Smart contracts on Solana ensure funds are only moved when your community says so.",
-    className: "lg:col-span-1",
-    iconClassName: "text-accent",
-  },
-  {
-    Icon: MessageCircle,
-    name: "Asha AI Guide",
-    description: "Your built-in AI community advisor. Ask questions, get help with decisions, and navigate the platform effortlessly.",
-    className: "lg:col-span-1",
-    iconClassName: "text-secondary",
-  },
-  {
-    Icon: Zap,
-    name: "Instant Settlement",
-    description: "Payments settle in seconds on Solana — no bank delays, no weekend holds, no excuses.",
-    className: "lg:col-span-1",
-    iconClassName: "text-primary",
+    icon: Eye,
+    label: "Audit",
+    title: "A permanent trail for every shilling",
+    description:
+      "Contribution history, proposal outcomes, and disbursements stay traceable from dashboard to chain.",
+    metric: "100%",
+    metricLabel: "visible activity",
   },
 ];
 
-// Decorative backgrounds for featured cards
-function VotingVisual() {
-  const options = [
-    { label: "Build borehole", votes: 78, color: "bg-primary" },
-    { label: "School supplies", votes: 52, color: "bg-accent" },
-    { label: "Emergency fund", votes: 34, color: "bg-secondary/60" },
-  ];
-  return (
-    <div className="absolute inset-0 flex items-start justify-end p-4 opacity-30 group-hover:opacity-50 transition-opacity">
-      <div className="w-48 space-y-2">
-        {options.map((o) => (
-          <div key={o.label} className="space-y-0.5">
-            <div className="flex justify-between text-[9px] text-muted-foreground">
-              <span>{o.label}</span>
-              <span>{o.votes}%</span>
-            </div>
-            <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-              <div className={cn("h-full rounded-full", o.color)} style={{ width: `${o.votes}%` }} />
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+const ledgerRows = [
+  { item: "Monthly dues", status: "Confirmed", value: "+ KSh 168,000", tone: "text-primary" },
+  { item: "Maize mill vote", status: "In quorum", value: "78%", tone: "text-accent" },
+  { item: "Supplier payout", status: "Approved", value: "- KSh 48,000", tone: "text-orange" },
+  { item: "Emergency fund", status: "Locked", value: "KSh 210,000", tone: "text-secondary" },
+];
 
-function FundVisual() {
+function WorkflowCard({ step, index }: { step: (typeof workflow)[number]; index: number }) {
+  const Icon = step.icon;
+
   return (
-    <div className="absolute inset-0 flex items-center justify-end p-6 opacity-25 group-hover:opacity-40 transition-opacity">
-      <div className="text-right space-y-1">
-        {["KSh 500", "KSh 1,200", "KSh 800", "KSh 2,000"].map((amt, i) => (
-          <div key={i} className="flex items-center gap-2 justify-end">
-            <span className="text-[10px] text-muted-foreground">Member {i + 1}</span>
-            <span className="text-xs font-semibold text-accent">{amt}</span>
-            <div className="w-2 h-2 rounded-full bg-primary/60" />
+    <motion.div
+      initial={{ opacity: 0, y: 18 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.05 }}
+      className={cn(
+        "group relative rounded-xl border border-border/70 bg-card/78 p-5 shadow-[var(--shadow-card)]",
+        "transition-all duration-200 hover:border-primary/40 hover:bg-surface",
+      )}
+    >
+      <div className="mb-5 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <Icon className="h-5 w-5" />
           </div>
-        ))}
-        <div className="pt-1 border-t border-border/40 text-xs font-bold text-primary">
-          Total: KSh 4,500
+          <span className="text-xs font-bold uppercase tracking-widest text-primary">{step.label}</span>
         </div>
+        <span className="font-display text-xs text-muted-foreground">0{index + 1}</span>
       </div>
-    </div>
+
+      <h3 className="font-display text-lg font-bold leading-snug text-foreground">{step.title}</h3>
+      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{step.description}</p>
+
+      <div className="mt-5 flex items-end justify-between border-t border-border/50 pt-4">
+        <div>
+          <p className="font-display text-2xl font-bold text-foreground">{step.metric}</p>
+          <p className="text-xs text-muted-foreground">{step.metricLabel}</p>
+        </div>
+        <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
+      </div>
+    </motion.div>
   );
 }
 
 export default function FeaturesSection() {
   return (
-    <section className="py-24 relative" id="features">
+    <section className="relative py-20" id="features">
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
 
       <div className="container mx-auto px-4">
-        {/* Header */}
-        <div className="text-center mb-14">
+        <div className="mb-10 grid gap-6 lg:grid-cols-[0.78fr_1fr] lg:items-end">
+          <div>
+            <motion.p
+              initial={{ opacity: 0, y: 14 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-xs font-semibold uppercase tracking-widest text-primary"
+            >
+              Product workflow
+            </motion.p>
+            <motion.h2
+              initial={{ opacity: 0, y: 14 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.05 }}
+              className="mt-3 max-w-2xl font-display text-3xl font-bold leading-tight text-foreground md:text-4xl"
+            >
+              The treasury loop your members can inspect
+            </motion.h2>
+          </div>
           <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-xs font-semibold uppercase tracking-widest text-primary mb-3"
-          >
-            Platform Features
-          </motion.p>
-          <motion.h2
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.05 }}
-            className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4"
-          >
-            Everything your community needs
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 14 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-muted-foreground text-lg max-w-xl mx-auto"
+            className="max-w-2xl text-base leading-relaxed text-muted-foreground lg:justify-self-end"
           >
-            From collecting dues to making collective decisions — Baraza handles it all, on-chain.
+            Baraza turns group finance into a clear operating flow: collect contributions,
+            govern proposals, release funds by rule, and audit the full history.
           </motion.p>
         </div>
 
-        {/* Bento grid */}
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-        >
-          <BentoGrid className="auto-rows-[14rem]">
-            {features.map((f, i) => (
-              <div key={f.name} className={cn("relative", f.className)}>
-                {/* Featured cards get a border beam */}
-                {f.featured && (
-                  <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none z-20">
-                    <BorderBeam
-                      size={180}
-                      duration={10}
-                      colorFrom="#219EBC"
-                      colorTo="#FFB703"
-                      delay={i * 2}
-                    />
-                  </div>
-                )}
-
-                <BentoCard
-                  name={f.name}
-                  description={f.description}
-                  Icon={f.Icon}
-                  iconClassName={f.iconClassName}
-                  className="h-full"
-                  background={
-                    f.name === "Democratic Voting" ? <VotingVisual /> :
-                    f.name === "Pool Funds Transparently" ? <FundVisual /> :
-                    undefined
-                  }
-                />
-              </div>
+        <div className="grid gap-4 lg:grid-cols-[1fr_0.78fr]">
+          <div className="grid gap-4 sm:grid-cols-2">
+            {workflow.map((step, index) => (
+              <WorkflowCard key={step.label} step={step} index={index} />
             ))}
-          </BentoGrid>
-        </motion.div>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="rounded-xl border border-border/70 bg-surface/70 p-5 shadow-[var(--shadow-card)]"
+          >
+            <div className="mb-5 flex items-center justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-widest text-muted-foreground">Live ledger</p>
+                <h3 className="mt-1 font-display text-xl font-bold text-foreground">Treasury state</h3>
+              </div>
+              <FileCheck2 className="h-5 w-5 text-primary" />
+            </div>
+
+            <div className="space-y-3">
+              {ledgerRows.map((row) => (
+                <div
+                  key={row.item}
+                  className="grid grid-cols-[1fr_auto] gap-3 rounded-lg border border-border/60 bg-background/35 p-3"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{row.item}</p>
+                    <p className="mt-0.5 inline-flex items-center gap-1 text-xs text-muted-foreground">
+                      <CheckCircle2 className="h-3 w-3 text-primary" />
+                      {row.status}
+                    </p>
+                  </div>
+                  <p className={cn("self-center text-sm font-bold tabular-nums", row.tone)}>
+                    {row.value}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-5 rounded-lg border border-primary/20 bg-primary/8 p-4">
+              <p className="text-sm font-semibold text-foreground">Shared visibility by default</p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                Members see the same source of truth before, during, and after each decision.
+              </p>
+            </div>
+          </motion.div>
+        </div>
       </div>
     </section>
   );

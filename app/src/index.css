@@ -9,67 +9,69 @@
     /* ── Baraza Design System v2 — Dark Ocean ── */
 
     /* Backgrounds */
-    --background: 200 97% 14%;       /* #023047 deep navy */
-    --foreground: 199 35% 92%;       /* near-white */
+    --background: 254 31% 14%;
+    --foreground: 32 100% 97%;
 
-    --card: 200 55% 17%;
-    --card-foreground: 199 35% 92%;
+    --card: 254 29% 18%;
+    --card-foreground: 32 100% 97%;
 
-    --popover: 200 60% 15%;
-    --popover-foreground: 199 35% 92%;
+    --popover: 254 29% 17%;
+    --popover-foreground: 32 100% 97%;
 
     /* Brand Colours */
-    --primary: 193 70% 43%;          /* #219EBC teal */
-    --primary-foreground: 200 97% 6%;
+    --primary: 173 44% 73%;
+    --primary-foreground: 254 31% 14%;
 
-    --secondary: 199 65% 73%;        /* #8ECAE6 sky */
-    --secondary-foreground: 200 97% 10%;
+    --secondary: 32 100% 97%;
+    --secondary-foreground: 254 31% 14%;
 
-    --muted: 200 38% 20%;
-    --muted-foreground: 199 25% 58%;
+    --muted: 254 24% 24%;
+    --muted-foreground: 32 46% 78%;
 
-    --accent: 44 100% 50%;           /* #FFB703 gold */
-    --accent-foreground: 200 97% 6%;
+    --accent: 44 86% 70%;
+    --accent-foreground: 254 31% 14%;
 
-    --destructive: 33 97% 49%;       /* #FB8500 orange */
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 30 100% 53%;
+    --destructive-foreground: 254 31% 14%;
 
-    --border: 200 35% 22%;
-    --input: 200 35% 22%;
-    --ring: 193 70% 43%;
+    --border: 254 22% 32%;
+    --input: 254 22% 32%;
+    --ring: 173 44% 73%;
 
-    --radius: 0.875rem;
+    --radius: 0.75rem;
 
     /* Extended surfaces */
-    --warm: 44 100% 50%;
-    --warm-foreground: 200 97% 6%;
-    --orange: 33 97% 49%;
-    --soft-blue: 199 65% 73%;
-    --surface: 200 48% 19%;
-    --surface-hover: 200 42% 23%;
+    --warm: 44 86% 70%;
+    --warm-foreground: 254 31% 14%;
+    --orange: 30 100% 53%;
+    --soft-blue: 173 44% 73%;
+    --surface: 254 27% 21%;
+    --surface-hover: 254 24% 27%;
 
     /* Sidebar */
-    --sidebar-background: 200 70% 12%;
-    --sidebar-foreground: 199 35% 85%;
-    --sidebar-primary: 193 70% 43%;
-    --sidebar-primary-foreground: 200 97% 6%;
-    --sidebar-accent: 200 38% 20%;
-    --sidebar-accent-foreground: 199 35% 85%;
-    --sidebar-border: 200 35% 22%;
-    --sidebar-ring: 193 70% 43%;
+    --sidebar-background: 254 31% 12%;
+    --sidebar-foreground: 32 100% 94%;
+    --sidebar-primary: 173 44% 73%;
+    --sidebar-primary-foreground: 254 31% 14%;
+    --sidebar-accent: 254 24% 24%;
+    --sidebar-accent-foreground: 32 100% 94%;
+    --sidebar-border: 254 22% 32%;
+    --sidebar-ring: 173 44% 73%;
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(193,70%,43%) 0%, hsl(199,65%,73%) 100%);
-    --gradient-warm: linear-gradient(135deg, hsl(44,100%,50%) 0%, hsl(33,97%,49%) 100%);
-    --gradient-surface: linear-gradient(180deg, hsl(200,55%,17%) 0%, hsl(200,65%,13%) 100%);
-    --gradient-hero: radial-gradient(ellipse 80% 60% at 50% -10%, hsl(193,70%,43%,0.15) 0%, transparent 70%),
-                     linear-gradient(180deg, hsl(200,97%,14%) 0%, hsl(200,80%,11%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(173,44%,73%) 0%, hsl(32,100%,97%) 52%, hsl(44,86%,70%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(44,86%,70%) 0%, hsl(30,100%,53%) 100%);
+    --gradient-thermal: linear-gradient(90deg, #392F5A 0%, #9DD9D2 18%, #FFF8F0 54%, #F4D06F 84%, #FF8811 100%);
+    --gradient-surface: linear-gradient(180deg, hsl(254,29%,18%) 0%, hsl(254,31%,14%) 100%);
+    --gradient-hero: radial-gradient(ellipse 62% 46% at 74% 12%, hsl(30 100% 53% / 0.18) 0%, transparent 62%),
+                     radial-gradient(ellipse 48% 42% at 58% 22%, hsl(173 44% 73% / 0.16) 0%, transparent 68%),
+                     linear-gradient(135deg, hsl(254,31%,14%) 0%, hsl(254,31%,27%) 45%, hsl(30,65%,22%) 100%);
 
     /* Shadows */
-    --shadow-card:  0 4px 24px -4px hsl(200 97% 6% / 0.55);
-    --shadow-glow:  0 0 40px hsl(193 70% 43% / 0.18);
-    --shadow-warm:  0 4px 24px hsl(44 100% 50% / 0.28);
-    --shadow-deep:  0 20px 60px -10px hsl(200 97% 6% / 0.8);
+    --shadow-card:  0 4px 24px -4px hsl(254 31% 8% / 0.58);
+    --shadow-glow:  0 0 40px hsl(173 44% 73% / 0.22);
+    --shadow-warm:  0 4px 24px hsl(30 100% 53% / 0.25);
+    --shadow-deep:  0 20px 60px -10px hsl(254 31% 8% / 0.78);
   }
 }
 
@@ -245,7 +247,7 @@
     background: hsl(var(--surface)) !important;
   }
   .wallet-adapter-modal-overlay {
-    background: hsl(200, 97%, 6%, 0.85) !important;
+    background: hsl(254, 31%, 8%, 0.86) !important;
   }
   .wallet-adapter-dropdown-list {
     background: hsl(var(--card)) !important;
@@ -278,8 +280,8 @@
   50%       { transform: translateY(-10px); }
 }
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px hsl(193 70% 43% / 0.2); }
-  50%       { box-shadow: 0 0 50px hsl(193 70% 43% / 0.5); }
+  0%, 100% { box-shadow: 0 0 20px hsl(173 44% 73% / 0.2); }
+  50%       { box-shadow: 0 0 50px hsl(30 100% 53% / 0.32); }
 }
 @keyframes shimmer {
   0%   { background-position: -200% 0; }

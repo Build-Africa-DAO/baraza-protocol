@@ -14,7 +14,7 @@ export function MagicCard({
   children,
   className,
   gradientSize = 220,
-  gradientColor = "#219EBC",
+  gradientColor = "#9DD9D2",
   gradientOpacity = 0.07,
 }: MagicCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);

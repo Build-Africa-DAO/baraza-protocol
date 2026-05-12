@@ -28,11 +28,17 @@ The Baraza logomark is three interconnected nodes forming a triangle — represe
 
 ## 2. Colour Palette
 
-### Primary (Brand Teal)
+The active app palette follows the Coolors sequence:
+
+```text
+#8ECAE6 -> #219EBC -> #023047 -> #FFB703 -> #FB8500
+```
+
+### Primary And Secondary
 | Token | Hex | HSL | Usage |
 |-------|-----|-----|-------|
-| `--primary` | `#219EBC` | `193 70% 43%` | CTAs, links, active states, icon accents |
-| `--secondary` | `#8ECAE6` | `199 65% 73%` | Badges, secondary text, soft highlights |
+| `--primary` | `#8ECAE6` | `199 65% 73%` | Primary CTAs, focus rings, active states, sky highlights |
+| `--secondary` | `#219EBC` | `193 70% 43%` | Supporting CTAs, links, icon accents, teal highlights |
 
 ### Accent (Community Gold)
 | Token | Hex | HSL | Usage |
@@ -44,20 +50,20 @@ The Baraza logomark is three interconnected nodes forming a triangle — represe
 | Token | Hex | HSL | Usage |
 |-------|-----|-----|-------|
 | `--background` | `#023047` | `200 97% 14%` | Page background |
-| `--card` | `~#0B3A52` | `200 55% 17%` | Card surfaces |
-| `--surface` | `~#0D3F59` | `200 48% 19%` | Input backgrounds, hover surfaces |
-| `--foreground` | `~#D1E8F0` | `199 35% 92%` | Primary text |
-| `--muted-foreground` | `~#7AA3B3` | `199 25% 58%` | Secondary text, placeholders |
+| `--card` | `~#093B58` | `200 79% 17%` | Card surfaces |
+| `--surface` | `~#0D4560` | `200 74% 19%` | Input backgrounds, hover surfaces |
+| `--foreground` | `~#D9F0F8` | `199 65% 92%` | Primary text |
+| `--muted-foreground` | `~#8FC8DD` | `199 45% 68%` | Secondary text, placeholders |
 
 ### Gradients
 ```
-Primary:  linear-gradient(135deg, #219EBC → #8ECAE6)
+Primary:  linear-gradient(135deg, #8ECAE6 -> #219EBC)
 Warm CTA: linear-gradient(135deg, #FFB703 → #FB8500)
 Hero:     radial-gradient at top + linear navy fade
 ```
 
 ### Accessibility
-All text/background combinations meet **WCAG AA** (4.5:1 minimum contrast). The primary teal on dark background achieves ~7:1 on `--background`.
+All text/background combinations should meet **WCAG AA** (4.5:1 minimum contrast). The primary sky on dark navy background has strong contrast and should remain the default for active/focus states.
 
 ---
 

@@ -2,16 +2,19 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Users, ArrowLeft, CheckCircle2, Loader2 } from 'lucide-react';
-import Layout from '@/components/Layout';
+import WalletLayout from '@/components/WalletLayout';
 import { COMMUNITY_TYPES } from '@/lib/constants';
 import { useWalletGuard } from '@/hooks/useWalletGuard';
-import { useBarazaContract } from '@/hooks/useBarazaContract';
+import { useToast } from '@/hooks/use-toast';
+import { createCommunityRecord } from '@/lib/communities';
 
 const CreateCommunity: React.FC = () => {
   const navigate = useNavigate();
   const { requireWallet, isReady } = useWalletGuard({ action: 'create a community' });
-  const { createCommunity, isPending } = useBarazaContract();
+  const { toast } = useToast();
+  const [isPending, setIsPending] = useState(false);
   const [isCreated, setIsCreated] = useState(false);
+  const [createdCommunityId, setCreatedCommunityId] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: '',
     type: '',
@@ -29,15 +32,35 @@ const CreateCommunity: React.FC = () => {
     e.preventDefault();
     if (!isValid) return;
     await requireWallet(async () => {
-      const feeLamports = Number(form.fee) * 1000;
-      const communityId = await createCommunity(form.name, feeLamports);
-      if (communityId) setIsCreated(true);
+      setIsPending(true);
+      try {
+        const community = await createCommunityRecord({
+          name: form.name,
+          type: form.type,
+          description: form.description,
+          membershipFee: Number(form.fee),
+        });
+        setCreatedCommunityId(community.id);
+        setIsCreated(true);
+        toast({
+          title: 'Community saved',
+          description: 'The community record is ready. On-chain setup is still pending.',
+        });
+      } catch (err) {
+        toast({
+          title: 'Could not create community',
+          description: err instanceof Error ? err.message : 'Please try again.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsPending(false);
+      }
     });
   };
 
   if (isCreated) {
     return (
-      <Layout>
+      <WalletLayout>
         <section className="py-20">
           <div className="container mx-auto px-4">
             <motion.div
@@ -49,14 +72,15 @@ const CreateCommunity: React.FC = () => {
                 <CheckCircle2 className="w-8 h-8 text-primary" />
               </div>
               <h2 className="font-display text-2xl font-bold text-foreground mb-3">
-                {form.name} is live!
+                {form.name} record created
               </h2>
               <p className="text-sm text-muted-foreground mb-8">
-                Your community has been created. Share the link with your members so they can join.
+                The app record is ready. On-chain setup, payment reconciliation, and membership minting are still pending.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <button
-                  onClick={() => navigate('/dashboard/1')}
+                  onClick={() => createdCommunityId && navigate(`/dashboard/${createdCommunityId}`)}
+                  disabled={!createdCommunityId}
                   className="btn-primary text-sm"
                 >
                   Go to Dashboard
@@ -71,12 +95,12 @@ const CreateCommunity: React.FC = () => {
             </motion.div>
           </div>
         </section>
-      </Layout>
+      </WalletLayout>
     );
   }
 
   return (
-    <Layout>
+    <WalletLayout>
       <section className="py-10 md:py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-lg mx-auto">
@@ -206,7 +230,7 @@ const CreateCommunity: React.FC = () => {
           </div>
         </div>
       </section>
-    </Layout>
+    </WalletLayout>
   );
 };
 

@@ -1,18 +1,20 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Users, TrendingUp, Vote, History, PlusCircle, CreditCard,
   ArrowLeft, Calendar, Loader2
 } from 'lucide-react';
-import Layout from '@/components/Layout';
+import WalletLayout from '@/components/WalletLayout';
 import DecisionCard from '@/components/DecisionCard';
 import MembershipCard from '@/components/MembershipCard';
-import { MOCK_COMMUNITIES, MOCK_DECISIONS } from '@/lib/constants';
+import { MOCK_DECISIONS } from '@/lib/constants';
 import { formatKSh } from '@/lib/utils';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletGuard } from '@/hooks/useWalletGuard';
 import { useBarazaContract } from '@/hooks/useBarazaContract';
+import { useCommunity } from '@/hooks/useCommunities';
+import { getActiveMembership, recordActiveMembership } from '@/lib/memberships';
 
 const CommunityDashboard: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,7 +25,49 @@ const CommunityDashboard: React.FC = () => {
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [isMember, setIsMember] = useState(false);
 
-  const community = MOCK_COMMUNITIES.find((c) => c.id === id) || MOCK_COMMUNITIES[0];
+  const { community, isLoading, error } = useCommunity(id);
+
+  useEffect(() => {
+    if (!community || !publicKey) {
+      setIsMember(false);
+      return;
+    }
+
+    setIsMember(!!getActiveMembership(community.id, publicKey.toBase58()));
+  }, [community, publicKey]);
+
+  if (isLoading) {
+    return (
+      <WalletLayout>
+        <section className="py-20">
+          <div className="container mx-auto px-4">
+            <div className="baraza-card h-48 max-w-3xl mx-auto animate-pulse" />
+          </div>
+        </section>
+      </WalletLayout>
+    );
+  }
+
+  if (!community) {
+    return (
+      <WalletLayout>
+        <section className="py-20">
+          <div className="container mx-auto px-4 text-center">
+            <h1 className="font-display text-2xl font-bold text-foreground mb-3">
+              Community not found
+            </h1>
+            <p className="text-sm text-muted-foreground mb-6">
+              {error?.message ?? 'This community does not exist or is not available in the current data.'}
+            </p>
+            <Link to="/communities" className="btn-primary text-sm inline-flex">
+              View Communities
+            </Link>
+          </div>
+        </section>
+      </WalletLayout>
+    );
+  }
+
   const decisions = MOCK_DECISIONS.filter((d) => d.communityId === community.id);
   const activeDecisions = decisions.filter((d) => d.status === 'active');
   const pastDecisions = decisions.filter((d) => d.status === 'completed');
@@ -33,6 +77,7 @@ const CommunityDashboard: React.FC = () => {
       const feeLamports = community.membershipFee * 1000; // KSh to lamports approximation
       const success = await joinCommunity(community.id, feeLamports);
       if (success) {
+        if (publicKey) recordActiveMembership(community.id, publicKey.toBase58());
         setIsMember(true);
         setShowJoinModal(false);
       }
@@ -71,7 +116,7 @@ const CommunityDashboard: React.FC = () => {
   ];
 
   return (
-    <Layout>
+    <WalletLayout>
       <section className="py-8 md:py-12">
         <div className="container mx-auto px-4">
           {/* Back */}
@@ -163,7 +208,7 @@ const CommunityDashboard: React.FC = () => {
             <div className="flex-1" />
             {isMember && activeTab === 'decisions' && (
               <Link
-                to={`/create-decision/${community.id}`}
+                to={`/dashboard/${community.id}/decisions/create`}
                 className="btn-primary text-xs flex items-center gap-1.5 px-3 py-2"
               >
                 <PlusCircle className="w-3.5 h-3.5" />
@@ -237,7 +282,7 @@ const CommunityDashboard: React.FC = () => {
                   />
                   <div className="baraza-card p-4 text-center">
                     <p className="text-xs text-muted-foreground">
-                      Your membership is active. You can vote on decisions and propose new ones.
+                      Prototype membership is active for this wallet. Production access will use the durable MemberAccount.
                     </p>
                   </div>
                 </div>
@@ -319,7 +364,7 @@ const CommunityDashboard: React.FC = () => {
           </motion.div>
         </div>
       )}
-    </Layout>
+    </WalletLayout>
   );
 };
 

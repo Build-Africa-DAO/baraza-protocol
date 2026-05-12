@@ -1,111 +1,90 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, CreditCard, Link2, Settings2, ShieldCheck, Users } from "lucide-react";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
-import { DotPattern } from "@/components/ui/dot-pattern";
-import { BorderBeam } from "@/components/ui/border-beam";
 
-const perks = [
-  "Free to start — no upfront cost",
-  "On-chain security, no middlemen",
-  "Works for Chamas, SACCOs, Welfare groups",
-  "Members vote, funds move transparently",
+const steps = [
+  { icon: CreditCard, title: "Join with M-Pesa", desc: "Start from phone-first dues and reconcile payment before membership activates." },
+  { icon: Link2, title: "Link wallet", desc: "Attach an embedded or external Solana wallet for credentials and signatures." },
+  { icon: Settings2, title: "Set group rules", desc: "Name the group, set dues, define quorum, and choose approval thresholds." },
+  { icon: Users, title: "Invite members", desc: "Members join the same treasury view before money starts moving." },
+  { icon: ShieldCheck, title: "Operate in public", desc: "Collect, vote, release, and audit with the same on-chain trail." },
+];
+
+const summary = [
+  { label: "Setup time", value: "4 min" },
+  { label: "Treasury mode", value: "Shared" },
+  { label: "Decision rule", value: "Quorum" },
 ];
 
 export default function CTASection() {
   return (
-    <section className="py-24">
+    <section className="py-20">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="relative overflow-hidden rounded-3xl border border-border/60"
-          style={{ background: "var(--gradient-surface)" }}
+          className="grid overflow-hidden rounded-2xl border border-border/70 bg-card/75 shadow-[var(--shadow-deep)] lg:grid-cols-[0.9fr_1.1fr]"
         >
-          {/* Border beam */}
-          <BorderBeam size={300} duration={15} colorFrom="#FFB703" colorTo="#219EBC" />
+          <div className="border-b border-border/70 p-8 md:p-10 lg:border-b-0 lg:border-r">
+            <p className="text-xs font-semibold uppercase tracking-widest text-accent">Launch a treasury</p>
+            <h2 className="mt-3 max-w-xl font-display text-3xl font-bold leading-tight text-foreground md:text-4xl">
+              Bring the group online with rules everyone can see
+            </h2>
+            <p className="mt-4 max-w-lg text-base leading-relaxed text-muted-foreground">
+              Start with a working treasury, not a blank workspace. Baraza gives members a shared
+              dashboard from the first contribution to the final vote.
+            </p>
 
-          {/* Dot pattern */}
-          <DotPattern
-            width={20}
-            height={20}
-            cr={1}
-            className="fill-primary/6 [mask-image:radial-gradient(ellipse_80%_60%_at_50%_50%,black,transparent)]"
-          />
-
-          {/* Ambient glows */}
-          <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-primary/8 blur-[80px] pointer-events-none" />
-          <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-accent/8 blur-[80px] pointer-events-none" />
-
-          {/* Content */}
-          <div className="relative z-10 p-10 md:p-16 flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
-            {/* Left copy */}
-            <div className="flex-1 text-center lg:text-left">
-              <p className="text-xs font-semibold uppercase tracking-widest text-accent mb-3">
-                Get started today
-              </p>
-              <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4 leading-tight">
-                Ready to bring your{" "}
-                <span className="text-gradient-primary">group online?</span>
-              </h2>
-              <p className="text-muted-foreground text-lg mb-8 max-w-lg">
-                Whether it's a Chama, SACCO, or welfare group — Baraza makes managing your
-                community simple, transparent, and powerful.
-              </p>
-
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-8">
-                {perks.map((perk) => (
-                  <li key={perk} className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                    {perk}
-                  </li>
-                ))}
-              </ul>
-
-              <div className="flex flex-col sm:flex-row items-center gap-4 lg:justify-start justify-center">
-                <Link to="/create" tabIndex={-1}>
-                  <ShimmerButton
-                    background="linear-gradient(135deg, hsl(44,100%,50%), hsl(33,97%,49%))"
-                    shimmerColor="rgba(255,255,255,0.5)"
-                    className="text-sm font-bold px-8 py-3.5 rounded-xl"
-                  >
-                    Start Your Group Free
-                    <ArrowRight className="w-4 h-4" />
-                  </ShimmerButton>
-                </Link>
-                <Link to="/communities" className="btn-ghost text-sm px-6 py-3.5">
-                  Explore Communities
-                </Link>
-              </div>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link to="/create" tabIndex={-1}>
+                <ShimmerButton
+                  background="linear-gradient(135deg, #F4D06F, #FF8811)"
+                  shimmerColor="rgba(255,255,255,0.5)"
+                  className="w-full justify-center rounded-lg px-7 py-3.5 text-sm font-bold sm:w-auto"
+                >
+                  Start a Group
+                  <ArrowRight className="h-4 w-4" />
+                </ShimmerButton>
+              </Link>
+              <Link to="/communities" className="btn-ghost justify-center rounded-lg px-7 py-3.5 text-sm">
+                Explore Communities
+              </Link>
             </div>
 
-            {/* Right: Quick steps */}
-            <div className="flex-shrink-0 w-full lg:w-72">
-              <div className="space-y-3">
-                {[
-                  { step: "01", title: "Connect Wallet", desc: "Use Phantom, Solflare, or Backpack" },
-                  { step: "02", title: "Create Your Group", desc: "Name it, set membership fee" },
-                  { step: "03", title: "Invite Members", desc: "Share your community link" },
-                  { step: "04", title: "Vote & Manage Funds", desc: "Transparent, on-chain governance" },
-                ].map((s, i) => (
-                  <div
-                    key={s.step}
-                    className="flex items-start gap-3 p-3.5 rounded-xl bg-card/60 border border-border/50 backdrop-blur-sm"
-                    style={{ animationDelay: `${i * 100}ms` }}
-                  >
-                    <span className="font-display text-xs font-bold text-primary/60 min-w-[28px] pt-0.5">
-                      {s.step}
-                    </span>
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">{s.title}</p>
-                      <p className="text-xs text-muted-foreground">{s.desc}</p>
+            <div className="mt-8 grid grid-cols-3 gap-3">
+              {summary.map((item) => (
+                <div key={item.label} className="rounded-lg border border-border/60 bg-background/35 p-3">
+                  <p className="text-[10px] uppercase text-muted-foreground">{item.label}</p>
+                  <p className="mt-1 font-display text-sm font-bold text-foreground">{item.value}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-3 bg-surface/45 p-5 md:grid-cols-2 md:p-6">
+            {steps.map((step, index) => {
+              const Icon = step.icon;
+
+              return (
+                <div key={step.title} className="rounded-xl border border-border/70 bg-background/35 p-4">
+                  <div className="mb-4 flex items-center justify-between">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <Icon className="h-5 w-5" />
                     </div>
+                    <span className="font-display text-xs text-muted-foreground">0{index + 1}</span>
                   </div>
-                ))}
-              </div>
-            </div>
+                  <h3 className="font-display text-base font-bold text-foreground">{step.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.desc}</p>
+                  <p className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    Ready
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </motion.div>
       </div>

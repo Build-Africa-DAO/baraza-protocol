@@ -4,16 +4,18 @@ import { motion } from "framer-motion";
 import { Search, PlusCircle, SlidersHorizontal } from "lucide-react";
 import Layout from "@/components/Layout";
 import CommunityCard from "@/components/CommunityCard";
-import { MOCK_COMMUNITIES, COMMUNITY_TYPES } from "@/lib/constants";
+import { COMMUNITY_TYPES } from "@/lib/constants";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { DotPattern } from "@/components/ui/dot-pattern";
 import { cn } from "@/lib/utils";
+import { useCommunities } from "@/hooks/useCommunities";
 
 export default function Communities() {
+  const { communities, isLoading, error } = useCommunities();
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
 
-  const filtered = MOCK_COMMUNITIES.filter((c) => {
+  const filtered = communities.filter((c) => {
     const matchesSearch =
       c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.description.toLowerCase().includes(search.toLowerCase());
@@ -110,15 +112,30 @@ export default function Communities() {
             </Link>
           </div>
 
+          {error && (
+            <div className="baraza-card p-4 mb-5 border-destructive/40">
+              <p className="text-sm text-destructive">Could not load saved communities.</p>
+              <p className="text-xs text-muted-foreground mt-1">{error.message}</p>
+            </div>
+          )}
+
           {/* Results count */}
-          {search || typeFilter !== "all" ? (
+          {isLoading ? (
+            <p className="text-xs text-muted-foreground mb-5">Loading communities...</p>
+          ) : search || typeFilter !== "all" ? (
             <p className="text-xs text-muted-foreground mb-5">
               {filtered.length} {filtered.length === 1 ? "community" : "communities"} found
             </p>
           ) : null}
 
           {/* Grid */}
-          {filtered.length > 0 ? (
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {Array.from({ length: 4 }).map((_, idx) => (
+                <div key={idx} className="baraza-card h-64 animate-pulse" />
+              ))}
+            </div>
+          ) : filtered.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filtered.map((community, idx) => (
                 <motion.div

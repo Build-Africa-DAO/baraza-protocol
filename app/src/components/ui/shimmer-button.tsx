@@ -12,7 +12,7 @@ export const ShimmerButton = React.forwardRef<HTMLButtonElement, ShimmerButtonPr
   (
     {
       shimmerColor = "rgba(255,255,255,0.4)",
-      background = "linear-gradient(135deg, hsl(193,70%,43%), hsl(199,65%,73%))",
+      background = "linear-gradient(135deg, #9DD9D2, #FFF8F0, #F4D06F)",
       className,
       children,
       ...props
@@ -31,7 +31,7 @@ export const ShimmerButton = React.forwardRef<HTMLButtonElement, ShimmerButtonPr
           "group relative flex cursor-pointer items-center justify-center overflow-hidden whitespace-nowrap",
           "rounded-xl px-7 py-3 font-semibold text-white",
           "bg-[image:var(--background)]",
-          "transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_30px_hsl(193_70%_43%/0.4)]",
+          "transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_30px_hsl(30_100%_53%/0.28)]",
           "active:scale-[0.98]",
           className,
         )}

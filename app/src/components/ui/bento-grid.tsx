@@ -41,8 +41,8 @@ export function BentoCard({
       className={cn(
         "group relative flex flex-col justify-between overflow-hidden rounded-2xl",
         "bg-card border border-border/60",
-        "shadow-[0_4px_24px_-4px_hsl(200_97%_6%/0.5)]",
-        "transition-all duration-300 hover:border-primary/30 hover:shadow-[0_0_30px_hsl(193_70%_43%/0.12)]",
+        "shadow-[0_4px_24px_-4px_hsl(254_31%_8%/0.55)]",
+        "transition-all duration-300 hover:border-primary/30 hover:shadow-[0_0_30px_hsl(30_100%_53%/0.14)]",
         className,
       )}
     >

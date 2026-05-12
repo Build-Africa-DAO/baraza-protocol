@@ -33,12 +33,12 @@ export default function CommunityCard({
 
   return (
     <Link to={`/dashboard/${id}`} className="block h-full">
-      <MagicCard className="h-full" gradientColor="#219EBC" gradientSize={200} gradientOpacity={0.06}>
+      <MagicCard className="h-full" gradientColor="#9DD9D2" gradientSize={200} gradientOpacity={0.06}>
         <div className={cn(
           "h-full flex flex-col p-5",
           "bg-card border border-border/60 rounded-xl",
           "transition-all duration-300",
-          "hover:border-primary/30 hover:shadow-[0_0_24px_hsl(193_70%_43%/0.12)]",
+          "hover:border-primary/30 hover:shadow-[0_0_24px_hsl(30_100%_53%/0.14)]",
         )}>
           {/* Header */}
           <div className="flex items-start gap-3 mb-4">

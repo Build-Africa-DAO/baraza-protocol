@@ -45,6 +45,12 @@ MVP:
 | Metadata | IPFS or Arweave | Community profile, membership metadata, proposal content |
 | Private state | Postgres or Supabase | Users, payment orders, webhooks, refunds, admin review |
 
+MVP payment surface:
+
+- Primary: M-Pesa through Africa's Talking live sandbox.
+- Optional: wallet-native crypto checkout through Solana Pay or Solana Commerce Kit.
+- Excluded: x402, credit/debit cards, cross-chain bridge checkout, and broad multi-method payment pickers.
+
 Phase 2:
 
 | Layer | Integration | Purpose |
@@ -54,6 +60,8 @@ Phase 2:
 | Cross-chain USDC | Circle CCTP, Allbridge, Mayan, or LI.FI | Solana/Stellar/EVM stablecoin movement |
 | Treasury multisig | Squads | Production multisig and program ownership controls |
 | Swap routing | Jupiter | SPL-token-to-USDC routing |
+| x402 | Pay-per-request APIs, agent services, gated content, or micro-access after membership checkout is stable |
+| Card checkout | Credit/debit card membership payment after M-Pesa and wallet checkout are stable |
 | AI | AI service plus attestations | Proposal summaries and bounty review support |
 
 ## 4. User Identity Model
@@ -551,6 +559,29 @@ Not allowed to fake:
 - Payment attestation consumption
 - Membership active only after mint confirmation
 - Proposal/vote state
+
+## 13.1 Current Repo Checkpoint
+
+As of the latest repository review, the `app/` frontend is a prototype over mock data. It passes TypeScript typechecking and production build, with only existing Fast Refresh lint warnings in shared UI modules.
+
+Current implementation realities:
+
+- `app/src/hooks/useBarazaContract.ts` exposes join, create-community, and vote methods, but blocks those writes until Baraza program instructions, persistence, and reconciliation are wired.
+- `app/src/pages/CommunityDashboard.tsx` does not activate membership unless `joinCommunity` returns success. The current hook returns failure for unwired writes, so the UI no longer treats no-op transactions as membership activation.
+- `app/src/components/DecisionCard.tsx` performs optimistic vote updates. Final vote state must come from durable governance state or indexed chain state.
+- `app/src/pages/CreateDecision.tsx` blocks fake proposal success and shows an explicit unwired-flow toast. MVP proposal creation still requires persistence and governance instruction wiring.
+- `app/src/pages/CommunityDashboard.tsx` links to the registered proposal creation route: `/dashboard/:id/decisions/create`.
+- Community lookup renders a not-found or invalid-community state for unknown IDs.
+- New community success stores a created community ID for navigation, but real persistence still needs to return a durable community record.
+
+Required next fixes before calling the app MVP-ready:
+
+1. Replace no-op transaction builders with typed Baraza instructions from generated clients or block the actions behind developer-only simulation.
+2. Add persistent community and proposal records before showing final success states.
+3. Implement payment order creation and reconciliation before membership activation.
+4. Add membership mint confirmation and indexer or polling confirmation before showing "active member".
+5. Add durable vote receipts and double-vote prevention before vote tallies are user-facing.
+6. Replace prototype created-community IDs with durable database/on-chain records.
 
 ## 14. Build Order
 
