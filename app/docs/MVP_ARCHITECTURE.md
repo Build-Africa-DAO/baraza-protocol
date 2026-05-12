@@ -45,6 +45,12 @@ MVP:
 | Metadata | IPFS or Arweave | Community profile, membership metadata, proposal content |
 | Private state | Postgres or Supabase | Users, payment orders, webhooks, refunds, admin review |
 
+MVP payment surface:
+
+- Primary: M-Pesa through Africa's Talking live sandbox.
+- Optional: wallet-native crypto checkout through Solana Pay or Solana Commerce Kit.
+- Excluded: x402, credit/debit cards, cross-chain bridge checkout, and broad multi-method payment pickers.
+
 Phase 2:
 
 | Layer | Integration | Purpose |
@@ -54,6 +60,8 @@ Phase 2:
 | Cross-chain USDC | Circle CCTP, Allbridge, Mayan, or LI.FI | Solana/Stellar/EVM stablecoin movement |
 | Treasury multisig | Squads | Production multisig and program ownership controls |
 | Swap routing | Jupiter | SPL-token-to-USDC routing |
+| x402 | Pay-per-request APIs, agent services, gated content, or micro-access after membership checkout is stable |
+| Card checkout | Credit/debit card membership payment after M-Pesa and wallet checkout are stable |
 | AI | AI service plus attestations | Proposal summaries and bounty review support |
 
 ## 4. User Identity Model

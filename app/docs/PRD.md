@@ -46,7 +46,7 @@ The long-term product is not just a DAO launcher. It is a stack for real-world c
 
 - Create a community in under 10 minutes.
 - Support both wallet-native and phone-first onboarding.
-- Let users pay with M-Pesa or crypto.
+- Let users pay with M-Pesa first and optional wallet-native crypto checkout after the core mobile-money path works.
 - Mint membership NFTs after confirmed payment and reconciliation.
 - Support weighted governance based on membership tier and rules.
 - Provide treasury visibility and proposal-based spending.
@@ -398,7 +398,6 @@ MVP integrations:
 | Solana indexing | Helius | Mint, transfer, proposal, vote, and treasury event webhooks |
 | Phone-first wallet | Privy or equivalent embedded wallet provider | Create or link Solana wallets for users who start with phone/email |
 | Crypto payment | Solana Pay or Solana Commerce Kit | Optional wallet-native membership checkout |
-| Solana swaps | Jupiter | Optional SPL-token-to-USDC routing after core payment flow works |
 | Treasury controls | Real Solana treasury vault with withdrawals disabled until controls are audited | MVP can accept/display deposits and queue authorized actions; no unaudited production withdrawals; Squads becomes the production multisig/admin layer |
 | Public metadata | IPFS or Arweave | Community, membership, proposal, and activity artifacts |
 | Private operations | Application database | Payment orders, user identifiers, webhook payloads, refunds, support notes |
@@ -410,6 +409,9 @@ Phase 2 integrations:
 | Settlement and off-ramp | Stellar Anchor Platform / SEP rails | Fiat, stablecoin, bank, and mobile-money linked settlement |
 | Contributor payouts | Stellar Disbursement Platform | Bulk payouts, grants, bounty rewards, diaspora payments |
 | Cross-chain stablecoin movement | Circle CCTP, Allbridge, Mayan, or LI.FI | Solana to Stellar/EVM USDC movement after MVP |
+| Solana swaps | Jupiter | Optional SPL-token-to-USDC routing after core payment flow works |
+| x402 payment | x402-compatible Solana payment flow | Pay-per-request APIs, agent services, gated content, or micro-access; not membership checkout MVP |
+| Card checkout | Payment processor or mobile-money/card partner | Credit/debit card membership checkout after M-Pesa and wallet checkout are stable |
 | Advanced treasury | Squads | Multisig, policy controls, program ownership, emergency actions |
 | AI assistance | AI service plus on-chain/off-chain attestations | Proposal summaries, rubric checks, risk notes; never final treasury authority |
 
@@ -418,6 +420,7 @@ Decision rules:
 - Do not add a cross-chain dependency to MVP.
 - Do not make Stellar required for first membership minting.
 - Do not make AI a signer, payer, or final approver.
+- Do not add x402, credit/debit card checkout, bridge checkout, or a broad payment-method picker to MVP.
 - Do not expose payment provider credentials to client code.
 - Keep every integration behind a provider adapter so the rail can change without rewriting product logic.
 - Treat `app/docs/MVP_ARCHITECTURE.md` as the canonical MVP build specification.
