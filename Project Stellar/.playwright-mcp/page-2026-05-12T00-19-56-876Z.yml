@@ -1,0 +1,113 @@
+- generic [ref=e1]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - link "Claude" [ref=e9] [cursor=pointer]:
+            - /url: https://claude.ai
+            - img "Claude" [ref=e10]
+          - generic [ref=e12]: Content is user-generated and unverified.
+        - generic [ref=e13]:
+          - img [ref=e14]
+          - generic [ref=e16]: "1"
+      - generic [ref=e17]:
+        - button "Copy link" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+        - button "Report" [ref=e25] [cursor=pointer]:
+          - img [ref=e26]
+        - button "Customize" [ref=e28] [cursor=pointer]:
+          - img [ref=e29]
+          - text: Customize
+    - iframe [active] [ref=e36]:
+      - generic [ref=f1e1]:
+        - alert [ref=f1e2]
+        - generic [ref=f1e4]:
+          - generic [ref=f1e5]:
+            - generic [ref=f1e6]:
+              - generic [ref=f1e7]: BARAZA
+              - generic [ref=f1e8]: Product Requirements
+              - generic [ref=f1e9]: v1.0 · Pre-Product
+            - generic [ref=f1e10]:
+              - button "01 Overview" [ref=f1e11] [cursor=pointer]
+              - button "02 Problem" [ref=f1e12] [cursor=pointer]
+              - button "03 Vision" [ref=f1e13] [cursor=pointer]
+              - button "04 Personas" [ref=f1e14] [cursor=pointer]
+              - button "05 Features" [ref=f1e15] [cursor=pointer]
+              - button "06 Baraza AI" [active] [ref=f1e16] [cursor=pointer]
+              - button "07 Escrow & Payments" [ref=f1e17] [cursor=pointer]
+              - button "08 Technical" [ref=f1e18] [cursor=pointer]
+              - button "09 User Flows" [ref=f1e19] [cursor=pointer]
+              - button "10 Revenue" [ref=f1e20] [cursor=pointer]
+              - button "11 Metrics & KPIs" [ref=f1e21] [cursor=pointer]
+              - button "12 Roadmap" [ref=f1e22] [cursor=pointer]
+              - button "13 Risk Register" [ref=f1e23] [cursor=pointer]
+              - button "14 Competitive" [ref=f1e24] [cursor=pointer]
+            - generic [ref=f1e26]:
+              - text: Build Africa DAO
+              - text: Confidential · 2025
+          - generic [ref=f1e28]:
+            - generic [ref=f1e29]:
+              - generic [ref=f1e30]: SECTION 06
+              - heading "Baraza AI Agent" [level=2] [ref=f1e769]
+              - paragraph [ref=f1e32]: Every DAO on Baraza gets its own dedicated AI agent. This section specifies exactly what it does, how it's built, and how it's governed.
+            - paragraph [ref=f1e771]: Baraza AI is not a chatbot bolted onto a DAO tool. It is the operational nervous system of every community — tracking, judging, advising, and reporting. Crucially, each DAO's AI agent is governed by that DAO. The community sets the parameters. Baraza provides the infrastructure.
+            - generic [ref=f1e772]:
+              - generic [ref=f1e773]:
+                - generic [ref=f1e774]: Proposal Shepherd
+                - generic [ref=f1e775]: → Tracks every proposal from submission to execution
+                - generic [ref=f1e776]: → Sends on-chain notifications at 75% of voting window expiry
+                - generic [ref=f1e777]: → Flags proposals that contradict previous governance decisions
+                - generic [ref=f1e778]: → Summarises discussion threads into a 3-bullet brief pinned above the vote
+                - generic [ref=f1e779]: → Escalates stalled approved proposals with execution deadline alerts
+                - generic [ref=f1e780]: "→ Weekly digest: proposals open, passed, failed, stalled"
+              - generic [ref=f1e781]:
+                - generic [ref=f1e782]: Bounty Judge
+                - generic [ref=f1e783]: → Receives all submissions for a job posting
+                - generic [ref=f1e784]: "→ Scores each against original brief on 5 dimensions: relevance, quality, completeness, creativity, adherence to spec"
+                - generic [ref=f1e785]: → Produces a scored leaderboard with breakdown per submission
+                - generic [ref=f1e786]: → Flags plagiarism or low-effort submissions automatically
+                - generic [ref=f1e787]: → DAO can ratify or override AI recommendation (both on-chain)
+                - generic [ref=f1e788]: → Scoring rubric weights configurable by DAO governance vote
+              - generic [ref=f1e789]:
+                - generic [ref=f1e790]: DAO Health Monitor
+                - generic [ref=f1e791]: "→ Weekly DAO health report: participation rate, treasury runway, proposal velocity, bounty completion rate"
+                - generic [ref=f1e792]: → Alerts when treasury drops below 3-month runway
+                - generic [ref=f1e793]: → Flags DAOs with <20% voter participation for 2 consecutive proposals
+                - generic [ref=f1e794]: → Tracks contributor pipeline health and signals talent gaps
+                - generic [ref=f1e795]: → Generates plain-English summary for non-crypto members
+                - generic [ref=f1e796]: → Benchmarks DAO health against similar DAOs on platform
+              - generic [ref=f1e797]:
+                - generic [ref=f1e798]: Business Intelligence
+                - generic [ref=f1e799]: "→ For Business Communities: clusters customer suggestions by theme"
+                - generic [ref=f1e800]: → Ranks suggestions by frequency, recency, and engagement
+                - generic [ref=f1e801]: → Identifies contradicting feedback signals
+                - generic [ref=f1e802]: → Generates weekly plain-English community health summary for business owners
+                - generic [ref=f1e803]: → Suggests when a Business Community is ready to upgrade to DAO
+                - generic [ref=f1e804]: → Tracks NPS-equivalent community sentiment score over time
+            - generic [ref=f1e805]:
+              - generic [ref=f1e806]: Technical Specification
+              - generic [ref=f1e807]:
+                - generic [ref=f1e808]:
+                  - generic [ref=f1e809]: Base Model
+                  - generic [ref=f1e810]: Claude (Anthropic) — with fine-tuning layer per DAO type
+                - generic [ref=f1e811]:
+                  - generic [ref=f1e812]: Agent Architecture
+                  - generic [ref=f1e813]: "Agentic loop: perception (on-chain events) → reasoning (LLM) → action (notifications, summaries, scores) → memory (DAO history store)"
+                - generic [ref=f1e814]:
+                  - generic [ref=f1e815]: On-chain Integration
+                  - generic [ref=f1e816]: Solana program emits events. Baraza AI indexer listens. AI responses and scores written back to chain as verifiable attestations.
+                - generic [ref=f1e817]:
+                  - generic [ref=f1e818]: DAO Context Window
+                  - generic [ref=f1e819]: "Each AI instance maintains a rolling context of: DAO charter, last 90 days of proposals, all job postings & submissions, member activity log, treasury events"
+                - generic [ref=f1e820]:
+                  - generic [ref=f1e821]: Governance of AI
+                  - generic [ref=f1e822]: "DAO can submit a 'Baraza AI Parameter Proposal' to adjust: scoring rubric weights, notification aggressiveness, report frequency, topic filters. Approved via normal governance vote."
+                - generic [ref=f1e823]:
+                  - generic [ref=f1e824]: Auditability
+                  - generic [ref=f1e825]: All AI decisions (scores, summaries, recommendations) are logged with their input context, model version, and timestamp. Stored on IPFS, hash on-chain.
+                - generic [ref=f1e826]:
+                  - generic [ref=f1e827]: MVP Scope
+                  - generic [ref=f1e828]: "MVP ships with: proposal tracking, discussion summarisation, bounty scoring, and weekly health report. Advanced features (full parameter governance, benchmarking) in Phase 2."
+  - alert [ref=e38]
+  - iframe [ref=e39]:
+    

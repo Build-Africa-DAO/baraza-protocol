@@ -1,0 +1,101 @@
+- generic [ref=e1]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - link "Claude" [ref=e9] [cursor=pointer]:
+            - /url: https://claude.ai
+            - img "Claude" [ref=e10]
+          - generic [ref=e12]: Content is user-generated and unverified.
+        - generic [ref=e13]:
+          - img [ref=e14]
+          - generic [ref=e16]: "1"
+      - generic [ref=e17]:
+        - button "Copy link" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+        - button "Report" [ref=e25] [cursor=pointer]:
+          - img [ref=e26]
+        - button "Customize" [ref=e28] [cursor=pointer]:
+          - img [ref=e29]
+          - text: Customize
+    - iframe [active] [ref=e36]:
+      - generic [ref=f1e1]:
+        - alert [ref=f1e2]
+        - generic [ref=f1e4]:
+          - generic [ref=f1e5]:
+            - generic [ref=f1e6]:
+              - generic [ref=f1e7]: BARAZA
+              - generic [ref=f1e8]: Product Requirements
+              - generic [ref=f1e9]: v1.0 · Pre-Product
+            - generic [ref=f1e10]:
+              - button "01 Overview" [ref=f1e11] [cursor=pointer]
+              - button "02 Problem" [ref=f1e12] [cursor=pointer]
+              - button "03 Vision" [ref=f1e13] [cursor=pointer]
+              - button "04 Personas" [ref=f1e14] [cursor=pointer]
+              - button "05 Features" [ref=f1e15] [cursor=pointer]
+              - button "06 Baraza AI" [ref=f1e16] [cursor=pointer]
+              - button "07 Escrow & Payments" [ref=f1e17] [cursor=pointer]
+              - button "08 Technical" [ref=f1e18] [cursor=pointer]
+              - button "09 User Flows" [ref=f1e19] [cursor=pointer]
+              - button "10 Revenue" [ref=f1e20] [cursor=pointer]
+              - button "11 Metrics & KPIs" [ref=f1e21] [cursor=pointer]
+              - button "12 Roadmap" [ref=f1e22] [cursor=pointer]
+              - button "13 Risk Register" [active] [ref=f1e23] [cursor=pointer]
+              - button "14 Competitive" [ref=f1e24] [cursor=pointer]
+            - generic [ref=f1e26]:
+              - text: Build Africa DAO
+              - text: Confidential · 2025
+          - generic [ref=f1e28]:
+            - generic [ref=f1e29]:
+              - generic [ref=f1e30]: SECTION 13
+              - heading "Risk Register" [level=2] [ref=f1e912]
+              - paragraph [ref=f1e32]: Known risks, likelihood, impact, and mitigation strategy for each.
+            - generic [ref=f1e913]:
+              - generic [ref=f1e914]:
+                - generic [ref=f1e915]: Risk
+                - generic [ref=f1e916]: Likelihood
+                - generic [ref=f1e917]: Impact
+                - generic [ref=f1e918]: Mitigation
+              - generic [ref=f1e919]:
+                - generic [ref=f1e920]: Escrow partner integration delays or failure
+                - generic [ref=f1e921]: Medium
+                - generic [ref=f1e922]: Critical
+                - generic [ref=f1e923]: Begin partner due diligence in Month 1. Have a backup partner identified. Build abstraction layer so escrow provider is swappable.
+              - generic [ref=f1e924]:
+                - generic [ref=f1e925]: Solana network congestion or downtime
+                - generic [ref=f1e926]: Low
+                - generic [ref=f1e927]: High
+                - generic [ref=f1e928]: Implement retry logic and transaction queuing. Monitor Solana status. Consider multi-chain support (Polygon EVM) as backup in Phase 3.
+              - generic [ref=f1e929]:
+                - generic [ref=f1e930]: Regulatory pushback on crypto in Kenya
+                - generic [ref=f1e931]: Medium
+                - generic [ref=f1e932]: High
+                - generic [ref=f1e933]: Engage CBK early. Business Community tier is fully web2 — no crypto required. Escrow partner handles regulatory compliance for fiat conversion.
+              - generic [ref=f1e934]:
+                - generic [ref=f1e935]: Low DAO retention (communities dying after launch)
+                - generic [ref=f1e936]: High
+                - generic [ref=f1e937]: High
+                - generic [ref=f1e938]: Baraza AI health alerts and nudges. Curated onboarding for first 10 DAOs with dedicated support. Success stories and case studies for social proof.
+              - generic [ref=f1e939]:
+                - generic [ref=f1e940]: Baraza AI scoring seen as unfair by contributors
+                - generic [ref=f1e941]: Medium
+                - generic [ref=f1e942]: Medium
+                - generic [ref=f1e943]: Full rubric transparency. DAO can override. Contributor can dispute. All AI decisions logged and auditable. Community can vote to adjust rubric weights.
+              - generic [ref=f1e944]:
+                - generic [ref=f1e945]: Smart contract exploit or treasury hack
+                - generic [ref=f1e946]: Low
+                - generic [ref=f1e947]: Critical
+                - generic [ref=f1e948]: Full Anchor framework audit before mainnet. Bug bounty programme. Multi-sig treasury controls. Time-lock on large withdrawals. Insurance fund from protocol fees.
+              - generic [ref=f1e949]:
+                - generic [ref=f1e950]: Crypto market downturn reduces Growth Market interest
+                - generic [ref=f1e951]: Medium
+                - generic [ref=f1e952]: Medium
+                - generic [ref=f1e953]: Core platform (DAO governance, business communities) is independent of token markets. Growth Markets are Phase 2 — platform survives without them.
+              - generic [ref=f1e954]:
+                - generic [ref=f1e955]: Mobile app quality on low-end Android devices
+                - generic [ref=f1e956]: High
+                - generic [ref=f1e957]: Medium
+                - generic [ref=f1e958]: Android-first development. Performance budget enforced. Test on devices as low as 2GB RAM. Offline-first architecture. PWA fallback for very low-end devices.
+  - alert [ref=e38]
+  - iframe [ref=e39]:
+    

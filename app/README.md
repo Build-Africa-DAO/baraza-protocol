@@ -68,7 +68,7 @@ graph TD
 ```bash
 # Clone
 git clone https://github.com/your-org/baraza-protocol.git
-cd baraza-protocol/Project\ Title
+cd baraza-protocol/app
 
 # Install
 npm install --legacy-peer-deps

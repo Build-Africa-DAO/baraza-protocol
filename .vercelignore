@@ -1,6 +1,5 @@
 node_modules
 .next
+dist
 *.zip
 *.gz
-baraza-protocol/node_modules
-baraza-protocol/.next

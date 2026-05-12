@@ -1,0 +1,6 @@
+[mcp_servers.firecrawl]
+url = "https://mcp.firecrawl.dev/fc-c2a1d2861b2c4e6eb1a4d226be7dca05/v2/mcp"
+
+[mcp_servers.playwright]
+args = ["@playwright/mcp@latest"]
+command = "npx"

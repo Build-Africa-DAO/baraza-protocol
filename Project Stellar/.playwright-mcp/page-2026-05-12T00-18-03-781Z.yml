@@ -1,0 +1,120 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - link "Claude" [ref=e9] [cursor=pointer]:
+            - /url: https://claude.ai
+            - img "Claude" [ref=e10]
+          - generic [ref=e12]: Content is user-generated and unverified.
+        - generic [ref=e13]:
+          - img [ref=e14]
+          - generic [ref=e16]: "1"
+      - generic [ref=e17]:
+        - button "Copy link" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+        - button "Report" [ref=e25] [cursor=pointer]:
+          - img [ref=e26]
+        - button "Customize" [ref=e28] [cursor=pointer]:
+          - img [ref=e29]
+          - text: Customize
+    - iframe [ref=e36]:
+      - generic [active] [ref=f1e1]:
+        - alert [ref=f1e2]
+        - generic [ref=f1e4]:
+          - generic [ref=f1e5]:
+            - generic [ref=f1e6]:
+              - generic [ref=f1e7]: BARAZA
+              - generic [ref=f1e8]: Product Requirements
+              - generic [ref=f1e9]: v1.0 · Pre-Product
+            - generic [ref=f1e10]:
+              - button "01 Overview" [ref=f1e11] [cursor=pointer]
+              - button "02 Problem" [ref=f1e12] [cursor=pointer]
+              - button "03 Vision" [ref=f1e13] [cursor=pointer]
+              - button "04 Personas" [ref=f1e14] [cursor=pointer]
+              - button "05 Features" [ref=f1e15] [cursor=pointer]
+              - button "06 Baraza AI" [ref=f1e16] [cursor=pointer]
+              - button "07 Escrow & Payments" [ref=f1e17] [cursor=pointer]
+              - button "08 Technical" [ref=f1e18] [cursor=pointer]
+              - button "09 User Flows" [ref=f1e19] [cursor=pointer]
+              - button "10 Revenue" [ref=f1e20] [cursor=pointer]
+              - button "11 Metrics & KPIs" [ref=f1e21] [cursor=pointer]
+              - button "12 Roadmap" [ref=f1e22] [cursor=pointer]
+              - button "13 Risk Register" [ref=f1e23] [cursor=pointer]
+              - button "14 Competitive" [ref=f1e24] [cursor=pointer]
+            - generic [ref=f1e26]:
+              - text: Build Africa DAO
+              - text: Confidential · 2025
+          - generic [ref=f1e28]:
+            - generic [ref=f1e29]:
+              - generic [ref=f1e30]: SECTION 01
+              - heading "Product Overview" [level=2] [ref=f1e31]
+              - paragraph [ref=f1e32]: The complete picture of what Baraza is, who it is for, and what it must do.
+            - generic [ref=f1e33]:
+              - generic [ref=f1e34]:
+                - generic [ref=f1e35]: Product Name
+                - generic [ref=f1e36]: Baraza
+              - generic [ref=f1e37]:
+                - generic [ref=f1e38]: Parent Organisation
+                - generic [ref=f1e39]: Build Africa DAO
+              - generic [ref=f1e40]:
+                - generic [ref=f1e41]: Document Version
+                - generic [ref=f1e42]: v1.0 — PRD
+              - generic [ref=f1e43]:
+                - generic [ref=f1e44]: Status
+                - generic [ref=f1e45]: Pre-Product / Idea Stage
+              - generic [ref=f1e46]:
+                - generic [ref=f1e47]: Blockchain
+                - generic [ref=f1e48]: Solana
+              - generic [ref=f1e49]:
+                - generic [ref=f1e50]: Target MVP Launch
+                - generic [ref=f1e51]: Under 6 months
+              - generic [ref=f1e52]:
+                - generic [ref=f1e53]: Launch Market
+                - generic [ref=f1e54]: Kenya (Global expansion from Month 3)
+              - generic [ref=f1e55]:
+                - generic [ref=f1e56]: Primary Platforms
+                - generic [ref=f1e57]: Web App + Mobile App (iOS & Android)
+            - generic [ref=f1e58]:
+              - generic [ref=f1e59]: One-Line Definition
+              - paragraph [ref=f1e60]: Baraza is the world's community operating system — where businesses evolve into DAOs, DAOs power businesses, every member holds real equity in what they build, an AI agent governs every community, a fiat-to-crypto escrow lets anyone join from a mobile phone, and a global investment layer lets the world bet on the communities they believe in.
+            - generic [ref=f1e61]:
+              - generic [ref=f1e62]: Core Modules
+              - generic [ref=f1e63]:
+                - generic [ref=f1e64]:
+                  - generic [ref=f1e65]: ⬡
+                  - generic [ref=f1e66]: DAO Engine
+                  - generic [ref=f1e67]: Create, configure and govern any community on-chain
+                - generic [ref=f1e68]:
+                  - generic [ref=f1e69]: ◈
+                  - generic [ref=f1e70]: NFT Membership
+                  - generic [ref=f1e71]: Digital membership cards that represent equity and voting power
+                - generic [ref=f1e72]:
+                  - generic [ref=f1e73]: ◉
+                  - generic [ref=f1e74]: Baraza AI
+                  - generic [ref=f1e75]: Dedicated AI agent per DAO — proposals, judging, health monitoring
+                - generic [ref=f1e76]:
+                  - generic [ref=f1e77]: ◧
+                  - generic [ref=f1e78]: Project Marketplace
+                  - generic [ref=f1e79]: Escrow-backed jobs scored and settled by AI and governance
+                - generic [ref=f1e80]:
+                  - generic [ref=f1e81]: ◫
+                  - generic [ref=f1e82]: Business Communities
+                  - generic [ref=f1e83]: Web2-friendly entry point with a full upgrade path to DAO
+                - generic [ref=f1e84]:
+                  - generic [ref=f1e85]: ◬
+                  - generic [ref=f1e86]: Growth Markets
+                  - generic [ref=f1e87]: Buy DAO tokens and NFTs — bet on community growth
+                - generic [ref=f1e88]:
+                  - generic [ref=f1e89]: 💱
+                  - generic [ref=f1e90]: Fiat Escrow Rail
+                  - generic [ref=f1e91]: M-Pesa, MTN MoMo, and bank transfers into any Baraza action
+                - generic [ref=f1e92]:
+                  - generic [ref=f1e93]: 🏛
+                  - generic [ref=f1e94]: Build Africa DAO
+                  - generic [ref=f1e95]: The umbrella DAO that holds equity in every community launched
+                - generic [ref=f1e96]:
+                  - generic [ref=f1e97]: 📊
+                  - generic [ref=f1e98]: Growth Oracle
+                  - generic [ref=f1e99]: On-chain DAO scoring that feeds token price models
+  - alert [ref=e38]

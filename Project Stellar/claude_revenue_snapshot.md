@@ -1,0 +1,107 @@
+- generic [ref=e1]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - link "Claude" [ref=e9] [cursor=pointer]:
+            - /url: https://claude.ai
+            - img "Claude" [ref=e10]
+          - generic [ref=e12]: Content is user-generated and unverified.
+        - generic [ref=e13]:
+          - img [ref=e14]
+          - generic [ref=e16]: "1"
+      - generic [ref=e17]:
+        - button "Copy link" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+        - button "Report" [ref=e25] [cursor=pointer]:
+          - img [ref=e26]
+        - button "Customize" [ref=e28] [cursor=pointer]:
+          - img [ref=e29]
+          - text: Customize
+    - iframe [active] [ref=e36]:
+      - generic [ref=f1e1]:
+        - alert [ref=f1e2]
+        - generic [ref=f1e4]:
+          - generic [ref=f1e5]:
+            - generic [ref=f1e6]:
+              - generic [ref=f1e7]: BARAZA
+              - generic [ref=f1e8]: Product Requirements
+              - generic [ref=f1e9]: v1.0 · Pre-Product
+            - generic [ref=f1e10]:
+              - button "01 Overview" [ref=f1e11] [cursor=pointer]
+              - button "02 Problem" [ref=f1e12] [cursor=pointer]
+              - button "03 Vision" [ref=f1e13] [cursor=pointer]
+              - button "04 Personas" [ref=f1e14] [cursor=pointer]
+              - button "05 Features" [ref=f1e15] [cursor=pointer]
+              - button "06 Baraza AI" [ref=f1e16] [cursor=pointer]
+              - button "07 Escrow & Payments" [ref=f1e17] [cursor=pointer]
+              - button "08 Technical" [ref=f1e18] [cursor=pointer]
+              - button "09 User Flows" [ref=f1e19] [cursor=pointer]
+              - button "10 Revenue" [active] [ref=f1e20] [cursor=pointer]
+              - button "11 Metrics & KPIs" [ref=f1e21] [cursor=pointer]
+              - button "12 Roadmap" [ref=f1e22] [cursor=pointer]
+              - button "13 Risk Register" [ref=f1e23] [cursor=pointer]
+              - button "14 Competitive" [ref=f1e24] [cursor=pointer]
+            - generic [ref=f1e26]:
+              - text: Build Africa DAO
+              - text: Confidential · 2025
+          - generic [ref=f1e28]:
+            - generic [ref=f1e29]:
+              - generic [ref=f1e30]: SECTION 10
+              - heading "Revenue Model" [level=2] [ref=f1e959]
+              - paragraph [ref=f1e32]: Free to launch. Revenue flows from activity — the more communities thrive, the more Baraza earns.
+            - paragraph [ref=f1e961]: Baraza does not charge to create a DAO. The network effect depends on volume of communities. Revenue is earned as a percentage of the value flowing through the platform — aligning Baraza's incentives perfectly with community growth.
+            - generic [ref=f1e962]:
+              - generic [ref=f1e963]:
+                - generic [ref=f1e964]:
+                  - generic [ref=f1e965]: Treasury Transaction Fee
+                  - generic [ref=f1e966]:
+                    - generic [ref=f1e967]: 1.5%
+                    - generic [ref=f1e968]: MVP
+                - generic [ref=f1e969]: "On: All fiat and crypto deposits into DAO treasuries"
+                - paragraph [ref=f1e970]: Primary revenue driver at scale. As treasuries grow, this compounds significantly.
+              - generic [ref=f1e971]:
+                - generic [ref=f1e972]:
+                  - generic [ref=f1e973]: NFT Marketplace Fee
+                  - generic [ref=f1e974]:
+                    - generic [ref=f1e975]: 2%
+                    - generic [ref=f1e976]: MVP
+                - generic [ref=f1e977]: "On: All secondary sales of NFT membership cards"
+                - paragraph [ref=f1e978]: Passive income that grows as NFT liquidity increases on the platform.
+              - generic [ref=f1e979]:
+                - generic [ref=f1e980]:
+                  - generic [ref=f1e981]: Bounty Escrow Fee
+                  - generic [ref=f1e982]:
+                    - generic [ref=f1e983]: 1%
+                    - generic [ref=f1e984]: MVP
+                - generic [ref=f1e985]: "On: All bounty values posted to the marketplace"
+                - paragraph [ref=f1e986]: Charged to the DAO at job posting. Non-refundable even if job is not filled.
+              - generic [ref=f1e987]:
+                - generic [ref=f1e988]:
+                  - generic [ref=f1e989]: Growth Token Protocol Fee
+                  - generic [ref=f1e991]: 3%
+                - generic [ref=f1e992]: "On: All IDO raises via the Baraza launchpad"
+                - paragraph [ref=f1e993]: Post-MVP. High-value revenue stream once Growth Markets are live.
+              - generic [ref=f1e994]:
+                - generic [ref=f1e995]:
+                  - generic [ref=f1e996]: Fiat Conversion Spread
+                  - generic [ref=f1e997]:
+                    - generic [ref=f1e998]: 0.5%
+                    - generic [ref=f1e999]: MVP
+                - generic [ref=f1e1000]: "On: All fiat-to-crypto conversions via escrow partner"
+                - paragraph [ref=f1e1001]: Revenue share with escrow partner. Margin depends on partner agreement.
+              - generic [ref=f1e1002]:
+                - generic [ref=f1e1003]:
+                  - generic [ref=f1e1004]: Build Africa DAO Genesis Stake
+                  - generic [ref=f1e1006]: 2–5%
+                - generic [ref=f1e1007]: "On: Token allocation at every new DAO launch"
+                - paragraph [ref=f1e1008]: Not cash revenue — equity in every DAO launched. Long-term portfolio value.
+              - generic [ref=f1e1009]:
+                - generic [ref=f1e1010]:
+                  - generic [ref=f1e1011]: Business Community Subscription
+                  - generic [ref=f1e1013]: TBD
+                - generic [ref=f1e1014]: "On: Optional premium tier for business analytics & AI features"
+                - paragraph [ref=f1e1015]: SaaS layer for corporates wanting advanced analytics, API access, white-labelling.
+  - alert [ref=e38]
+  - iframe [ref=e39]:
+    

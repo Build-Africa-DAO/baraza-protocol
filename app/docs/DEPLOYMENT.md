@@ -9,7 +9,7 @@
 
 ### First-time setup
 ```bash
-cd "Project Title"
+cd app
 vercel
 # Follow prompts: link to project, set framework to Vite
 ```

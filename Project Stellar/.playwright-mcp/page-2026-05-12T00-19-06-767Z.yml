@@ -1,0 +1,166 @@
+- generic [ref=e1]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - link "Claude" [ref=e9] [cursor=pointer]:
+            - /url: https://claude.ai
+            - img "Claude" [ref=e10]
+          - generic [ref=e12]: Content is user-generated and unverified.
+        - generic [ref=e13]:
+          - img [ref=e14]
+          - generic [ref=e16]: "1"
+      - generic [ref=e17]:
+        - button "Copy link" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+        - button "Report" [ref=e25] [cursor=pointer]:
+          - img [ref=e26]
+        - button "Customize" [ref=e28] [cursor=pointer]:
+          - img [ref=e29]
+          - text: Customize
+    - iframe [active] [ref=e36]:
+      - generic [ref=f1e1]:
+        - alert [ref=f1e2]
+        - generic [ref=f1e4]:
+          - generic [ref=f1e5]:
+            - generic [ref=f1e6]:
+              - generic [ref=f1e7]: BARAZA
+              - generic [ref=f1e8]: Product Requirements
+              - generic [ref=f1e9]: v1.0 · Pre-Product
+            - generic [ref=f1e10]:
+              - button "01 Overview" [ref=f1e11] [cursor=pointer]
+              - button "02 Problem" [ref=f1e12] [cursor=pointer]
+              - button "03 Vision" [ref=f1e13] [cursor=pointer]
+              - button "04 Personas" [ref=f1e14] [cursor=pointer]
+              - button "05 Features" [ref=f1e15] [cursor=pointer]
+              - button "06 Baraza AI" [ref=f1e16] [cursor=pointer]
+              - button "07 Escrow & Payments" [active] [ref=f1e17] [cursor=pointer]
+              - button "08 Technical" [ref=f1e18] [cursor=pointer]
+              - button "09 User Flows" [ref=f1e19] [cursor=pointer]
+              - button "10 Revenue" [ref=f1e20] [cursor=pointer]
+              - button "11 Metrics & KPIs" [ref=f1e21] [cursor=pointer]
+              - button "12 Roadmap" [ref=f1e22] [cursor=pointer]
+              - button "13 Risk Register" [ref=f1e23] [cursor=pointer]
+              - button "14 Competitive" [ref=f1e24] [cursor=pointer]
+            - generic [ref=f1e26]:
+              - text: Build Africa DAO
+              - text: Confidential · 2025
+          - generic [ref=f1e28]:
+            - generic [ref=f1e29]:
+              - generic [ref=f1e30]: SECTION 07
+              - heading "Escrow & Payment Rail" [level=2] [ref=f1e433]
+              - paragraph [ref=f1e32]: The fiat-to-crypto infrastructure that makes Baraza accessible to every African with a phone.
+            - paragraph [ref=f1e435]: The escrow system is operated by a third-party partner. Baraza's role is to integrate cleanly with the partner's API for all four core payment touchpoints. The partner handles KYC, AML, fiat settlement, and crypto conversion. Baraza handles the on-chain side of every transaction.
+            - generic [ref=f1e418]:
+              - generic [ref=f1e419]: Four Integration Touchpoints
+              - generic [ref=f1e420]:
+                - generic [ref=f1e436]:
+                  - generic [ref=f1e437]: NFT Membership Purchase
+                  - generic [ref=f1e438]:
+                    - generic [ref=f1e439]: "01"
+                    - generic [ref=f1e440]: User selects DAO tier + sees KES/NGN/GHS price
+                  - generic [ref=f1e441]:
+                    - generic [ref=f1e442]: "02"
+                    - generic [ref=f1e443]: "Baraza calls escrow API: creates payment order with 10-min rate lock"
+                  - generic [ref=f1e444]:
+                    - generic [ref=f1e445]: "03"
+                    - generic [ref=f1e446]: User pays via M-Pesa STK push / bank transfer
+                  - generic [ref=f1e447]:
+                    - generic [ref=f1e448]: "04"
+                    - generic [ref=f1e449]: Escrow webhook confirms fiat settlement
+                  - generic [ref=f1e450]:
+                    - generic [ref=f1e451]: "05"
+                    - generic [ref=f1e452]: Baraza smart contract mints NFT to user wallet
+                  - generic [ref=f1e453]:
+                    - generic [ref=f1e454]: "06"
+                    - generic [ref=f1e455]: Membership activated. Email + in-app confirmation sent.
+                - generic [ref=f1e456]:
+                  - generic [ref=f1e457]: DAO Treasury Funding
+                  - generic [ref=f1e458]:
+                    - generic [ref=f1e459]: "01"
+                    - generic [ref=f1e460]: DAO creates funding campaign via Baraza dashboard
+                  - generic [ref=f1e461]:
+                    - generic [ref=f1e462]: "02"
+                    - generic [ref=f1e463]: Escrow partner provides unique payment reference per campaign
+                  - generic [ref=f1e464]:
+                    - generic [ref=f1e465]: "03"
+                    - generic [ref=f1e466]: Any member pays fiat to that reference from phone or bank
+                  - generic [ref=f1e467]:
+                    - generic [ref=f1e468]: "04"
+                    - generic [ref=f1e469]: Escrow batches and converts to stablecoin (USDC / cKES)
+                  - generic [ref=f1e470]:
+                    - generic [ref=f1e471]: "05"
+                    - generic [ref=f1e472]: Funds deposited to DAO multi-sig treasury on Solana
+                  - generic [ref=f1e473]:
+                    - generic [ref=f1e474]: "06"
+                    - generic [ref=f1e475]: Each contribution recorded on-chain. Baraza AI updates health score.
+                - generic [ref=f1e476]:
+                  - generic [ref=f1e477]: Job Bounty Payout
+                  - generic [ref=f1e478]:
+                    - generic [ref=f1e479]: "01"
+                    - generic [ref=f1e480]: DAO funds bounty from treasury (crypto) or fiat top-up
+                  - generic [ref=f1e481]:
+                    - generic [ref=f1e482]: "02"
+                    - generic [ref=f1e483]: Funds locked in Solana escrow program
+                  - generic [ref=f1e484]:
+                    - generic [ref=f1e485]: "03"
+                    - generic [ref=f1e486]: Baraza AI scores submissions. DAO ratifies winner.
+                  - generic [ref=f1e487]:
+                    - generic [ref=f1e488]: "04"
+                    - generic [ref=f1e489]: Smart contract triggers escrow release to winner's wallet
+                  - generic [ref=f1e490]:
+                    - generic [ref=f1e491]: "05"
+                    - generic [ref=f1e492]: Winner requests off-ramp via Baraza dashboard
+                  - generic [ref=f1e493]:
+                    - generic [ref=f1e494]: "06"
+                    - generic [ref=f1e495]: Escrow partner processes fiat payout to M-Pesa / bank within 24h
+                - generic [ref=f1e496]:
+                  - generic [ref=f1e497]: Growth Token Purchase
+                  - generic [ref=f1e498]:
+                    - generic [ref=f1e499]: "01"
+                    - generic [ref=f1e500]: Investor browses Growth Market. Selects DAO token.
+                  - generic [ref=f1e501]:
+                    - generic [ref=f1e502]: "02"
+                    - generic [ref=f1e503]: "Baraza calls escrow API: 5-min rate lock on token price in local currency"
+                  - generic [ref=f1e504]:
+                    - generic [ref=f1e505]: "03"
+                    - generic [ref=f1e506]: Investor pays via M-Pesa, bank, or SWIFT wire
+                  - generic [ref=f1e507]:
+                    - generic [ref=f1e508]: "04"
+                    - generic [ref=f1e509]: Escrow converts fiat to SOL. Executes bonding curve purchase.
+                  - generic [ref=f1e510]:
+                    - generic [ref=f1e511]: "05"
+                    - generic [ref=f1e512]: Tokens delivered to investor wallet (custodial or self-custody)
+                  - generic [ref=f1e513]:
+                    - generic [ref=f1e514]: "06"
+                    - generic [ref=f1e515]: "Exit: sell tokens → bonding curve → fiat off-ramp via same rails"
+            - generic [ref=f1e516]:
+              - generic [ref=f1e517]: Supported Rails at MVP
+              - generic [ref=f1e518]:
+                - generic [ref=f1e519]:
+                  - generic [ref=f1e520]: M-Pesa (Kenya)
+                  - generic [ref=f1e521]: Mobile Money
+                  - generic [ref=f1e522]: Kenya MVP launch
+                - generic [ref=f1e523]:
+                  - generic [ref=f1e524]: MTN MoMo
+                  - generic [ref=f1e525]: Mobile Money
+                  - generic [ref=f1e526]: Ghana, Nigeria, Uganda, +15
+                - generic [ref=f1e527]:
+                  - generic [ref=f1e528]: Airtel Money
+                  - generic [ref=f1e529]: Mobile Money
+                  - generic [ref=f1e530]: Uganda, Tanzania, Zambia
+                - generic [ref=f1e531]:
+                  - generic [ref=f1e532]: Local Bank Transfer
+                  - generic [ref=f1e533]: Bank
+                  - generic [ref=f1e534]: All 54 African markets
+                - generic [ref=f1e535]:
+                  - generic [ref=f1e536]: SWIFT / Wire
+                  - generic [ref=f1e537]: International Bank
+                  - generic [ref=f1e538]: Global diaspora
+                - generic [ref=f1e539]:
+                  - generic [ref=f1e540]: Stablecoin Direct
+                  - generic [ref=f1e541]: Crypto
+                  - generic [ref=f1e542]: Crypto-native users globally
+  - alert [ref=e38]
+  - iframe [ref=e39]:
+    
