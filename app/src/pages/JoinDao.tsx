@@ -5,7 +5,6 @@ import {
   Check,
   CreditCard,
   Phone,
-  ShieldCheck,
   Wallet,
 } from "lucide-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
@@ -183,15 +182,6 @@ export default function JoinDao() {
             </div>
 
             <ActivationTracker />
-
-            <div className="grid gap-3 md:grid-cols-3">
-              {["PaymentAttestation Created", "Membership Mint Submitted", "MemberAccount Active"].map((label) => (
-                <div key={label} className="rounded-lg border border-border/70 bg-card/70 p-4">
-                  <ShieldCheck className="mb-3 h-5 w-5 text-primary" />
-                  <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">{label}</p>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </section>

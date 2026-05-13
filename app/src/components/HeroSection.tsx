@@ -31,8 +31,6 @@ const contributions = [
 
 const timeline = ["Proposal created", "Member review", "Voting live", "Execution pending"];
 const communityTypes = ["community", "DAO", "SACCO", "co-operative", "chama", "welfare group"];
-const globeBackgroundUrl =
-  "https://lh3.googleusercontent.com/aida/ADBb0uiXB8ISdyt3uAd2jBCg8EbLBxaj9XYIJ1q6vUnyyWrmeJJT3s3cLd_i7yOLIPEgT1hakdc8kFysYRKFtm0Wl4QzVrSKUsoRJvV9MPEmqA70k8dRqF7mcQ0A8L-0LlQuncGB6ev-MPgPDwWvBnJCCCPHgFob91haqyBezaTtytmGVA5XATspt5Dm11LG97K1y_t-kQ603lMnXPPOTxi9osAqS2DfVW7xOf1FJRJFBvyV26rlZCIRIEvW3rA";
 
 const container: Variants = {
   hidden: {},
@@ -233,10 +231,6 @@ export default function HeroSection() {
     <section className="relative overflow-hidden border-b border-primary/10 pt-20 pb-10 sm:pt-28 sm:pb-12 lg:pt-32">
       <div className="absolute inset-0 pointer-events-none" aria-hidden>
         <div className="absolute inset-0 ambient-globe-layer" />
-        <div
-          className="absolute inset-0 bg-cover bg-[center_right] opacity-35 mix-blend-screen saturate-125"
-          style={{ backgroundImage: `url(${globeBackgroundUrl})` }}
-        />
         <div className="absolute inset-0 bg-gradient-to-r from-background via-background/88 to-background/20" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/60" />
         <DotPattern
@@ -266,22 +260,10 @@ export default function HeroSection() {
             <motion.h1
               variants={item}
               className="font-display text-5xl font-black leading-[0.92] tracking-normal text-foreground sm:text-6xl lg:text-7xl"
-            >
-              <span className="block text-secondary">Govern</span>
-              <span className="block text-accent">Together,</span>
-              <span className="block">
-                <span className="text-secondary">Build</span>{" "}
-                <span className="text-primary">Forever</span>
-              </span>
-            </motion.h1>
-
-            <motion.p
-              variants={item}
-              className="mt-6 font-display text-4xl font-black leading-[0.92] tracking-normal sm:mt-7 sm:text-5xl lg:text-6xl"
               aria-live="polite"
             >
               <RotatingCommunityText />
-            </motion.p>
+            </motion.h1>
 
             <motion.p
               variants={item}
