@@ -4,6 +4,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import Layout from "@/components/Layout";
 import { truncateAddress } from "@/lib/utils";
+import CommunityBanner from "@/components/CommunityBanner";
 
 export default function Profile() {
   const { publicKey, connected, wallet } = useWallet();
@@ -36,7 +37,7 @@ export default function Profile() {
     <Layout>
       <section className="py-10 md:py-14">
         <div className="container mx-auto px-4">
-          <div className="baraza-card mb-6 p-5 md:p-6">
+          <CommunityBanner className="mb-6 p-5 md:p-6">
             <div className="flex flex-col justify-between gap-5 md:flex-row md:items-center">
               <div className="flex items-center gap-5">
                 <div className="grid h-20 w-20 place-items-center rounded-lg border border-border bg-surface text-primary">
@@ -53,7 +54,7 @@ export default function Profile() {
                 </div>
               </div>
             </div>
-          </div>
+          </CommunityBanner>
 
           <div className="grid gap-6 lg:grid-cols-[0.34fr_0.66fr]">
             <aside className="space-y-6">

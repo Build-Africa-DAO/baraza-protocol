@@ -6,6 +6,7 @@ import { daysRemaining, formatKSh } from "@/lib/utils";
 import { useWalletGuard } from "@/hooks/useWalletGuard";
 import { useBarazaContract } from "@/hooks/useBarazaContract";
 import { useCommunity } from "@/hooks/useCommunities";
+import CommunityBanner from "@/components/CommunityBanner";
 
 export default function ProposalDetail() {
   const { id, decisionId } = useParams<{ id: string; decisionId: string }>();
@@ -63,7 +64,7 @@ export default function ProposalDetail() {
 
           <div className="grid gap-6 xl:grid-cols-[0.68fr_0.32fr]">
             <main className="space-y-6">
-              <div className="baraza-card p-5 md:p-6">
+              <CommunityBanner type={community?.type} className="p-5 md:p-6">
                 <div className="mb-4 flex flex-wrap items-center gap-3">
                   <span className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 font-mono text-xs uppercase tracking-widest text-primary">
                     {proposal.status === "active" ? "Voting open" : proposal.status === "completed" ? "Closed" : "Failed"}
@@ -72,7 +73,7 @@ export default function ProposalDetail() {
                 </div>
                 <h1 className="font-display text-3xl font-bold text-foreground">{proposal.title}</h1>
                 <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">{proposal.description}</p>
-              </div>
+              </CommunityBanner>
 
               <div className="grid gap-4 md:grid-cols-4">
                 {[

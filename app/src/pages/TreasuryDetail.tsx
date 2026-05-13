@@ -3,6 +3,7 @@ import { Download, ExternalLink, ReceiptText, ShieldCheck } from "lucide-react";
 import Layout from "@/components/Layout";
 import { useCommunity } from "@/hooks/useCommunities";
 import { formatKSh } from "@/lib/utils";
+import CommunityBanner from "@/components/CommunityBanner";
 
 const attestations = [
   ["MPESA-XJ9L2B", "PaymentAttestation", "+ KSh 50,000", "Confirmed"],
@@ -24,7 +25,8 @@ export default function TreasuryDetail() {
     <Layout>
       <section className="py-10 md:py-14">
         <div className="container mx-auto px-4">
-          <header className="mb-8 flex flex-col justify-between gap-4 border-b border-border pb-6 md:flex-row md:items-end">
+          <CommunityBanner type={community?.type} className="mb-8 p-5 md:p-6">
+          <header className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div>
               <p className="font-mono text-xs uppercase tracking-widest text-primary">DAO Treasury</p>
               <h1 className="mt-2 font-display text-3xl font-bold text-foreground">{community?.name ?? "Community"} Treasury</h1>
@@ -41,6 +43,7 @@ export default function TreasuryDetail() {
               Export CSV
             </button>
           </header>
+          </CommunityBanner>
 
           <div className="baraza-card mb-6 overflow-hidden p-5 md:p-6">
             <div className="flex flex-col justify-between gap-6 md:flex-row md:items-center">

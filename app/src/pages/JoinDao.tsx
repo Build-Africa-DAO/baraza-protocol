@@ -12,43 +12,53 @@ import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import Layout from "@/components/Layout";
 import { useCommunity } from "@/hooks/useCommunities";
 import { formatKSh } from "@/lib/utils";
+import CommunityBanner from "@/components/CommunityBanner";
 
 const joinSteps = [
-  { label: "Enter phone number", state: "pending" },
-  { label: "Verify with SMS code", state: "pending" },
-  { label: "Approve M-Pesa prompt", state: "pending" },
+  { label: "Phone entered", state: "current" },
+  { label: "OTP verified", state: "pending" },
+  { label: "Payment started", state: "pending" },
   { label: "Payment confirmed", state: "pending" },
-  { label: "Membership credential prepared", state: "pending" },
-  { label: "Confirmed on Solana", state: "pending" },
+  { label: "Credential minted", state: "pending" },
   { label: "Active DAO member", state: "pending" },
 ];
 
-function StepRail() {
+function ActivationTracker() {
   return (
-    <div className="baraza-card p-5 md:p-6">
-      <h2 className="font-display text-lg font-semibold text-foreground">How activation works</h2>
-      <p className="mt-2 text-xs text-muted-foreground">
-        Every join follows the same steps. We&apos;ll guide you through each one in real time once you start.
-      </p>
-      <div className="mt-6 space-y-5">
-        {joinSteps.map((step) => (
-          <div key={step.label} className="flex items-center gap-3">
+    <div className="baraza-card p-4 md:p-5">
+      <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 className="font-display text-base font-semibold text-foreground">Membership activation</h2>
+          <p className="mt-1 text-xs text-muted-foreground">Payment, mint, and on-chain confirmation stay separate.</p>
+        </div>
+        <span className="rounded-full border border-primary/20 bg-primary/8 px-3 py-1 text-[11px] font-semibold text-primary">
+          Step 1 of {joinSteps.length}
+        </span>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
+        {joinSteps.map((step, index) => (
+          <div
+            key={step.label}
+            className={
+              step.state === "current"
+                ? "rounded-lg border border-primary/35 bg-primary/10 p-3"
+                : "rounded-lg border border-border/70 bg-background/35 p-3"
+            }
+          >
             <div
               className={
-                step.state === "done"
-                  ? "grid h-7 w-7 place-items-center rounded-full border border-confirmed/50 bg-confirmed/15 text-confirmed"
-                  : step.state === "current"
-                    ? "grid h-7 w-7 place-items-center rounded-full border border-primary bg-primary text-primary-foreground shadow-[0_0_18px_hsl(var(--primary)/0.28)]"
-                    : "grid h-7 w-7 place-items-center rounded-full border border-border bg-surface text-muted-foreground"
+                step.state === "current"
+                  ? "mb-2 grid h-7 w-7 place-items-center rounded-full bg-primary text-primary-foreground shadow-[0_0_18px_hsl(var(--primary)/0.28)]"
+                  : "mb-2 grid h-7 w-7 place-items-center rounded-full border border-border bg-surface text-muted-foreground"
               }
             >
-              {step.state === "done" ? <Check className="h-4 w-4" /> : <span className="h-2 w-2 rounded-full bg-current" />}
+              {step.state === "done" ? <Check className="h-4 w-4" /> : <span className="text-[11px] font-bold">{index + 1}</span>}
             </div>
             <span
               className={
                 step.state === "current"
-                  ? "font-mono text-xs font-semibold uppercase tracking-widest text-primary"
-                  : "font-mono text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+                  ? "block text-[11px] font-bold uppercase tracking-widest text-primary"
+                  : "block text-[11px] font-bold uppercase tracking-widest text-muted-foreground"
               }
             >
               {step.label}
@@ -67,7 +77,7 @@ export default function JoinDao() {
 
   return (
     <Layout>
-      <section className="relative overflow-hidden py-10 md:py-14">
+      <section className="relative overflow-hidden py-8 md:py-12">
         <div className="absolute inset-0 pointer-events-none" aria-hidden>
           <div className="absolute right-[-10rem] top-16 h-[28rem] w-[28rem] rounded-full border border-primary/10 bg-primary/5 blur-sm" />
           <div className="absolute right-20 top-40 h-40 w-40 rounded-full border border-primary/15" />
@@ -79,22 +89,21 @@ export default function JoinDao() {
             Back to DAO
           </Link>
 
-          <div className="grid gap-6 lg:grid-cols-[0.42fr_0.58fr]">
-            <StepRail />
-
+          <div className="mx-auto max-w-5xl space-y-5">
             <div className="baraza-card overflow-hidden">
-              <div className="border-b border-border bg-surface/70 p-5 md:p-6">
-                <div className="flex flex-wrap items-start justify-between gap-4">
+              <CommunityBanner type={community?.type} className="rounded-none border-0 border-b border-border">
+              <div className="p-5 md:p-7">
+                <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
                   <div>
                     <p className="font-mono text-xs uppercase tracking-widest text-primary">Join DAO</p>
-                    <h1 className="mt-2 font-display text-2xl font-bold text-foreground">
+                    <h1 className="mt-2 font-display text-3xl font-bold text-foreground">
                       {community?.name ?? "Community DAO"}
                     </h1>
-                    <p className="mt-2 max-w-xl text-sm text-muted-foreground">
+                    <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
                       Start with M-Pesa dues, then link a Solana wallet to receive your Membership Credential.
                     </p>
                   </div>
-                  <div className="rounded-lg border border-primary/20 bg-primary/10 px-3 py-2 text-right">
+                  <div className="w-full rounded-lg border border-primary/20 bg-primary/10 px-4 py-3 md:w-auto md:text-right">
                     <p className="text-xs text-muted-foreground">Monthly Dues</p>
                     <p className="font-display text-lg font-bold text-primary">
                       {formatKSh(community?.membershipFee ?? 5000)}
@@ -102,9 +111,10 @@ export default function JoinDao() {
                   </div>
                 </div>
               </div>
+              </CommunityBanner>
 
-              <div className="grid gap-5 p-5 md:grid-cols-2 md:p-6">
-                <div className="rounded-lg border border-border bg-background/55 p-5">
+              <div className="grid gap-4 p-5 md:grid-cols-2 md:p-6">
+                <div className="rounded-lg border border-primary/18 bg-background/50 p-5">
                   <div className="mb-4 flex items-center gap-3">
                     <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary/12 text-primary">
                       <Phone className="h-5 w-5" />
@@ -131,14 +141,14 @@ export default function JoinDao() {
 
                   <Link
                     to={`/join/${id ?? "1"}/status?orderId=ord_demo_123`}
-                    className="btn-warm mt-5 w-full justify-center gap-2 py-3 text-sm"
+                    className="btn-warm mt-5 w-full justify-center gap-2 py-3 text-sm font-bold"
                   >
                     <CreditCard className="h-4 w-4" />
                     Request M-Pesa Prompt
                   </Link>
                 </div>
 
-                <div className="rounded-lg border border-border bg-background/55 p-5">
+                <div className="rounded-lg border border-primary/18 bg-background/50 p-5">
                   <div className="mb-4 flex items-center gap-3">
                     <div className="grid h-10 w-10 place-items-center rounded-lg bg-dao/15 text-dao">
                       <Wallet className="h-5 w-5" />
@@ -154,7 +164,7 @@ export default function JoinDao() {
                   <button
                     type="button"
                     onClick={() => setVisible(true)}
-                    className="btn-ghost mt-5 w-full justify-center gap-2 py-3 text-sm"
+                    className="btn-ghost mt-5 w-full justify-center gap-2 py-3 text-sm font-bold"
                   >
                     <Wallet className="h-4 w-4" />
                     Connect wallet
@@ -171,15 +181,17 @@ export default function JoinDao() {
                 </div>
               </div>
             </div>
-          </div>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
-            {["PaymentAttestation Created", "Membership Mint Submitted", "MemberAccount Active"].map((label) => (
-              <div key={label} className="rounded-lg border border-border bg-card p-4">
-                <ShieldCheck className="mb-3 h-5 w-5 text-primary" />
-                <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">{label}</p>
-              </div>
-            ))}
+            <ActivationTracker />
+
+            <div className="grid gap-3 md:grid-cols-3">
+              {["PaymentAttestation Created", "Membership Mint Submitted", "MemberAccount Active"].map((label) => (
+                <div key={label} className="rounded-lg border border-border/70 bg-card/70 p-4">
+                  <ShieldCheck className="mb-3 h-5 w-5 text-primary" />
+                  <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">{label}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>

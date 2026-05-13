@@ -7,6 +7,7 @@ import { COMMUNITY_TYPES } from '@/lib/constants';
 import { useWalletGuard } from '@/hooks/useWalletGuard';
 import { useToast } from '@/hooks/use-toast';
 import { createCommunityRecord } from '@/lib/communities';
+import CommunityBanner from '@/components/CommunityBanner';
 
 const CreateCommunity: React.FC = () => {
   const navigate = useNavigate();
@@ -118,6 +119,7 @@ const CreateCommunity: React.FC = () => {
               Back
             </button>
 
+            <CommunityBanner className="mb-8 p-5">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -132,6 +134,7 @@ const CreateCommunity: React.FC = () => {
                 Launch a DAO where members can contribute, submit governance proposals, and manage a shared treasury with explicit governance rules.
               </p>
             </motion.div>
+            </CommunityBanner>
 
             {/* Form */}
             <motion.form

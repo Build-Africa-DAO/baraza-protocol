@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { motion, type Variants } from "framer-motion";
 import {
   ArrowRight,
@@ -29,6 +30,7 @@ const contributions = [
 ];
 
 const timeline = ["Proposal created", "Member review", "Voting live", "Execution pending"];
+const communityTypes = ["community", "DAO", "SACCO", "co-operative", "chama", "welfare group"];
 const globeBackgroundUrl =
   "https://lh3.googleusercontent.com/aida/ADBb0uiXB8ISdyt3uAd2jBCg8EbLBxaj9XYIJ1q6vUnyyWrmeJJT3s3cLd_i7yOLIPEgT1hakdc8kFysYRKFtm0Wl4QzVrSKUsoRJvV9MPEmqA70k8dRqF7mcQ0A8L-0LlQuncGB6ev-MPgPDwWvBnJCCCPHgFob91haqyBezaTtytmGVA5XATspt5Dm11LG97K1y_t-kQ603lMnXPPOTxi9osAqS2DfVW7xOf1FJRJFBvyV26rlZCIRIEvW3rA";
 
@@ -45,6 +47,45 @@ const item: Variants = {
     transition: { duration: 0.5, ease: [0.4, 0, 0.2, 1] as [number, number, number, number] },
   },
 };
+
+function RotatingCommunityText() {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isChanging, setIsChanging] = useState(false);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setIsChanging(true);
+
+      window.setTimeout(() => {
+        setActiveIndex((index) => (index + 1) % communityTypes.length);
+        setIsChanging(false);
+      }, 180);
+    }, 2200);
+
+    return () => window.clearInterval(interval);
+  }, []);
+
+  const activeType = communityTypes[activeIndex];
+
+  return (
+    <span className="block overflow-hidden">
+      <span className="block">
+        <span className="text-secondary">Create</span>{" "}
+        <span className="text-accent">your</span>
+      </span>
+      <span className="block min-h-[1.05em] text-primary">
+        <span
+          className={cn(
+            "inline-block whitespace-nowrap transition-all duration-200 ease-out",
+            isChanging ? "-translate-y-2 opacity-0" : "translate-y-0 opacity-100"
+          )}
+        >
+          {activeType}
+        </span>
+      </span>
+    </span>
+  );
+}
 
 function ProductDashboard() {
   return (
@@ -226,15 +267,25 @@ export default function HeroSection() {
               variants={item}
               className="font-display text-5xl font-black leading-[0.92] tracking-normal text-foreground sm:text-6xl lg:text-7xl"
             >
-              <span className="block">Govern together.</span>
+              <span className="block text-secondary">Govern</span>
+              <span className="block text-accent">Together,</span>
               <span className="block">
-                Build <span className="text-primary">forever</span>.
+                <span className="text-secondary">Build</span>{" "}
+                <span className="text-primary">Forever</span>
               </span>
             </motion.h1>
 
             <motion.p
               variants={item}
-              className="mt-5 max-w-xl text-base leading-7 text-muted-foreground sm:mt-6 sm:text-lg sm:leading-8"
+              className="mt-6 font-display text-4xl font-black leading-[0.92] tracking-normal sm:mt-7 sm:text-5xl lg:text-6xl"
+              aria-live="polite"
+            >
+              <RotatingCommunityText />
+            </motion.p>
+
+            <motion.p
+              variants={item}
+              className="mt-4 max-w-xl text-base leading-7 text-muted-foreground sm:mt-5 sm:text-lg sm:leading-8"
             >
               Browse chamas, SACCOs, welfare groups, and co-operatives with shared
               treasury visibility, member voting, and phone-first M-Pesa participation.

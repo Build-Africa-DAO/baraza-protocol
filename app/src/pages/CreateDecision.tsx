@@ -7,6 +7,7 @@ import { formatKSh } from '@/lib/utils';
 import { useWalletGuard } from '@/hooks/useWalletGuard';
 import { useToast } from '@/hooks/use-toast';
 import { useCommunity } from '@/hooks/useCommunities';
+import CommunityBanner from '@/components/CommunityBanner';
 
 const CreateDecision: React.FC = () => {
   const navigate = useNavigate();
@@ -93,6 +94,7 @@ const CreateDecision: React.FC = () => {
               Back to {community.name}
             </button>
 
+            <CommunityBanner type={community.type} className="mb-6 p-5">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -107,6 +109,7 @@ const CreateDecision: React.FC = () => {
                 Submit a proposal for the community DAO to vote on. Include how much funding is needed from the treasury.
               </p>
             </motion.div>
+            </CommunityBanner>
 
             {/* Fund info */}
             <motion.div

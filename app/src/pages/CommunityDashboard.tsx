@@ -15,6 +15,7 @@ import { useWalletGuard } from '@/hooks/useWalletGuard';
 import { useBarazaContract } from '@/hooks/useBarazaContract';
 import { useCommunity } from '@/hooks/useCommunities';
 import { getActiveMembership, recordActiveMembership } from '@/lib/memberships';
+import CommunityBanner from '@/components/CommunityBanner';
 
 const dashboardGlobeUrl =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuAhAO65kkwr6zxxrtYjpZm23ugp7boCWsRE_kTE7O3PUPmonOS4vJUPPGp_AALnUHlCa23XX7HVjJ3lfv_cs2mIWSzHwYBQIvrue4TcJGeHUsuQLKSNOuhSpHNySzZ8pUcK9MLmMfeh0l2ciNsph8EcgoHMr86aCmoQZLn2qesMSBGPMStXx9CHE1aW6vpRO1bQ13KDvFm92lVbqFLdD6qie_U66bf4EIKpbK6LxxS-9a0Q4YK3m0GuJPePOTqqPhC9tTuWGu4UnIo";
@@ -146,10 +147,10 @@ const CommunityDashboard: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="premium-glass relative mb-8 overflow-hidden rounded-xl p-5 md:p-6"
+            className="mb-8"
           >
-            <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-primary/10 blur-3xl" />
-            <div className="relative flex flex-col gap-5 sm:flex-row sm:items-start">
+            <CommunityBanner type={community.type} className="p-5 md:p-6">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
               <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/15 shadow-[0_0_28px_hsl(var(--primary)/0.18)]">
                 <span className="font-display text-lg font-bold text-primary">{community.image}</span>
               </div>
@@ -195,6 +196,7 @@ const CommunityDashboard: React.FC = () => {
                 </div>
               </div>
             </div>
+            </CommunityBanner>
           </motion.div>
 
           {/* Stats grid */}

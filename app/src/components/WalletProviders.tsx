@@ -5,10 +5,9 @@ import {
   PhantomWalletAdapter,
   SolflareWalletAdapter,
 } from '@solana/wallet-adapter-wallets';
-import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { clusterApiUrl } from '@solana/web3.js';
-import '@solana/wallet-adapter-react-ui/styles.css';
 import { WALLET_ADAPTER_NETWORK } from '@/lib/network';
+import BarazaWalletModalProvider from '@/components/BarazaWalletModalProvider';
 
 const RPC_ENDPOINTS = [
   ...new Set(
@@ -39,7 +38,7 @@ export default function WalletProviders({ children }: WalletProvidersProps) {
   return (
     <ConnectionProvider endpoint={endpoint}>
       <WalletProvider wallets={wallets} autoConnect onError={onError}>
-        <WalletModalProvider>{children}</WalletModalProvider>
+        <BarazaWalletModalProvider>{children}</BarazaWalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>
   );

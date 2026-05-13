@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Search, PlusCircle, SlidersHorizontal } from "lucide-react";
+import { Grid2X2, List, Search, PlusCircle, SlidersHorizontal } from "lucide-react";
 import Layout from "@/components/Layout";
 import CommunityCard from "@/components/CommunityCard";
 import { COMMUNITY_TYPES } from "@/lib/constants";
@@ -9,11 +9,13 @@ import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { DotPattern } from "@/components/ui/dot-pattern";
 import { cn } from "@/lib/utils";
 import { useCommunities } from "@/hooks/useCommunities";
+import CommunityBanner from "@/components/CommunityBanner";
 
 export default function Communities() {
   const { communities, isLoading, error } = useCommunities();
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [layout, setLayout] = useState<"grid" | "list">("grid");
 
   const filtered = communities.filter((c) => {
     const matchesSearch =
@@ -38,11 +40,12 @@ export default function Communities() {
         </div>
 
         <div className="container mx-auto px-4 relative z-10">
-          <motion.div
+          <CommunityBanner className="mb-8 min-h-[15rem]">
+            <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="max-w-2xl"
+            className="max-w-2xl p-6 md:p-8"
           >
             <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-2">
               Discover
@@ -54,13 +57,14 @@ export default function Communities() {
               Find a DAO to join, or explore how communities are governing funds with Baraza.
             </p>
           </motion.div>
+          </CommunityBanner>
         </div>
       </section>
 
       <section className="pb-16">
         <div className="container mx-auto px-4">
           {/* Controls */}
-          <div className="flex flex-col sm:flex-row gap-3 mb-8">
+          <div className="mb-8 grid gap-3 lg:grid-cols-[1fr_auto_auto_auto]">
             {/* Search */}
             <div className="relative flex-1">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -79,7 +83,7 @@ export default function Communities() {
             </div>
 
             {/* Type filter */}
-            <div className="relative flex-shrink-0">
+            <div className="relative">
               <SlidersHorizontal className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               <select
                 value={typeFilter}
@@ -97,6 +101,30 @@ export default function Communities() {
                   <option key={t.value} value={t.value}>{t.label}</option>
                 ))}
               </select>
+            </div>
+
+            <div className="grid grid-cols-2 rounded-xl border border-border bg-surface p-1" aria-label="Choose layout">
+              {[
+                { value: "grid" as const, label: "Grid", icon: Grid2X2 },
+                { value: "list" as const, label: "List", icon: List },
+              ].map(({ value, label, icon: Icon }) => {
+                const active = layout === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setLayout(value)}
+                    aria-pressed={active}
+                    className={cn(
+                      "inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70",
+                      active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {label}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Start CTA */}
@@ -130,13 +158,13 @@ export default function Communities() {
 
           {/* Grid */}
           {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className={cn(layout === "grid" ? "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "grid gap-4")}>
               {Array.from({ length: 4 }).map((_, idx) => (
-                <div key={idx} className="baraza-card h-64 animate-pulse" />
+                <div key={idx} className={cn("baraza-card animate-pulse", layout === "grid" ? "h-80" : "h-56")} />
               ))}
             </div>
           ) : filtered.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className={cn(layout === "grid" ? "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "grid gap-4")}>
               {filtered.map((community, idx) => (
                 <motion.div
                   key={community.id}
@@ -145,7 +173,7 @@ export default function Communities() {
                   transition={{ delay: idx * 0.04, duration: 0.35 }}
                   className="h-full"
                 >
-                  <CommunityCard {...community} />
+                  <CommunityCard {...community} layout={layout} />
                 </motion.div>
               ))}
             </div>

@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
-import { Users, TrendingUp, MessageSquare } from "lucide-react";
+import { BadgePlus, Link2, UserPlus, Users, TrendingUp, MessageSquare } from "lucide-react";
 import { MagicCard } from "@/components/ui/magic-card";
 import { formatKSh, cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import { getCommunityBannerImage } from "@/lib/communityVisuals";
 
 interface CommunityCardProps {
   id: string;
@@ -13,6 +15,7 @@ interface CommunityCardProps {
   fundBalance: number;
   activeDecisions: number;
   image: string;
+  layout?: "grid" | "list";
 }
 
 const typeConfig: Record<string, { bg: string; text: string; dot: string }> = {
@@ -26,42 +29,61 @@ const typeConfig: Record<string, { bg: string; text: string; dot: string }> = {
 };
 
 export default function CommunityCard({
-  id, name, type, description, membershipFee, memberCount, fundBalance, activeDecisions, image,
+  id, name, type, description, membershipFee, memberCount, fundBalance, activeDecisions, image, layout = "grid",
 }: CommunityCardProps) {
   const tc = typeConfig[type] ?? typeConfig.other;
+  const { toast } = useToast();
+  const isList = layout === "list";
 
   return (
-    <Link to={`/dashboard/${id}`} className="block h-full">
+    <article className="h-full">
       <MagicCard className="h-full" gradientColor="#FFBB00" gradientSize={200} gradientOpacity={0.06}>
         <div className={cn(
-          "h-full flex flex-col p-5",
+          "h-full overflow-hidden",
+          isList && "sm:flex",
           "bg-card border border-border/60 rounded-xl",
           "transition-all duration-300",
           "hover:border-primary/30 hover:shadow-[0_0_24px_hsl(44_100%_50%/0.18)]",
         )}>
-          {/* Header */}
-          <div className="flex items-start gap-3 mb-4">
-            <div className="w-11 h-11 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0 text-lg">
-              {image}
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-display text-sm font-semibold text-foreground truncate leading-tight">
-                {name}
-              </h3>
-              <span className={cn("inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium capitalize", tc.bg, tc.text)}>
-                <span className={cn("w-1.5 h-1.5 rounded-full", tc.dot)} />
+          <div className={cn("relative h-28 overflow-hidden", isList && "sm:h-full sm:min-h-56 sm:w-64 sm:shrink-0")}>
+            <img
+              src={getCommunityBannerImage(type)}
+              alt=""
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-card via-card/45 to-transparent" />
+            <div className="absolute bottom-4 left-4 flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-background/80 font-display text-lg font-black text-primary shadow-lg backdrop-blur">
+                {image}
+              </div>
+              <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-semibold capitalize backdrop-blur", tc.bg, tc.text)}>
+                <span className={cn("h-1.5 w-1.5 rounded-full", tc.dot)} />
                 {type}
               </span>
             </div>
           </div>
 
-          {/* Description */}
-          <p className="text-xs text-muted-foreground leading-relaxed mb-4 line-clamp-2 flex-1">
-            {description}
-          </p>
+          <div className={cn("flex h-full flex-col p-5", isList && "sm:flex-1")}>
+            <div className={cn(isList && "sm:grid sm:grid-cols-[1fr_auto] sm:gap-6")}>
+              <div className="min-w-0">
+              <h3 className="font-display text-lg font-bold leading-tight text-foreground">
+                {name}
+              </h3>
+              <p className={cn("mt-3 text-sm leading-6 text-muted-foreground", isList ? "line-clamp-3" : "line-clamp-2 flex-1")}>
+                {description}
+              </p>
+              </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-1.5 pt-4 border-t border-border/40">
+              <div className={cn("mt-4 flex items-center justify-between gap-3 sm:mt-0", !isList && "hidden")}>
+                <div>
+                  <p className="text-[10px] text-muted-foreground">Monthly fee</p>
+                  <p className="text-sm font-bold text-accent tabular-nums">{formatKSh(membershipFee)}</p>
+                </div>
+              </div>
+            </div>
+
+          <div className="mt-5 grid grid-cols-3 gap-1.5 border-t border-border/40 pt-4">
             <div className="flex flex-col items-center text-center gap-0.5">
               <Users className="w-3.5 h-3.5 text-primary" />
               <span className="text-xs font-semibold text-foreground tabular-nums">{memberCount}</span>
@@ -81,13 +103,37 @@ export default function CommunityCard({
             </div>
           </div>
 
-          {/* Fee */}
-          <div className="mt-3.5 flex items-center justify-between">
+          <div className={cn("mt-3.5 flex items-center justify-between", isList && "sm:hidden")}>
             <span className="text-[10px] text-muted-foreground">Monthly fee</span>
             <span className="text-xs font-bold text-accent tabular-nums">{formatKSh(membershipFee)}</span>
           </div>
+
+            <div className="mt-5 grid gap-2 sm:grid-cols-3">
+              <Link to={`/dashboard/${id}`} className="btn-ghost justify-center gap-2 px-3 py-2 text-xs font-bold">
+                <Link2 className="h-3.5 w-3.5" />
+                Connect to DAO
+              </Link>
+              <Link to={`/join/${id}`} className="btn-warm justify-center gap-2 px-3 py-2 text-xs font-bold">
+                <UserPlus className="h-3.5 w-3.5" />
+                Become a member
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  toast({
+                    title: "Token setup queued",
+                    description: "Membership token support appears after the DAO membership flow is connected.",
+                  });
+                }}
+                className="btn-ghost justify-center gap-2 px-3 py-2 text-xs font-bold"
+              >
+                <BadgePlus className="h-3.5 w-3.5" />
+                Add token
+              </button>
+            </div>
+          </div>
         </div>
       </MagicCard>
-    </Link>
+    </article>
   );
 }
