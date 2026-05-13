@@ -1,14 +1,14 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, CheckCircle2, CreditCard, Link2, Settings2, ShieldCheck, Users } from "lucide-react";
+import { ArrowRight, Coins, Link2, Settings2, ShieldCheck, Users } from "lucide-react";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 
 const steps = [
-  { icon: CreditCard, title: "Join with M-Pesa", desc: "Start from phone-first dues and reconcile payment before membership activates." },
-  { icon: Link2, title: "Link wallet", desc: "Attach an embedded or external Solana wallet for credentials and signatures." },
-  { icon: Settings2, title: "Set group rules", desc: "Name the group, set dues, define quorum, and choose approval thresholds." },
-  { icon: Users, title: "Invite members", desc: "Members join the same treasury view before money starts moving." },
-  { icon: ShieldCheck, title: "Operate in public", desc: "Collect, vote, release, and audit with the same on-chain trail." },
+  { icon: Link2, title: "Connect a wallet", desc: "Sign in with Phantom, Solflare, or Coinbase Wallet. Your wallet becomes the founding admin signer." },
+  { icon: Settings2, title: "Set DAO basics", desc: "Name your DAO, pick a type, and set monthly dues members will contribute to the shared treasury." },
+  { icon: ShieldCheck, title: "Define governance rules", desc: "Quorum, approval threshold, and default voting period — members see them before any proposal opens." },
+  { icon: Users, title: "Invite members", desc: "Share the join link. Members can join via M-Pesa or directly with a wallet." },
+  { icon: Coins, title: "Govern transparently", desc: "Members propose, vote, and release funds. Every action lands on a shared on-chain trail." },
 ];
 
 const summary = [
@@ -31,11 +31,11 @@ export default function CTASection() {
           <div className="border-b border-border/70 p-8 md:p-10 lg:border-b-0 lg:border-r">
             <p className="text-xs font-semibold uppercase tracking-widest text-accent">Launch a treasury</p>
             <h2 className="mt-3 max-w-xl font-display text-3xl font-bold leading-tight text-foreground md:text-4xl">
-              Bring the group online with rules everyone can see
+              Launch a community DAO with rules everyone can inspect
             </h2>
             <p className="mt-4 max-w-lg text-base leading-relaxed text-muted-foreground">
               Start with a working treasury, not a blank workspace. Baraza gives members a shared
-              dashboard from the first contribution to the final vote.
+              dashboard from the first contribution to the final governance vote.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -45,12 +45,12 @@ export default function CTASection() {
                   shimmerColor="rgba(255,255,255,0.5)"
                   className="w-full justify-center rounded-lg px-7 py-3.5 text-sm font-bold sm:w-auto"
                 >
-                  Start a Group
+                  Create a DAO
                   <ArrowRight className="h-4 w-4" />
                 </ShimmerButton>
               </Link>
               <Link to="/communities" className="btn-ghost justify-center rounded-lg px-7 py-3.5 text-sm">
-                Explore Communities
+                Explore Community DAOs
               </Link>
             </div>
 
@@ -78,10 +78,6 @@ export default function CTASection() {
                   </div>
                   <h3 className="font-display text-base font-bold text-foreground">{step.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.desc}</p>
-                  <p className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-primary">
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    Ready
-                  </p>
                 </div>
               );
             })}

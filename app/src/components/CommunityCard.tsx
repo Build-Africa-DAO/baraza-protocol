@@ -1,8 +1,7 @@
 import { Link } from "react-router-dom";
 import { Users, TrendingUp, MessageSquare } from "lucide-react";
 import { MagicCard } from "@/components/ui/magic-card";
-import { formatKSh } from "@/lib/utils";
-import { cn } from "@/lib/utils";
+import { formatKSh, cn } from "@/lib/utils";
 
 interface CommunityCardProps {
   id: string;
@@ -33,12 +32,12 @@ export default function CommunityCard({
 
   return (
     <Link to={`/dashboard/${id}`} className="block h-full">
-      <MagicCard className="h-full" gradientColor="#9DD9D2" gradientSize={200} gradientOpacity={0.06}>
+      <MagicCard className="h-full" gradientColor="#FFBB00" gradientSize={200} gradientOpacity={0.06}>
         <div className={cn(
           "h-full flex flex-col p-5",
           "bg-card border border-border/60 rounded-xl",
           "transition-all duration-300",
-          "hover:border-primary/30 hover:shadow-[0_0_24px_hsl(30_100%_53%/0.14)]",
+          "hover:border-primary/30 hover:shadow-[0_0_24px_hsl(44_100%_50%/0.18)]",
         )}>
           {/* Header */}
           <div className="flex items-start gap-3 mb-4">
@@ -73,12 +72,12 @@ export default function CommunityCard({
               <span className="text-[11px] font-semibold text-foreground tabular-nums truncate w-full text-center">
                 {formatKSh(fundBalance)}
               </span>
-              <span className="text-[9px] text-muted-foreground">Fund</span>
+              <span className="text-[9px] text-muted-foreground">Treasury</span>
             </div>
             <div className="flex flex-col items-center text-center gap-0.5">
               <MessageSquare className="w-3.5 h-3.5 text-secondary" />
               <span className="text-xs font-semibold text-foreground tabular-nums">{activeDecisions}</span>
-              <span className="text-[9px] text-muted-foreground">Votes</span>
+              <span className="text-[9px] text-muted-foreground">Proposals</span>
             </div>
           </div>
 

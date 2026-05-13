@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import {
   ArrowRight,
   CheckCircle2,
@@ -29,23 +29,48 @@ const contributions = [
 ];
 
 const timeline = ["Proposal created", "Member review", "Voting live", "Execution pending"];
+const globeBackgroundUrl =
+  "https://lh3.googleusercontent.com/aida/ADBb0uiXB8ISdyt3uAd2jBCg8EbLBxaj9XYIJ1q6vUnyyWrmeJJT3s3cLd_i7yOLIPEgT1hakdc8kFysYRKFtm0Wl4QzVrSKUsoRJvV9MPEmqA70k8dRqF7mcQ0A8L-0LlQuncGB6ev-MPgPDwWvBnJCCCPHgFob91haqyBezaTtytmGVA5XATspt5Dm11LG97K1y_t-kQ603lMnXPPOTxi9osAqS2DfVW7xOf1FJRJFBvyV26rlZCIRIEvW3rA";
 
-const container = {
+const container: Variants = {
   hidden: {},
   show: { transition: { staggerChildren: 0.09 } },
 };
 
-const item = {
+const item: Variants = {
   hidden: { opacity: 0, y: 22 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.4, 0, 0.2, 1] } },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: [0.4, 0, 0.2, 1] as [number, number, number, number] },
+  },
 };
 
 function ProductDashboard() {
   return (
     <div className="relative mx-auto w-full max-w-[620px]">
-      <div className="absolute -inset-4 rounded-[1.25rem] border border-primary/10 bg-primary/[0.03]" />
-      <div className="relative overflow-hidden rounded-2xl border border-primary/18 bg-[#392F5A]/95 shadow-[0_28px_90px_hsl(254_31%_8%/0.72)]">
-        <div className="flex items-center justify-between border-b border-primary/12 bg-[#31284e] px-4 py-3 sm:px-5">
+      <div className="absolute -inset-5 rounded-[1.25rem] border border-primary/10 bg-primary/[0.03] blur-[1px]" />
+      <div className="absolute -right-4 -top-8 hidden w-56 rounded-xl border border-primary/20 bg-card/70 p-4 shadow-2xl backdrop-blur-xl xl:block">
+        <div className="mb-1 flex items-center justify-between text-[11px] uppercase tracking-widest text-muted-foreground">
+          DAO Treasury
+          <Landmark className="h-3.5 w-3.5 text-primary" />
+        </div>
+        <p className="font-display text-xl font-bold text-primary">KSh 2,450,000</p>
+        <p className="mt-1 text-xs text-confirmed">PaymentAttestations synced</p>
+      </div>
+      <div className="absolute -bottom-6 right-10 hidden w-64 rounded-xl border border-accent/25 bg-card/70 p-4 shadow-2xl backdrop-blur-xl lg:block">
+        <p className="mb-2 text-xs text-muted-foreground">Latest ProposalAccount</p>
+        <p className="text-sm font-semibold text-foreground">Solar panel investment</p>
+        <div className="mt-3 flex items-center gap-3">
+          <div className="h-2 flex-1 rounded-full bg-background/70">
+            <div className="h-full w-[72%] rounded-full bg-accent" />
+          </div>
+          <span className="text-xs font-bold text-accent">72%</span>
+        </div>
+      </div>
+      <div className="relative overflow-hidden rounded-2xl border border-primary/18 bg-card/90 shadow-[0_28px_90px_hsl(84_17%_2%/0.72)] backdrop-blur-xl">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_0%,hsl(var(--primary)/0.12),transparent_38%)]" />
+        <div className="relative flex items-center justify-between border-b border-primary/12 bg-surface/70 px-4 py-3 sm:px-5">
           <div className="flex min-w-0 items-center gap-3">
             <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary/12 text-primary">
               <Landmark className="h-4 w-4" />
@@ -61,12 +86,12 @@ function ProductDashboard() {
           </div>
         </div>
 
-        <div className="space-y-4 p-4 sm:p-5">
+        <div className="relative space-y-4 p-4 sm:p-5">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-[1.2fr_0.8fr_0.8fr]">
             <div className="col-span-2 rounded-xl border border-accent/18 bg-accent/8 p-4 sm:col-span-1">
               <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-accent">
                 <CircleDollarSign className="h-3.5 w-3.5" />
-                Community fund
+                DAO Treasury
               </div>
               <p className="font-display text-2xl font-bold leading-none text-foreground">KSh 1,248,500</p>
               <p className="mt-2 text-xs text-muted-foreground">All deposits and approvals recorded.</p>
@@ -166,7 +191,13 @@ export default function HeroSection() {
   return (
     <section className="relative overflow-hidden border-b border-primary/10 pt-20 pb-10 sm:pt-28 sm:pb-12 lg:pt-32">
       <div className="absolute inset-0 pointer-events-none" aria-hidden>
-        <div className="absolute inset-0" style={{ background: "var(--gradient-hero)" }} />
+        <div className="absolute inset-0 ambient-globe-layer" />
+        <div
+          className="absolute inset-0 bg-cover bg-[center_right] opacity-35 mix-blend-screen saturate-125"
+          style={{ backgroundImage: `url(${globeBackgroundUrl})` }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/88 to-background/20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/60" />
         <DotPattern
           width={28}
           height={28}
@@ -188,41 +219,44 @@ export default function HeroSection() {
               className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/8 px-3.5 py-1.5 text-xs font-semibold text-primary sm:mb-6"
             >
               <ShieldCheck className="h-3.5 w-3.5" />
-              Live governance for community funds
+              Community DAO treasury, voting, and membership
             </motion.div>
 
             <motion.h1
               variants={item}
-              className="font-display text-3xl font-bold leading-[1.08] tracking-normal text-foreground sm:text-5xl lg:text-6xl"
+              className="font-display text-5xl font-black leading-[0.92] tracking-normal text-foreground sm:text-6xl lg:text-7xl"
             >
-              Run your community fund with every vote and shilling visible
+              <span className="block">Govern together.</span>
+              <span className="block">
+                Build <span className="text-primary">forever</span>.
+              </span>
             </motion.h1>
 
             <motion.p
               variants={item}
               className="mt-5 max-w-xl text-base leading-7 text-muted-foreground sm:mt-6 sm:text-lg sm:leading-8"
             >
-              Baraza gives chamas, SACCOs, welfare groups, and co-ops one shared workspace
-              for contributions, proposals, votes, and treasury records.
+              Browse chamas, SACCOs, welfare groups, and co-operatives with shared
+              treasury visibility, member voting, and phone-first M-Pesa participation.
             </motion.p>
 
             <motion.div variants={item} className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row">
-              <Link to="/create" tabIndex={-1} className="sm:w-auto">
+              <Link to="/communities" tabIndex={-1} className="sm:w-auto">
                 <ShimmerButton
                   background="linear-gradient(135deg, #F4D06F, #FF8811)"
                   shimmerColor="rgba(255,255,255,0.5)"
-                  className="w-full justify-center rounded-xl px-6 py-3.5 text-sm font-bold sm:w-auto"
+                  className="w-full justify-center rounded-xl px-8 py-4 text-base font-extrabold uppercase tracking-wide sm:w-auto"
                 >
-                  Start Your Group
+                  Browse Community DAOs
                   <ArrowRight className="h-4 w-4" />
                 </ShimmerButton>
               </Link>
-              <Link to="/communities" className="btn-ghost justify-center px-6 py-3.5 text-sm sm:w-auto">
-                Browse Communities
+              <Link to="/create" className="btn-ghost justify-center px-6 py-4 text-sm font-bold sm:w-auto">
+                Create a Community DAO
               </Link>
             </motion.div>
 
-            <motion.div variants={item} className="mt-8 hidden max-w-xl grid-cols-3 gap-3 sm:grid">
+            <motion.div variants={item} className="mt-8 grid max-w-xl grid-cols-3 gap-3">
               {stats.map((stat) => (
                 <div key={stat.label} className="border-l border-primary/18 pl-3">
                   <p className="font-display text-lg font-bold text-foreground sm:text-xl">{stat.value}</p>

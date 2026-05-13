@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Users, ArrowLeft, CheckCircle2, Loader2 } from 'lucide-react';
-import WalletLayout from '@/components/WalletLayout';
+import { Users, ArrowLeft, CheckCircle2, Loader2, ShieldCheck } from 'lucide-react';
+import Layout from '@/components/Layout';
 import { COMMUNITY_TYPES } from '@/lib/constants';
 import { useWalletGuard } from '@/hooks/useWalletGuard';
 import { useToast } from '@/hooks/use-toast';
@@ -10,7 +10,7 @@ import { createCommunityRecord } from '@/lib/communities';
 
 const CreateCommunity: React.FC = () => {
   const navigate = useNavigate();
-  const { requireWallet, isReady } = useWalletGuard({ action: 'create a community' });
+  const { requireWallet, isReady } = useWalletGuard({ action: 'create a community DAO' });
   const { toast } = useToast();
   const [isPending, setIsPending] = useState(false);
   const [isCreated, setIsCreated] = useState(false);
@@ -20,6 +20,10 @@ const CreateCommunity: React.FC = () => {
     type: '',
     fee: '',
     description: '',
+    quorum: '51',
+    approvalThreshold: '66',
+    votingPeriod: '7',
+    treasuryPolicy: 'multisig-ready',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -43,8 +47,8 @@ const CreateCommunity: React.FC = () => {
         setCreatedCommunityId(community.id);
         setIsCreated(true);
         toast({
-          title: 'Community saved',
-          description: 'The community record is ready. On-chain setup is still pending.',
+          title: 'Community DAO created',
+          description: 'Share the join link with members to get started.',
         });
       } catch (err) {
         toast({
@@ -60,7 +64,7 @@ const CreateCommunity: React.FC = () => {
 
   if (isCreated) {
     return (
-      <WalletLayout>
+      <Layout>
         <section className="py-20">
           <div className="container mx-auto px-4">
             <motion.div
@@ -72,10 +76,10 @@ const CreateCommunity: React.FC = () => {
                 <CheckCircle2 className="w-8 h-8 text-primary" />
               </div>
               <h2 className="font-display text-2xl font-bold text-foreground mb-3">
-                {form.name} record created
+                {form.name} is live
               </h2>
               <p className="text-sm text-muted-foreground mb-8">
-                The app record is ready. On-chain setup, payment reconciliation, and membership minting are still pending.
+                Your Community DAO is ready. Share the join link with members, then create your first governance proposal from the dashboard.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <button
@@ -95,15 +99,16 @@ const CreateCommunity: React.FC = () => {
             </motion.div>
           </div>
         </section>
-      </WalletLayout>
+      </Layout>
     );
   }
 
   return (
-    <WalletLayout>
+    <Layout>
       <section className="py-10 md:py-16">
         <div className="container mx-auto px-4">
-          <div className="max-w-lg mx-auto">
+          <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[0.64fr_0.36fr]">
+            <div>
             {/* Back button */}
             <button
               onClick={() => navigate(-1)}
@@ -121,10 +126,10 @@ const CreateCommunity: React.FC = () => {
                 <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center">
                   <Users className="w-5 h-5 text-accent" />
                 </div>
-                <h1 className="font-display text-2xl font-bold text-foreground">Start a Group</h1>
+                <h1 className="font-display text-2xl font-bold text-foreground">Create a Community DAO</h1>
               </div>
               <p className="text-sm text-muted-foreground mb-8">
-                Create a community where members can contribute, make decisions, and manage funds together.
+                Launch a DAO where members can contribute, submit governance proposals, and manage a shared treasury with explicit governance rules.
               </p>
             </motion.div>
 
@@ -203,13 +208,92 @@ const CreateCommunity: React.FC = () => {
                 />
               </div>
 
+              <div className="grid gap-5 rounded-lg border border-border bg-card p-5 md:grid-cols-3">
+                <div className="md:col-span-3">
+                  <h2 className="font-mono text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                    Governance Rules
+                  </h2>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-foreground mb-2">
+                    Quorum Threshold
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      name="quorum"
+                      value={form.quorum}
+                      onChange={handleChange}
+                      min="1"
+                      max="100"
+                      className="w-full bg-surface rounded-lg px-4 py-3 pr-9 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/40 border border-border transition-all"
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">%</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-foreground mb-2">
+                    Approval Threshold
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      name="approvalThreshold"
+                      value={form.approvalThreshold}
+                      onChange={handleChange}
+                      min="1"
+                      max="100"
+                      className="w-full bg-surface rounded-lg px-4 py-3 pr-9 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/40 border border-border transition-all"
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">%</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-foreground mb-2">
+                    Default Voting Period
+                  </label>
+                  <select
+                    name="votingPeriod"
+                    value={form.votingPeriod}
+                    onChange={handleChange}
+                    className="w-full bg-surface rounded-lg px-4 py-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/40 border border-border cursor-pointer appearance-none"
+                  >
+                    <option value="3">3 days</option>
+                    <option value="7">7 days</option>
+                    <option value="14">14 days</option>
+                    <option value="30">30 days</option>
+                  </select>
+                </div>
+
+                <div className="md:col-span-3">
+                  <label className="block text-xs font-semibold text-foreground mb-2">
+                    Treasury Policy
+                  </label>
+                  <select
+                    name="treasuryPolicy"
+                    value={form.treasuryPolicy}
+                    onChange={handleChange}
+                    className="w-full bg-surface rounded-lg px-4 py-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/40 border border-border cursor-pointer appearance-none"
+                  >
+                    <option value="multisig-ready">Multisig-ready treasury release</option>
+                    <option value="proposal-only">Proposal-approved releases only</option>
+                    <option value="manual-review">Manual admin review for releases</option>
+                  </select>
+                </div>
+              </div>
+
               {/* Submit */}
               {!isReady ? (
-                <div className="baraza-card p-4 text-center">
-                  <p className="text-xs text-muted-foreground mb-1">
-                    Connect your wallet to create a community
-                  </p>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => requireWallet(async () => undefined)}
+                  className="w-full btn-warm text-sm py-3.5 flex items-center justify-center gap-2"
+                >
+                  Connect wallet to continue
+                </button>
               ) : (
                 <button
                   type="submit"
@@ -219,18 +303,49 @@ const CreateCommunity: React.FC = () => {
                   {isPending ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Creating...
+                      Creating…
                     </>
                   ) : (
-                    'Create Community'
+                    'Create Community DAO'
                   )}
                 </button>
               )}
             </motion.form>
+            </div>
+
+            <aside className="lg:pt-14">
+              <div className="baraza-card sticky top-24 p-5">
+                <h2 className="font-mono text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                  Setup Checklist
+                </h2>
+                <div className="mt-5 space-y-4">
+                  {[
+                    ['CommunityAccount', 'Ready from form details'],
+                    ['TreasuryAccount', 'Pending on-chain setup'],
+                    ['MembershipTier', 'Uses monthly dues'],
+                    ['Governance Rules', 'Quorum and approval thresholds'],
+                    ['Membership Credential', 'Minted after payment attestation'],
+                  ].map(([label, detail], index) => (
+                    <div key={label} className="flex gap-3">
+                      <ShieldCheck className={index === 0 ? 'mt-0.5 h-5 w-5 text-confirmed' : 'mt-0.5 h-5 w-5 text-primary'} />
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">{label}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">{detail}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-6 rounded-lg border border-primary/20 bg-primary/8 p-4">
+                  <p className="text-xs leading-5 text-muted-foreground">
+                    Treasury setup, membership tiers, and credentials are provisioned automatically once your DAO is created.
+                  </p>
+                </div>
+              </div>
+            </aside>
           </div>
         </div>
       </section>
-    </WalletLayout>
+    </Layout>
   );
 };
 

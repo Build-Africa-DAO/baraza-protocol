@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Vote, ArrowLeft, Info, Loader2 } from 'lucide-react';
-import WalletLayout from '@/components/WalletLayout';
+import { Vote, ArrowLeft, Info, Loader2, ShieldCheck } from 'lucide-react';
+import Layout from '@/components/Layout';
 import { formatKSh } from '@/lib/utils';
 import { useWalletGuard } from '@/hooks/useWalletGuard';
 import { useToast } from '@/hooks/use-toast';
@@ -11,7 +11,7 @@ import { useCommunity } from '@/hooks/useCommunities';
 const CreateDecision: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const { requireWallet, isReady } = useWalletGuard({ action: 'propose decisions' });
+  const { requireWallet, isReady } = useWalletGuard({ action: 'submit governance proposals' });
   const { toast } = useToast();
   const [form, setForm] = useState({
     title: '',
@@ -31,19 +31,19 @@ const CreateDecision: React.FC = () => {
 
   if (isLoading) {
     return (
-      <WalletLayout>
+      <Layout>
         <section className="py-20">
           <div className="container mx-auto px-4">
             <div className="baraza-card h-48 max-w-lg mx-auto animate-pulse" />
           </div>
         </section>
-      </WalletLayout>
+      </Layout>
     );
   }
 
   if (!community) {
     return (
-      <WalletLayout>
+      <Layout>
         <section className="py-20">
           <div className="container mx-auto px-4 text-center">
             <h1 className="font-display text-2xl font-bold text-foreground mb-3">
@@ -57,7 +57,7 @@ const CreateDecision: React.FC = () => {
             </Link>
           </div>
         </section>
-      </WalletLayout>
+      </Layout>
     );
   }
 
@@ -70,9 +70,8 @@ const CreateDecision: React.FC = () => {
       setIsPending(true);
       try {
         toast({
-          title: 'Proposal creation is not wired yet',
-          description: 'Persistence and governance instructions are required before a proposal can be opened for voting.',
-          variant: 'destructive',
+          title: 'Proposal submission — coming soon',
+          description: 'Voting opens once the on-chain governance program ships. Thanks for trying it early.',
         });
       } finally {
         setIsPending(false);
@@ -81,7 +80,7 @@ const CreateDecision: React.FC = () => {
   };
 
   return (
-    <WalletLayout>
+    <Layout>
       <section className="py-10 md:py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-lg mx-auto">
@@ -102,10 +101,10 @@ const CreateDecision: React.FC = () => {
                 <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
                   <Vote className="w-5 h-5 text-primary" />
                 </div>
-                <h1 className="font-display text-2xl font-bold text-foreground">Propose a Decision</h1>
+                <h1 className="font-display text-2xl font-bold text-foreground">Submit a Governance Proposal</h1>
               </div>
               <p className="text-sm text-muted-foreground mb-8">
-                Submit a proposal for the community to vote on. Include how much funding is needed from the community fund.
+                Submit a proposal for the community DAO to vote on. Include how much funding is needed from the treasury.
               </p>
             </motion.div>
 
@@ -114,13 +113,30 @@ const CreateDecision: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
-              className="baraza-card p-4 mb-6 flex items-center gap-3 bg-surface"
+              className="baraza-card p-4 mb-4 flex items-center gap-3 bg-surface"
             >
               <Info className="w-5 h-5 text-primary flex-shrink-0" />
               <div>
-                <p className="text-xs text-muted-foreground">Available Community Fund</p>
+                <p className="text-xs text-muted-foreground">Available DAO Treasury</p>
                 <p className="text-sm font-bold text-accent">{formatKSh(community.fundBalance)}</p>
               </div>
+            </motion.div>
+
+            {/* Governance rules */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.08 }}
+              className="mb-6 rounded-lg border border-primary/20 bg-primary/8 p-4"
+            >
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Governance rules
+              </div>
+              <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                This DAO requires <strong className="text-foreground">50% quorum</strong> and{" "}
+                <strong className="text-foreground">60% approval</strong>. Voting closes automatically when the period ends.
+              </p>
             </motion.div>
 
             {/* Form */}
@@ -134,7 +150,7 @@ const CreateDecision: React.FC = () => {
               {/* Title */}
               <div>
                 <label className="block text-xs font-semibold text-foreground mb-2">
-                  Decision Title
+                  Proposal Title
                 </label>
                 <input
                   type="text"
@@ -180,7 +196,7 @@ const CreateDecision: React.FC = () => {
                 </div>
                 {overBudget && (
                   <p className="text-xs text-destructive mt-1.5">
-                    This exceeds the available community fund of {formatKSh(community.fundBalance)}
+                    This exceeds the available DAO treasury of {formatKSh(community.fundBalance)}
                   </p>
                 )}
               </div>
@@ -207,7 +223,7 @@ const CreateDecision: React.FC = () => {
               {!isReady ? (
                 <div className="baraza-card p-4 text-center">
                   <p className="text-xs text-muted-foreground">
-                    Connect your wallet to propose a decision
+                    Connect your wallet to submit a governance proposal
                   </p>
                 </div>
               ) : (
@@ -222,7 +238,7 @@ const CreateDecision: React.FC = () => {
                       Submitting...
                     </>
                   ) : (
-                    'Submit Decision for Voting'
+                    'Submit Proposal for Vote'
                   )}
                 </button>
               )}
@@ -230,7 +246,7 @@ const CreateDecision: React.FC = () => {
           </div>
         </div>
       </section>
-    </WalletLayout>
+    </Layout>
   );
 };
 

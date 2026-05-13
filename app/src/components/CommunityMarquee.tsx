@@ -11,7 +11,7 @@ const communities = [
 ];
 
 const recentActivity = [
-  { action: "Decision passed", community: "Kilimani Chama", time: "2m", icon: Vote },
+  { action: "Proposal passed", community: "Kilimani Chama", time: "2m", icon: Vote },
   { action: "Dues confirmed", community: "Westlands SACCO", time: "8m", icon: Banknote },
   { action: "Treasury grew", community: "Estate Owners", time: "15m", icon: TrendingUp },
   { action: "Payout released", community: "Mama Mboga Fund", time: "22m", icon: CheckCircle2 },
@@ -68,7 +68,7 @@ export function CommunityMarquee() {
       <div className="container mx-auto mb-6 px-4">
         <div className="grid gap-3 md:grid-cols-[auto_1fr] md:items-end">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-primary">Live network</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary">Sample Network</p>
             <h2 className="mt-2 font-display text-2xl font-bold text-foreground md:text-3xl">
               Community treasuries in motion
             </h2>

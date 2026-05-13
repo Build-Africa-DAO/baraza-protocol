@@ -2,26 +2,67 @@ import { Link } from "react-router-dom";
 import { Github, Globe, Twitter } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 
-const links = {
+type FooterLink =
+  | { label: string; to: string }
+  | { label: string; href: string; external: true }
+  | { label: string; soon: true };
+
+const links: Record<string, FooterLink[]> = {
   Product: [
-    { label: "Browse Communities", to: "/communities" },
-    { label: "Start a Group", to: "/create" },
-    { label: "Dashboard", to: "/dashboard/1" },
-    { label: "Workflow", to: "/#features" },
+    { label: "Browse Community DAOs", to: "/communities" },
+    { label: "Create a DAO", to: "/create" },
+    { label: "How it Works", to: "/#features" },
   ],
   Support: [
-    { label: "Help Centre", to: "#" },
-    { label: "Community Guidelines", to: "#" },
-    { label: "Privacy Policy", to: "#" },
-    { label: "Terms of Service", to: "#" },
+    { label: "Help Centre", soon: true },
+    { label: "Community Guidelines", soon: true },
+    { label: "Privacy Policy", soon: true },
+    { label: "Terms of Service", soon: true },
   ],
   Developers: [
-    { label: "Smart Contracts", to: "#" },
-    { label: "API Docs", to: "#" },
-    { label: "GitHub", to: "#" },
-    { label: "Changelog", to: "#" },
+    { label: "Smart Contracts", soon: true },
+    { label: "API Docs", soon: true },
+    { label: "GitHub", soon: true },
+    { label: "Changelog", soon: true },
   ],
 };
+
+function FooterLinkItem({ link }: { link: FooterLink }) {
+  if ("to" in link) {
+    return (
+      <Link
+        to={link.to}
+        className="text-sm text-muted-foreground transition-colors duration-150 hover:text-primary"
+      >
+        {link.label}
+      </Link>
+    );
+  }
+  if ("external" in link) {
+    return (
+      <a
+        href={link.href}
+        target="_blank"
+        rel="noreferrer noopener"
+        className="text-sm text-muted-foreground transition-colors duration-150 hover:text-primary"
+      >
+        {link.label}
+      </a>
+    );
+  }
+  return (
+    <span
+      aria-disabled="true"
+      title="Coming soon"
+      className="cursor-not-allowed text-sm text-muted-foreground/60"
+    >
+      {link.label}
+      <span className="ml-1.5 text-[10px] uppercase tracking-wider text-muted-foreground/50">
+        Soon
+      </span>
+    </span>
+  );
+}
 
 export default function Footer() {
   return (
@@ -31,8 +72,8 @@ export default function Footer() {
           <div className="lg:col-span-2">
             <BrandLogo size="md" className="mb-4" />
             <p className="mb-5 max-w-xs text-sm leading-relaxed text-muted-foreground">
-              A product-led treasury layer for groups that collect dues, vote on proposals,
-              and move funds with shared visibility.
+              A treasury layer for groups that collect dues, vote on proposals,
+              and move funds with shared on-chain visibility.
             </p>
             <div className="flex items-center gap-2">
               {[
@@ -40,14 +81,15 @@ export default function Footer() {
                 { icon: Github, label: "GitHub" },
                 { icon: Globe, label: "Website" },
               ].map(({ icon: Icon, label }) => (
-                <a
+                <span
                   key={label}
-                  href="#"
-                  aria-label={label}
-                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-border/60 bg-background/40 text-muted-foreground transition-all duration-200 hover:border-primary/40 hover:text-foreground"
+                  aria-label={`${label} (coming soon)`}
+                  aria-disabled="true"
+                  title="Coming soon"
+                  className="flex h-9 w-9 cursor-not-allowed items-center justify-center rounded-lg border border-border/40 bg-background/30 text-muted-foreground/50"
                 >
                   <Icon className="h-4 w-4" />
-                </a>
+                </span>
               ))}
             </div>
           </div>
@@ -60,12 +102,7 @@ export default function Footer() {
               <ul className="space-y-2.5">
                 {items.map((item) => (
                   <li key={item.label}>
-                    <Link
-                      to={item.to}
-                      className="text-sm text-muted-foreground transition-colors duration-150 hover:text-primary"
-                    >
-                      {item.label}
-                    </Link>
+                    <FooterLinkItem link={item} />
                   </li>
                 ))}
               </ul>

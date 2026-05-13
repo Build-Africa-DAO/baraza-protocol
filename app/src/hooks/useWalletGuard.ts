@@ -37,10 +37,8 @@ export function useWalletGuard(options: WalletGuardOptions = {}): WalletGuardRes
       }
 
       if (!connected || !publicKey) {
-        toast({
-          title: 'Wallet not connected',
-          description: `Connect your Solana wallet to ${options.action ?? 'perform this action'}.`,
-        });
+        // Opening the wallet modal already tells the user what they need to do —
+        // a parallel toast just competes with it.
         setVisible(true);
         return undefined;
       }
@@ -50,11 +48,11 @@ export function useWalletGuard(options: WalletGuardOptions = {}): WalletGuardRes
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Transaction failed.';
 
-        // User explicitly rejected — no error toast needed
-        if (message.toLowerCase().includes('user rejected')) {
+        // Match the rejection vocab across Phantom, Solflare, Backpack, Coinbase, etc.
+        if (/user (rejected|denied|cancell?ed)|rejected by user|approval denied/i.test(message)) {
           toast({
-            title: 'Cancelled',
-            description: 'Transaction was cancelled.',
+            title: 'Signature cancelled',
+            description: `Tap ${options.action ?? 'the action'} when you're ready to sign.`,
           });
           return undefined;
         }

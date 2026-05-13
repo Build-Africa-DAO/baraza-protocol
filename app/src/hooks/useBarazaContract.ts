@@ -8,8 +8,6 @@
  */
 import { useCallback, useRef, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { PublicKey, SystemProgram } from '@solana/web3.js';
-import { withRpcFallback } from '@/lib/rpc';
 import { useToast } from '@/hooks/use-toast';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -30,6 +28,10 @@ export interface VoteState {
 }
 
 // ─── Cache ────────────────────────────────────────────────────────────────────
+//
+// Reads are not yet wired to the on-chain program, so there is nothing to
+// cache. The map and helpers below will return once fetchTreasuryBalance and
+// fetchVoteState read real account state.
 
 const CACHE_TTL_MS = 30_000; // 30 s
 const cache = new Map<string, { data: unknown; ts: number }>();
@@ -44,10 +46,6 @@ function fromCache<T>(key: string): T | null {
   return entry.data as T;
 }
 
-function toCache<T>(key: string, data: T): void {
-  cache.set(key, { data, ts: Date.now() });
-}
-
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 interface UseBarazaContractResult {
@@ -56,8 +54,10 @@ interface UseBarazaContractResult {
   fetchVoteState: (proposalId: string) => Promise<VoteState | null>;
   // Write
   castVote: (proposalId: string, communityId: string, support: boolean) => Promise<boolean>;
-  joinCommunity: (communityId: string, feeLamports: number) => Promise<boolean>;
-  createCommunity: (name: string, feeLamports: number) => Promise<string | null>;
+  /** feeKSh is the membership fee in KSh. KSh→lamports conversion happens on the program/backend side. */
+  joinCommunity: (communityId: string, feeKSh: number) => Promise<boolean>;
+  /** feeKSh is the monthly dues in KSh. KSh→lamports conversion happens on the program/backend side. */
+  createCommunity: (name: string, feeKSh: number) => Promise<string | null>;
   // State
   isPending: boolean;
 }
@@ -77,19 +77,10 @@ export function useBarazaContract(): UseBarazaContractResult {
       const cached = fromCache<number>(cacheKey);
       if (cached !== null) return cached;
 
-      try {
-        const balance = await withRpcFallback(async (conn) => {
-          // In production this would use an Anchor program account PDA
-          // For now, returns a simulated balance based on community mock data
-          const pk = new PublicKey(SystemProgram.programId);
-          return conn.getBalance(pk);
-        });
-        const result = balance ?? 0;
-        toCache(cacheKey, result);
-        return result;
-      } catch {
-        return 0;
-      }
+      // TODO: derive the community treasury PDA and call conn.getBalance(pda)
+      // once the Baraza Anchor program is deployed.
+      void communityId;
+      return 0;
     },
     []
   );
@@ -124,9 +115,8 @@ export function useBarazaContract(): UseBarazaContractResult {
 
       try {
         toast({
-          title: `${action} is not wired yet`,
-          description: 'Real Baraza program instructions, persistence, and reconciliation are required before this can complete.',
-          variant: 'destructive',
+          title: `${action} — coming soon`,
+          description: 'This action goes live once the on-chain program ships. Thanks for trying it early.',
         });
         return false;
       } finally {
@@ -138,28 +128,25 @@ export function useBarazaContract(): UseBarazaContractResult {
   );
 
   const castVote = useCallback(
-    async (proposalId: string, communityId: string, support: boolean): Promise<boolean> => {
+    async (proposalId: string, _communityId: string, _support: boolean): Promise<boolean> => {
       const txId = `vote:${proposalId}:${publicKey?.toBase58()}`;
-      void support; void communityId;
       return blockUnwiredWrite(txId, 'Vote casting');
     },
     [blockUnwiredWrite, publicKey]
   );
 
   const joinCommunity = useCallback(
-    async (communityId: string, feeLamports: number): Promise<boolean> => {
+    async (communityId: string, _feeKSh: number): Promise<boolean> => {
       const txId = `join:${communityId}:${publicKey?.toBase58()}`;
-      void feeLamports;
-      return blockUnwiredWrite(txId, 'Community joining');
+      return blockUnwiredWrite(txId, 'Joining a DAO');
     },
     [blockUnwiredWrite, publicKey]
   );
 
   const createCommunity = useCallback(
-    async (name: string, feeLamports: number): Promise<string | null> => {
+    async (name: string, _feeKSh: number): Promise<string | null> => {
       const txId = `create:${name}:${publicKey?.toBase58()}`;
-      void feeLamports;
-      const success = await blockUnwiredWrite(txId, 'Community creation');
+      const success = await blockUnwiredWrite(txId, 'Creating a DAO');
       return success ? `community-${Date.now()}` : null;
     },
     [blockUnwiredWrite, publicKey]

@@ -5,8 +5,7 @@ import { useConnection } from '@solana/wallet-adapter-react';
 import { Copy, LogOut, RefreshCw, ChevronDown, AlertTriangle } from 'lucide-react';
 import { truncateAddress } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-
-const DEVNET_GENESIS = 'EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG';
+import { EXPECTED_GENESIS, NETWORK_LABEL } from '@/lib/network';
 
 /** Branded wallet button + dropdown with disconnect / copy / change wallet */
 const WalletStatus: React.FC = () => {
@@ -15,16 +14,26 @@ const WalletStatus: React.FC = () => {
   const { setVisible } = useWalletModal();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
-  const [wrongChain, setWrongChain] = useState(false);
+  const [networkState, setNetworkState] = useState<'unknown' | 'right' | 'wrong'>('unknown');
   const ref = useRef<HTMLDivElement>(null);
 
-  // Detect wrong chain by comparing genesis hash
+  // Detect wrong chain by comparing genesis hash. On RPC failure we deliberately
+  // stay 'unknown' instead of asserting 'right' — silently treating an unreachable
+  // RPC as the correct network is how users end up signing on the wrong chain.
   useEffect(() => {
-    if (!connected) { setWrongChain(false); return; }
+    if (!connected) { setNetworkState('unknown'); return; }
+    let cancelled = false;
     connection.getGenesisHash().then((hash) => {
-      setWrongChain(hash !== DEVNET_GENESIS);
-    }).catch(() => setWrongChain(false));
+      if (cancelled) return;
+      setNetworkState(hash === EXPECTED_GENESIS ? 'right' : 'wrong');
+    }).catch(() => {
+      if (cancelled) return;
+      setNetworkState('unknown');
+    });
+    return () => { cancelled = true; };
   }, [connected, connection]);
+
+  const wrongChain = networkState === 'wrong';
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -75,7 +84,7 @@ const WalletStatus: React.FC = () => {
       {wrongChain && (
         <div className="absolute -top-8 right-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1 rounded-full bg-destructive/15 border border-destructive/30 text-destructive text-[11px] font-medium">
           <AlertTriangle className="w-3 h-3" />
-          Wrong network — switch to Devnet
+          Wrong network — switch to {NETWORK_LABEL}
         </div>
       )}
 

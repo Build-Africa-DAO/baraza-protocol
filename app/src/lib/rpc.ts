@@ -1,16 +1,19 @@
 import { Connection, clusterApiUrl } from '@solana/web3.js';
-import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { WALLET_ADAPTER_NETWORK } from '@/lib/network';
 
-const DEVNET_ENDPOINTS = [
-  import.meta.env.VITE_RPC_ENDPOINT,
-  'https://api.devnet.solana.com',
-  clusterApiUrl(WalletAdapterNetwork.Devnet),
-].filter(Boolean) as string[];
+const RPC_ENDPOINTS = [
+  ...new Set(
+    [
+      import.meta.env.VITE_RPC_ENDPOINT,
+      clusterApiUrl(WALLET_ADAPTER_NETWORK),
+    ].filter(Boolean) as string[]
+  ),
+];
 
 let activeEndpointIndex = 0;
 
 export function getPrimaryEndpoint(): string {
-  return DEVNET_ENDPOINTS[activeEndpointIndex] ?? DEVNET_ENDPOINTS[0];
+  return RPC_ENDPOINTS[activeEndpointIndex] ?? RPC_ENDPOINTS[0];
 }
 
 /**
@@ -31,9 +34,9 @@ export async function withRpcFallback<T>(
   fn: (connection: Connection) => Promise<T>
 ): Promise<T> {
   let lastError: unknown;
-  for (let i = 0; i < DEVNET_ENDPOINTS.length; i++) {
-    const endpointIdx = (activeEndpointIndex + i) % DEVNET_ENDPOINTS.length;
-    const conn = new Connection(DEVNET_ENDPOINTS[endpointIdx], {
+  for (let i = 0; i < RPC_ENDPOINTS.length; i++) {
+    const endpointIdx = (activeEndpointIndex + i) % RPC_ENDPOINTS.length;
+    const conn = new Connection(RPC_ENDPOINTS[endpointIdx], {
       commitment: 'confirmed',
     });
     try {

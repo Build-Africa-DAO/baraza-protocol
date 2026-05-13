@@ -48,10 +48,10 @@ export default function Communities() {
               Discover
             </p>
             <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-3">
-              Communities
+              Community DAOs
             </h1>
             <p className="text-muted-foreground">
-              Find a group to join, or explore how communities are using Baraza.
+              Find a DAO to join, or explore how communities are governing funds with Baraza.
             </p>
           </motion.div>
         </div>
@@ -68,7 +68,7 @@ export default function Communities() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search communities by name or type…"
+                placeholder="Search by name"
                 className={cn(
                   "w-full bg-surface border border-border rounded-xl",
                   "pl-10 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground",
@@ -107,21 +107,21 @@ export default function Communities() {
                 className="text-sm font-bold px-5 py-3 rounded-xl whitespace-nowrap"
               >
                 <PlusCircle className="w-4 h-4" />
-                Start a Group
+                Create a DAO
               </ShimmerButton>
             </Link>
           </div>
 
           {error && (
             <div className="baraza-card p-4 mb-5 border-destructive/40">
-              <p className="text-sm text-destructive">Could not load saved communities.</p>
-              <p className="text-xs text-muted-foreground mt-1">{error.message}</p>
+              <p className="text-sm text-destructive">We couldn&apos;t load Community DAOs right now.</p>
+              <p className="text-xs text-muted-foreground mt-1">Check your connection and refresh.</p>
             </div>
           )}
 
           {/* Results count */}
           {isLoading ? (
-            <p className="text-xs text-muted-foreground mb-5">Loading communities...</p>
+            <p className="text-xs text-muted-foreground mb-5">Loading Community DAOs…</p>
           ) : search || typeFilter !== "all" ? (
             <p className="text-xs text-muted-foreground mb-5">
               {filtered.length} {filtered.length === 1 ? "community" : "communities"} found
@@ -159,13 +159,13 @@ export default function Communities() {
                 <Search className="w-6 h-6 text-primary" />
               </div>
               <p className="font-display text-base font-semibold text-foreground mb-1">
-                No communities found
+                No DAOs match that filter yet
               </p>
               <p className="text-sm text-muted-foreground mb-6">
-                Try a different search term or filter.
+                Try a different type, or start your own Community DAO.
               </p>
               <Link to="/create" className="btn-primary inline-flex items-center gap-2 text-sm">
-                <PlusCircle className="w-4 h-4" /> Create a Community
+                <PlusCircle className="w-4 h-4" /> Create a Community DAO
               </Link>
             </motion.div>
           )}
