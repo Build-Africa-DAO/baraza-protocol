@@ -14,18 +14,6 @@ const links: Record<string, FooterLink[]> = {
     { label: "Create a DAO", to: "/create" },
     { label: "How it Works", to: "/#features" },
   ],
-  Support: [
-    { label: "Help Centre", soon: true },
-    { label: "Community Guidelines", soon: true },
-    { label: "Privacy Policy", soon: true },
-    { label: "Terms of Service", soon: true },
-  ],
-  Developers: [
-    { label: "Smart Contracts", soon: true },
-    { label: "API Docs", soon: true },
-    { label: "GitHub", soon: true },
-    { label: "Changelog", soon: true },
-  ],
 };
 
 function FooterLinkItem({ link }: { link: FooterLink }) {
@@ -69,7 +57,7 @@ export default function Footer() {
   return (
     <footer className="border-t border-border/60 bg-card/50 backdrop-blur-sm">
       <div className="container mx-auto px-4 py-14">
-        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <BrandLogo size="md" className="mb-4" />
             <p className="mb-5 max-w-xs text-sm leading-relaxed text-muted-foreground">
