@@ -177,7 +177,7 @@ export default function Profile() {
                       </Link>
                       <Link to="/create" className="btn-ghost inline-flex items-center gap-2 text-sm">
                         <PlusCircle className="h-4 w-4" />
-                        Create a Community DAO
+                        Launch a Community DAO
                       </Link>
                     </div>
                   </div>

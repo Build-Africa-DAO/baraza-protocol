@@ -14,7 +14,7 @@ import { useChain } from '@/hooks/useChain';
 
 const CreateCommunity: React.FC = () => {
   const navigate = useNavigate();
-  const { requireWallet, isReady } = useWalletGuard({ action: 'create a community DAO' });
+  const { requireWallet, isReady } = useWalletGuard({ action: 'launch a community DAO' });
   const { toast } = useToast();
   const { chain, chainMeta } = useChain();
   const [isPending, setIsPending] = useState(false);
@@ -104,14 +104,14 @@ const CreateCommunity: React.FC = () => {
         toast({
           title: charge.persisted
             ? `${formatKSh(DAO_CREATION_FEE_KES)} payment received`
-            : `Community DAO created (simulator offline)`,
+            : `Community DAO launched (simulator offline)`,
           description: charge.persisted
             ? `Order ${charge.orderId.slice(0, 12)}…  · ${form.name} is live.`
-            : 'Local dev mode — payment skipped, community created.',
+            : 'Local dev mode — payment skipped, community launched.',
         });
       } catch (err) {
         toast({
-          title: 'Could not create community',
+          title: 'Could not launch community',
           description: err instanceof Error ? err.message : 'Please try again.',
           variant: 'destructive',
         });
@@ -189,7 +189,7 @@ const CreateCommunity: React.FC = () => {
                 <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center">
                   <Users className="w-5 h-5 text-accent" />
                 </div>
-                <h1 className="font-display text-2xl font-bold text-foreground">Create a Community DAO</h1>
+                <h1 className="font-display text-2xl font-bold text-foreground">Launch a Community DAO</h1>
               </div>
               <p className="text-sm text-muted-foreground mb-8">
                 Launch a DAO where members can contribute, submit governance proposals, and manage a shared treasury with explicit governance rules.
@@ -349,9 +349,13 @@ const CreateCommunity: React.FC = () => {
                 </div>
               </div>
 
-              {/* Payment: phone + creation fee + network */}
-              <div className="rounded-lg border border-border/60 bg-surface divide-y divide-border/40">
-                <div className="px-4 py-4">
+              {/* Payment: matches the Governance Rules card style above for visual parity */}
+              <div className="grid gap-4 rounded-lg border border-border bg-card p-5">
+                <h2 className="font-mono text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                  Payment
+                </h2>
+
+                <div>
                   <label htmlFor="create-phone" className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-foreground">
                     <Phone className="h-3.5 w-3.5 text-primary" />
                     M-Pesa number for the {formatKSh(DAO_CREATION_FEE_KES)} charge
@@ -378,7 +382,7 @@ const CreateCommunity: React.FC = () => {
                   )}
                 </div>
 
-                <div className="flex items-center justify-between px-4 py-3">
+                <div className="grid gap-2 border-t border-border/40 pt-4 text-sm sm:grid-cols-[1fr_auto] sm:items-center sm:gap-x-4">
                   <div>
                     <p className="text-xs font-semibold text-foreground">DAO creation fee</p>
                     <p className="mt-0.5 text-[11px] text-muted-foreground">
@@ -389,7 +393,8 @@ const CreateCommunity: React.FC = () => {
                     {formatKSh(DAO_CREATION_FEE_KES)}
                   </span>
                 </div>
-                <div className="flex items-center justify-between px-4 py-3 text-xs">
+
+                <div className="grid gap-2 text-xs sm:grid-cols-[1fr_auto] sm:items-center sm:gap-x-4">
                   <span className="text-muted-foreground">Settled on</span>
                   <span className="inline-flex items-center gap-1.5 font-semibold text-foreground">
                     <span
@@ -423,7 +428,7 @@ const CreateCommunity: React.FC = () => {
                       Processing payment…
                     </>
                   ) : (
-                    `Pay ${formatKSh(DAO_CREATION_FEE_KES)} & Create DAO`
+                    `Pay ${formatKSh(DAO_CREATION_FEE_KES)} & Launch DAO`
                   )}
                 </button>
               )}

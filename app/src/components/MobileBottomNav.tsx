@@ -69,7 +69,7 @@ export default function MobileBottomNav() {
             )}
           >
             <PlusCircle className="h-7 w-7" />
-            <span className="sr-only">Create a Community DAO</span>
+            <span className="sr-only">Launch a Community DAO</span>
           </Link>
         </div>
 

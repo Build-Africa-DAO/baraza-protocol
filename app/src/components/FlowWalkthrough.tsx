@@ -56,10 +56,10 @@ const flows: Record<FlowKey, { label: string; title: string; steps: FlowStep[] }
   },
   organizer: {
     label: "Organizer",
-    title: "Create the group, set rules, admit members, and release funds.",
+    title: "Launch the group, set rules, admit members, and release funds.",
     steps: [
       {
-        title: "Create DAO",
+        title: "Launch DAO",
         detail: "Set the group name, type, dues, quorum, approval, and vote window.",
         icon: ClipboardList,
         stat: "4m",

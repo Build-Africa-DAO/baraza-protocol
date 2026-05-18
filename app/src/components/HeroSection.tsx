@@ -123,7 +123,7 @@ function HeroPreview() {
 
 export default function HeroSection() {
   return (
-    <section className="relative overflow-hidden border-b border-primary/10 pt-18 pb-8 sm:pt-24 sm:pb-10 lg:pt-28">
+    <section className="relative overflow-hidden border-b border-primary/10 pt-16 pb-7 sm:pt-20 sm:pb-8 lg:pt-20">
       <div className="absolute inset-0 pointer-events-none" aria-hidden>
         <div className="absolute inset-0 ambient-globe-layer" />
         <div className="absolute inset-0 bg-gradient-to-r from-background via-background/88 to-background/20" />
@@ -184,7 +184,7 @@ export default function HeroSection() {
               </Link>
             </motion.div>
 
-            <motion.div variants={item} className="mt-7 grid max-w-xl grid-cols-3 gap-3">
+            <motion.div variants={item} className="mt-6 grid max-w-xl grid-cols-3 gap-3">
               {stats.map((stat) => (
                 <div key={stat.label} className="border-l border-primary/18 pl-3">
                   <p className="font-display text-lg font-bold text-foreground sm:text-xl">{stat.value}</p>
@@ -201,7 +201,7 @@ export default function HeroSection() {
           variants={item}
           initial={false}
           animate="show"
-          className="mt-8 hidden flex-wrap items-center gap-3 border-t border-primary/10 pt-5 text-xs text-muted-foreground sm:flex"
+          className="mt-6 hidden flex-wrap items-center gap-3 border-t border-primary/10 pt-4 text-xs text-muted-foreground sm:flex"
         >
           <span className="inline-flex items-center gap-2">
             <Users className="h-3.5 w-3.5 text-primary" />

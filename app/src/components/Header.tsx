@@ -10,7 +10,7 @@ const navLinks = [
   { path: "/profile", label: "Profile" },
   { path: "/communities", label: "Explore" },
   { path: "/evaluate", label: "Evaluate" },
-  { path: "/create", label: "Create" },
+  { path: "/create", label: "Launch" },
 ];
 
 interface HeaderProps {

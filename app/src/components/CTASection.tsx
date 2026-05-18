@@ -44,7 +44,7 @@ export default function CTASection() {
                   shimmerColor="rgba(255,255,255,0.5)"
                   className="w-full justify-center rounded-lg px-7 py-3.5 text-sm font-bold sm:w-auto"
                 >
-                  Create a DAO
+                  Launch a DAO
                   <ArrowRight className="h-4 w-4" />
                 </ShimmerButton>
               </Link>

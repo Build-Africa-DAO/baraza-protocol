@@ -178,7 +178,7 @@ export default function Communities() {
                 className="text-sm font-bold px-5 py-3 rounded-xl whitespace-nowrap"
               >
                 <PlusCircle className="w-4 h-4" />
-                Create a DAO
+                Launch a DAO
               </ShimmerButton>
             </Link>
           </div>
@@ -242,7 +242,7 @@ export default function Communities() {
                   : "Try a different type, or start your own Community DAO."}
               </p>
               <Link to="/create" className="btn-primary inline-flex items-center gap-2 text-sm">
-                <PlusCircle className="w-4 h-4" /> Create a Community DAO
+                <PlusCircle className="w-4 h-4" /> Launch a Community DAO
               </Link>
             </motion.div>
           )}
