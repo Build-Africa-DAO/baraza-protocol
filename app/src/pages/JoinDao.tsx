@@ -14,6 +14,7 @@ import Layout from "@/components/Layout";
 import { useCommunity } from "@/hooks/useCommunities";
 import { useToast } from "@/hooks/use-toast";
 import { formatKSh } from "@/lib/utils";
+import { normaliseKenyanPhone } from "@/lib/phone";
 import CommunityBanner from "@/components/CommunityBanner";
 
 const joinSteps = [
@@ -70,23 +71,6 @@ function ActivationTracker() {
       </div>
     </div>
   );
-}
-
-/**
- * Normalises a Kenyan phone input to the 9-digit local subscriber form
- * (`7XX XXX XXX`). Accepts any of:
- *   - `7XX XXX XXX` (what the placeholder shows)
- *   - `07XX XXX XXX` (how most Kenyans type it)
- *   - `+254 7XX XXX XXX` / `254 7XX XXX XXX` (international form)
- * Returns null when the input is not a valid Kenyan mobile number.
- */
-function normaliseKenyanPhone(raw: string): string | null {
-  const digits = raw.replace(/\D/g, "");
-  let local: string | null = null;
-  if (digits.length === 9 && digits.startsWith("7")) local = digits;
-  else if (digits.length === 10 && digits.startsWith("07")) local = digits.slice(1);
-  else if (digits.length === 12 && digits.startsWith("2547")) local = digits.slice(3);
-  return local;
 }
 
 function generateLocalOrderId(): string {

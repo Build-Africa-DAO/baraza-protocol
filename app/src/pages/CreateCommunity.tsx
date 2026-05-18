@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Users, ArrowLeft, CheckCircle2, Loader2, ShieldCheck } from 'lucide-react';
+import { Users, ArrowLeft, CheckCircle2, Loader2, Phone, ShieldCheck } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { COMMUNITY_TYPES, DAO_CREATION_FEE_KES } from '@/lib/constants';
 import { formatKSh } from '@/lib/utils';
+import { normaliseKenyanPhone } from '@/lib/phone';
 import { useWalletGuard } from '@/hooks/useWalletGuard';
 import { useToast } from '@/hooks/use-toast';
 import { createCommunityRecord } from '@/lib/communities';
@@ -24,6 +25,7 @@ const CreateCommunity: React.FC = () => {
     type: '',
     fee: '',
     description: '',
+    phone: '',
     quorum: '51',
     approvalThreshold: '66',
     votingPeriod: '7',
@@ -34,14 +36,58 @@ const CreateCommunity: React.FC = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const isValid = !!(form.name.trim() && form.type && form.fee && form.description.trim());
+  const normalisedPhone = normaliseKenyanPhone(form.phone);
+  const isValid = !!(
+    form.name.trim() &&
+    form.type &&
+    form.fee &&
+    form.description.trim() &&
+    normalisedPhone !== null
+  );
+
+  /**
+   * Charge the DAO creation fee via the M-Pesa simulator, then create the
+   * community record. Falls back to direct creation if the simulator endpoint
+   * is unreachable (local dev without `vercel dev`) so the form still works
+   * — the fee is then a paper-only acknowledgement, not enforced.
+   */
+  async function chargeCreationFee(): Promise<{ orderId: string; persisted: boolean }> {
+    try {
+      const res = await fetch('/api/mpesa/simulate', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          phone: `+254${normalisedPhone}`,
+          communityId: 'dao-creation-pending',
+          amount: DAO_CREATION_FEE_KES,
+          currency: 'KES',
+        }),
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { orderId?: string; persisted?: boolean };
+        if (data.orderId) {
+          return { orderId: data.orderId, persisted: data.persisted ?? false };
+        }
+      }
+    } catch {
+      // network/CORS/local-dev — fall through
+    }
+    return {
+      orderId: `ord_local_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      persisted: false,
+    };
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isValid) return;
+    if (!isValid || !normalisedPhone) return;
     await requireWallet(async () => {
       setIsPending(true);
       try {
+        // Step 1: charge the DAO creation fee
+        const charge = await chargeCreationFee();
+
+        // Step 2: create the community record
         const community = await createCommunityRecord({
           name: form.name,
           type: form.type,
@@ -56,8 +102,12 @@ const CreateCommunity: React.FC = () => {
         setCreatedCommunityId(community.id);
         setIsCreated(true);
         toast({
-          title: 'Community DAO created',
-          description: 'Share the join link with members to get started.',
+          title: charge.persisted
+            ? `${formatKSh(DAO_CREATION_FEE_KES)} payment received`
+            : `Community DAO created (simulator offline)`,
+          description: charge.persisted
+            ? `Order ${charge.orderId.slice(0, 12)}…  · ${form.name} is live.`
+            : 'Local dev mode — payment skipped, community created.',
         });
       } catch (err) {
         toast({
@@ -299,8 +349,35 @@ const CreateCommunity: React.FC = () => {
                 </div>
               </div>
 
-              {/* Summary: creation fee + network */}
+              {/* Payment: phone + creation fee + network */}
               <div className="rounded-lg border border-border/60 bg-surface divide-y divide-border/40">
+                <div className="px-4 py-4">
+                  <label htmlFor="create-phone" className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                    <Phone className="h-3.5 w-3.5 text-primary" />
+                    M-Pesa number for the {formatKSh(DAO_CREATION_FEE_KES)} charge
+                  </label>
+                  <div className="flex rounded-lg border border-border bg-background/45 focus-within:border-primary/50">
+                    <span className="border-r border-border px-3 py-2.5 text-sm text-muted-foreground">+254</span>
+                    <input
+                      id="create-phone"
+                      name="phone"
+                      value={form.phone}
+                      onChange={handleChange}
+                      placeholder="7XX XXX XXX"
+                      type="tel"
+                      inputMode="numeric"
+                      autoComplete="tel-national"
+                      aria-invalid={form.phone.length > 0 && normalisedPhone === null}
+                      className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm text-foreground outline-none"
+                    />
+                  </div>
+                  {form.phone.length > 0 && normalisedPhone === null && (
+                    <p className="mt-1.5 text-[11px] text-destructive">
+                      Enter a valid Kenyan mobile number (07XX, 7XX, or +254 7XX).
+                    </p>
+                  )}
+                </div>
+
                 <div className="flex items-center justify-between px-4 py-3">
                   <div>
                     <p className="text-xs font-semibold text-foreground">DAO creation fee</p>
