@@ -130,7 +130,7 @@ export default function JoinStatus() {
       }
     };
 
-    poll();
+    void poll();
     return () => {
       cancelled = true;
       if (timer !== undefined) window.clearTimeout(timer);

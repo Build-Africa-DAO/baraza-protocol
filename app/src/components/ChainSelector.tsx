@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Check, ChevronDown } from 'lucide-react';
 import { CHAIN_LIST, type Chain } from '@/lib/chain';
-import { useChain } from '@/components/ChainProvider';
+import { useChain } from '@/hooks/useChain';
 import { cn } from '@/lib/utils';
 
 interface ChainSelectorProps {

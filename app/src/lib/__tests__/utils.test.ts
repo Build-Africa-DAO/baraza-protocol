@@ -44,7 +44,10 @@ describe('daysRemaining', () => {
 
 describe('cn', () => {
   it('merges class names', () => expect(cn('foo', 'bar')).toBe('foo bar'));
-  it('drops falsy values', () => expect(cn('foo', false && 'bar')).toBe('foo'));
+  it('drops falsy values', () => {
+    const falsy = (): string | false => false as const;
+    expect(cn('foo', falsy() && 'bar')).toBe('foo');
+  });
   it('resolves tailwind conflicts (later wins)', () => {
     expect(cn('text-sm', 'text-lg')).toBe('text-lg');
   });

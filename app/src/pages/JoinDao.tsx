@@ -72,10 +72,21 @@ function ActivationTracker() {
   );
 }
 
-function isValidKenyanPhone(raw: string): boolean {
-  // Accept "7XX XXX XXX" -> normalise to digits; require exactly 9
+/**
+ * Normalises a Kenyan phone input to the 9-digit local subscriber form
+ * (`7XX XXX XXX`). Accepts any of:
+ *   - `7XX XXX XXX` (what the placeholder shows)
+ *   - `07XX XXX XXX` (how most Kenyans type it)
+ *   - `+254 7XX XXX XXX` / `254 7XX XXX XXX` (international form)
+ * Returns null when the input is not a valid Kenyan mobile number.
+ */
+function normaliseKenyanPhone(raw: string): string | null {
   const digits = raw.replace(/\D/g, "");
-  return digits.length === 9 && digits.startsWith("7");
+  let local: string | null = null;
+  if (digits.length === 9 && digits.startsWith("7")) local = digits;
+  else if (digits.length === 10 && digits.startsWith("07")) local = digits.slice(1);
+  else if (digits.length === 12 && digits.startsWith("2547")) local = digits.slice(3);
+  return local;
 }
 
 function generateLocalOrderId(): string {
@@ -92,10 +103,11 @@ export default function JoinDao() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const amount = community?.membershipFee ?? 0;
-  const canSubmit = isValidKenyanPhone(phone) && amount > 0 && !isSubmitting;
+  const normalisedPhone = normaliseKenyanPhone(phone);
+  const canSubmit = normalisedPhone !== null && amount > 0 && !isSubmitting;
 
   async function handleMpesaSubmit() {
-    if (!canSubmit || !id) return;
+    if (!canSubmit || !id || !normalisedPhone) return;
     setIsSubmitting(true);
 
     let orderId: string | null = null;
@@ -106,7 +118,7 @@ export default function JoinDao() {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          phone: `+254${phone.replace(/\D/g, "")}`,
+          phone: `+254${normalisedPhone}`,
           communityId: id,
           amount,
           currency: "KES",
@@ -132,6 +144,9 @@ export default function JoinDao() {
         : "Enter your M-Pesa PIN on your phone to confirm the payment.",
     });
 
+    // Reset state before navigating so re-entering the page (back button)
+    // doesn't leave the button permanently disabled.
+    setIsSubmitting(false);
     navigate(`/join/${id}/status?orderId=${encodeURIComponent(orderId)}`);
   }
 

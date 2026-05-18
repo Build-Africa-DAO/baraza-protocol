@@ -46,13 +46,13 @@ const WalletStatus: React.FC = () => {
 
   const handleCopy = () => {
     if (!publicKey) return;
-    navigator.clipboard.writeText(publicKey.toBase58());
+    void navigator.clipboard.writeText(publicKey.toBase58());
     toast({ title: 'Address copied!' });
     setOpen(false);
   };
 
   const handleDisconnect = () => {
-    disconnect();
+    void disconnect();
     setOpen(false);
   };
 

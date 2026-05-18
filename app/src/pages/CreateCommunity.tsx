@@ -8,7 +8,7 @@ import { useWalletGuard } from '@/hooks/useWalletGuard';
 import { useToast } from '@/hooks/use-toast';
 import { createCommunityRecord } from '@/lib/communities';
 import CommunityBanner from '@/components/CommunityBanner';
-import { useChain } from '@/components/ChainProvider';
+import { useChain } from '@/hooks/useChain';
 
 const CreateCommunity: React.FC = () => {
   const navigate = useNavigate();

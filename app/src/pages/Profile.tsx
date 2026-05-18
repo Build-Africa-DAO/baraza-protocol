@@ -13,6 +13,24 @@ import { CHAINS } from "@/lib/chain";
 export default function Profile() {
   const { publicKey, connected, wallet } = useWallet();
   const { setVisible } = useWalletModal();
+  const { communities } = useCommunities();
+
+  // Address is only needed below the early-return, but `useMemo` MUST be called
+  // unconditionally on every render — so compute it here (defaulting to "")
+  // and skip the lookup when no wallet is connected.
+  const address = publicKey?.toBase58() ?? "";
+
+  const myMemberships = useMemo(() => {
+    if (!address) return [];
+    const records = listMembershipsForWallet(address);
+    return records
+      .map((record) => {
+        const community = communities.find((c) => c.id === record.communityId);
+        if (!community) return null;
+        return { record, community };
+      })
+      .filter((entry): entry is { record: ReturnType<typeof listMembershipsForWallet>[number]; community: typeof communities[number] } => entry !== null);
+  }, [address, communities]);
 
   if (!connected || !publicKey) {
     return (
@@ -34,20 +52,6 @@ export default function Profile() {
       </Layout>
     );
   }
-
-  const address = publicKey.toBase58();
-  const { communities } = useCommunities();
-
-  const myMemberships = useMemo(() => {
-    const records = listMembershipsForWallet(address);
-    return records
-      .map((record) => {
-        const community = communities.find((c) => c.id === record.communityId);
-        if (!community) return null;
-        return { record, community };
-      })
-      .filter((entry): entry is { record: ReturnType<typeof listMembershipsForWallet>[number]; community: typeof communities[number] } => entry !== null);
-  }, [address, communities]);
 
   return (
     <Layout>

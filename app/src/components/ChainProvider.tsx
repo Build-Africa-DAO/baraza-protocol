@@ -1,13 +1,15 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useMemo, useState } from 'react';
 import { CHAINS, type Chain, type ChainMeta, readStoredChain, writeStoredChain } from '@/lib/chain';
 
-interface ChainContextValue {
+export interface ChainContextValue {
   chain: Chain;
   chainMeta: ChainMeta;
   setChain: (chain: Chain) => void;
 }
 
-const ChainContext = createContext<ChainContextValue | undefined>(undefined);
+// Exported for the `useChain` hook in `@/hooks/useChain`. Kept here so the
+// context + provider stay in one place; consumers import via the hook.
+export const ChainContext = createContext<ChainContextValue | undefined>(undefined);
 
 export default function ChainProvider({ children }: { children: React.ReactNode }) {
   const [chain, setChainState] = useState<Chain>(() => readStoredChain());
@@ -23,10 +25,4 @@ export default function ChainProvider({ children }: { children: React.ReactNode 
   );
 
   return <ChainContext.Provider value={value}>{children}</ChainContext.Provider>;
-}
-
-export function useChain(): ChainContextValue {
-  const ctx = useContext(ChainContext);
-  if (!ctx) throw new Error('useChain must be used within a ChainProvider');
-  return ctx;
 }
