@@ -1,21 +1,30 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Users, TrendingUp, Vote, History, PlusCircle, CreditCard,
-  ArrowLeft, Calendar, Loader2, ShieldCheck, ReceiptText
+  ArrowLeft, Calendar, Loader2, ShieldCheck, ReceiptText,
+  LayoutDashboard, Wallet as WalletIcon, ExternalLink, Activity,
 } from 'lucide-react';
 import Layout from '@/components/Layout';
 import DecisionCard from '@/components/DecisionCard';
-import MembershipCard from '@/components/MembershipCard';
 import { MOCK_DECISIONS } from '@/lib/constants';
-import { formatKSh } from '@/lib/utils';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { formatKSh, truncateAddress } from '@/lib/utils';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { useWalletGuard } from '@/hooks/useWalletGuard';
 import { useBarazaContract } from '@/hooks/useBarazaContract';
 import { useCommunity } from '@/hooks/useCommunities';
-import { getActiveMembership, recordActiveMembership } from '@/lib/memberships';
+import {
+  getActiveMembership,
+  listMembershipsForCommunity,
+  recordActiveMembership,
+} from '@/lib/memberships';
 import CommunityBanner from '@/components/CommunityBanner';
+import { CHAINS } from '@/lib/chain';
+import { NETWORK_LABEL } from '@/lib/network';
+
+type DashboardTab = 'overview' | 'members' | 'governance' | 'wallet';
 
 const dashboardGlobeUrl =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuAhAO65kkwr6zxxrtYjpZm23ugp7boCWsRE_kTE7O3PUPmonOS4vJUPPGp_AALnUHlCa23XX7HVjJ3lfv_cs2mIWSzHwYBQIvrue4TcJGeHUsuQLKSNOuhSpHNySzZ8pUcK9MLmMfeh0l2ciNsph8EcgoHMr86aCmoQZLn2qesMSBGPMStXx9CHE1aW6vpRO1bQ13KDvFm92lVbqFLdD6qie_U66bf4EIKpbK6LxxS-9a0Q4YK3m0GuJPePOTqqPhC9tTuWGu4UnIo";
@@ -23,13 +32,41 @@ const dashboardGlobeUrl =
 const CommunityDashboard: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { publicKey } = useWallet();
+  const { connection } = useConnection();
   const { requireWallet } = useWalletGuard({ action: 'join this community' });
   const { joinCommunity, isPending } = useBarazaContract();
-  const [activeTab, setActiveTab] = useState<'decisions' | 'membership'>('decisions');
+  const [activeTab, setActiveTab] = useState<DashboardTab>('overview');
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [isMember, setIsMember] = useState(false);
+  const [walletSol, setWalletSol] = useState<number | null>(null);
 
   const { community, isLoading, error } = useCommunity(id);
+
+  // Fetch the connected wallet's SOL balance from the configured Solana cluster.
+  // Real RPC call — the treasury vault PDA balance is shown only after program deploy.
+  useEffect(() => {
+    if (!publicKey) {
+      setWalletSol(null);
+      return;
+    }
+    let cancelled = false;
+    connection
+      .getBalance(publicKey)
+      .then((lamports) => {
+        if (!cancelled) setWalletSol(lamports / LAMPORTS_PER_SOL);
+      })
+      .catch(() => {
+        if (!cancelled) setWalletSol(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [connection, publicKey]);
+
+  const communityMembers = useMemo(
+    () => (community ? listMembershipsForCommunity(community.id) : []),
+    [community],
+  );
 
   useEffect(() => {
     if (!community || !publicKey) {
@@ -167,6 +204,17 @@ const CommunityDashboard: React.FC = () => {
                   <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 font-medium capitalize text-primary">
                     {community.type} DAO
                   </span>
+                  <span
+                    aria-label={`Network: ${CHAINS[community.chain ?? 'solana'].label}`}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/45 px-2.5 py-1 font-medium text-foreground"
+                  >
+                    <span
+                      aria-hidden
+                      className="h-1.5 w-1.5 rounded-full"
+                      style={{ background: CHAINS[community.chain ?? 'solana'].badgeBg }}
+                    />
+                    {CHAINS[community.chain ?? 'solana'].label}
+                  </span>
                   <span className="inline-flex items-center gap-1">
                     <Calendar className="h-3.5 w-3.5" />
                     Since {new Date(community.createdAt).toLocaleDateString('en-KE', { month: 'short', year: 'numeric' })}
@@ -222,13 +270,16 @@ const CommunityDashboard: React.FC = () => {
 
           {/* Tabs */}
           <div className="mb-6 flex flex-wrap items-center gap-1 border-b border-border/50 pb-px">
-            {[
-              { key: 'decisions', label: 'Governance Proposals', icon: Vote },
-              { key: 'membership', label: 'My Membership', icon: CreditCard },
-            ].map((tab) => (
+            {([
+              { key: 'overview', label: 'Overview', icon: LayoutDashboard },
+              { key: 'members', label: 'Members', icon: Users },
+              { key: 'governance', label: 'Governance', icon: Vote },
+              { key: 'wallet', label: 'Wallet', icon: WalletIcon },
+            ] as const).map((tab) => (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key as typeof activeTab)}
+                onClick={() => setActiveTab(tab.key)}
+                aria-current={activeTab === tab.key ? 'page' : undefined}
                 className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-all border-b-2 -mb-px ${
                   activeTab === tab.key
                     ? 'text-primary border-primary'
@@ -239,15 +290,8 @@ const CommunityDashboard: React.FC = () => {
                 {tab.label}
               </button>
             ))}
-            <Link
-              to={`/dashboard/${community.id}/treasury`}
-              className="flex items-center gap-2 border-b-2 border-transparent px-4 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:text-foreground"
-            >
-              <ReceiptText className="h-4 w-4" />
-              DAO Treasury
-            </Link>
             <div className="flex-1" />
-            {isMember && activeTab === 'decisions' && (
+            {isMember && activeTab === 'governance' && (
               <Link
                 to={`/dashboard/${community.id}/decisions/create`}
                 className="btn-primary text-xs flex items-center gap-1.5 px-3 py-2"
@@ -258,9 +302,9 @@ const CommunityDashboard: React.FC = () => {
             )}
           </div>
 
-          {/* Content */}
-          {activeTab === 'decisions' && (
-            <div className="space-y-8">
+          {/* Overview tab */}
+          {activeTab === 'overview' && (
+            <div className="space-y-6">
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_21rem]">
                 <div className="premium-glass rounded-xl p-5">
                   <div className="mb-4 flex items-center justify-between gap-4">
@@ -268,8 +312,9 @@ const CommunityDashboard: React.FC = () => {
                       <h3 className="font-display text-lg font-semibold text-foreground">DAO activity overview</h3>
                       <p className="text-xs text-muted-foreground">Contributions, proposals, and votes at a glance.</p>
                     </div>
-                    <span className="hidden rounded-full border border-confirmed/25 bg-confirmed/10 px-3 py-1 text-xs font-semibold text-confirmed sm:inline-flex">
-                      Live data
+                    <span className="hidden rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary sm:inline-flex">
+                      <Activity className="mr-1 h-3 w-3" />
+                      Solana {NETWORK_LABEL}
                     </span>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-3">
@@ -286,28 +331,136 @@ const CommunityDashboard: React.FC = () => {
                     ))}
                   </div>
                 </div>
+
                 <div className="premium-glass rounded-xl p-5">
                   <div className="mb-4 flex items-center justify-between">
-                    <h3 className="font-display text-base font-semibold text-foreground">Action Required</h3>
-                    <Vote className="h-4 w-4 text-accent" />
-                  </div>
-                  <div className="space-y-3">
-                    <div className="rounded-lg border border-accent/20 bg-accent/8 p-4">
-                      <p className="mb-1 text-[11px] font-bold uppercase tracking-widest text-accent">Voting live</p>
-                      <p className="text-sm font-semibold text-foreground">Review open governance proposals.</p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Quorum, approval threshold, and vote receipts are visible before signing.
-                      </p>
-                    </div>
-                    {!isMember && (
-                      <Link to={`/join/${community.id}`} className="btn-warm w-full justify-center text-sm">
-                        Join DAO to vote
-                      </Link>
+                    <h3 className="font-display text-base font-semibold text-foreground">Your role</h3>
+                    {isMember ? (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-confirmed/30 bg-confirmed/12 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-confirmed">
+                        <ShieldCheck className="h-3 w-3" />
+                        Active
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        Not a member
+                      </span>
                     )}
                   </div>
+                  {isMember ? (
+                    <div className="space-y-3 text-sm">
+                      <div className="flex justify-between border-b border-border/40 pb-2">
+                        <span className="text-muted-foreground">Role</span>
+                        <span className="font-semibold text-foreground">Member</span>
+                      </div>
+                      <div className="flex justify-between border-b border-border/40 pb-2">
+                        <span className="text-muted-foreground">Voting power</span>
+                        <span className="font-semibold text-foreground">1 vote</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Monthly dues</span>
+                        <span className="font-semibold text-accent">{formatKSh(community.membershipFee)}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-xs text-muted-foreground">
+                        Join to receive a Solana membership credential and vote on proposals.
+                      </p>
+                      <Link to={`/join/${community.id}`} className="btn-warm mt-4 w-full justify-center text-sm">
+                        Join DAO
+                      </Link>
+                    </>
+                  )}
                 </div>
               </div>
 
+              <div className="premium-glass rounded-xl p-5">
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="font-display text-base font-semibold text-foreground">Governance rules</h3>
+                  <ShieldCheck className="h-4 w-4 text-primary" />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-4">
+                  {[
+                    ['Quorum', `${community.quorumPct ?? 51}%`],
+                    ['Approval', `${community.approvalThresholdPct ?? 66}%`],
+                    ['Voting period', `${community.votingPeriodDays ?? 7} days`],
+                    ['Treasury', (community.treasuryPolicy ?? 'multisig-ready').replace('-', ' ')],
+                  ].map(([label, value]) => (
+                    <div key={label} className="rounded-lg border border-border/60 bg-background/35 p-3">
+                      <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</p>
+                      <p className="mt-1 font-semibold capitalize text-foreground">{value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Members tab */}
+          {activeTab === 'members' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-display text-lg font-semibold text-foreground">
+                    Members ({communityMembers.length})
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Showing locally-tracked members. Full on-chain `MemberAccount` PDAs surface after the membership program deploys.
+                  </p>
+                </div>
+              </div>
+
+              {communityMembers.length > 0 ? (
+                <div className="space-y-2">
+                  {communityMembers.map((m, idx) => {
+                    const isYou = !!publicKey && m.walletAddress === publicKey.toBase58();
+                    return (
+                      <div
+                        key={`${m.walletAddress}-${idx}`}
+                        className="flex items-center gap-4 rounded-lg border border-border bg-background/45 p-4"
+                      >
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/15 font-display text-sm font-bold text-primary">
+                          {m.walletAddress.slice(0, 2).toUpperCase()}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="truncate font-mono text-sm text-foreground">
+                              {truncateAddress(m.walletAddress, 6)}
+                            </p>
+                            {isYou && (
+                              <span className="rounded-full border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary">
+                                You
+                              </span>
+                            )}
+                          </div>
+                          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+                            <span className="capitalize">Role: Member</span>
+                            <span>Joined {new Date(m.joinedAt).toLocaleDateString('en-KE', { month: 'short', year: 'numeric' })}</span>
+                          </div>
+                        </div>
+                        <span className="inline-flex items-center gap-1 rounded-full border border-confirmed/30 bg-confirmed/12 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-confirmed">
+                          <ShieldCheck className="h-3 w-3" />
+                          {m.status}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="baraza-card p-10 text-center">
+                  <Users className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
+                  <p className="text-sm font-semibold text-foreground">No members tracked locally yet</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Reported member count: {community.memberCount}. Member roster loads from on-chain `MemberAccount` PDAs once the membership program is deployed.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Governance tab */}
+          {activeTab === 'governance' && (
+            <div className="space-y-8">
               {activeDecisions.length > 0 && (
                 <div>
                   <h3 className="font-display text-sm font-semibold text-foreground mb-4">Active Proposals</h3>
@@ -350,45 +503,105 @@ const CommunityDashboard: React.FC = () => {
                   <p className="text-sm text-muted-foreground">No governance proposals yet. Be the first to submit one!</p>
                 </div>
               )}
+
+              {isMember && (
+                <Link
+                  to={`/dashboard/${community.id}/decisions/create`}
+                  className="btn-warm mx-auto flex w-fit items-center gap-2 px-5 py-3 text-sm"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  Submit a new proposal
+                </Link>
+              )}
             </div>
           )}
 
-          {activeTab === 'membership' && (
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="max-w-md mx-auto py-8"
-            >
-              {isMember ? (
-                <div className="space-y-6">
-                  <MembershipCard
-                    communityName={community.name}
-                    memberName="Community Member"
-                    memberId={publicKey ? publicKey.toBase58().slice(0, 8) : 'BRZ-0001'}
-                    joinDate={new Date().toLocaleDateString('en-KE', { month: 'short', year: 'numeric' })}
-                    communityType={community.type}
-                  />
+          {/* Wallet tab */}
+          {activeTab === 'wallet' && (
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="premium-glass rounded-xl p-5">
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="font-display text-base font-semibold text-foreground">Community treasury</h3>
+                  <ReceiptText className="h-4 w-4 text-primary" />
                 </div>
-              ) : (
-                <div className="premium-glass rounded-xl p-8 text-center">
-                  <CreditCard className="w-10 h-10 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="font-display text-base font-semibold text-foreground mb-2">
-                    Not a member yet
-                  </h3>
-                  <p className="text-xs text-muted-foreground mb-4">
-                    Join this community to get your membership card and start participating in decisions.
-                  </p>
-                  <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-                    <Link to={`/join/${community.id}`} className="btn-warm justify-center text-sm">
-                      Join with M-Pesa
-                    </Link>
-                    <button onClick={() => setShowJoinModal(true)} className="btn-ghost justify-center text-sm">
-                      Join with wallet
-                    </button>
+
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-center justify-between border-b border-border/40 pb-3">
+                    <span className="text-muted-foreground">Network</span>
+                    <span className="inline-flex items-center gap-1.5 font-semibold text-foreground">
+                      <span
+                        aria-hidden
+                        className="h-1.5 w-1.5 rounded-full"
+                        style={{ background: CHAINS[community.chain ?? 'solana'].badgeBg }}
+                      />
+                      {CHAINS[community.chain ?? 'solana'].label} · {NETWORK_LABEL}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between border-b border-border/40 pb-3">
+                    <span className="text-muted-foreground">Recorded balance</span>
+                    <span className="font-display text-lg font-bold text-accent">{formatKSh(community.fundBalance)}</span>
+                  </div>
+                  <div className="flex items-center justify-between border-b border-border/40 pb-3">
+                    <span className="text-muted-foreground">On-chain vault</span>
+                    <span className="text-xs font-semibold text-muted-foreground">Pending program deploy</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Withdrawals</span>
+                    <span className="text-xs font-semibold text-muted-foreground capitalize">
+                      {(community.treasuryPolicy ?? 'multisig-ready').replace('-', ' ')}
+                    </span>
                   </div>
                 </div>
-              )}
-            </motion.div>
+
+                <Link
+                  to={`/dashboard/${community.id}/treasury`}
+                  className="btn-ghost mt-5 w-full justify-center gap-2 text-sm"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Open treasury detail
+                </Link>
+              </div>
+
+              <div className="premium-glass rounded-xl p-5">
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="font-display text-base font-semibold text-foreground">Your Solana wallet</h3>
+                  <WalletIcon className="h-4 w-4 text-primary" />
+                </div>
+
+                {publicKey ? (
+                  <div className="space-y-3 text-sm">
+                    <div className="rounded-lg border border-border/60 bg-background/35 p-3">
+                      <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Address</p>
+                      <p className="mt-1 font-mono text-xs text-foreground break-all">{publicKey.toBase58()}</p>
+                    </div>
+                    <div className="flex items-center justify-between border-b border-border/40 pb-3">
+                      <span className="text-muted-foreground">SOL balance</span>
+                      <span className="font-display text-lg font-bold text-foreground tabular-nums">
+                        {walletSol === null ? '—' : `${walletSol.toFixed(4)} SOL`}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between border-b border-border/40 pb-3">
+                      <span className="text-muted-foreground">Cluster</span>
+                      <span className="text-xs font-semibold text-foreground">Solana {NETWORK_LABEL}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Membership in this DAO</span>
+                      <span className={isMember ? 'text-xs font-semibold text-confirmed' : 'text-xs font-semibold text-muted-foreground'}>
+                        {isMember ? 'Active' : 'None'}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-dashed border-border bg-background/30 p-6 text-center">
+                    <WalletIcon className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
+                    <p className="text-sm font-semibold text-foreground">Wallet not connected</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Connect Phantom, Solflare, or Coinbase Wallet to see your SOL balance and membership status.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
         </div>
       </section>

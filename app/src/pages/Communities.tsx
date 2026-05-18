@@ -10,11 +10,21 @@ import { DotPattern } from "@/components/ui/dot-pattern";
 import { cn } from "@/lib/utils";
 import { useCommunities } from "@/hooks/useCommunities";
 import CommunityBanner from "@/components/CommunityBanner";
+import { CHAINS, type Chain } from "@/lib/chain";
+
+type ChainFilter = "all" | Chain;
+
+const CHAIN_FILTERS: { value: ChainFilter; label: string; dot?: string }[] = [
+  { value: "all", label: "All Networks" },
+  { value: "solana", label: CHAINS.solana.label, dot: CHAINS.solana.badgeBg },
+  { value: "stellar", label: CHAINS.stellar.label, dot: CHAINS.stellar.badgeBg },
+];
 
 export default function Communities() {
   const { communities, isLoading, error } = useCommunities();
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [chainFilter, setChainFilter] = useState<ChainFilter>("all");
   const [layout, setLayout] = useState<"grid" | "list">("grid");
 
   const filtered = communities.filter((c) => {
@@ -22,8 +32,12 @@ export default function Communities() {
       c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.description.toLowerCase().includes(search.toLowerCase());
     const matchesType = typeFilter === "all" || c.type === typeFilter;
-    return matchesSearch && matchesType;
+    const communityChain = c.chain ?? "solana";
+    const matchesChain = chainFilter === "all" || communityChain === chainFilter;
+    return matchesSearch && matchesType && matchesChain;
   });
+
+  const hasActiveFilter = !!search || typeFilter !== "all" || chainFilter !== "all";
 
   return (
     <Layout>
@@ -63,6 +77,35 @@ export default function Communities() {
 
       <section className="pb-16">
         <div className="container mx-auto px-4">
+          {/* Network filter */}
+          <div className="mb-4 flex flex-wrap items-center gap-2" role="group" aria-label="Filter by network">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mr-1">
+              Network
+            </span>
+            {CHAIN_FILTERS.map((option) => {
+              const active = chainFilter === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setChainFilter(option.value)}
+                  aria-pressed={active}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70",
+                    active
+                      ? "border-primary/60 bg-primary/12 text-foreground"
+                      : "border-border/60 bg-surface text-muted-foreground hover:text-foreground hover:bg-surface-hover",
+                  )}
+                >
+                  {option.dot && (
+                    <span aria-hidden className="h-1.5 w-1.5 rounded-full" style={{ background: option.dot }} />
+                  )}
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+
           {/* Controls */}
           <div className="mb-8 grid gap-3 lg:grid-cols-[1fr_auto_auto_auto]">
             {/* Search */}
@@ -150,7 +193,7 @@ export default function Communities() {
           {/* Results count */}
           {isLoading ? (
             <p className="text-xs text-muted-foreground mb-5">Loading Community DAOs…</p>
-          ) : search || typeFilter !== "all" ? (
+          ) : hasActiveFilter ? (
             <p className="text-xs text-muted-foreground mb-5">
               {filtered.length} {filtered.length === 1 ? "community" : "communities"} found
             </p>
@@ -187,10 +230,16 @@ export default function Communities() {
                 <Search className="w-6 h-6 text-primary" />
               </div>
               <p className="font-display text-base font-semibold text-foreground mb-1">
-                No DAOs match that filter yet
+                {chainFilter === "stellar"
+                  ? "No Stellar communities yet"
+                  : chainFilter === "solana"
+                    ? "No Solana communities match that filter"
+                    : "No DAOs match that filter yet"}
               </p>
               <p className="text-sm text-muted-foreground mb-6">
-                Try a different type, or start your own Community DAO.
+                {chainFilter === "stellar"
+                  ? "Stellar support is coming in Phase 2. Switch to Solana to see existing DAOs."
+                  : "Try a different type, or start your own Community DAO."}
               </p>
               <Link to="/create" className="btn-primary inline-flex items-center gap-2 text-sm">
                 <PlusCircle className="w-4 h-4" /> Create a Community DAO

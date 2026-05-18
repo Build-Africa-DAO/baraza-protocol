@@ -9,11 +9,9 @@ export function formatKSh(amount: number): string {
   return `KSh ${amount.toLocaleString('en-KE')}`;
 }
 
-export function shortenAddress(address: string, chars = 4): string {
+export function truncateAddress(address: string, chars = 4): string {
   return `${address.slice(0, chars)}...${address.slice(-chars)}`;
 }
-
-export const truncateAddress = shortenAddress;
 
 export function daysRemaining(endsAt: string): number {
   const end = new Date(endsAt).getTime();

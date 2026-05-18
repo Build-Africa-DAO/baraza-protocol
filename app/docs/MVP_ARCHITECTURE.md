@@ -1,7 +1,7 @@
 # Baraza MVP Architecture
 
 Status: MVP build plan
-Date: 2026-05-12
+Date: 2026-05-13
 
 ## 1. MVP Goal
 
@@ -375,6 +375,90 @@ Treasury MVP policy:
 - MVP withdrawals/execution remain disabled until audit, emergency pause, and multisig/Squads or equivalent operational control are in place.
 - No unaudited production withdrawals may ship.
 
+## 6.2 Proposal State Machine
+
+`ProposalAccount.status` is one of nine states. Transitions are slot-driven (most) or signer-driven (cancel, veto).
+
+States:
+
+```text
+Pending      on-chain, voting_starts_at_slot > current_slot
+Active       voting_starts_at_slot <= current_slot < voting_ends_at_slot
+Defeated     voting_ends_at_slot reached, quorum NOT met OR for_weight <= against_weight  [terminal]
+Succeeded    voting_ends_at_slot reached, quorum met AND for_weight > against_weight
+Queued       Succeeded + eta_slot set, awaiting timelock
+Executed     eta_slot <= current_slot <= eta_slot + grace_period_slots, action ran        [terminal]
+Expired      current_slot > eta_slot + grace_period_slots, never executed                 [terminal]
+Canceled     proposer or admin_authority canceled before Queued                           [terminal]
+Vetoed       vetoer_authority killed it in any pre-Executed state                         [terminal]
+```
+
+Allowed transitions:
+
+```text
+Pending      -> Active            slot reached, activate_proposal ix writes snapshot
+Pending      -> Canceled          proposer or admin
+Active       -> Defeated          slot reached, finalize_proposal ix
+Active       -> Succeeded         slot reached, finalize_proposal ix
+Active       -> Canceled          admin only (emergency)
+Succeeded    -> Queued            queue_proposal ix
+Queued       -> Executed          execute_proposal ix, within grace window
+Queued       -> Expired           any caller, after grace window
+pre-Executed -> Vetoed            vetoer_authority, if set
+```
+
+Finalization (`Active -> Defeated/Succeeded`) is permissionless. Any caller can invoke `finalize_proposal` after `voting_ends_at_slot`. This avoids relying on a privileged finalizer.
+
+## 6.3 Governance Defaults
+
+Initial values written to `CommunityConfigAccount` at community creation. Per-community overrides allowed within hard bounds enforced by the program.
+
+Slot math assumes ~0.4s/slot mainnet target (~216,000 slots/day).
+
+| Parameter | Default | Min | Max |
+| --- | --- | --- | --- |
+| `voting_delay_slots` | 54,000 (6h) | 0 | 432,000 (2d) |
+| `voting_period_slots` | 648,000 (3d) | 108,000 (12h) | 6,480,000 (30d) |
+| `timelock_delay_slots` | 216,000 (1d) | 0 | 1,512,000 (7d) |
+| `grace_period_slots` | 1,512,000 (7d) | 216,000 (1d) | 6,480,000 (30d) |
+| `quorum_bps` | 3,300 (33%) | 500 (5%) | 10,000 (100%) |
+| `approval_threshold_bps` | 5,001 (>50%) | 5,001 | 10,000 |
+| `proposal_threshold_weight` | 1 | 1 | u64::MAX |
+| `vetoer_authority` | `None` | — | — |
+
+Bounds enforce:
+
+- Quorum is reachable (`quorum_bps <= 10_000`).
+- Approval threshold is strict-majority floor (>50% rounds to 5,001 bps; abstain excluded from the denominator).
+- Voting period has a 12h floor so members across timezones can participate.
+
+`vetoer_authority` is opt-in per community and must be burnable (set to `None`) by a successful proposal.
+
+## 6.4 Vote Receipt Schema
+
+PDA seeds: `["vote", proposal_pubkey.as_ref(), voter_member_pubkey.as_ref()]`.
+
+Existence of the account prevents double-voting; cast is atomic with account creation (Anchor `init` constraint).
+
+Fields:
+
+```text
+proposal              Pubkey
+voter_member          Pubkey  (MemberAccount PDA)
+voter_wallet          Pubkey  (signer at cast time, recorded for audit across wallet migration)
+support               u8      (0 = Against, 1 = For, 2 = Abstain)
+weight                u64     (snapshot weight at proposal.snapshot_slot; not re-read at cast time)
+cast_at_slot          u64
+reason_uri            Option<String>  (IPFS CID for vote explanation, optional)
+bump                  u8
+```
+
+Rules:
+
+- Created exactly once per `(proposal, voter_member)`; PDA collision = double-vote attempt = revert.
+- `weight` is read from `MemberAccount.voting_weight` at `proposal.snapshot_slot`. Later tier changes do not affect already-cast votes.
+- `voter_wallet` records the wallet that signed. If the member later migrates wallets, the receipt still reflects who cast it at the time; this is the auditable record for §12 activity events.
+
 ## 7. Webhook Flow
 
 ```text
@@ -570,6 +654,9 @@ Current implementation realities:
 - `app/src/pages/CommunityDashboard.tsx` does not activate membership unless `joinCommunity` returns success. The current hook returns failure for unwired writes, so the UI no longer treats no-op transactions as membership activation.
 - `app/src/components/DecisionCard.tsx` performs optimistic vote updates. Final vote state must come from durable governance state or indexed chain state.
 - `app/src/pages/CreateDecision.tsx` blocks fake proposal success and shows an explicit unwired-flow toast. MVP proposal creation still requires persistence and governance instruction wiring.
+
+Completed prototype guardrails:
+
 - `app/src/pages/CommunityDashboard.tsx` links to the registered proposal creation route: `/dashboard/:id/decisions/create`.
 - Community lookup renders a not-found or invalid-community state for unknown IDs.
 - New community success stores a created community ID for navigation, but real persistence still needs to return a durable community record.

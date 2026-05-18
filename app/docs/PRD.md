@@ -122,11 +122,14 @@ The current repository contains a Vite React prototype with mock community, prop
 
 Prototype behavior must be labeled or gated until the matching backend, payment, and Solana flows exist.
 
-Required before demo readiness:
+Completed prototype guardrails:
 
 - The dashboard "New Decision" CTA must route to the registered proposal creation route.
 - Unknown community IDs must not silently fall back to another community.
 - Created communities must navigate to their real created record, not a fixed mock dashboard.
+
+Remaining before demo readiness:
+
 - Community creation must persist to the application database and, when required by the flow, create the Solana community accounts.
 - Proposal creation must persist a proposal record and submit or prepare the matching governance instruction.
 - Vote casting must create a durable `VoteReceiptAccount` or indexed vote record and prevent double voting.

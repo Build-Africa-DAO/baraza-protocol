@@ -1,14 +1,16 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Users, LayoutDashboard, PlusCircle, Home, ChevronRight } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
+import ChainSelector from "@/components/ChainSelector";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
-  { path: "/", label: "Home", icon: Home },
-  { path: "/communities", label: "Communities", icon: Users },
-  { path: "/create", label: "Start a Group", icon: PlusCircle },
-  { path: "/dashboard/1", label: "Dashboard", icon: LayoutDashboard },
+  { path: "/", label: "About" },
+  { path: "/profile", label: "Profile" },
+  { path: "/communities", label: "Explore" },
+  { path: "/evaluate", label: "Evaluate" },
+  { path: "/create", label: "Create" },
 ];
 
 interface HeaderProps {
@@ -32,62 +34,55 @@ export default function Header({ walletSlot }: HeaderProps) {
   return (
     <header
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+        "fixed top-0 left-0 right-0 z-50 border-b transition-all duration-300",
         scrolled
-          ? "glass-surface border-b border-border/50 shadow-[0_2px_20px_hsl(254_31%_8%/0.45)]"
-          : "bg-transparent border-b border-transparent",
+          ? "border-border/60 bg-background/88 shadow-[0_2px_20px_hsl(84_17%_2%/0.55)] backdrop-blur-xl"
+          : "border-border/35 bg-background/82 backdrop-blur-xl",
       )}
     >
-      <div className="container mx-auto flex items-center justify-between h-16 px-4">
-        {/* Logo */}
-        <Link to="/" className="flex-shrink-0" aria-label="Baraza home">
-          <BrandLogo size="sm" />
-        </Link>
-
-        {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-0.5" aria-label="Main navigation">
-          {navLinks.map((link) => {
-            const isActive =
-              location.pathname === link.path ||
-              (link.path !== "/" && location.pathname.startsWith(link.path));
-            return (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={cn(
-                  "relative flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all duration-200",
-                  isActive
-                    ? "text-primary bg-primary/10"
-                    : "text-muted-foreground hover:text-foreground hover:bg-surface",
-                )}
-              >
-                <link.icon className="w-3.5 h-3.5" />
-                {link.label}
-                {isActive && (
-                  <span className="absolute inset-x-3 bottom-0.5 h-px rounded-full bg-primary" />
-                )}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Right side */}
-        <div className="flex items-center gap-2">
-          {/* CTA for desktop */}
-          <Link
-            to="/create"
-            className="hidden sm:flex btn-warm text-xs px-4 py-2 items-center gap-1.5"
-          >
-            Start a Group
-            <ChevronRight className="w-3.5 h-3.5" />
+      <div className="flex h-14 w-full items-center justify-between gap-4 px-4 sm:px-6">
+        <div className="flex min-w-0 items-center gap-8">
+          <Link to="/" className="flex-shrink-0" aria-label="Baraza home">
+            <BrandLogo size="sm" />
           </Link>
+
+          <nav className="hidden items-center gap-6 md:flex" aria-label="Main navigation">
+            {navLinks.map((link) => {
+              const isActive =
+                location.pathname === link.path ||
+                (link.path !== "/" && location.pathname.startsWith(link.path));
+              return (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  aria-current={isActive ? "page" : undefined}
+                  className={cn(
+                    "relative py-1 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70",
+                    isActive
+                      ? "text-foreground"
+                      : "text-foreground/80 hover:text-foreground",
+                  )}
+                >
+                  {link.label}
+                  {isActive && (
+                    <span className="absolute inset-x-0 -bottom-1 h-0.5 rounded-full bg-primary" />
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:block">
+            <ChainSelector />
+          </div>
 
           {walletSlot && <div className="hidden sm:block">{walletSlot}</div>}
 
-          {/* Mobile toggle */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-surface transition-colors"
+            className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-surface hover:text-foreground md:hidden"
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileOpen}
           >
@@ -96,34 +91,33 @@ export default function Header({ walletSlot }: HeaderProps) {
         </div>
       </div>
 
-      {/* Mobile drawer */}
       {mobileOpen && (
-        <div className="md:hidden glass-surface border-t border-border/50 animate-fade-in">
-          <nav className="container mx-auto px-4 py-4 flex flex-col gap-1" aria-label="Mobile navigation">
+        <div className="animate-fade-in border-t border-border/50 bg-background/95 backdrop-blur-xl md:hidden">
+          <nav className="container mx-auto flex flex-col gap-1 px-4 py-4" aria-label="Mobile navigation">
             {navLinks.map((link) => {
-              const isActive = location.pathname === link.path;
+              const isActive =
+                location.pathname === link.path ||
+                (link.path !== "/" && location.pathname.startsWith(link.path));
               return (
                 <Link
                   key={link.path}
                   to={link.path}
                   onClick={() => setMobileOpen(false)}
+                  aria-current={isActive ? "page" : undefined}
                   className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                    "rounded-md px-3 py-2.5 text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70",
                     isActive
-                      ? "text-primary bg-primary/10"
-                      : "text-muted-foreground hover:text-foreground hover:bg-surface",
+                      ? "bg-primary/10 text-foreground"
+                      : "text-foreground/80 hover:bg-surface hover:text-foreground",
                   )}
                 >
-                  <link.icon className="w-5 h-5" />
                   {link.label}
                 </Link>
               );
             })}
-            <div className="pt-3 border-t border-border/50 mt-1 flex flex-col gap-2">
+            <div className="mt-2 flex flex-col gap-2 border-t border-border/50 pt-3">
+              <ChainSelector variant="mobile" />
               {walletSlot}
-              <Link to="/create" className="btn-warm text-sm text-center py-2.5 flex items-center justify-center gap-2">
-                Start a Group <ChevronRight className="w-4 h-4" />
-              </Link>
             </div>
           </nav>
         </div>

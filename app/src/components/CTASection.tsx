@@ -1,12 +1,11 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, Coins, Link2, Settings2, ShieldCheck, Users } from "lucide-react";
+import { ArrowRight, Coins, Link2, ShieldCheck, Users } from "lucide-react";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 
 const steps = [
   { icon: Link2, title: "Connect a wallet", desc: "Sign in with Phantom, Solflare, or Coinbase Wallet. Your wallet becomes the founding admin signer." },
-  { icon: Settings2, title: "Set DAO basics", desc: "Name your DAO, pick a type, and set monthly dues members will contribute to the shared treasury." },
-  { icon: ShieldCheck, title: "Define governance rules", desc: "Quorum, approval threshold, and default voting period — members see them before any proposal opens." },
+  { icon: ShieldCheck, title: "Set basics & rules", desc: "Name your DAO, pick a type, set monthly dues, and define quorum, approval, and voting period." },
   { icon: Users, title: "Invite members", desc: "Share the join link. Members can join via M-Pesa or directly with a wallet." },
   { icon: Coins, title: "Govern transparently", desc: "Members propose, vote, and release funds. Every action lands on a shared on-chain trail." },
 ];

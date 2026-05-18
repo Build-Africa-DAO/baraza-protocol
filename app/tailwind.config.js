@@ -1,9 +1,6 @@
 export default {
 	darkMode: ["class"],
 	content: [
-		"./pages/**/*.{ts,tsx}",
-		"./components/**/*.{ts,tsx}",
-		"./app/**/*.{ts,tsx}",
 		"./src/**/*.{ts,tsx}",
 	],
 	prefix: "",
@@ -21,8 +18,9 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				sans: ['DM Sans', 'system-ui', 'sans-serif'],
-				display: ['Unbounded', 'system-ui', 'sans-serif'],
+				sans: ['Inter', 'system-ui', 'sans-serif'],
+				display: ['Hanken Grotesk', 'system-ui', 'sans-serif'],
+				mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
@@ -63,20 +61,21 @@ export default {
 					foreground: 'hsl(var(--warm-foreground))'
 				},
 				orange: 'hsl(var(--orange))',
-				'soft-blue': 'hsl(var(--soft-blue))',
+				dao: {
+					DEFAULT: 'hsl(var(--dao))',
+					foreground: 'hsl(var(--dao-foreground))'
+				},
+				network: {
+					DEFAULT: 'hsl(var(--network))',
+					foreground: 'hsl(var(--network-foreground))'
+				},
+				confirmed: {
+					DEFAULT: 'hsl(var(--confirmed))',
+					foreground: 'hsl(var(--confirmed-foreground))'
+				},
 				surface: {
 					DEFAULT: 'hsl(var(--surface))',
 					hover: 'hsl(var(--surface-hover))'
-				},
-				sidebar: {
-					DEFAULT: 'hsl(var(--sidebar-background))',
-					foreground: 'hsl(var(--sidebar-foreground))',
-					primary: 'hsl(var(--sidebar-primary))',
-					'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-					accent: 'hsl(var(--sidebar-accent))',
-					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-					border: 'hsl(var(--sidebar-border))',
-					ring: 'hsl(var(--sidebar-ring))'
 				}
 			},
 			borderRadius: {
@@ -98,8 +97,8 @@ export default {
 					'50%': { transform: 'translateY(-10px)' }
 				},
 				'pulse-glow': {
-					'0%, 100%': { boxShadow: '0 0 20px hsl(173 44% 73% / 0.2)' },
-					'50%': { boxShadow: '0 0 50px hsl(30 100% 53% / 0.32)' }
+					'0%, 100%': { boxShadow: '0 0 20px hsl(44 100% 50% / 0.2)' },
+					'50%': { boxShadow: '0 0 50px hsl(44 100% 50% / 0.45)' }
 				},
 				'fade-up': {
 					'0%': { opacity: '0', transform: 'translateY(24px)' },

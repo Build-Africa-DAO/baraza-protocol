@@ -147,7 +147,7 @@ export default function FeaturesSection() {
           >
             <div className="mb-5 flex items-center justify-between">
               <div>
-                <p className="text-xs uppercase tracking-widest text-muted-foreground">Live ledger</p>
+                <p className="text-xs uppercase tracking-widest text-muted-foreground">Sample ledger</p>
                 <h3 className="mt-1 font-display text-xl font-bold text-foreground">Treasury state</h3>
               </div>
               <FileCheck2 className="h-5 w-5 text-primary" />

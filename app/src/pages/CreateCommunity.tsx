@@ -8,11 +8,13 @@ import { useWalletGuard } from '@/hooks/useWalletGuard';
 import { useToast } from '@/hooks/use-toast';
 import { createCommunityRecord } from '@/lib/communities';
 import CommunityBanner from '@/components/CommunityBanner';
+import { useChain } from '@/components/ChainProvider';
 
 const CreateCommunity: React.FC = () => {
   const navigate = useNavigate();
   const { requireWallet, isReady } = useWalletGuard({ action: 'create a community DAO' });
   const { toast } = useToast();
+  const { chain, chainMeta } = useChain();
   const [isPending, setIsPending] = useState(false);
   const [isCreated, setIsCreated] = useState(false);
   const [createdCommunityId, setCreatedCommunityId] = useState<string | null>(null);
@@ -44,6 +46,11 @@ const CreateCommunity: React.FC = () => {
           type: form.type,
           description: form.description,
           membershipFee: Number(form.fee),
+          chain,
+          quorumPct: Number(form.quorum),
+          approvalThresholdPct: Number(form.approvalThreshold),
+          votingPeriodDays: Number(form.votingPeriod),
+          treasuryPolicy: form.treasuryPolicy as 'multisig-ready' | 'proposal-only' | 'manual-review',
         });
         setCreatedCommunityId(community.id);
         setIsCreated(true);
@@ -286,6 +293,21 @@ const CreateCommunity: React.FC = () => {
                     <option value="manual-review">Manual admin review for releases</option>
                   </select>
                 </div>
+              </div>
+
+              {/* Network */}
+              <div className="flex items-center justify-between rounded-lg border border-border/60 bg-surface px-4 py-3 text-xs">
+                <span className="text-muted-foreground">
+                  This community will be created on
+                </span>
+                <span className="inline-flex items-center gap-1.5 font-semibold text-foreground">
+                  <span
+                    aria-hidden
+                    className="h-1.5 w-1.5 rounded-full"
+                    style={{ background: chainMeta.badgeBg }}
+                  />
+                  {chainMeta.label}
+                </span>
               </div>
 
               {/* Submit */}

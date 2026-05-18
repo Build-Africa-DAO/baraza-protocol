@@ -36,3 +36,6 @@ Thumbs.db
 
 .vercel
 .env*.local
+
+# Higgsfield render output (binary mp4s)
+scripts/higgsfield/output/

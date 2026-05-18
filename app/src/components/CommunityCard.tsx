@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
-import { BadgePlus, Link2, UserPlus, Users, TrendingUp, MessageSquare } from "lucide-react";
+import { ArrowRight, UserPlus, Users, TrendingUp, MessageSquare } from "lucide-react";
 import { MagicCard } from "@/components/ui/magic-card";
 import { formatKSh, cn } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
 import { getCommunityBannerImage } from "@/lib/communityVisuals";
+import { CHAINS, type Chain } from "@/lib/chain";
 
 interface CommunityCardProps {
   id: string;
@@ -15,6 +15,7 @@ interface CommunityCardProps {
   fundBalance: number;
   activeDecisions: number;
   image: string;
+  chain?: Chain;
   layout?: "grid" | "list";
 }
 
@@ -29,10 +30,10 @@ const typeConfig: Record<string, { bg: string; text: string; dot: string }> = {
 };
 
 export default function CommunityCard({
-  id, name, type, description, membershipFee, memberCount, fundBalance, activeDecisions, image, layout = "grid",
+  id, name, type, description, membershipFee, memberCount, fundBalance, activeDecisions, image, chain = "solana", layout = "grid",
 }: CommunityCardProps) {
   const tc = typeConfig[type] ?? typeConfig.other;
-  const { toast } = useToast();
+  const chainMeta = CHAINS[chain];
   const isList = layout === "list";
 
   return (
@@ -53,6 +54,17 @@ export default function CommunityCard({
               loading="lazy"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-card via-card/45 to-transparent" />
+            <span
+              aria-label={`Network: ${chainMeta.label}`}
+              className="absolute top-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-background/75 px-2 py-1 text-[10px] font-semibold text-foreground backdrop-blur"
+            >
+              <span
+                aria-hidden
+                className="h-1.5 w-1.5 rounded-full"
+                style={{ background: chainMeta.badgeBg }}
+              />
+              {chainMeta.label}
+            </span>
             <div className="absolute bottom-4 left-4 flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-background/80 font-display text-lg font-black text-primary shadow-lg backdrop-blur">
                 {image}
@@ -108,28 +120,15 @@ export default function CommunityCard({
             <span className="text-xs font-bold text-accent tabular-nums">{formatKSh(membershipFee)}</span>
           </div>
 
-            <div className="mt-5 grid gap-2 sm:grid-cols-3">
-              <Link to={`/dashboard/${id}`} className="btn-ghost justify-center gap-2 px-3 py-2 text-xs font-bold">
-                <Link2 className="h-3.5 w-3.5" />
-                Connect to DAO
-              </Link>
+            <div className="mt-5 grid gap-2 sm:grid-cols-2">
               <Link to={`/join/${id}`} className="btn-warm justify-center gap-2 px-3 py-2 text-xs font-bold">
                 <UserPlus className="h-3.5 w-3.5" />
                 Become a member
               </Link>
-              <button
-                type="button"
-                onClick={() => {
-                  toast({
-                    title: "Token setup queued",
-                    description: "Membership token support appears after the DAO membership flow is connected.",
-                  });
-                }}
-                className="btn-ghost justify-center gap-2 px-3 py-2 text-xs font-bold"
-              >
-                <BadgePlus className="h-3.5 w-3.5" />
-                Add token
-              </button>
+              <Link to={`/dashboard/${id}`} className="btn-ghost justify-center gap-2 px-3 py-2 text-xs font-bold">
+                View profile
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
             </div>
           </div>
         </div>

@@ -8,6 +8,7 @@ import { useWalletGuard } from '@/hooks/useWalletGuard';
 import { useToast } from '@/hooks/use-toast';
 import { useCommunity } from '@/hooks/useCommunities';
 import CommunityBanner from '@/components/CommunityBanner';
+import { DEFAULT_GOVERNANCE } from '@/lib/constants';
 
 const CreateDecision: React.FC = () => {
   const navigate = useNavigate();
@@ -137,8 +138,13 @@ const CreateDecision: React.FC = () => {
                 Governance rules
               </div>
               <p className="mt-2 text-xs leading-5 text-muted-foreground">
-                This DAO requires <strong className="text-foreground">50% quorum</strong> and{" "}
-                <strong className="text-foreground">60% approval</strong>. Voting closes automatically when the period ends.
+                This DAO requires{" "}
+                <strong className="text-foreground">{community.quorumPct ?? DEFAULT_GOVERNANCE.quorumPct}% quorum</strong>{" "}
+                and{" "}
+                <strong className="text-foreground">
+                  {community.approvalThresholdPct ?? DEFAULT_GOVERNANCE.approvalThresholdPct}% approval
+                </strong>
+                . Voting closes automatically when the period ends.
               </p>
             </motion.div>
 

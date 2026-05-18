@@ -1,77 +1,81 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Unbounded:wght@200..900&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* ── Baraza Design System v2 — Dark Ocean ── */
+    /* Baraza Design System v3: Dark Charcoal + Amber Gold */
 
-    /* Backgrounds */
-    --background: 254 31% 14%;
-    --foreground: 32 100% 97%;
+    /* Backgrounds: deep charcoal, warm-tinted */
+    --background: 84 17% 5%;
+    --foreground: 44 100% 95%;
 
-    --card: 254 29% 18%;
-    --card-foreground: 32 100% 97%;
+    --card: 88 14% 8%;
+    --card-foreground: 44 100% 95%;
 
-    --popover: 254 29% 17%;
-    --popover-foreground: 32 100% 97%;
+    --popover: 88 14% 7%;
+    --popover-foreground: 44 100% 95%;
 
-    /* Brand Colours */
-    --primary: 173 44% 73%;
-    --primary-foreground: 254 31% 14%;
+    /* Brand: Amber Gold primary */
+    --primary: 44 100% 50%;
+    --primary-foreground: 84 17% 5%;
 
-    --secondary: 32 100% 97%;
-    --secondary-foreground: 254 31% 14%;
+    /* Secondary: warm off-white */
+    --secondary: 44 100% 95%;
+    --secondary-foreground: 84 17% 5%;
 
-    --muted: 254 24% 24%;
-    --muted-foreground: 32 46% 78%;
+    --muted: 90 10% 14%;
+    --muted-foreground: 44 60% 68%;
 
-    --accent: 44 86% 70%;
-    --accent-foreground: 254 31% 14%;
+    /* Accent: Blaze Orange for urgency / pending */
+    --accent: 17 97% 49%;
+    --accent-foreground: 44 100% 95%;
 
-    --destructive: 30 100% 53%;
-    --destructive-foreground: 254 31% 14%;
+    /* Destructive: muted red */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 44 100% 95%;
 
-    --border: 254 22% 32%;
-    --input: 254 22% 32%;
-    --ring: 173 44% 73%;
+    --border: 44 100% 18%;
+    --input: 90 10% 14%;
+    --ring: 44 100% 50%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
-    /* Extended surfaces */
-    --warm: 44 86% 70%;
-    --warm-foreground: 254 31% 14%;
-    --orange: 30 100% 53%;
-    --soft-blue: 173 44% 73%;
-    --surface: 254 27% 21%;
-    --surface-hover: 254 24% 27%;
+    /* Extended semantic tokens */
+    --warm: 44 100% 50%;
+    --warm-foreground: 84 17% 5%;
+    --orange: 17 97% 49%;
 
-    /* Sidebar */
-    --sidebar-background: 254 31% 12%;
-    --sidebar-foreground: 32 100% 94%;
-    --sidebar-primary: 173 44% 73%;
-    --sidebar-primary-foreground: 254 31% 14%;
-    --sidebar-accent: 254 24% 24%;
-    --sidebar-accent-foreground: 32 100% 94%;
-    --sidebar-border: 254 22% 32%;
-    --sidebar-ring: 173 44% 73%;
+    /* DAO / governance: Blue Violet */
+    --dao: 270 85% 50%;
+    --dao-foreground: 44 100% 95%;
+
+    /* Network / chain: Azure Blue */
+    --network: 217 100% 50%;
+    --network-foreground: 44 100% 95%;
+
+    /* Confirmed / trusted financial state: muted green */
+    --confirmed: 142 60% 40%;
+    --confirmed-foreground: 44 100% 95%;
+
+    --surface: 90 12% 10%;
+    --surface-hover: 90 10% 14%;
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(173,44%,73%) 0%, hsl(32,100%,97%) 52%, hsl(44,86%,70%) 100%);
-    --gradient-warm: linear-gradient(135deg, hsl(44,86%,70%) 0%, hsl(30,100%,53%) 100%);
-    --gradient-thermal: linear-gradient(90deg, #392F5A 0%, #9DD9D2 18%, #FFF8F0 54%, #F4D06F 84%, #FF8811 100%);
-    --gradient-surface: linear-gradient(180deg, hsl(254,29%,18%) 0%, hsl(254,31%,14%) 100%);
-    --gradient-hero: radial-gradient(ellipse 62% 46% at 74% 12%, hsl(30 100% 53% / 0.18) 0%, transparent 62%),
-                     radial-gradient(ellipse 48% 42% at 58% 22%, hsl(173 44% 73% / 0.16) 0%, transparent 68%),
-                     linear-gradient(135deg, hsl(254,31%,14%) 0%, hsl(254,31%,27%) 45%, hsl(30,65%,22%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(44,100%,50%) 0%, hsl(44,100%,72%) 50%, hsl(44,100%,95%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(44,100%,50%) 0%, hsl(17,97%,49%) 100%);
+    --gradient-dao: linear-gradient(135deg, hsl(270,85%,50%) 0%, hsl(217,100%,50%) 100%);
+    --gradient-surface: linear-gradient(180deg, hsl(88,14%,8%) 0%, hsl(84,17%,5%) 100%);
+    --gradient-hero: radial-gradient(ellipse 55% 42% at 72% 10%, hsl(44 100% 50% / 0.22) 0%, transparent 58%),
+                     radial-gradient(ellipse 44% 36% at 55% 20%, hsl(270 85% 50% / 0.12) 0%, transparent 65%),
+                     linear-gradient(135deg, hsl(84,17%,5%) 0%, hsl(90,12%,10%) 50%, hsl(44,60%,9%) 100%);
 
     /* Shadows */
-    --shadow-card:  0 4px 24px -4px hsl(254 31% 8% / 0.58);
-    --shadow-glow:  0 0 40px hsl(173 44% 73% / 0.22);
-    --shadow-warm:  0 4px 24px hsl(30 100% 53% / 0.25);
-    --shadow-deep:  0 20px 60px -10px hsl(254 31% 8% / 0.78);
+    --shadow-card:  0 4px 24px -4px hsl(84 17% 2% / 0.70);
+    --shadow-glow:  0 0 40px hsl(44 100% 50% / 0.25);
+    --shadow-warm:  0 4px 24px hsl(44 100% 50% / 0.28);
+    --shadow-dao:   0 0 40px hsl(270 85% 50% / 0.18);
+    --shadow-deep:  0 20px 60px -10px hsl(84 17% 2% / 0.85);
   }
 }
 
@@ -82,17 +86,17 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-family: 'DM Sans', system-ui, sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Unbounded', system-ui, sans-serif;
+    font-family: 'Hanken Grotesk', system-ui, sans-serif;
   }
 }
 
 @layer components {
-  /* ── Buttons ── */
+  /* Buttons */
   .btn-primary {
     display: inline-flex;
     align-items: center;
@@ -152,7 +156,7 @@
     color: hsl(var(--foreground));
   }
 
-  /* ── Cards ── */
+  /* Cards */
   .baraza-card {
     background: hsl(var(--card));
     border: 1px solid hsl(var(--border));
@@ -173,7 +177,22 @@
     border-radius: var(--radius);
   }
 
-  /* ── Text Gradients ── */
+  .premium-glass {
+    background: hsl(var(--card) / 0.72);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid hsl(var(--primary) / 0.14);
+    box-shadow: 0 24px 80px hsl(var(--background) / 0.72);
+  }
+
+  .ambient-globe-layer {
+    background-image:
+      radial-gradient(circle at 74% 34%, hsl(var(--primary) / 0.2), transparent 25rem),
+      radial-gradient(circle at 82% 58%, hsl(var(--confirmed) / 0.12), transparent 20rem),
+      radial-gradient(circle at 50% 12%, hsl(var(--dao) / 0.1), transparent 22rem);
+  }
+
+  /* Text Gradients */
   .text-gradient-primary {
     background: var(--gradient-primary);
     -webkit-background-clip: text;
@@ -187,11 +206,11 @@
     background-clip: text;
   }
 
-  /* ── Glow helpers ── */
+  /* Glow helpers */
   .glow-primary { box-shadow: var(--shadow-glow); }
   .glow-warm    { box-shadow: var(--shadow-warm); }
 
-  /* ── Progress ── */
+  /* Progress */
   .baraza-progress {
     height: 6px;
     border-radius: 9999px;
@@ -205,12 +224,12 @@
     transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
   }
 
-  /* ── Wallet adapter overrides ── */
+  /* Wallet adapter overrides */
   .wallet-adapter-button-trigger {
     background: var(--gradient-primary) !important;
     color: hsl(var(--primary-foreground)) !important;
     border-radius: var(--radius) !important;
-    font-family: 'DM Sans', system-ui, sans-serif !important;
+    font-family: 'Inter', system-ui, sans-serif !important;
     font-weight: 600 !important;
     font-size: 0.875rem !important;
     height: 2.5rem !important;
@@ -229,10 +248,10 @@
     background: hsl(var(--card)) !important;
     border: 1px solid hsl(var(--border)) !important;
     border-radius: 1rem !important;
-    font-family: 'DM Sans', system-ui, sans-serif !important;
+    font-family: 'Inter', system-ui, sans-serif !important;
   }
   .wallet-adapter-modal-title {
-    font-family: 'Unbounded', system-ui, sans-serif !important;
+    font-family: 'Hanken Grotesk', system-ui, sans-serif !important;
     color: hsl(var(--foreground)) !important;
   }
   .wallet-adapter-modal-list li {
@@ -256,13 +275,13 @@
   }
   .wallet-adapter-dropdown-list-item {
     color: hsl(var(--foreground)) !important;
-    font-family: 'DM Sans', system-ui, sans-serif !important;
+    font-family: 'Inter', system-ui, sans-serif !important;
   }
   .wallet-adapter-dropdown-list-item:hover {
     background: hsl(var(--surface)) !important;
   }
 
-  /* ── Scrollbar ── */
+  /* Scrollbar */
   ::-webkit-scrollbar { width: 5px; }
   ::-webkit-scrollbar-track { background: hsl(var(--background)); }
   ::-webkit-scrollbar-thumb {
@@ -274,14 +293,14 @@
   }
 }
 
-/* ── Keyframes ── */
+/* Keyframes */
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50%       { transform: translateY(-10px); }
 }
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px hsl(173 44% 73% / 0.2); }
-  50%       { box-shadow: 0 0 50px hsl(30 100% 53% / 0.32); }
+  0%, 100% { box-shadow: 0 0 20px hsl(var(--primary) / 0.20); }
+  50%       { box-shadow: 0 0 50px hsl(var(--primary) / 0.45); }
 }
 @keyframes shimmer {
   0%   { background-position: -200% 0; }

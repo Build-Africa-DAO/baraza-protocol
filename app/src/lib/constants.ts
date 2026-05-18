@@ -9,7 +9,34 @@ export interface Community {
   activeDecisions: number;
   createdAt: string;
   image: string;
+  chain?: 'solana' | 'stellar';
+  quorumPct?: number;
+  approvalThresholdPct?: number;
+  votingPeriodDays?: number;
+  treasuryPolicy?: 'multisig-ready' | 'proposal-only' | 'manual-review';
 }
+
+export const DEFAULT_GOVERNANCE = {
+  quorumPct: 51,
+  approvalThresholdPct: 66,
+  votingPeriodDays: 7,
+  treasuryPolicy: 'multisig-ready' as const,
+};
+
+/**
+ * Mirrors the on-chain `ProposalStatus` enum in
+ * `programs/governance/src/lib.rs`. UI surfaces these as lifecycle pills.
+ */
+export type ProposalLifecycleStage =
+  | 'pending'
+  | 'active'
+  | 'defeated'
+  | 'succeeded'
+  | 'queued'
+  | 'executed'
+  | 'expired'
+  | 'canceled'
+  | 'vetoed';
 
 export interface Decision {
   id: string;
@@ -22,15 +49,20 @@ export interface Decision {
   votesAgainst: number;
   totalMembers: number;
   status: 'active' | 'completed' | 'failed';
+  /**
+   * Optional. When the governance program is wired, this is the authoritative
+   * on-chain stage. When absent, the UI infers a stage from `status`.
+   */
+  lifecycleStage?: ProposalLifecycleStage;
   createdAt: string;
   endsAt: string;
 }
 
 export const MOCK_COMMUNITIES: Community[] = [
-  { id: '1', name: 'Kibera Youth Collective', type: 'savings', description: "A savings group for young entrepreneurs in Kibera. We pool resources monthly and support each other's business ventures.", membershipFee: 500, memberCount: 47, fundBalance: 234500, activeDecisions: 3, createdAt: '2024-11-15', image: 'KY' },
-  { id: '2', name: 'Mama Mboga Association', type: 'cooperative', description: 'Market vendors cooperative for bulk purchasing, shared transport, and collective bargaining.', membershipFee: 200, memberCount: 123, fundBalance: 567800, activeDecisions: 5, createdAt: '2024-08-22', image: 'MM' },
-  { id: '3', name: 'TechBridge Nairobi', type: 'professional', description: 'Professional network for tech workers. Monthly meetups, skills sharing, and emergency support fund.', membershipFee: 1000, memberCount: 89, fundBalance: 890000, activeDecisions: 2, createdAt: '2024-06-10', image: 'TB' },
-  { id: '4', name: 'Mwanzo Housing Sacco', type: 'housing', description: 'Community housing initiative. Members contribute towards land purchase and affordable housing construction.', membershipFee: 2000, memberCount: 34, fundBalance: 1450000, activeDecisions: 1, createdAt: '2024-09-01', image: 'MH' },
+  { id: '1', name: 'Kibera Youth Collective', type: 'savings', description: "A savings group for young entrepreneurs in Kibera. We pool resources monthly and support each other's business ventures.", membershipFee: 500, memberCount: 47, fundBalance: 234500, activeDecisions: 3, createdAt: '2024-11-15', image: 'KY', chain: 'solana' },
+  { id: '2', name: 'Mama Mboga Association', type: 'cooperative', description: 'Market vendors cooperative for bulk purchasing, shared transport, and collective bargaining.', membershipFee: 200, memberCount: 123, fundBalance: 567800, activeDecisions: 5, createdAt: '2024-08-22', image: 'MM', chain: 'solana' },
+  { id: '3', name: 'TechBridge Nairobi', type: 'professional', description: 'Professional network for tech workers. Monthly meetups, skills sharing, and emergency support fund.', membershipFee: 1000, memberCount: 89, fundBalance: 890000, activeDecisions: 2, createdAt: '2024-06-10', image: 'TB', chain: 'solana' },
+  { id: '4', name: 'Mwanzo Housing Sacco', type: 'housing', description: 'Community housing initiative. Members contribute towards land purchase and affordable housing construction.', membershipFee: 2000, memberCount: 34, fundBalance: 1450000, activeDecisions: 1, createdAt: '2024-09-01', image: 'MH', chain: 'solana' },
 ];
 
 export const MOCK_DECISIONS: Decision[] = [

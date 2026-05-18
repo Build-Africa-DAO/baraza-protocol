@@ -1,15 +1,18 @@
-import { Link, useParams } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   AlertTriangle,
   ArrowLeft,
   Check,
   CreditCard,
+  Loader2,
   Phone,
   Wallet,
 } from "lucide-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import Layout from "@/components/Layout";
 import { useCommunity } from "@/hooks/useCommunities";
+import { useToast } from "@/hooks/use-toast";
 import { formatKSh } from "@/lib/utils";
 import CommunityBanner from "@/components/CommunityBanner";
 
@@ -69,10 +72,68 @@ function ActivationTracker() {
   );
 }
 
+function isValidKenyanPhone(raw: string): boolean {
+  // Accept "7XX XXX XXX" -> normalise to digits; require exactly 9
+  const digits = raw.replace(/\D/g, "");
+  return digits.length === 9 && digits.startsWith("7");
+}
+
+function generateLocalOrderId(): string {
+  return `ord_local_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
 export default function JoinDao() {
   const { id } = useParams<{ id: string }>();
   const { community } = useCommunity(id);
   const { setVisible } = useWalletModal();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [phone, setPhone] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const amount = community?.membershipFee ?? 0;
+  const canSubmit = isValidKenyanPhone(phone) && amount > 0 && !isSubmitting;
+
+  async function handleMpesaSubmit() {
+    if (!canSubmit || !id) return;
+    setIsSubmitting(true);
+
+    let orderId: string | null = null;
+    let usedFallback = false;
+
+    try {
+      const res = await fetch("/api/mpesa/simulate", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          phone: `+254${phone.replace(/\D/g, "")}`,
+          communityId: id,
+          amount,
+          currency: "KES",
+        }),
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { orderId?: string };
+        orderId = data.orderId ?? null;
+      }
+    } catch {
+      // network/CORS/local-dev-no-vercel — fall through to mock
+    }
+
+    if (!orderId) {
+      orderId = generateLocalOrderId();
+      usedFallback = true;
+    }
+
+    toast({
+      title: usedFallback ? "Simulator unreachable — using local order" : "M-Pesa prompt sent",
+      description: usedFallback
+        ? "Run `vercel dev` to exercise the real /api/mpesa/simulate endpoint."
+        : "Enter your M-Pesa PIN on your phone to confirm the payment.",
+    });
+
+    navigate(`/join/${id}/status?orderId=${encodeURIComponent(orderId)}`);
+  }
 
   return (
     <Layout>
@@ -129,6 +190,8 @@ export default function JoinDao() {
                     <span className="border-r border-border px-3 py-3 text-sm text-muted-foreground">+254</span>
                     <input
                       id="join-phone"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
                       className="min-w-0 flex-1 bg-transparent px-3 py-3 text-sm text-foreground outline-none"
                       placeholder="7XX XXX XXX"
                       type="tel"
@@ -138,13 +201,24 @@ export default function JoinDao() {
                   </div>
                   <p className="mt-2 text-[11px] text-muted-foreground">We&apos;ll send a one-time code by SMS. Your number stays private.</p>
 
-                  <Link
-                    to={`/join/${id ?? "1"}/status?orderId=ord_demo_123`}
-                    className="btn-warm mt-5 w-full justify-center gap-2 py-3 text-sm font-bold"
+                  <button
+                    type="button"
+                    onClick={handleMpesaSubmit}
+                    disabled={!canSubmit}
+                    className="btn-warm mt-5 w-full justify-center gap-2 py-3 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <CreditCard className="h-4 w-4" />
-                    Request M-Pesa Prompt
-                  </Link>
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Sending prompt...
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="h-4 w-4" />
+                        Request M-Pesa Prompt
+                      </>
+                    )}
+                  </button>
                 </div>
 
                 <div className="rounded-lg border border-primary/18 bg-background/50 p-5">

@@ -39,6 +39,18 @@ export function getActiveMembership(
   }) ?? null;
 }
 
+export function listMembershipsForWallet(walletAddress: string): MembershipRecord[] {
+  return readMemberships()
+    .filter((record) => record.walletAddress === walletAddress)
+    .sort((a, b) => new Date(b.joinedAt).getTime() - new Date(a.joinedAt).getTime());
+}
+
+export function listMembershipsForCommunity(communityId: string): MembershipRecord[] {
+  return readMemberships()
+    .filter((record) => record.communityId === communityId)
+    .sort((a, b) => new Date(b.joinedAt).getTime() - new Date(a.joinedAt).getTime());
+}
+
 export function recordActiveMembership(communityId: string, walletAddress: string): MembershipRecord {
   const records = readMemberships();
   const existingIndex = records.findIndex((record) => {

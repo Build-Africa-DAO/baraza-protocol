@@ -72,9 +72,9 @@ const WalletStatus: React.FC = () => {
     return (
       <button
         onClick={() => setVisible(true)}
-        className="btn-primary text-sm px-4 py-2"
+        className="rounded-md bg-secondary px-6 py-2.5 text-sm font-bold text-secondary-foreground transition-colors hover:bg-secondary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
       >
-        Connect Wallet
+        Connect
       </button>
     );
   }
@@ -90,7 +90,7 @@ const WalletStatus: React.FC = () => {
 
       <button
         onClick={() => setOpen((o) => !o)}
-        className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all text-sm font-semibold ${
+        className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-semibold transition-all ${
           wrongChain
             ? 'bg-destructive/10 border-destructive/40 text-destructive'
             : 'bg-surface border-border hover:border-primary/50 text-foreground'

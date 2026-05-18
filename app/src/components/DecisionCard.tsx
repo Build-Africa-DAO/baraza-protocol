@@ -1,9 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { ThumbsUp, ThumbsDown, Clock, CheckCircle2, User, Loader2 } from 'lucide-react';
+import { Loader2, ThumbsDown, ThumbsUp, User } from 'lucide-react';
 import { formatKSh, daysRemaining } from '@/lib/utils';
 import { useWalletGuard } from '@/hooks/useWalletGuard';
 import { useBarazaContract } from '@/hooks/useBarazaContract';
+import type { ProposalLifecycleStage } from '@/lib/constants';
+import { STAGE_META, inferStage } from '@/lib/proposalStatus';
 
 interface DecisionCardProps {
   id: string;
@@ -16,6 +18,7 @@ interface DecisionCardProps {
   votesAgainst: number;
   totalMembers: number;
   status: string;
+  lifecycleStage?: ProposalLifecycleStage;
   createdAt: string;
   endsAt: string;
 }
@@ -31,6 +34,7 @@ const DecisionCard: React.FC<DecisionCardProps> = ({
   votesAgainst: initialVotesAgainst,
   totalMembers,
   status,
+  lifecycleStage,
   endsAt,
 }) => {
   const { requireWallet, isReady } = useWalletGuard({ action: 'vote on decisions' });
@@ -48,7 +52,10 @@ const DecisionCard: React.FC<DecisionCardProps> = ({
   const againstPct = totalVotes > 0 ? 100 - forPct : 0;
   const participationPct = Math.round((totalVotes / totalMembers) * 100);
 
-  const isActive = status === 'active';
+  const stage: ProposalLifecycleStage = lifecycleStage ?? inferStage(status);
+  const stageMeta = STAGE_META[stage];
+  const StageIcon = stageMeta.icon;
+  const isActive = stageMeta.votable;
   const days = daysRemaining(endsAt);
 
   const handleVote = async (vote: 'for' | 'against') => {
@@ -83,15 +90,21 @@ const DecisionCard: React.FC<DecisionCardProps> = ({
 
   return (
     <div className="baraza-card p-5">
-      {/* Status badge + amount */}
-      <div className="flex items-center justify-between mb-3">
-        <div
-          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold ${
-            isActive ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
-          }`}
-        >
-          {isActive ? <Clock className="w-3 h-3" /> : <CheckCircle2 className="w-3 h-3" />}
-          {isActive ? `${days} day${days !== 1 ? 's' : ''} left` : 'Completed'}
+      {/* Lifecycle stage pill + funding amount */}
+      <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+        <div className="flex items-center gap-2">
+          <span
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider ${stageMeta.className}`}
+            aria-label={`Stage: ${stageMeta.label}`}
+          >
+            <StageIcon className="w-3 h-3" />
+            {stageMeta.label}
+          </span>
+          {isActive && (
+            <span className="text-[10px] text-muted-foreground">
+              {days} day{days !== 1 ? 's' : ''} left
+            </span>
+          )}
         </div>
         <span className="text-xs font-semibold text-accent">{formatKSh(fundingAmount)}</span>
       </div>

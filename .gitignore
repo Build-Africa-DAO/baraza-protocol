@@ -1,11 +1,44 @@
+# Vercel
 .vercel
+
+# Dependencies
 node_modules/
+
+# Framework artifacts
 .next/
-*.zip
-*.png
 dist/
 build/
+
+# Environment
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Binary / design assets (keep in Figma/Notion, not git)
+*.zip
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+
+# Dev logs
+vite-dev.*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Scratch / AI workspace directories (not part of the product)
+baraza-protocol/
+"Project Stellar"/
+"Project Title"/
+vscode-themes/
+.codex/
+.playwright-mcp/
+.claude/
+builder-template-app/
+
+# Anchor / Rust build output
+target/

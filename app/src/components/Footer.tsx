@@ -57,8 +57,8 @@ export default function Footer() {
   return (
     <footer className="border-t border-border/60 bg-card/50 backdrop-blur-sm">
       <div className="container mx-auto px-4 py-14">
-        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 gap-10 sm:grid-cols-[1.4fr_1fr] lg:gap-16">
+          <div>
             <BrandLogo size="md" className="mb-4" />
             <p className="mb-5 max-w-xs text-sm leading-relaxed text-muted-foreground">
               A treasury layer for groups that collect dues, vote on proposals,

@@ -1,0 +1,48 @@
+{
+  "$schema_note": "Source of truth for app/scripts/higgsfield/render.mjs. Each shot produces one 5s clip via Soul -> DoP pipeline.",
+  "defaults": {
+    "aspect_ratio": "16:9",
+    "resolution": "1080p",
+    "duration": 5,
+    "image_model": "higgsfield-ai/soul/standard",
+    "video_model": "higgsfield-ai/dop/preview"
+  },
+  "shots": [
+    {
+      "id": "01_cash",
+      "title": "Hands counting cash",
+      "image_prompt": "Close-up of weathered hands counting a stack of Kenyan 1000-shilling notes on a worn wooden table, warm afternoon light streaming from a window, a small spiral notebook with hand-written tallies just out of focus, depth of field shallow at f/2.0, 35mm film grain, color palette of warm ochre and deep brown, anthropological photography, Magnum Photos style.",
+      "motion_prompt": "Slow push-in on the hands, money stack slightly compressing as a note is laid down, subtle paper rustle implied, no camera shake, hands stay in frame."
+    },
+    {
+      "id": "02_meeting",
+      "title": "Group meeting around a ledger",
+      "image_prompt": "Five Kenyan women in their thirties to fifties gathered around a wooden table on an open verandah, one pointing at an open A4 ledger book, animated mid-discussion, late afternoon sun warming the scene, headscarves and bright kitenge fabric, candid editorial documentary style, shallow depth of field, soft bokeh of greenery beyond the verandah, 50mm lens look, Kodak Portra 400 color grade.",
+      "motion_prompt": "Handheld feel, very gentle drift left to right, one woman gestures emphatically, another nods, soft natural movement, no zoom."
+    },
+    {
+      "id": "03_mpesa",
+      "title": "M-Pesa confirmation on a phone",
+      "image_prompt": "Macro close-up of a hand holding a budget Android smartphone in portrait, screen showing a green SMS notification panel that reads 'Confirmed. Ksh 500 sent to BARAZA POOL on 18/5/26' in clean sans-serif text, blurred market stall colors behind, late golden hour, cinematic clean key light on the screen, photorealistic, no fake fingers, no UI artifacts.",
+      "motion_prompt": "Slow push-in on the phone screen, hand stays steady, slight breathing of the background bokeh, no rack focus."
+    },
+    {
+      "id": "04_chama",
+      "title": "Wide chama gathering under acacia",
+      "image_prompt": "Wide establishing shot of a community savings group of 25 people seated in a loose circle under a large spreading acacia tree, golden hour light filtering through the canopy, dusty red earth, a chairperson standing addressing the group with one arm raised, plastic chairs and a small wooden table at center, the Kenyan countryside extending behind, anamorphic widescreen look, deep saturation, Roger Deakins lighting, depth, scale.",
+      "motion_prompt": "Slow dolly forward toward the circle, treetops sway gently in the breeze, one figure in the circle turns their head, otherwise static composition, cinematic patience."
+    },
+    {
+      "id": "05_dashboard",
+      "title": "Phone showing a dashboard",
+      "image_prompt": "Over-the-shoulder shot of a young Kenyan man holding a smartphone in portrait, screen displays an abstract financial dashboard with a large green KSh balance number, a horizontal vote progress bar in yellow and green, and three small avatar circles, dark navy app background with warm yellow accent color, clean modern UI sans-serif text, defocused market alley in the background with warm sodium light, cinematic, 35mm, photorealistic, no spelling errors on screen elements.",
+      "motion_prompt": "Slight handheld breathing, the screen content stays still, the man's thumb scrolls upward by a small amount, background traffic blur shifts subtly."
+    },
+    {
+      "id": "06_skyline",
+      "title": "Sunset skyline title card",
+      "image_prompt": "Wide silhouette of the Nairobi skyline at dusk, deep indigo sky transitioning to molten orange at the horizon, KICC tower and surrounding buildings as recognizable silhouettes, a flock of birds in mid-flight, low foreground out of focus, room for text overlay in the upper third, cinematic 2.39:1 framing, hyper-real, Christopher Doyle color palette.",
+      "motion_prompt": "Slow truck right, parallax between near silhouettes and distant skyline, birds drift across frame, gentle ambient motion, no camera shake."
+    }
+  ]
+}

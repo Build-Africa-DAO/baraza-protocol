@@ -15,6 +15,8 @@ export default defineConfig({
   },
   build: {
     target: 'esnext',
+    // Disabled to avoid a Vercel edge-cache bug with preload link injection
+    // causing CORS errors on cold starts for the wallet adapter chunks.
     modulePreload: false,
     rollupOptions: {
       output: {

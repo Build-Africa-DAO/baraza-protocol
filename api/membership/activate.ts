@@ -1,0 +1,193 @@
+/**
+ * Membership activation — durable Supabase write triggered by the client
+ * when JoinStatus observes a payment order reach a terminal positive state
+ * (INDEXER_CONFIRMED or RECONCILED).
+ *
+ * Server-side gating:
+ *   1. Order must exist in `payment_orders` with status >= INDEXER_CONFIRMED.
+ *   2. Idempotent — duplicate POSTs with the same (community_id, wallet_address)
+ *      return 200 with the existing record.
+ *
+ * Client always also calls `recordActiveMembership()` locally so the dashboard
+ * recognises the user immediately even if the Supabase insert is async/slow.
+ */
+
+export const config = { runtime: 'edge' };
+
+interface ActivateRequest {
+  orderId: string;
+  communityId: string;
+  walletAddress: string;
+}
+
+function json(body: unknown, init?: ResponseInit): Response {
+  return new Response(JSON.stringify(body), {
+    ...init,
+    headers: {
+      'content-type': 'application/json',
+      'access-control-allow-origin': '*',
+      ...(init?.headers ?? {}),
+    },
+  });
+}
+
+function bad(message: string, status = 400): Response {
+  return json({ error: 'invalid_request', message }, { status });
+}
+
+const TERMINAL_POSITIVE_STATUSES = new Set([
+  'INDEXER_CONFIRMED',
+  'RECONCILED',
+]);
+
+async function fetchOrderStatus(url: string, serviceKey: string, orderId: string): Promise<string | null> {
+  const res = await fetch(
+    `${url}/rest/v1/payment_orders?order_id=eq.${encodeURIComponent(orderId)}&select=status,community_id`,
+    {
+      headers: {
+        apikey: serviceKey,
+        Authorization: `Bearer ${serviceKey}`,
+      },
+    },
+  );
+  if (!res.ok) return null;
+  const rows = (await res.json().catch(() => [])) as Array<{ status: string; community_id: string }>;
+  return rows[0]?.status ?? null;
+}
+
+async function findExistingMembership(
+  url: string,
+  serviceKey: string,
+  communityId: string,
+  walletAddress: string,
+): Promise<{ member_id: string; status: string } | null> {
+  const params = new URLSearchParams({
+    community_id: `eq.${communityId}`,
+    wallet_address: `eq.${walletAddress}`,
+    select: 'member_id,status',
+  });
+  const res = await fetch(`${url}/rest/v1/memberships?${params.toString()}`, {
+    headers: {
+      apikey: serviceKey,
+      Authorization: `Bearer ${serviceKey}`,
+    },
+  });
+  if (!res.ok) return null;
+  const rows = (await res.json().catch(() => [])) as Array<{ member_id: string; status: string }>;
+  return rows.find((r) => r.status === 'ACTIVE' || r.status === 'PENDING') ?? null;
+}
+
+async function insertMembership(
+  url: string,
+  serviceKey: string,
+  payload: {
+    member_id: string;
+    community_id: string;
+    user_id_hash: string;
+    wallet_address: string;
+    payment_order_id: string;
+  },
+): Promise<{ ok: boolean; detail?: string }> {
+  const res = await fetch(`${url}/rest/v1/memberships`, {
+    method: 'POST',
+    headers: {
+      apikey: serviceKey,
+      Authorization: `Bearer ${serviceKey}`,
+      'content-type': 'application/json',
+      Prefer: 'return=representation',
+    },
+    body: JSON.stringify({
+      ...payload,
+      status: 'ACTIVE',
+      voting_weight: 1,
+      activated_at: new Date().toISOString(),
+    }),
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '');
+    return { ok: false, detail };
+  }
+  return { ok: true };
+}
+
+function generateMemberId(): string {
+  return `mem_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+export default async function handler(req: Request): Promise<Response> {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      headers: {
+        'access-control-allow-origin': '*',
+        'access-control-allow-methods': 'POST, OPTIONS',
+        'access-control-allow-headers': 'content-type',
+      },
+    });
+  }
+  if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, { status: 405 });
+
+  const url = process.env.SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceKey) {
+    return json({
+      ok: false,
+      persisted: false,
+      reason: 'supabase_not_configured',
+      note: 'Membership recorded locally only. Set SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY to enable durable writes.',
+    });
+  }
+
+  let body: ActivateRequest;
+  try {
+    body = (await req.json()) as ActivateRequest;
+  } catch {
+    return bad('Body must be valid JSON');
+  }
+
+  if (!body.orderId) return bad('orderId is required');
+  if (!body.communityId) return bad('communityId is required');
+  if (!body.walletAddress) return bad('walletAddress is required');
+
+  // Gate: order must be in a terminal positive state.
+  const orderStatus = await fetchOrderStatus(url, serviceKey, body.orderId);
+  if (!orderStatus) {
+    return bad(`Order ${body.orderId} not found`, 404);
+  }
+  if (!TERMINAL_POSITIVE_STATUSES.has(orderStatus)) {
+    return bad(
+      `Order ${body.orderId} is in status ${orderStatus}; activation requires INDEXER_CONFIRMED or RECONCILED.`,
+      409,
+    );
+  }
+
+  // Idempotent: return existing membership if one already exists.
+  const existing = await findExistingMembership(url, serviceKey, body.communityId, body.walletAddress);
+  if (existing) {
+    return json({
+      ok: true,
+      persisted: true,
+      memberId: existing.member_id,
+      status: existing.status,
+      created: false,
+    });
+  }
+
+  // No user identity yet — use a hash of the wallet as the user_id_hash for now.
+  // Production replaces this with the HMAC-peppered phone hash from auth.
+  const userIdHash = `wallet:${body.walletAddress}`;
+
+  const memberId = generateMemberId();
+  const result = await insertMembership(url, serviceKey, {
+    member_id: memberId,
+    community_id: body.communityId,
+    user_id_hash: userIdHash,
+    wallet_address: body.walletAddress,
+    payment_order_id: body.orderId,
+  });
+
+  if (!result.ok) {
+    return json({ ok: false, persisted: false, error: result.detail }, { status: 500 });
+  }
+
+  return json({ ok: true, persisted: true, memberId, status: 'ACTIVE', created: true });
+}

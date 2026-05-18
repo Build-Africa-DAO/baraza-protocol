@@ -1,0 +1,30 @@
+[features]
+seeds = false
+skip-lint = false
+
+[programs.localnet]
+governance = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+community_registry = "CmnZpkH1Y9d5oh4PNqRTYAyMRhFqLkXq2fJh6cN6jPbm"
+membership = "EnCvLHcm2dSjwKjskwihHbuHWLQKjPKMLGJJxbPiaDup"
+payment_attestation = "CxNwpwExBQedJDYeuspyUUtHjeNr52wy6BTFPFbXWSL7"
+treasury_vault = "TreasuryVAULTPRoGRamPLaCeHoLderaaaaaaaaaaaaa"
+
+[programs.devnet]
+governance = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+community_registry = "CmnZpkH1Y9d5oh4PNqRTYAyMRhFqLkXq2fJh6cN6jPbm"
+membership = "EnCvLHcm2dSjwKjskwihHbuHWLQKjPKMLGJJxbPiaDup"
+payment_attestation = "CxNwpwExBQedJDYeuspyUUtHjeNr52wy6BTFPFbXWSL7"
+treasury_vault = "TreasuryVAULTPRoGRamPLaCeHoLderaaaaaaaaaaaaa"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "Localnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+
+[workspace]
+members = ["programs/community_registry", "programs/governance", "programs/membership", "programs/payment_attestation", "programs/treasury_vault"]

@@ -85,7 +85,7 @@ export default function HeroSection() {
       <div className="container relative z-10 mx-auto px-4">
         <motion.div
           variants={container}
-          initial="hidden"
+          initial={false}
           animate="show"
           className="max-w-2xl"
         >
@@ -141,7 +141,7 @@ export default function HeroSection() {
 
         <motion.div
           variants={item}
-          initial="hidden"
+          initial={false}
           animate="show"
           className="mt-10 hidden flex-wrap items-center gap-3 border-t border-primary/10 pt-5 text-xs text-muted-foreground sm:flex"
         >

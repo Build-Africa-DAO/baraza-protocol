@@ -1,53 +1,48 @@
 import React, { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
-import { Skeleton } from '@/components/ui/skeleton';
+import WalletProviders from '@/components/WalletProviders';
+import ChainProvider from '@/components/ChainProvider';
+import PageLoader from '@/components/PageLoader';
 
 const Index = lazy(() => import('./pages/Index'));
 const Communities = lazy(() => import('./pages/Communities'));
+const Evaluate = lazy(() => import('./pages/Evaluate'));
 const CreateCommunity = lazy(() => import('./pages/CreateCommunity'));
 const CommunityDashboard = lazy(() => import('./pages/CommunityDashboard'));
 const CreateDecision = lazy(() => import('./pages/CreateDecision'));
+const JoinDao = lazy(() => import('./pages/JoinDao'));
+const JoinStatus = lazy(() => import('./pages/JoinStatus'));
+const Profile = lazy(() => import('./pages/Profile'));
+const TreasuryDetail = lazy(() => import('./pages/TreasuryDetail'));
+const ProposalDetail = lazy(() => import('./pages/ProposalDetail'));
+const AdminReconciliation = lazy(() => import('./pages/AdminReconciliation'));
 const NotFound = lazy(() => import('./pages/NotFound'));
-const WalletProviders = lazy(() => import('@/components/WalletProviders'));
-
-function PageSkeleton() {
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="space-y-4 w-full max-w-md px-4">
-        <Skeleton className="h-8 w-3/4 mx-auto" />
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-5/6" />
-        <Skeleton className="h-40 w-full rounded-xl mt-8" />
-      </div>
-    </div>
-  );
-}
 
 const App: React.FC = () => {
-  const protectedRoute = (element: React.ReactNode) => (
-    <Suspense fallback={<PageSkeleton />}>
-      <WalletProviders>{element}</WalletProviders>
-    </Suspense>
-  );
-
   return (
-    <>
-      <Suspense fallback={<PageSkeleton />}>
+    <ChainProvider>
+      <WalletProviders>
+        <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/communities" element={<Communities />} />
-          <Route path="/create" element={protectedRoute(<CreateCommunity />)} />
-          <Route path="/dashboard/:id" element={protectedRoute(<CommunityDashboard />)} />
-          <Route
-            path="/dashboard/:id/decisions/create"
-            element={protectedRoute(<CreateDecision />)}
-          />
+          <Route path="/evaluate" element={<Evaluate />} />
+          <Route path="/create" element={<CreateCommunity />} />
+          <Route path="/dashboard/:id" element={<CommunityDashboard />} />
+          <Route path="/dashboard/:id/decisions/create" element={<CreateDecision />} />
+          <Route path="/join/:id" element={<JoinDao />} />
+          <Route path="/join/:id/status" element={<JoinStatus />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/dashboard/:id/treasury" element={<TreasuryDetail />} />
+          <Route path="/dashboard/:id/decisions/:decisionId" element={<ProposalDetail />} />
+          <Route path="/admin" element={<AdminReconciliation />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </Suspense>
-      <Toaster />
-    </>
+        </Suspense>
+        <Toaster />
+      </WalletProviders>
+    </ChainProvider>
   );
 };
 
