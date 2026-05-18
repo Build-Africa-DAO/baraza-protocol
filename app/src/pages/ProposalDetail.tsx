@@ -1,11 +1,13 @@
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, Loader2, ThumbsDown, ThumbsUp } from "lucide-react";
 import Layout from "@/components/Layout";
-import { MOCK_DECISIONS } from "@/lib/constants";
+import { DEFAULT_GOVERNANCE, MOCK_DECISIONS } from "@/lib/constants";
 import { daysRemaining, formatKSh } from "@/lib/utils";
 import { useWalletGuard } from "@/hooks/useWalletGuard";
 import { useBarazaContract } from "@/hooks/useBarazaContract";
 import { useCommunity } from "@/hooks/useCommunities";
+import { useToast } from "@/hooks/use-toast";
+import { STAGE_META, inferStage } from "@/lib/proposalStatus";
 import CommunityBanner from "@/components/CommunityBanner";
 
 export default function ProposalDetail() {
@@ -14,6 +16,7 @@ export default function ProposalDetail() {
   const { community } = useCommunity(proposal?.communityId);
   const { requireWallet } = useWalletGuard({ action: "vote on this proposal" });
   const { castVote, isPending } = useBarazaContract();
+  const { toast } = useToast();
 
   if (!proposal) {
     return (
@@ -34,11 +37,20 @@ export default function ProposalDetail() {
     );
   }
 
-  const support = Math.round((proposal.votesFor / (proposal.votesFor + proposal.votesAgainst)) * 100);
-  const object = 100 - support;
-  const quorum = Math.round(((proposal.votesFor + proposal.votesAgainst) / proposal.totalMembers) * 100);
+  const totalVotes = proposal.votesFor + proposal.votesAgainst;
+  const support = totalVotes > 0
+    ? Math.round((proposal.votesFor / totalVotes) * 100)
+    : 0;
+  const object = totalVotes > 0 ? 100 - support : 0;
+  const quorum = proposal.totalMembers > 0
+    ? Math.round((totalVotes / proposal.totalMembers) * 100)
+    : 0;
   const days = daysRemaining(proposal.endsAt);
-  const endsLabel = proposal.status !== "active"
+  const stage = proposal.lifecycleStage ?? inferStage(proposal.status);
+  const stageMeta = STAGE_META[stage];
+  const StageIcon = stageMeta.icon;
+  const isVotable = stageMeta.votable;
+  const endsLabel = !isVotable
     ? "Voting closed"
     : days === 0
       ? "Closes today"
@@ -46,10 +58,23 @@ export default function ProposalDetail() {
   const treasuryImpactPct = community?.fundBalance
     ? Math.round((proposal.fundingAmount / community.fundBalance) * 1000) / 10
     : null;
+  const quorumRequiredPct = community?.quorumPct ?? DEFAULT_GOVERNANCE.quorumPct;
 
   const handleVote = (vote: boolean) => async () => {
     await requireWallet(async () => {
-      await castVote(proposal.id, proposal.communityId, vote);
+      const success = await castVote(proposal.id, proposal.communityId, vote);
+      if (success) {
+        toast({
+          title: vote ? "Support recorded" : "Objection recorded",
+          description: "Your signed vote is queued for the next governance tally.",
+        });
+      } else {
+        toast({
+          title: "Vote could not be cast",
+          description: "The governance program isn't wired yet — try again once it ships.",
+          variant: "destructive",
+        });
+      }
     });
   };
 
@@ -66,8 +91,12 @@ export default function ProposalDetail() {
             <main className="space-y-6">
               <CommunityBanner type={community?.type} className="p-5 md:p-6">
                 <div className="mb-4 flex flex-wrap items-center gap-3">
-                  <span className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 font-mono text-xs uppercase tracking-widest text-primary">
-                    {proposal.status === "active" ? "Voting open" : proposal.status === "completed" ? "Closed" : "Failed"}
+                  <span
+                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wider ${stageMeta.className}`}
+                    aria-label={`Stage: ${stageMeta.label}`}
+                  >
+                    <StageIcon className="h-3 w-3" />
+                    {stageMeta.label}
                   </span>
                   <span className="text-xs text-muted-foreground">#{proposal.id.padStart(3, "0")}</span>
                 </div>
@@ -79,8 +108,8 @@ export default function ProposalDetail() {
                 {[
                   ["Requested funding", formatKSh(proposal.fundingAmount), "text-primary"],
                   ["Treasury impact", treasuryImpactPct !== null ? `-${treasuryImpactPct}%` : "—", "text-destructive"],
-                  ["Quorum required", "40%", "text-foreground"],
-                  ["Current approval", `${support}%`, "text-primary"],
+                  ["Quorum required", `${quorumRequiredPct}%`, "text-foreground"],
+                  ["Current approval", totalVotes > 0 ? `${support}%` : "—", "text-primary"],
                 ].map(([label, value, tone]) => (
                   <div key={label} className="baraza-card p-4">
                     <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">{label}</p>
@@ -113,7 +142,7 @@ export default function ProposalDetail() {
                   <button
                     type="button"
                     onClick={handleVote(true)}
-                    disabled={isPending || proposal.status !== "active"}
+                    disabled={isPending || !isVotable}
                     className="btn-warm justify-center gap-2 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ThumbsUp className="h-4 w-4" />}
@@ -122,7 +151,7 @@ export default function ProposalDetail() {
                   <button
                     type="button"
                     onClick={handleVote(false)}
-                    disabled={isPending || proposal.status !== "active"}
+                    disabled={isPending || !isVotable}
                     className="btn-ghost justify-center gap-2 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ThumbsDown className="h-4 w-4" />}
@@ -149,7 +178,7 @@ export default function ProposalDetail() {
                   <div className="relative">
                     <span className="absolute -left-[1.6rem] top-1 h-3 w-3 rounded-full bg-muted-foreground" />
                     <p className="text-sm text-foreground">
-                      {proposal.status === "active" ? "Voting closes" : "Voting closed"}
+                      {isVotable ? "Voting closes" : "Voting closed"}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(proposal.endsAt).toLocaleDateString("en-KE", { day: "2-digit", month: "short", year: "numeric" })}
