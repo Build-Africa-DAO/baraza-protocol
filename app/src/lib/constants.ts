@@ -24,6 +24,13 @@ export const DEFAULT_GOVERNANCE = {
 };
 
 /**
+ * One-time onboarding fee charged to the founding admin when creating a
+ * Community DAO. Covers Solana account rent, metadata pinning to IPFS, and
+ * the operational cost of the off-chain registry.
+ */
+export const DAO_CREATION_FEE_KES = 2500;
+
+/**
  * Mirrors the on-chain `ProposalStatus` enum in
  * `programs/governance/src/lib.rs`. UI surfaces these as lifecycle pills.
  */

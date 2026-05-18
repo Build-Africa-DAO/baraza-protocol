@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Users, ArrowLeft, CheckCircle2, Loader2, ShieldCheck } from 'lucide-react';
 import Layout from '@/components/Layout';
-import { COMMUNITY_TYPES } from '@/lib/constants';
+import { COMMUNITY_TYPES, DAO_CREATION_FEE_KES } from '@/lib/constants';
+import { formatKSh } from '@/lib/utils';
 import { useWalletGuard } from '@/hooks/useWalletGuard';
 import { useToast } from '@/hooks/use-toast';
 import { createCommunityRecord } from '@/lib/communities';
@@ -86,8 +87,11 @@ const CreateCommunity: React.FC = () => {
               <h2 className="font-display text-2xl font-bold text-foreground mb-3">
                 {form.name} is live
               </h2>
+              <p className="text-sm text-muted-foreground mb-2">
+                Payment of {formatKSh(DAO_CREATION_FEE_KES)} received. Your Community DAO is ready.
+              </p>
               <p className="text-sm text-muted-foreground mb-8">
-                Your Community DAO is ready. Share the join link with members, then create your first governance proposal from the dashboard.
+                Share the join link with members, then create your first governance proposal from the dashboard.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <button
@@ -295,19 +299,30 @@ const CreateCommunity: React.FC = () => {
                 </div>
               </div>
 
-              {/* Network */}
-              <div className="flex items-center justify-between rounded-lg border border-border/60 bg-surface px-4 py-3 text-xs">
-                <span className="text-muted-foreground">
-                  This community will be created on
-                </span>
-                <span className="inline-flex items-center gap-1.5 font-semibold text-foreground">
-                  <span
-                    aria-hidden
-                    className="h-1.5 w-1.5 rounded-full"
-                    style={{ background: chainMeta.badgeBg }}
-                  />
-                  {chainMeta.label}
-                </span>
+              {/* Summary: creation fee + network */}
+              <div className="rounded-lg border border-border/60 bg-surface divide-y divide-border/40">
+                <div className="flex items-center justify-between px-4 py-3">
+                  <div>
+                    <p className="text-xs font-semibold text-foreground">DAO creation fee</p>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">
+                      One-time charge for Solana rent, IPFS pinning, and registry setup.
+                    </p>
+                  </div>
+                  <span className="font-display text-lg font-bold text-accent tabular-nums">
+                    {formatKSh(DAO_CREATION_FEE_KES)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between px-4 py-3 text-xs">
+                  <span className="text-muted-foreground">Settled on</span>
+                  <span className="inline-flex items-center gap-1.5 font-semibold text-foreground">
+                    <span
+                      aria-hidden
+                      className="h-1.5 w-1.5 rounded-full"
+                      style={{ background: chainMeta.badgeBg }}
+                    />
+                    {chainMeta.label}
+                  </span>
+                </div>
               </div>
 
               {/* Submit */}
@@ -328,10 +343,10 @@ const CreateCommunity: React.FC = () => {
                   {isPending ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Creating…
+                      Processing payment…
                     </>
                   ) : (
-                    'Create Community DAO'
+                    `Pay ${formatKSh(DAO_CREATION_FEE_KES)} & Create DAO`
                   )}
                 </button>
               )}
