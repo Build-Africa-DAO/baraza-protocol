@@ -2,27 +2,35 @@ import { describe, expect, it } from 'vitest';
 import { CHAINS, CHAIN_LIST, readStoredChain, writeStoredChain } from '@/lib/chain';
 
 describe('CHAINS metadata', () => {
-  it('exposes both solana and stellar entries', () => {
+  it('exposes solana, stellar, base, ethereum entries', () => {
     expect(CHAINS.solana).toBeDefined();
     expect(CHAINS.stellar).toBeDefined();
+    expect(CHAINS.base).toBeDefined();
+    expect(CHAINS.ethereum).toBeDefined();
   });
 
-  it('marks solana as enabled and stellar as Phase 2', () => {
+  it('marks only Solana as enabled; others are placeholders', () => {
     expect(CHAINS.solana.enabled).toBe(true);
     expect(CHAINS.stellar.enabled).toBe(false);
+    expect(CHAINS.base.enabled).toBe(false);
+    expect(CHAINS.ethereum.enabled).toBe(false);
+  });
+
+  it('uses correct comingSoon labels', () => {
     expect(CHAINS.stellar.comingSoon).toBe('Phase 2');
+    expect(CHAINS.base.comingSoon).toBe('Soon');
+    expect(CHAINS.ethereum.comingSoon).toBe('Soon');
   });
 
   it('uses brand-correct badge colors', () => {
-    // Solana green per https://solana.com/branding
     expect(CHAINS.solana.badgeBg.toUpperCase()).toBe('#14F195');
-    // Stellar blue per Baraza palette tokens
     expect(CHAINS.stellar.badgeBg.toUpperCase()).toBe('#0066FF');
+    expect(CHAINS.base.badgeBg.toUpperCase()).toBe('#0052FF');
+    expect(CHAINS.ethereum.badgeBg.toUpperCase()).toBe('#627EEA');
   });
 
-  it('CHAIN_LIST renders solana before stellar', () => {
-    expect(CHAIN_LIST[0].id).toBe('solana');
-    expect(CHAIN_LIST[1].id).toBe('stellar');
+  it('CHAIN_LIST orders Solana first, then Stellar, Base, Ethereum', () => {
+    expect(CHAIN_LIST.map((c) => c.id)).toEqual(['solana', 'stellar', 'base', 'ethereum']);
   });
 });
 

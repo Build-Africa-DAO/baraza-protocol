@@ -6,7 +6,7 @@
  * user is browsing — Solana now, Stellar in Phase 2.
  */
 
-export type Chain = 'solana' | 'stellar';
+export type Chain = 'solana' | 'stellar' | 'base' | 'ethereum';
 
 export interface ChainMeta {
   id: Chain;
@@ -18,6 +18,14 @@ export interface ChainMeta {
   comingSoon?: string;
 }
 
+// Solana is the only currently-enabled chain. Others are placeholders to
+// communicate the multi-chain roadmap; selecting them is blocked in
+// ChainSelector and DB writes are rejected by the CHECK constraint in
+// supabase/migrations/001_communities_governance_columns.sql.
+//
+// To actually enable Stellar (Phase 2): widen the DB CHECK + wire Soroban.
+// To enable Base / Ethereum: integrate wagmi/RainbowKit alongside the
+// Solana wallet adapter and add EVM-side program logic.
 export const CHAINS: Record<Chain, ChainMeta> = {
   solana: {
     id: 'solana',
@@ -36,9 +44,27 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     enabled: false,
     comingSoon: 'Phase 2',
   },
+  base: {
+    id: 'base',
+    label: 'Base',
+    short: 'BASE',
+    badgeBg: '#0052FF',
+    badgeText: '#FFFFFF',
+    enabled: false,
+    comingSoon: 'Soon',
+  },
+  ethereum: {
+    id: 'ethereum',
+    label: 'Ethereum',
+    short: 'ETH',
+    badgeBg: '#627EEA',
+    badgeText: '#FFFFFF',
+    enabled: false,
+    comingSoon: 'Soon',
+  },
 };
 
-export const CHAIN_LIST: ChainMeta[] = [CHAINS.solana, CHAINS.stellar];
+export const CHAIN_LIST: ChainMeta[] = [CHAINS.solana, CHAINS.stellar, CHAINS.base, CHAINS.ethereum];
 
 const STORAGE_KEY = 'baraza:chain';
 const DEFAULT_CHAIN: Chain = 'solana';

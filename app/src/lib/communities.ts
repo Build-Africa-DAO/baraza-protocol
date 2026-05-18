@@ -90,8 +90,13 @@ function initials(name: string): string {
     .join('') || 'BR';
 }
 
+function parseChain(raw: string | null | undefined): Chain {
+  if (raw === 'stellar' || raw === 'base' || raw === 'ethereum') return raw;
+  return 'solana';
+}
+
 function communityFromRow(row: CommunityRow): Community {
-  const chain = row.chain === 'stellar' ? 'stellar' : 'solana';
+  const chain = parseChain(row.chain);
   return {
     id: row.id,
     name: row.name,

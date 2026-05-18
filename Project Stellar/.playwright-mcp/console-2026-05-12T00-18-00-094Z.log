@@ -1,4 +1,0 @@
-[    1519ms] [ERROR] Failed to load resource: the server responded with a status of 405 () @ https://claude.ai/sentry?o=1158394&p=4504646202490880:0
-[    2207ms] [ERROR] Unrecognized Content-Security-Policy directive 'webrtc'. @ https://www.claudeusercontent.com/artifact/93d82c69-3e55-4582-a671-8650bd0c2331?domain=&errorReportingMode=parent&formattedSpreadsheets=true:0
-[    3488ms] [WARNING] [ARTIFACTS] Received message does not conform to basic message shape, ignoring @ https://assets-proxy.anthropic.com/claude-ai/v1/_next/static/chunks/5103-081ee00c07bd644f.js:11
-[    4980ms] [WARNING] [Intercom] The App ID in your code snippet has not been set. Set it to your App ID found in settings to complete installation: https://app.intercom.com/a/apps/_/settings/web @ https://js.intercomcdn.com/frame-modern.4e95377f.js:0

@@ -6,18 +6,17 @@ interface NavItem {
   path: string;
   label: string;
   icon: LucideIcon;
-  /** Tailwind class for the grid placement so the layout stays predictable
-   *  regardless of how many items exist. */
+  /** Tailwind class for the grid placement so spacing stays even. */
   colClass: string;
 }
 
 const leftItems: NavItem[] = [
-  { path: '/',            label: 'Home',    icon: Home,      colClass: 'col-start-1' },
-  { path: '/communities', label: 'Explore', icon: Compass,   colClass: 'col-start-2' },
+  { path: '/', label: 'Home', icon: Home, colClass: 'col-start-1' },
+  { path: '/communities', label: 'Explore', icon: Compass, colClass: 'col-start-2' },
 ];
 
 const rightItems: NavItem[] = [
-  { path: '/profile',     label: 'Profile', icon: UserRound, colClass: 'col-start-5' },
+  { path: '/profile', label: 'Profile', icon: UserRound, colClass: 'col-start-4' },
 ];
 
 function isPathActive(currentPath: string, target: string): boolean {
@@ -28,6 +27,7 @@ function isPathActive(currentPath: string, target: string): boolean {
 function NavLink({ item, location }: { item: NavItem; location: ReturnType<typeof useLocation> }) {
   const Icon = item.icon;
   const active = isPathActive(location.pathname, item.path);
+
   return (
     <Link
       to={item.path}
@@ -53,12 +53,11 @@ export default function MobileBottomNav() {
       aria-label="Mobile navigation"
       className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-background/92 backdrop-blur-xl md:hidden"
     >
-      <div className="mx-auto grid max-w-md grid-cols-5 items-end px-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2">
+      <div className="mx-auto grid max-w-md grid-cols-4 items-end px-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2">
         {leftItems.map((item) => (
           <NavLink key={item.path} item={item} location={location} />
         ))}
 
-        {/* Centered primary action — fixed col-start-3 regardless of nav items count */}
         <div className="col-start-3 flex justify-center">
           <Link
             to="/create"
