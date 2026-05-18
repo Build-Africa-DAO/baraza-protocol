@@ -124,7 +124,7 @@ export default function JoinDao() {
     toast({
       title: usedFallback ? "Simulator unreachable — using local order" : "M-Pesa prompt sent",
       description: usedFallback
-        ? "Run `vercel dev` to exercise the real /api/mpesa/simulate endpoint."
+        ? "Run \"vercel dev\" to exercise the real /api/mpesa/simulate endpoint."
         : "Enter your M-Pesa PIN on your phone to confirm the payment.",
     });
 

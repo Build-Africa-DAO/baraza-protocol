@@ -123,7 +123,7 @@ function HeroPreview() {
 
 export default function HeroSection() {
   return (
-    <section className="relative overflow-hidden border-b border-primary/10 pt-20 pb-10 sm:pt-28 sm:pb-12 lg:pt-32">
+    <section className="relative overflow-hidden border-b border-primary/10 pt-18 pb-8 sm:pt-24 sm:pb-10 lg:pt-28">
       <div className="absolute inset-0 pointer-events-none" aria-hidden>
         <div className="absolute inset-0 ambient-globe-layer" />
         <div className="absolute inset-0 bg-gradient-to-r from-background via-background/88 to-background/20" />
@@ -136,12 +136,12 @@ export default function HeroSection() {
         />
       </div>
 
-      <div className="container relative z-10 mx-auto px-4">
+      <div className="container relative z-10 mx-auto max-w-7xl px-4">
         <motion.div
           variants={container}
           initial={false}
           animate="show"
-          className="min-[860px]:grid min-[860px]:grid-cols-[minmax(0,1fr)_minmax(18rem,0.74fr)] min-[860px]:items-center min-[860px]:gap-8"
+          className="min-[860px]:grid min-[860px]:grid-cols-[minmax(0,1fr)_minmax(18rem,0.62fr)] min-[860px]:items-center min-[860px]:gap-10"
         >
           <div className="max-w-2xl">
             <motion.div
@@ -168,23 +168,23 @@ export default function HeroSection() {
               treasury visibility, member voting, and phone-first M-Pesa participation.
             </motion.p>
 
-            <motion.div variants={item} className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row">
-              <Link to="/communities" tabIndex={-1} className="sm:w-auto">
+            <motion.div variants={item} className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row min-[860px]:flex-col min-[1040px]:flex-row">
+              <Link to="/communities" tabIndex={-1} className="sm:w-auto min-[860px]:w-full min-[1040px]:w-auto">
                 <ShimmerButton
                   background="linear-gradient(135deg, #F4D06F, #FF8811)"
                   shimmerColor="rgba(255,255,255,0.5)"
-                  className="w-full justify-center rounded-xl px-8 py-4 text-base font-extrabold uppercase tracking-wide sm:w-auto"
+                  className="w-full justify-center rounded-xl px-6 py-4 text-base font-extrabold uppercase tracking-wide sm:w-auto min-[860px]:w-full min-[1040px]:w-auto"
                 >
                   Browse Community DAOs
                   <ArrowRight className="h-4 w-4" />
                 </ShimmerButton>
               </Link>
-              <Link to="/create" className="btn-ghost justify-center px-6 py-4 text-sm font-bold sm:w-auto">
+              <Link to="/create" className="btn-ghost justify-center px-6 py-4 text-sm font-bold sm:w-auto min-[860px]:w-full min-[1040px]:w-auto">
                 Create a Community DAO
               </Link>
             </motion.div>
 
-            <motion.div variants={item} className="mt-8 grid max-w-xl grid-cols-3 gap-3">
+            <motion.div variants={item} className="mt-7 grid max-w-xl grid-cols-3 gap-3">
               {stats.map((stat) => (
                 <div key={stat.label} className="border-l border-primary/18 pl-3">
                   <p className="font-display text-lg font-bold text-foreground sm:text-xl">{stat.value}</p>
@@ -201,7 +201,7 @@ export default function HeroSection() {
           variants={item}
           initial={false}
           animate="show"
-          className="mt-10 hidden flex-wrap items-center gap-3 border-t border-primary/10 pt-5 text-xs text-muted-foreground sm:flex"
+          className="mt-8 hidden flex-wrap items-center gap-3 border-t border-primary/10 pt-5 text-xs text-muted-foreground sm:flex"
         >
           <span className="inline-flex items-center gap-2">
             <Users className="h-3.5 w-3.5 text-primary" />

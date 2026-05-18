@@ -405,7 +405,7 @@ const CommunityDashboard: React.FC = () => {
                     Members ({communityMembers.length})
                   </h3>
                   <p className="text-xs text-muted-foreground">
-                    Showing locally-tracked members. Full on-chain `MemberAccount` PDAs surface after the membership program deploys.
+                    Showing locally-tracked members. Full on-chain <code className="font-mono text-foreground">MemberAccount</code> PDAs surface after the membership program deploys.
                   </p>
                 </div>
               </div>
@@ -451,7 +451,7 @@ const CommunityDashboard: React.FC = () => {
                   <Users className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
                   <p className="text-sm font-semibold text-foreground">No members tracked locally yet</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Reported member count: {community.memberCount}. Member roster loads from on-chain `MemberAccount` PDAs once the membership program is deployed.
+                    Reported member count: {community.memberCount}. Member roster loads from on-chain <code className="font-mono text-foreground">MemberAccount</code> PDAs once the membership program is deployed.
                   </p>
                 </div>
               )}
