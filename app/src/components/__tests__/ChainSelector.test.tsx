@@ -38,17 +38,17 @@ describe('ChainSelector — closed state', () => {
 });
 
 describe('ChainSelector — open state', () => {
-  it('lists all 4 chains, with Solana as the selected option', () => {
+  it('lists all 9 chains, with Solana as the selected option', () => {
     renderSelector();
     fireEvent.click(screen.getByRole('button', { name: /network: solana/i }));
     const listbox = screen.getByRole('listbox');
     const options = within(listbox).getAllByRole('option');
-    expect(options).toHaveLength(4);
+    expect(options).toHaveLength(9);
     expect(options[0]).toHaveAttribute('aria-selected', 'true');
-    // Solana selected; Stellar / Base / Ethereum all unselected
-    expect(options[1]).toHaveAttribute('aria-selected', 'false');
-    expect(options[2]).toHaveAttribute('aria-selected', 'false');
-    expect(options[3]).toHaveAttribute('aria-selected', 'false');
+    // All non-Solana options are unselected
+    for (let i = 1; i < options.length; i++) {
+      expect(options[i]).toHaveAttribute('aria-selected', 'false');
+    }
   });
 
   it('disables Stellar with a Phase 2 label', () => {
@@ -58,11 +58,12 @@ describe('ChainSelector — open state', () => {
     expect(stellarOption).toBeDisabled();
   });
 
-  it('disables Base and Ethereum with Soon labels', () => {
+  it('disables all non-Solana chains with Soon labels', () => {
     renderSelector();
     fireEvent.click(screen.getByRole('button', { name: /network: solana/i }));
-    expect(screen.getByRole('option', { name: /base.*soon/i })).toBeDisabled();
-    expect(screen.getByRole('option', { name: /ethereum.*soon/i })).toBeDisabled();
+    for (const name of ['ethereum', 'base', 'arbitrum', 'optimism', 'polygon', 'bnb chain', 'celo']) {
+      expect(screen.getByRole('option', { name: new RegExp(`${name}.*soon`, 'i') })).toBeDisabled();
+    }
   });
 
   it('closes on Escape', () => {

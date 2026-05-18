@@ -79,7 +79,7 @@ export function CommunityMarquee() {
         </div>
       </div>
 
-      <div className="relative flex flex-col gap-3">
+      <div className="relative flex w-full max-w-full flex-col gap-3 overflow-hidden">
         <Marquee pauseOnHover className="[--duration:34s]" repeat={2}>
           {communities.map((community) => (
             <CommunityChip key={community.name} community={community} />

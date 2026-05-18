@@ -90,9 +90,20 @@ function initials(name: string): string {
     .join('') || 'BR';
 }
 
+const VALID_CHAINS: Chain[] = [
+  'solana',
+  'stellar',
+  'ethereum',
+  'base',
+  'arbitrum',
+  'optimism',
+  'polygon',
+  'bnb',
+  'celo',
+];
+
 function parseChain(raw: string | null | undefined): Chain {
-  if (raw === 'stellar' || raw === 'base' || raw === 'ethereum') return raw;
-  return 'solana';
+  return VALID_CHAINS.includes(raw as Chain) ? (raw as Chain) : 'solana';
 }
 
 function communityFromRow(row: CommunityRow): Community {

@@ -2,35 +2,55 @@ import { describe, expect, it } from 'vitest';
 import { CHAINS, CHAIN_LIST, readStoredChain, writeStoredChain } from '@/lib/chain';
 
 describe('CHAINS metadata', () => {
-  it('exposes solana, stellar, base, ethereum entries', () => {
-    expect(CHAINS.solana).toBeDefined();
-    expect(CHAINS.stellar).toBeDefined();
-    expect(CHAINS.base).toBeDefined();
-    expect(CHAINS.ethereum).toBeDefined();
+  it('exposes all 9 chain entries', () => {
+    for (const id of ['solana', 'stellar', 'ethereum', 'base', 'arbitrum', 'optimism', 'polygon', 'bnb', 'celo'] as const) {
+      expect(CHAINS[id]).toBeDefined();
+    }
   });
 
   it('marks only Solana as enabled; others are placeholders', () => {
     expect(CHAINS.solana.enabled).toBe(true);
-    expect(CHAINS.stellar.enabled).toBe(false);
-    expect(CHAINS.base.enabled).toBe(false);
-    expect(CHAINS.ethereum.enabled).toBe(false);
+    for (const id of ['stellar', 'ethereum', 'base', 'arbitrum', 'optimism', 'polygon', 'bnb', 'celo'] as const) {
+      expect(CHAINS[id].enabled).toBe(false);
+      expect(CHAINS[id].comingSoon).toBeTruthy();
+    }
   });
 
   it('uses correct comingSoon labels', () => {
     expect(CHAINS.stellar.comingSoon).toBe('Phase 2');
     expect(CHAINS.base.comingSoon).toBe('Soon');
     expect(CHAINS.ethereum.comingSoon).toBe('Soon');
+    expect(CHAINS.arbitrum.comingSoon).toBe('Soon');
+    expect(CHAINS.optimism.comingSoon).toBe('Soon');
+    expect(CHAINS.polygon.comingSoon).toBe('Soon');
+    expect(CHAINS.bnb.comingSoon).toBe('Soon');
+    expect(CHAINS.celo.comingSoon).toBe('Soon');
   });
 
   it('uses brand-correct badge colors', () => {
     expect(CHAINS.solana.badgeBg.toUpperCase()).toBe('#14F195');
     expect(CHAINS.stellar.badgeBg.toUpperCase()).toBe('#0066FF');
-    expect(CHAINS.base.badgeBg.toUpperCase()).toBe('#0052FF');
     expect(CHAINS.ethereum.badgeBg.toUpperCase()).toBe('#627EEA');
+    expect(CHAINS.base.badgeBg.toUpperCase()).toBe('#0052FF');
+    expect(CHAINS.arbitrum.badgeBg.toUpperCase()).toBe('#28A0F0');
+    expect(CHAINS.optimism.badgeBg.toUpperCase()).toBe('#FF0420');
+    expect(CHAINS.polygon.badgeBg.toUpperCase()).toBe('#8247E5');
+    expect(CHAINS.bnb.badgeBg.toUpperCase()).toBe('#F3BA2F');
+    expect(CHAINS.celo.badgeBg.toUpperCase()).toBe('#35D07F');
   });
 
-  it('CHAIN_LIST orders Solana first, then Stellar, Base, Ethereum', () => {
-    expect(CHAIN_LIST.map((c) => c.id)).toEqual(['solana', 'stellar', 'base', 'ethereum']);
+  it('CHAIN_LIST has all chains in expected order', () => {
+    expect(CHAIN_LIST.map((c) => c.id)).toEqual([
+      'solana',
+      'stellar',
+      'ethereum',
+      'base',
+      'arbitrum',
+      'optimism',
+      'polygon',
+      'bnb',
+      'celo',
+    ]);
   });
 });
 

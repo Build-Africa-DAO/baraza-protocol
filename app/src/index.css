@@ -80,6 +80,22 @@
 }
 
 @layer base {
+  html,
+  body,
+  #root {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  @supports not (overflow: clip) {
+    html,
+    body,
+    #root {
+      overflow-x: hidden;
+    }
+  }
+
   * {
     border-color: hsl(var(--border));
   }

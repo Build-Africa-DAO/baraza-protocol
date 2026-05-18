@@ -9,7 +9,16 @@ export interface Community {
   activeDecisions: number;
   createdAt: string;
   image: string;
-  chain?: 'solana' | 'stellar' | 'base' | 'ethereum';
+  chain?:
+    | 'solana'
+    | 'stellar'
+    | 'ethereum'
+    | 'base'
+    | 'arbitrum'
+    | 'optimism'
+    | 'polygon'
+    | 'bnb'
+    | 'celo';
   quorumPct?: number;
   approvalThresholdPct?: number;
   votingPeriodDays?: number;

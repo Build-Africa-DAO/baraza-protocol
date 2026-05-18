@@ -6,7 +6,16 @@
  * user is browsing — Solana now, Stellar in Phase 2.
  */
 
-export type Chain = 'solana' | 'stellar' | 'base' | 'ethereum';
+export type Chain =
+  | 'solana'
+  | 'stellar'
+  | 'ethereum'
+  | 'base'
+  | 'arbitrum'
+  | 'optimism'
+  | 'polygon'
+  | 'bnb'
+  | 'celo';
 
 export interface ChainMeta {
   id: Chain;
@@ -44,15 +53,6 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     enabled: false,
     comingSoon: 'Phase 2',
   },
-  base: {
-    id: 'base',
-    label: 'Base',
-    short: 'BASE',
-    badgeBg: '#0052FF',
-    badgeText: '#FFFFFF',
-    enabled: false,
-    comingSoon: 'Soon',
-  },
   ethereum: {
     id: 'ethereum',
     label: 'Ethereum',
@@ -62,9 +62,75 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     enabled: false,
     comingSoon: 'Soon',
   },
+  base: {
+    id: 'base',
+    label: 'Base',
+    short: 'BASE',
+    badgeBg: '#0052FF',
+    badgeText: '#FFFFFF',
+    enabled: false,
+    comingSoon: 'Soon',
+  },
+  arbitrum: {
+    id: 'arbitrum',
+    label: 'Arbitrum',
+    short: 'ARB',
+    badgeBg: '#28A0F0',
+    badgeText: '#FFFFFF',
+    enabled: false,
+    comingSoon: 'Soon',
+  },
+  optimism: {
+    id: 'optimism',
+    label: 'Optimism',
+    short: 'OP',
+    badgeBg: '#FF0420',
+    badgeText: '#FFFFFF',
+    enabled: false,
+    comingSoon: 'Soon',
+  },
+  polygon: {
+    id: 'polygon',
+    label: 'Polygon',
+    short: 'POL',
+    badgeBg: '#8247E5',
+    badgeText: '#FFFFFF',
+    enabled: false,
+    comingSoon: 'Soon',
+  },
+  bnb: {
+    id: 'bnb',
+    label: 'BNB Chain',
+    short: 'BNB',
+    badgeBg: '#F3BA2F',
+    badgeText: '#0B132B',
+    enabled: false,
+    comingSoon: 'Soon',
+  },
+  celo: {
+    // Mobile-first L1, designed for emerging markets — strongest EVM fit for
+    // Baraza's chama / SACCO users when EVM support is added.
+    id: 'celo',
+    label: 'Celo',
+    short: 'CELO',
+    badgeBg: '#35D07F',
+    badgeText: '#0B132B',
+    enabled: false,
+    comingSoon: 'Soon',
+  },
 };
 
-export const CHAIN_LIST: ChainMeta[] = [CHAINS.solana, CHAINS.stellar, CHAINS.base, CHAINS.ethereum];
+export const CHAIN_LIST: ChainMeta[] = [
+  CHAINS.solana,
+  CHAINS.stellar,
+  CHAINS.ethereum,
+  CHAINS.base,
+  CHAINS.arbitrum,
+  CHAINS.optimism,
+  CHAINS.polygon,
+  CHAINS.bnb,
+  CHAINS.celo,
+];
 
 const STORAGE_KEY = 'baraza:chain';
 const DEFAULT_CHAIN: Chain = 'solana';
