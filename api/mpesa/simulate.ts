@@ -63,7 +63,7 @@ async function persistOrder(input: {
   orderId: string;
   request: SimulateRequest;
 }): Promise<boolean> {
-  const url = process.env.SUPABASE_URL;
+  const url = process.env.SUPABASE_URL?.replace(/\/$/, '');
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceKey) return false;
 

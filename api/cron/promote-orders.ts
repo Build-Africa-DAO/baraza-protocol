@@ -43,7 +43,7 @@ function isAuthorized(req: Request): boolean {
 }
 
 async function patchOrders(from: string, to: string): Promise<number> {
-  const url = process.env.SUPABASE_URL;
+  const url = process.env.SUPABASE_URL?.replace(/\/$/, '');
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceKey) return 0;
 

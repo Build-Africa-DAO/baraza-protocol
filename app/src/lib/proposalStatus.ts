@@ -46,9 +46,14 @@ export const STAGE_META: Record<ProposalLifecycleStage, StageMeta> = {
 /**
  * Infer a lifecycle stage from the legacy `status` field. Used when the
  * authoritative on-chain stage is not (yet) attached to a Decision.
+ *
+ * Unknown status values fall back to `'pending'` rather than `'active'` —
+ * surfacing vote buttons on a proposal with mystery status is worse than
+ * surfacing a quiet "Pending" pill that won't accept votes.
  */
 export function inferStage(status: string): ProposalLifecycleStage {
   if (status === 'completed') return 'executed';
   if (status === 'failed') return 'defeated';
-  return 'active';
+  if (status === 'active') return 'active';
+  return 'pending';
 }

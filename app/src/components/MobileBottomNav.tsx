@@ -1,16 +1,47 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Compass, Home, PlusCircle, UserRound } from 'lucide-react';
+import { Compass, Home, PlusCircle, UserRound, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const sideItems = [
-  { path: '/', label: 'Home', icon: Home },
-  { path: '/communities', label: 'Explore', icon: Compass },
-  { path: '/profile', label: 'Profile', icon: UserRound },
-] as const;
+interface NavItem {
+  path: string;
+  label: string;
+  icon: LucideIcon;
+  /** Tailwind class for the grid placement so the layout stays predictable
+   *  regardless of how many items exist. */
+  colClass: string;
+}
+
+const leftItems: NavItem[] = [
+  { path: '/',            label: 'Home',    icon: Home,      colClass: 'col-start-1' },
+  { path: '/communities', label: 'Explore', icon: Compass,   colClass: 'col-start-2' },
+];
+
+const rightItems: NavItem[] = [
+  { path: '/profile',     label: 'Profile', icon: UserRound, colClass: 'col-start-5' },
+];
 
 function isPathActive(currentPath: string, target: string): boolean {
   if (target === '/') return currentPath === '/';
   return currentPath === target || currentPath.startsWith(`${target}/`);
+}
+
+function NavLink({ item, location }: { item: NavItem; location: ReturnType<typeof useLocation> }) {
+  const Icon = item.icon;
+  const active = isPathActive(location.pathname, item.path);
+  return (
+    <Link
+      to={item.path}
+      aria-current={active ? 'page' : undefined}
+      className={cn(
+        item.colClass,
+        'flex flex-col items-center gap-1 rounded-md px-2 py-2 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70',
+        active ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
+      )}
+    >
+      <Icon className="h-5 w-5" />
+      {item.label}
+    </Link>
+  );
 }
 
 export default function MobileBottomNav() {
@@ -23,27 +54,12 @@ export default function MobileBottomNav() {
       className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-background/92 backdrop-blur-xl md:hidden"
     >
       <div className="mx-auto grid max-w-md grid-cols-5 items-end px-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2">
-        {sideItems.slice(0, 2).map((item) => {
-          const Icon = item.icon;
-          const active = isPathActive(location.pathname, item.path);
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              aria-current={active ? 'page' : undefined}
-              className={cn(
-                'flex flex-col items-center gap-1 rounded-md px-2 py-2 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70',
-                active ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
-              )}
-            >
-              <Icon className="h-5 w-5" />
-              {item.label}
-            </Link>
-          );
-        })}
+        {leftItems.map((item) => (
+          <NavLink key={item.path} item={item} location={location} />
+        ))}
 
-        {/* Centered primary action */}
-        <div className="flex justify-center">
+        {/* Centered primary action — fixed col-start-3 regardless of nav items count */}
+        <div className="col-start-3 flex justify-center">
           <Link
             to="/create"
             aria-current={createActive ? 'page' : undefined}
@@ -58,24 +74,9 @@ export default function MobileBottomNav() {
           </Link>
         </div>
 
-        {sideItems.slice(2).map((item) => {
-          const Icon = item.icon;
-          const active = isPathActive(location.pathname, item.path);
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              aria-current={active ? 'page' : undefined}
-              className={cn(
-                'col-start-5 flex flex-col items-center gap-1 rounded-md px-2 py-2 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70',
-                active ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
-              )}
-            >
-              <Icon className="h-5 w-5" />
-              {item.label}
-            </Link>
-          );
-        })}
+        {rightItems.map((item) => (
+          <NavLink key={item.path} item={item} location={location} />
+        ))}
       </div>
     </nav>
   );

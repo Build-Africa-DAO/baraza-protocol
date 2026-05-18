@@ -66,8 +66,8 @@ describe('inferStage', () => {
     expect(inferStage('active')).toBe('active');
   });
 
-  it('falls back to "active" for unknown values', () => {
-    expect(inferStage('weird-state')).toBe('active');
-    expect(inferStage('')).toBe('active');
+  it('falls back to "pending" for unknown values (safer than surfacing vote buttons on mystery state)', () => {
+    expect(inferStage('weird-state')).toBe('pending');
+    expect(inferStage('')).toBe('pending');
   });
 });

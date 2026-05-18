@@ -87,7 +87,7 @@ async function insertMembership(
     wallet_address: string;
     payment_order_id: string;
   },
-): Promise<{ ok: boolean; detail?: string }> {
+): Promise<{ ok: boolean; duplicate: boolean; detail?: string }> {
   const res = await fetch(`${url}/rest/v1/memberships`, {
     method: 'POST',
     headers: {
@@ -105,9 +105,14 @@ async function insertMembership(
   });
   if (!res.ok) {
     const detail = await res.text().catch(() => '');
-    return { ok: false, detail };
+    // Partial unique index `memberships_active_community_wallet_unique` fires
+    // when a parallel request beat us to the insert. Treat as "already exists"
+    // rather than 500ing the caller.
+    const isDuplicate = res.status === 409 ||
+      /duplicate key|23505|memberships_active_community_wallet_unique/i.test(detail);
+    return { ok: false, duplicate: isDuplicate, detail };
   }
-  return { ok: true };
+  return { ok: true, duplicate: false };
 }
 
 function generateMemberId(): string {
@@ -126,7 +131,7 @@ export default async function handler(req: Request): Promise<Response> {
   }
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, { status: 405 });
 
-  const url = process.env.SUPABASE_URL;
+  const url = process.env.SUPABASE_URL?.replace(/\/$/, '');
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceKey) {
     return json({
@@ -186,6 +191,19 @@ export default async function handler(req: Request): Promise<Response> {
   });
 
   if (!result.ok) {
+    if (result.duplicate) {
+      // Lost the insert race; another caller just created the membership.
+      const winner = await findExistingMembership(url, serviceKey, body.communityId, body.walletAddress);
+      if (winner) {
+        return json({
+          ok: true,
+          persisted: true,
+          memberId: winner.member_id,
+          status: winner.status,
+          created: false,
+        });
+      }
+    }
     return json({ ok: false, persisted: false, error: result.detail }, { status: 500 });
   }
 

@@ -12,15 +12,36 @@ interface ChainSelectorProps {
 export default function ChainSelector({ variant = 'desktop', className }: ChainSelectorProps) {
   const { chain, chainMeta, setChain } = useChain();
   const [open, setOpen] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState<number>(-1);
   const containerRef = useRef<HTMLDivElement>(null);
+  const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setFocusedIndex(-1);
+      return;
+    }
     const handleClick = (e: MouseEvent) => {
       if (!containerRef.current?.contains(e.target as Node)) setOpen(false);
     };
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
+      if (e.key === 'Escape') {
+        setOpen(false);
+        return;
+      }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        setFocusedIndex((prev) => {
+          const direction = e.key === 'ArrowDown' ? 1 : -1;
+          const len = CHAIN_LIST.length;
+          // Skip disabled entries — keep advancing in the same direction.
+          for (let step = 1; step <= len; step++) {
+            const next = (prev + direction * step + len) % len;
+            if (CHAIN_LIST[next].enabled) return next;
+          }
+          return prev;
+        });
+      }
     };
     window.addEventListener('mousedown', handleClick);
     window.addEventListener('keydown', handleKey);
@@ -29,6 +50,13 @@ export default function ChainSelector({ variant = 'desktop', className }: ChainS
       window.removeEventListener('keydown', handleKey);
     };
   }, [open]);
+
+  // Move DOM focus to the focused option when the index changes.
+  useEffect(() => {
+    if (focusedIndex >= 0) {
+      optionRefs.current[focusedIndex]?.focus();
+    }
+  }, [focusedIndex]);
 
   const handleSelect = (next: Chain) => {
     setChain(next);
@@ -75,7 +103,7 @@ export default function ChainSelector({ variant = 'desktop', className }: ChainS
             isMobile ? 'left-0 right-0 top-full mt-2' : 'right-0 top-full mt-2 w-44',
           )}
         >
-          {CHAIN_LIST.map((meta) => {
+          {CHAIN_LIST.map((meta, index) => {
             const active = meta.id === chain;
             const disabled = !meta.enabled;
             return (
@@ -83,9 +111,16 @@ export default function ChainSelector({ variant = 'desktop', className }: ChainS
                 <button
                   type="button"
                   role="option"
+                  ref={(el) => { optionRefs.current[index] = el; }}
                   aria-selected={active}
                   disabled={disabled}
                   onClick={() => !disabled && handleSelect(meta.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      if (!disabled) handleSelect(meta.id);
+                    }
+                  }}
                   className={cn(
                     'flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left text-sm transition-colors',
                     disabled
