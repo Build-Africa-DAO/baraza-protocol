@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import {
   Users, TrendingUp, Vote, History, PlusCircle, CreditCard,
   ArrowLeft, Calendar, ShieldCheck, ReceiptText,
-  LayoutDashboard, Wallet as WalletIcon, ExternalLink, Activity,
+  LayoutDashboard, Wallet as WalletIcon, ExternalLink, Activity, Images,
 } from 'lucide-react';
 import LiveStatCard from '@/components/community/LiveStatCard';
 import ActivityFeed from '@/components/community/ActivityFeed';
@@ -17,11 +17,12 @@ import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { useCommunity } from '@/hooks/useCommunities';
 import { getActiveMembership } from '@/lib/memberships';
 import CommunityBanner from '@/components/CommunityBanner';
+import CommunityGallery from '@/components/CommunityGallery';
 import { CHAINS } from '@/lib/chain';
 import { NETWORK_LABEL } from '@/lib/network';
 import { useSeo } from '@/lib/seo';
 
-type DashboardTab = 'overview' | 'members' | 'governance' | 'activity' | 'wallet';
+type DashboardTab = 'overview' | 'members' | 'governance' | 'gallery' | 'activity' | 'wallet';
 
 const dashboardGlobeUrl =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuAhAO65kkwr6zxxrtYjpZm23ugp7boCWsRE_kTE7O3PUPmonOS4vJUPPGp_AALnUHlCa23XX7HVjJ3lfv_cs2mIWSzHwYBQIvrue4TcJGeHUsuQLKSNOuhSpHNySzZ8pUcK9MLmMfeh0l2ciNsph8EcgoHMr86aCmoQZLn2qesMSBGPMStXx9CHE1aW6vpRO1bQ13KDvFm92lVbqFLdD6qie_U66bf4EIKpbK6LxxS-9a0Q4YK3m0GuJPePOTqqPhC9tTuWGu4UnIo";
@@ -291,6 +292,7 @@ const CommunityDashboard: React.FC = () => {
               { key: 'overview', label: 'Overview', icon: LayoutDashboard },
               { key: 'members', label: 'Members', icon: Users },
               { key: 'governance', label: 'Governance', icon: Vote },
+              { key: 'gallery', label: 'Gallery', icon: Images },
               { key: 'activity', label: 'Activity', icon: Activity },
               { key: 'wallet', label: 'Wallet', icon: WalletIcon },
             ] as const).map((tab) => (
@@ -411,6 +413,8 @@ const CommunityDashboard: React.FC = () => {
                   ))}
                 </div>
               </div>
+
+              <CommunityGallery communityName={community.name} type={community.type} compact />
             </div>
           )}
 
@@ -480,6 +484,11 @@ const CommunityDashboard: React.FC = () => {
                 </Link>
               )}
             </div>
+          )}
+
+          {/* Gallery tab */}
+          {activeTab === 'gallery' && (
+            <CommunityGallery communityName={community.name} type={community.type} />
           )}
 
           {/* Wallet tab */}
