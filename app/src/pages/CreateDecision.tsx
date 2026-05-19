@@ -113,8 +113,8 @@ const CreateDecision: React.FC = () => {
       setIsPending(true);
       try {
         toast({
-          title: 'Proposal submission — coming soon',
-          description: 'Voting opens once the on-chain governance program ships. Thanks for trying it early.',
+          title: 'Proposal submission is in preview mode',
+          description: 'The proposal form is ready. On-chain voting will activate after governance deployment.',
         });
       } finally {
         setIsPending(false);

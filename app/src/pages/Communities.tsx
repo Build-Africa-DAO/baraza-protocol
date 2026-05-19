@@ -266,7 +266,7 @@ export default function Communities() {
               </p>
               <p className="text-sm mb-6">
                 {chainFilter === "stellar"
-                  ? "Stellar support is coming in Phase 2. Switch to Solana to see existing DAOs."
+                  ? "Stellar is on the Phase 2 roadmap. Switch to Solana to see active communities."
                   : "Try a different type, or start your own Community DAO."}
               </p>
               <Link to="/create" className="btn-primary inline-flex items-center gap-2 text-sm">

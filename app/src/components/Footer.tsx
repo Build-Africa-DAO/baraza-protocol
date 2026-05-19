@@ -1,11 +1,10 @@
 import { Link } from "react-router-dom";
-import { Github, Globe, Twitter } from "lucide-react";
+import { Github, Globe } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 
 type FooterLink =
   | { label: string; to: string }
-  | { label: string; href: string; external: true }
-  | { label: string; soon: true };
+  | { label: string; href: string; external: true };
 
 const links: Record<string, FooterLink[]> = {
   Product: [
@@ -66,19 +65,17 @@ export default function Footer() {
             </p>
             <div className="flex items-center gap-2">
               {[
-                { icon: Twitter, label: "Twitter" },
-                { icon: Github, label: "GitHub" },
-                { icon: Globe, label: "Website" },
-              ].map(({ icon: Icon, label }) => (
-                <span
+                { icon: Github, label: "GitHub", href: "https://github.com/Azizudinly/baraza-protocol" },
+                { icon: Globe, label: "Website", href: "/" },
+              ].map(({ icon: Icon, label, href }) => (
+                <a
                   key={label}
-                  aria-label={`${label} (coming soon)`}
-                  aria-disabled="true"
-                  title="Coming soon"
-                  className="flex h-9 w-9 cursor-not-allowed items-center justify-center rounded-lg border border-border/40 bg-background/30 text-muted-foreground/50"
+                  href={href}
+                  aria-label={label}
+                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-border/40 bg-background/30 text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary"
                 >
                   <Icon className="h-4 w-4" />
-                </span>
+                </a>
               ))}
             </div>
           </div>

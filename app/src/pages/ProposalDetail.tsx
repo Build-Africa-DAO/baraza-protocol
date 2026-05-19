@@ -81,7 +81,7 @@ export default function ProposalDetail() {
       } else {
         toast({
           title: "Vote could not be cast",
-          description: "The governance program isn't wired yet — try again once it ships.",
+          description: "Voting is in preview mode until the governance program is deployed.",
           variant: "destructive",
         });
       }

@@ -77,8 +77,8 @@ export function useBarazaContract(): UseBarazaContractResult {
       const cached = fromCache<number>(cacheKey);
       if (cached !== null) return cached;
 
-      // TODO: derive the community treasury PDA and call conn.getBalance(pda)
-      // once the Baraza Anchor program is deployed.
+      // Program deployment note: derive the community treasury PDA and call
+      // conn.getBalance(pda) once the Baraza Anchor program is deployed.
       void communityId;
       return 0;
     },
@@ -115,8 +115,8 @@ export function useBarazaContract(): UseBarazaContractResult {
 
       try {
         toast({
-          title: `${action} — coming soon`,
-          description: 'This action goes live once the on-chain program ships. Thanks for trying it early.',
+          title: `${action} is in preview mode`,
+          description: 'The interface is ready. On-chain settlement will activate after program deployment.',
         });
         return false;
       } finally {

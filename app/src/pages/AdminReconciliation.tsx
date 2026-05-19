@@ -53,8 +53,8 @@ export default function AdminReconciliation() {
 
   const notifyNotWired = (action: string) =>
     toast({
-      title: `${action} — coming soon`,
-      description: 'This operation goes live once reconciliation endpoints ship.',
+      title: `${action} is in preview mode`,
+      description: 'The operator UI is ready. This action will connect when reconciliation endpoints ship.',
     });
 
   const filteredOrders = paymentOrders.filter(([id]) =>

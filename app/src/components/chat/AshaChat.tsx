@@ -68,7 +68,7 @@ const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
   {
     keywords: ['mpesa', 'm-pesa', 'mobile money', 'phone', 'pay with phone'],
     reply:
-      "M-Pesa support is coming! We're building a bridge so members can pay membership fees directly from M-Pesa without needing a crypto wallet — perfect for members who aren't in web3 yet.",
+      "Baraza includes a phone-first M-Pesa flow for membership dues. In local preview it simulates the payment order, and in production it connects to payment confirmation and membership activation.",
   },
   {
     keywords: ['what is chama', 'chama meaning', 'what is a chama'],
