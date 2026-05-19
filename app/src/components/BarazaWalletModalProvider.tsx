@@ -5,7 +5,7 @@ import { WalletModalContext } from "@solana/wallet-adapter-react-ui";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const APPROVED_WALLETS = ["Phantom", "Solflare", "Coinbase Wallet"];
+const PREFERRED_WALLETS = ["Phantom", "Solflare", "Coinbase Wallet", "Backpack", "Ledger", "Trezor"];
 
 interface BarazaWalletModalProviderProps {
   children: React.ReactNode;
@@ -23,14 +23,20 @@ export default function BarazaWalletModalProvider({ children }: BarazaWalletModa
   const [visible, setVisible] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
-  const approvedWallets = useMemo(
+  const visibleWallets = useMemo(
     () =>
       wallets
-        .filter((wallet) => APPROVED_WALLETS.includes(wallet.adapter.name))
         .sort((a, b) => {
           const aInstalled = a.readyState === WalletReadyState.Installed ? 0 : 1;
           const bInstalled = b.readyState === WalletReadyState.Installed ? 0 : 1;
-          return aInstalled - bInstalled || APPROVED_WALLETS.indexOf(a.adapter.name) - APPROVED_WALLETS.indexOf(b.adapter.name);
+          const aPreferred = PREFERRED_WALLETS.includes(a.adapter.name)
+            ? PREFERRED_WALLETS.indexOf(a.adapter.name)
+            : PREFERRED_WALLETS.length;
+          const bPreferred = PREFERRED_WALLETS.includes(b.adapter.name)
+            ? PREFERRED_WALLETS.indexOf(b.adapter.name)
+            : PREFERRED_WALLETS.length;
+
+          return aInstalled - bInstalled || aPreferred - bPreferred || a.adapter.name.localeCompare(b.adapter.name);
         }),
     [wallets]
   );
@@ -80,7 +86,7 @@ export default function BarazaWalletModalProvider({ children }: BarazaWalletModa
 
       {visible && (
         <div
-          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/72 px-4 backdrop-blur-sm"
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm"
           role="presentation"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) close();
@@ -91,26 +97,26 @@ export default function BarazaWalletModalProvider({ children }: BarazaWalletModa
             role="dialog"
             aria-modal="true"
             aria-labelledby="baraza-wallet-modal-title"
-            className="relative w-full max-w-sm rounded-xl border border-primary/12 bg-[#111622] p-5 shadow-[0_28px_90px_hsl(84_17%_2%/0.85)]"
+            className="relative w-full max-w-sm rounded-xl bg-card p-5 shadow-2xl"
           >
             <button
               type="button"
               onClick={close}
               aria-label="Close wallet selector"
-              className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full bg-surface text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+              className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full focus-visible:outline-none focus-visible:ring-2"
             >
               <X className="h-5 w-5" />
             </button>
 
-            <h2 id="baraza-wallet-modal-title" className="mx-auto mt-8 max-w-xs text-center font-display text-xl font-bold leading-snug text-foreground">
+            <h2 id="baraza-wallet-modal-title" className="mx-auto mt-8 max-w-xs text-center font-display text-xl font-bold leading-snug">
               Connect a Solana wallet to continue
             </h2>
-            <p className="mx-auto mt-3 max-w-xs text-center text-sm leading-6 text-muted-foreground">
-              Baraza currently supports Phantom, Solflare, and Coinbase Wallet for DAO membership and voting.
+            <p className="mx-auto mt-3 max-w-xs text-center text-sm leading-6">
+              Choose any available Solana wallet for DAO membership, voting, and treasury actions.
             </p>
 
-            <div className="mt-7 space-y-2">
-              {approvedWallets.map((wallet) => {
+            <div className="mt-7 max-h-[60vh] space-y-2 overflow-y-auto pr-1">
+              {visibleWallets.map((wallet) => {
                 const unsupported = wallet.readyState === WalletReadyState.Unsupported;
                 return (
                   <button
@@ -122,13 +128,13 @@ export default function BarazaWalletModalProvider({ children }: BarazaWalletModa
                       close();
                     }}
                     className={cn(
-                      "flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70",
-                      unsupported ? "cursor-not-allowed opacity-50" : "hover:bg-surface"
+                      "flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left focus-visible:outline-none focus-visible:ring-2",
+                      unsupported ? "cursor-not-allowed opacity-50" : ""
                     )}
                   >
                     <img src={wallet.adapter.icon} alt="" className="h-7 w-7 rounded-md" />
-                    <span className="min-w-0 flex-1 font-semibold text-foreground">{wallet.adapter.name}</span>
-                    <span className="text-xs font-medium text-muted-foreground">{readyStateLabel(wallet.readyState)}</span>
+                    <span className="min-w-0 flex-1 font-semibold">{wallet.adapter.name}</span>
+                    <span className="text-xs font-medium">{readyStateLabel(wallet.readyState)}</span>
                   </button>
                 );
               })}

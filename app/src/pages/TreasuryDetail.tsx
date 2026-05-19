@@ -4,6 +4,7 @@ import Layout from "@/components/Layout";
 import { useCommunity } from "@/hooks/useCommunities";
 import { formatKSh } from "@/lib/utils";
 import CommunityBanner from "@/components/CommunityBanner";
+import { useSeo } from "@/lib/seo";
 
 const attestations = [
   ["MPESA-XJ9L2B", "PaymentAttestation", "+ KSh 50,000", "Confirmed"],
@@ -20,6 +21,13 @@ const releases = [
 export default function TreasuryDetail() {
   const { id } = useParams<{ id: string }>();
   const { community } = useCommunity(id);
+
+  useSeo({
+    title: community ? `${community.name} treasury` : "Treasury",
+    description: "Treasury attestations, payment confirmations, and rule-governed releases.",
+    path: id ? `/dashboard/${id}/treasury` : undefined,
+    noIndex: true,
+  });
 
   return (
     <Layout>

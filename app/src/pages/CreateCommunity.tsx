@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { Users, ArrowLeft, CheckCircle2, Loader2, Phone, ShieldCheck } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { COMMUNITY_TYPES, DAO_CREATION_FEE_KES } from '@/lib/constants';
@@ -11,8 +10,15 @@ import { useToast } from '@/hooks/use-toast';
 import { createCommunityRecord } from '@/lib/communities';
 import CommunityBanner from '@/components/CommunityBanner';
 import { useChain } from '@/hooks/useChain';
+import { useSeo } from '@/lib/seo';
 
 const CreateCommunity: React.FC = () => {
+  useSeo({
+    title: "Launch a community DAO",
+    description:
+      "Spin up a chama, SACCO, welfare group, or co-operative on Baraza. Set membership rules, dues, quorum, and M-Pesa contribution paths in a single guided flow.",
+    path: "/create",
+  });
   const navigate = useNavigate();
   const { requireWallet, isReady } = useWalletGuard({ action: 'launch a community DAO' });
   const { toast } = useToast();
@@ -126,22 +132,18 @@ const CreateCommunity: React.FC = () => {
       <Layout>
         <section className="py-20">
           <div className="container mx-auto px-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="max-w-md mx-auto text-center"
-            >
-              <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-6">
-                <CheckCircle2 className="w-8 h-8 text-primary" />
+            <div className="max-w-md mx-auto text-center">
+              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+                <CheckCircle2 className="w-8 h-8" />
               </div>
-              <h2 className="font-display text-2xl font-bold text-foreground mb-3">
+              <h2 className="font-display text-2xl font-bold mb-3">
                 {form.name} is live
               </h2>
-              <p className="text-sm text-muted-foreground mb-2">
+              <p className="text-sm mb-2">
                 Payment of {formatKSh(DAO_CREATION_FEE_KES)} received. Your Community DAO is ready.
               </p>
-              <p className="text-sm text-muted-foreground mb-8">
-                Share the join link with members, then create your first governance proposal from the dashboard.
+              <p className="text-sm mb-8">
+                Share the join link with members, then start your first governance proposal from the dashboard.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <button
@@ -158,7 +160,7 @@ const CreateCommunity: React.FC = () => {
                   View All Communities
                 </button>
               </div>
-            </motion.div>
+            </div>
           </div>
         </section>
       </Layout>
@@ -174,40 +176,34 @@ const CreateCommunity: React.FC = () => {
             {/* Back button */}
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+              className="flex items-center gap-2 text-sm mb-6"
             >
               <ArrowLeft className="w-4 h-4" />
               Back
             </button>
 
             <CommunityBanner className="mb-8 p-5">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
+            <div>
               <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center">
-                  <Users className="w-5 h-5 text-accent" />
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center">
+                  <Users className="w-5 h-5" />
                 </div>
-                <h1 className="font-display text-2xl font-bold text-foreground">Launch a Community DAO</h1>
+                <h1 className="font-display text-2xl font-bold">Launch a Community DAO</h1>
               </div>
-              <p className="text-sm text-muted-foreground mb-8">
+              <p className="text-sm mb-8">
                 Launch a DAO where members can contribute, submit governance proposals, and manage a shared treasury with explicit governance rules.
               </p>
-            </motion.div>
+            </div>
             </CommunityBanner>
 
             {/* Form */}
-            <motion.form
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
+            <form
               onSubmit={handleSubmit}
               className="space-y-5"
             >
               {/* Name */}
               <div>
-                <label className="block text-xs font-semibold text-foreground mb-2">
+                <label className="block text-xs font-semibold mb-2">
                   Community Name
                 </label>
                 <input
@@ -216,20 +212,20 @@ const CreateCommunity: React.FC = () => {
                   value={form.name}
                   onChange={handleChange}
                   placeholder="e.g., Kibera Youth Collective"
-                  className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/40 border border-border transition-all"
+                  className="w-full rounded-xl px-4 py-3 text-sm outline-none border"
                 />
               </div>
 
               {/* Type */}
               <div>
-                <label className="block text-xs font-semibold text-foreground mb-2">
+                <label className="block text-xs font-semibold mb-2">
                   Community Type
                 </label>
                 <select
                   name="type"
                   value={form.type}
                   onChange={handleChange}
-                  className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/40 border border-border cursor-pointer appearance-none"
+                  className="w-full rounded-xl px-4 py-3 text-sm outline-none border cursor-pointer appearance-none"
                 >
                   <option value="" disabled>Select a type</option>
                   {COMMUNITY_TYPES.map((t) => (
@@ -240,11 +236,11 @@ const CreateCommunity: React.FC = () => {
 
               {/* Fee */}
               <div>
-                <label className="block text-xs font-semibold text-foreground mb-2">
+                <label className="block text-xs font-semibold mb-2">
                   Monthly Membership Fee (KSh)
                 </label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">KSh</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium">KSh</span>
                   <input
                     type="number"
                     name="fee"
@@ -252,14 +248,14 @@ const CreateCommunity: React.FC = () => {
                     onChange={handleChange}
                     placeholder="500"
                     min="0"
-                    className="w-full bg-surface rounded-xl pl-14 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/40 border border-border transition-all"
+                    className="w-full rounded-xl pl-14 pr-4 py-3 text-sm outline-none border"
                   />
                 </div>
               </div>
 
               {/* Description */}
               <div>
-                <label className="block text-xs font-semibold text-foreground mb-2">
+                <label className="block text-xs font-semibold mb-2">
                   Description
                 </label>
                 <textarea
@@ -268,19 +264,19 @@ const CreateCommunity: React.FC = () => {
                   onChange={handleChange}
                   placeholder="Tell people what your community is about..."
                   rows={4}
-                  className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/40 border border-border transition-all resize-none"
+                  className="w-full rounded-xl px-4 py-3 text-sm outline-none border resize-none"
                 />
               </div>
 
-              <div className="grid gap-5 rounded-lg border border-border bg-card p-5 md:grid-cols-3">
+              <div className="grid gap-5 rounded-lg border p-5 md:grid-cols-3">
                 <div className="md:col-span-3">
-                  <h2 className="font-mono text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                  <h2 className="font-mono text-xs font-semibold uppercase tracking-widest">
                     Governance Rules
                   </h2>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-foreground mb-2">
+                  <label className="block text-xs font-semibold mb-2">
                     Quorum Threshold
                   </label>
                   <div className="relative">
@@ -291,14 +287,14 @@ const CreateCommunity: React.FC = () => {
                       onChange={handleChange}
                       min="1"
                       max="100"
-                      className="w-full bg-surface rounded-lg px-4 py-3 pr-9 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/40 border border-border transition-all"
+                      className="w-full rounded-lg px-4 py-3 pr-9 text-sm outline-none border"
                     />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">%</span>
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium">%</span>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-foreground mb-2">
+                  <label className="block text-xs font-semibold mb-2">
                     Approval Threshold
                   </label>
                   <div className="relative">
@@ -309,21 +305,21 @@ const CreateCommunity: React.FC = () => {
                       onChange={handleChange}
                       min="1"
                       max="100"
-                      className="w-full bg-surface rounded-lg px-4 py-3 pr-9 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/40 border border-border transition-all"
+                      className="w-full rounded-lg px-4 py-3 pr-9 text-sm outline-none border"
                     />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">%</span>
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium">%</span>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-foreground mb-2">
+                  <label className="block text-xs font-semibold mb-2">
                     Default Voting Period
                   </label>
                   <select
                     name="votingPeriod"
                     value={form.votingPeriod}
                     onChange={handleChange}
-                    className="w-full bg-surface rounded-lg px-4 py-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/40 border border-border cursor-pointer appearance-none"
+                    className="w-full rounded-lg px-4 py-3 text-sm outline-none border cursor-pointer appearance-none"
                   >
                     <option value="3">3 days</option>
                     <option value="7">7 days</option>
@@ -333,14 +329,14 @@ const CreateCommunity: React.FC = () => {
                 </div>
 
                 <div className="md:col-span-3">
-                  <label className="block text-xs font-semibold text-foreground mb-2">
+                  <label className="block text-xs font-semibold mb-2">
                     Treasury Policy
                   </label>
                   <select
                     name="treasuryPolicy"
                     value={form.treasuryPolicy}
                     onChange={handleChange}
-                    className="w-full bg-surface rounded-lg px-4 py-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/40 border border-border cursor-pointer appearance-none"
+                    className="w-full rounded-lg px-4 py-3 text-sm outline-none border cursor-pointer appearance-none"
                   >
                     <option value="multisig-ready">Multisig-ready treasury release</option>
                     <option value="proposal-only">Proposal-approved releases only</option>
@@ -350,18 +346,18 @@ const CreateCommunity: React.FC = () => {
               </div>
 
               {/* Payment: matches the Governance Rules card style above for visual parity */}
-              <div className="grid gap-4 rounded-lg border border-border bg-card p-5">
-                <h2 className="font-mono text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              <div className="grid gap-4 rounded-lg border p-5">
+                <h2 className="font-mono text-xs font-semibold uppercase tracking-widest">
                   Payment
                 </h2>
 
                 <div>
-                  <label htmlFor="create-phone" className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-foreground">
-                    <Phone className="h-3.5 w-3.5 text-primary" />
+                  <label htmlFor="create-phone" className="mb-2 flex items-center gap-1.5 text-xs font-semibold">
+                    <Phone className="h-3.5 w-3.5" />
                     M-Pesa number for the {formatKSh(DAO_CREATION_FEE_KES)} charge
                   </label>
-                  <div className="flex rounded-lg border border-border bg-background/45 focus-within:border-primary/50">
-                    <span className="border-r border-border px-3 py-2.5 text-sm text-muted-foreground">+254</span>
+                  <div className="flex rounded-lg border focus-within:border-current">
+                    <span className="border-r px-3 py-2.5 text-sm">+254</span>
                     <input
                       id="create-phone"
                       name="phone"
@@ -372,31 +368,31 @@ const CreateCommunity: React.FC = () => {
                       inputMode="numeric"
                       autoComplete="tel-national"
                       aria-invalid={form.phone.length > 0 && normalisedPhone === null}
-                      className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm text-foreground outline-none"
+                      className="min-w-0 flex-1 px-3 py-2.5 text-sm outline-none"
                     />
                   </div>
                   {form.phone.length > 0 && normalisedPhone === null && (
-                    <p className="mt-1.5 text-[11px] text-destructive">
+                    <p className="mt-1.5 text-[11px]">
                       Enter a valid Kenyan mobile number (07XX, 7XX, or +254 7XX).
                     </p>
                   )}
                 </div>
 
-                <div className="grid gap-2 border-t border-border/40 pt-4 text-sm sm:grid-cols-[1fr_auto] sm:items-center sm:gap-x-4">
+                <div className="grid gap-2 border-t pt-4 text-sm sm:grid-cols-[1fr_auto] sm:items-center sm:gap-x-4">
                   <div>
-                    <p className="text-xs font-semibold text-foreground">DAO creation fee</p>
-                    <p className="mt-0.5 text-[11px] text-muted-foreground">
+                    <p className="text-xs font-semibold">DAO creation fee</p>
+                    <p className="mt-0.5 text-[11px]">
                       One-time charge for Solana rent, IPFS pinning, and registry setup.
                     </p>
                   </div>
-                  <span className="font-display text-lg font-bold text-accent tabular-nums">
+                  <span className="font-display text-lg font-bold tabular-nums">
                     {formatKSh(DAO_CREATION_FEE_KES)}
                   </span>
                 </div>
 
                 <div className="grid gap-2 text-xs sm:grid-cols-[1fr_auto] sm:items-center sm:gap-x-4">
-                  <span className="text-muted-foreground">Settled on</span>
-                  <span className="inline-flex items-center gap-1.5 font-semibold text-foreground">
+                  <span>Settled on</span>
+                  <span className="inline-flex items-center gap-1.5 font-semibold">
                     <span
                       aria-hidden
                       className="h-1.5 w-1.5 rounded-full"
@@ -432,12 +428,12 @@ const CreateCommunity: React.FC = () => {
                   )}
                 </button>
               )}
-            </motion.form>
+            </form>
             </div>
 
             <aside className="lg:pt-14">
               <div className="baraza-card sticky top-24 p-5">
-                <h2 className="font-mono text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                <h2 className="font-mono text-xs font-semibold uppercase tracking-widest">
                   Setup Checklist
                 </h2>
                 <div className="mt-5 space-y-4">
@@ -447,19 +443,19 @@ const CreateCommunity: React.FC = () => {
                     ['MembershipTier', 'Uses monthly dues'],
                     ['Governance Rules', 'Quorum and approval thresholds'],
                     ['Membership Credential', 'Minted after payment attestation'],
-                  ].map(([label, detail], index) => (
+                  ].map(([label, detail]) => (
                     <div key={label} className="flex gap-3">
-                      <ShieldCheck className={index === 0 ? 'mt-0.5 h-5 w-5 text-confirmed' : 'mt-0.5 h-5 w-5 text-primary'} />
+                      <ShieldCheck className="mt-0.5 h-5 w-5" />
                       <div>
-                        <p className="text-sm font-semibold text-foreground">{label}</p>
-                        <p className="mt-1 text-xs text-muted-foreground">{detail}</p>
+                        <p className="text-sm font-semibold">{label}</p>
+                        <p className="mt-1 text-xs">{detail}</p>
                       </div>
                     </div>
                   ))}
                 </div>
-                <div className="mt-6 rounded-lg border border-primary/20 bg-primary/8 p-4">
-                  <p className="text-xs leading-5 text-muted-foreground">
-                    Treasury setup, membership tiers, and credentials are provisioned automatically once your DAO is created.
+                <div className="mt-6 rounded-lg border p-4">
+                  <p className="text-xs leading-5">
+                    Treasury setup, membership tiers, and credentials are provisioned automatically once your DAO is launched.
                   </p>
                 </div>
               </div>

@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /profile
+Disallow: /dashboard/
+Disallow: /join/
+
+Sitemap: https://baraza.protocol/sitemap.xml

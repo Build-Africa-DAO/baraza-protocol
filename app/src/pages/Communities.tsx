@@ -1,16 +1,14 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { Link, useSearchParams } from "react-router-dom";
 import { Grid2X2, List, Search, PlusCircle, SlidersHorizontal } from "lucide-react";
 import Layout from "@/components/Layout";
 import CommunityCard from "@/components/CommunityCard";
 import { COMMUNITY_TYPES } from "@/lib/constants";
-import { ShimmerButton } from "@/components/ui/shimmer-button";
-import { DotPattern } from "@/components/ui/dot-pattern";
 import { cn } from "@/lib/utils";
 import { useCommunities } from "@/hooks/useCommunities";
 import CommunityBanner from "@/components/CommunityBanner";
 import { CHAINS, type Chain } from "@/lib/chain";
+import { useSeo } from "@/lib/seo";
 
 type ChainFilter = "all" | Chain;
 
@@ -21,8 +19,15 @@ const CHAIN_FILTERS: { value: ChainFilter; label: string; dot?: string }[] = [
 ];
 
 export default function Communities() {
+  useSeo({
+    title: "Browse community DAOs",
+    description:
+      "Discover chamas, SACCOs, welfare groups, and co-operatives on Baraza. Filter by community type and chain to find a group to join or evaluate.",
+    path: "/communities",
+  });
   const { communities, isLoading, error } = useCommunities();
-  const [search, setSearch] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [search, setSearch] = useState(() => searchParams.get("q") ?? "");
   const [typeFilter, setTypeFilter] = useState("all");
   const [chainFilter, setChainFilter] = useState<ChainFilter>("all");
   const [layout, setLayout] = useState<"grid" | "list">("grid");
@@ -43,34 +48,19 @@ export default function Communities() {
     <Layout>
       {/* Page header */}
       <section className="relative pt-28 pb-12 overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-64 bg-primary/6 blur-[80px] rounded-full" />
-          <DotPattern
-            width={24}
-            height={24}
-            cr={1}
-            className="fill-primary/6 [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,black,transparent)]"
-          />
-        </div>
-
         <div className="container mx-auto px-4 relative z-10">
           <CommunityBanner className="mb-8 min-h-[15rem]">
-            <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="max-w-2xl p-6 md:p-8"
-          >
-            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-2">
+            <div className="max-w-2xl p-6 md:p-8">
+            <p className="text-xs font-semibold uppercase tracking-widest mb-2">
               Discover
             </p>
-            <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-3">
+            <h1 className="font-display text-3xl md:text-4xl font-bold mb-3">
               Community DAOs
             </h1>
-            <p className="text-muted-foreground">
+            <p>
               Find a DAO to join, or explore how communities are governing funds with Baraza.
             </p>
-          </motion.div>
+          </div>
           </CommunityBanner>
         </div>
       </section>
@@ -79,7 +69,7 @@ export default function Communities() {
         <div className="container mx-auto px-4">
           {/* Network filter */}
           <div className="mb-4 flex flex-wrap items-center gap-2" role="group" aria-label="Filter by network">
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mr-1">
+            <span className="text-xs font-semibold uppercase tracking-wider mr-1">
               Network
             </span>
             {CHAIN_FILTERS.map((option) => {
@@ -91,10 +81,8 @@ export default function Communities() {
                   onClick={() => setChainFilter(option.value)}
                   aria-pressed={active}
                   className={cn(
-                    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70",
-                    active
-                      ? "border-primary/60 bg-primary/12 text-foreground"
-                      : "border-border/60 bg-surface text-muted-foreground hover:text-foreground hover:bg-surface-hover",
+                    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2",
+                    active ? "border-primary bg-primary/10 text-primary" : "hover:border-primary/40",
                   )}
                 >
                   {option.dot && (
@@ -110,16 +98,23 @@ export default function Communities() {
           <div className="mb-8 grid gap-3 lg:grid-cols-[1fr_auto_auto_auto]">
             {/* Search */}
             <div className="relative flex-1">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" />
               <input
                 type="text"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setSearch(next);
+                  const params = new URLSearchParams(searchParams);
+                  if (next.trim()) params.set("q", next);
+                  else params.delete("q");
+                  setSearchParams(params, { replace: true });
+                }}
                 placeholder="Search by name"
                 className={cn(
-                  "w-full bg-surface border border-border rounded-xl",
-                  "pl-10 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground",
-                  "outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-all",
+                  "w-full rounded-xl border",
+                  "pl-10 pr-4 py-3 text-sm",
+                  "outline-none",
                 )}
                 aria-label="Search communities"
               />
@@ -127,14 +122,14 @@ export default function Communities() {
 
             {/* Type filter */}
             <div className="relative">
-              <SlidersHorizontal className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <SlidersHorizontal className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" />
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
                 className={cn(
-                  "appearance-none bg-surface border border-border rounded-xl",
-                  "pl-10 pr-8 py-3 text-sm text-foreground",
-                  "outline-none focus:ring-1 focus:ring-primary/40 cursor-pointer transition-all",
+                  "appearance-none rounded-xl border",
+                  "pl-10 pr-8 py-3 text-sm",
+                  "outline-none cursor-pointer",
                   "min-w-[160px]",
                 )}
                 aria-label="Filter by type"
@@ -146,7 +141,7 @@ export default function Communities() {
               </select>
             </div>
 
-            <div className="grid grid-cols-2 rounded-xl border border-border bg-surface p-1" aria-label="Choose layout">
+            <div className="grid grid-cols-2 rounded-xl border p-1" aria-label="Choose layout">
               {[
                 { value: "grid" as const, label: "Grid", icon: Grid2X2 },
                 { value: "list" as const, label: "List", icon: List },
@@ -159,8 +154,8 @@ export default function Communities() {
                     onClick={() => setLayout(value)}
                     aria-pressed={active}
                     className={cn(
-                      "inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70",
-                      active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                      "inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-bold focus-visible:outline-none focus-visible:ring-2",
+                      active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground",
                     )}
                   >
                     <Icon className="h-4 w-4" />
@@ -172,29 +167,28 @@ export default function Communities() {
 
             {/* Start CTA */}
             <Link to="/create" tabIndex={-1}>
-              <ShimmerButton
-                background="linear-gradient(135deg, hsl(44,100%,50%), hsl(33,97%,49%))"
-                shimmerColor="rgba(255,255,255,0.5)"
-                className="text-sm font-bold px-5 py-3 rounded-xl whitespace-nowrap"
+              <button
+                type="button"
+                className="text-sm font-bold px-5 py-3 rounded-xl whitespace-nowrap inline-flex items-center gap-2"
               >
                 <PlusCircle className="w-4 h-4" />
                 Launch a DAO
-              </ShimmerButton>
+              </button>
             </Link>
           </div>
 
           {error && (
-            <div className="baraza-card p-4 mb-5 border-destructive/40">
-              <p className="text-sm text-destructive">We couldn&apos;t load Community DAOs right now.</p>
-              <p className="text-xs text-muted-foreground mt-1">Check your connection and refresh.</p>
+            <div className="baraza-card p-4 mb-5">
+              <p className="text-sm">We couldn&apos;t load Community DAOs right now.</p>
+              <p className="text-xs mt-1">Check your connection and refresh.</p>
             </div>
           )}
 
           {/* Results count */}
           {isLoading ? (
-            <p className="text-xs text-muted-foreground mb-5">Loading Community DAOs…</p>
+            <p className="text-xs mb-5">Loading Community DAOs…</p>
           ) : hasActiveFilter ? (
-            <p className="text-xs text-muted-foreground mb-5">
+            <p className="text-xs mb-5">
               {filtered.length} {filtered.length === 1 ? "community" : "communities"} found
             </p>
           ) : null}
@@ -203,40 +197,74 @@ export default function Communities() {
           {isLoading ? (
             <div className={cn(layout === "grid" ? "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "grid gap-4")}>
               {Array.from({ length: 4 }).map((_, idx) => (
-                <div key={idx} className={cn("baraza-card animate-pulse", layout === "grid" ? "h-80" : "h-56")} />
+                layout === "grid" ? (
+                  <div key={idx} className="baraza-card animate-pulse p-5 space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-muted flex-shrink-0" />
+                      <div className="space-y-1.5 flex-1">
+                        <div className="h-4 w-3/4 rounded bg-muted" />
+                        <div className="h-3 w-1/2 rounded bg-muted" />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-3 w-full rounded bg-muted" />
+                      <div className="h-3 w-5/6 rounded bg-muted" />
+                      <div className="h-3 w-2/3 rounded bg-muted" />
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 pt-2">
+                      {Array.from({ length: 3 }).map((_, j) => (
+                        <div key={j} className="space-y-1">
+                          <div className="h-5 w-full rounded bg-muted" />
+                          <div className="h-2.5 w-3/4 rounded bg-muted" />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="h-9 w-full rounded-lg bg-muted" />
+                  </div>
+                ) : (
+                  <div key={idx} className="baraza-card animate-pulse p-5">
+                    <div className="flex items-start gap-4">
+                      <div className="h-12 w-12 rounded-xl bg-muted flex-shrink-0" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-5 w-48 rounded bg-muted" />
+                        <div className="h-3 w-full rounded bg-muted" />
+                        <div className="h-3 w-3/4 rounded bg-muted" />
+                        <div className="flex gap-4 pt-1">
+                          <div className="h-3 w-20 rounded bg-muted" />
+                          <div className="h-3 w-20 rounded bg-muted" />
+                          <div className="h-3 w-20 rounded bg-muted" />
+                        </div>
+                      </div>
+                      <div className="h-9 w-28 rounded-lg bg-muted flex-shrink-0" />
+                    </div>
+                  </div>
+                )
               ))}
             </div>
           ) : filtered.length > 0 ? (
             <div className={cn(layout === "grid" ? "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "grid gap-4")}>
-              {filtered.map((community, idx) => (
-                <motion.div
+              {filtered.map((community) => (
+                <div
                   key={community.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.04, duration: 0.35 }}
                   className="h-full"
                 >
                   <CommunityCard {...community} layout={layout} />
-                </motion.div>
+                </div>
               ))}
             </div>
           ) : (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="baraza-card p-12 text-center"
-            >
-              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Search className="w-6 h-6 text-primary" />
+            <div className="baraza-card p-12 text-center">
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Search className="w-6 h-6" />
               </div>
-              <p className="font-display text-base font-semibold text-foreground mb-1">
+              <p className="font-display text-base font-semibold mb-1">
                 {chainFilter === "stellar"
                   ? "No Stellar communities yet"
                   : chainFilter === "solana"
                     ? "No Solana communities match that filter"
                     : "No DAOs match that filter yet"}
               </p>
-              <p className="text-sm text-muted-foreground mb-6">
+              <p className="text-sm mb-6">
                 {chainFilter === "stellar"
                   ? "Stellar support is coming in Phase 2. Switch to Solana to see existing DAOs."
                   : "Try a different type, or start your own Community DAO."}
@@ -244,7 +272,7 @@ export default function Communities() {
               <Link to="/create" className="btn-primary inline-flex items-center gap-2 text-sm">
                 <PlusCircle className="w-4 h-4" /> Launch a Community DAO
               </Link>
-            </motion.div>
+            </div>
           )}
         </div>
       </section>

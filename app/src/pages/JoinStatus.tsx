@@ -12,6 +12,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import Layout from "@/components/Layout";
 import { useCommunity } from "@/hooks/useCommunities";
 import { isSupabaseConfigured } from "@/lib/communities";
+import { useSeo } from "@/lib/seo";
 import {
   fetchPaymentOrder,
   isFailureStatus,
@@ -69,6 +70,13 @@ export default function JoinStatus() {
   const { community } = useCommunity(id);
   const { publicKey } = useWallet();
   const orderId = params.get("orderId") ?? "";
+
+  useSeo({
+    title: community ? `Join status — ${community.name}` : "Join status",
+    description: "Track M-Pesa payment, credential mint, and on-chain membership activation.",
+    path: id ? `/join/${id}/status` : undefined,
+    noIndex: true,
+  });
 
   const isLocalOrder = orderId.startsWith("ord_local_") || !orderId;
   const hasSupabase = isSupabaseConfigured();
@@ -178,24 +186,24 @@ export default function JoinStatus() {
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-4xl">
             <div className="mb-6">
-              <p className="font-mono text-xs uppercase tracking-widest text-primary">Join Status</p>
-              <h1 className="mt-2 font-display text-3xl font-bold text-foreground">
+              <p className="font-mono text-xs uppercase tracking-widest">Join Status</p>
+              <h1 className="mt-2 font-display text-3xl font-bold">
                 {isFailed
                   ? "Membership activation failed"
                   : isComplete
                     ? "You're an active member"
                     : "Activating your DAO membership"}
               </h1>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Order <span className="font-mono text-foreground">{orderId || "(none)"}</span> for{" "}
+              <p className="mt-2 text-sm">
+                Order <span className="font-mono">{orderId || "(none)"}</span> for{" "}
                 {community?.name ?? "Community DAO"} is moving from M-Pesa confirmation to on-chain Membership Credential.
               </p>
             </div>
 
             {errorMessage && (
-              <div className="mb-6 flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/8 p-4 text-sm">
-                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
-                <p className="text-destructive">{errorMessage}</p>
+              <div className="mb-6 flex items-start gap-3 rounded-lg border p-4 text-sm">
+                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
+                <p>{errorMessage}</p>
               </div>
             )}
 
@@ -203,15 +211,9 @@ export default function JoinStatus() {
               <div className="baraza-card p-5 md:p-6">
                 <div className="space-y-5">
                   {stepStates.map((step) => (
-                    <div key={step.code} className="flex gap-4 rounded-lg border border-border bg-background/45 p-4">
+                    <div key={step.code} className="flex gap-4 rounded-lg border p-4">
                       <div
-                        className={
-                          step.state === "done"
-                            ? "grid h-9 w-9 shrink-0 place-items-center rounded-full bg-confirmed/15 text-confirmed"
-                            : step.state === "current"
-                              ? "grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/15 text-primary"
-                              : "grid h-9 w-9 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground"
-                        }
+                        className="grid h-9 w-9 shrink-0 place-items-center rounded-full"
                       >
                         {step.state === "done"
                           ? <Check className="h-5 w-5" />
@@ -219,7 +221,7 @@ export default function JoinStatus() {
                             ? <Loader2 className="h-5 w-5 animate-spin" />
                             : <Clock3 className="h-5 w-5" />}
                       </div>
-                      <p className="self-center text-sm font-medium text-foreground">{step.label}</p>
+                      <p className="self-center text-sm font-medium">{step.label}</p>
                     </div>
                   ))}
                 </div>
@@ -227,23 +229,17 @@ export default function JoinStatus() {
 
               <aside className="space-y-5">
                 <div className="baraza-card p-5">
-                  <h2 className="font-display text-lg font-semibold text-foreground">Status</h2>
+                  <h2 className="font-display text-lg font-semibold">Status</h2>
                   <div className="mt-4 space-y-3 text-sm">
-                    <div className="flex justify-between gap-3 border-b border-border pb-3">
-                      <span className="text-muted-foreground">Payment</span>
-                      <span className={statusIndex(status) >= statusIndex("PAYMENT_CONFIRMED") ? "text-confirmed" : "text-muted-foreground"}>
+                    <div className="flex justify-between gap-3 border-b pb-3">
+                      <span>Payment</span>
+                      <span>
                         {statusIndex(status) >= statusIndex("PAYMENT_CONFIRMED") ? "Confirmed" : "Pending"}
                       </span>
                     </div>
-                    <div className="flex justify-between gap-3 border-b border-border pb-3">
-                      <span className="text-muted-foreground">Credential</span>
-                      <span className={
-                        statusIndex(status) >= statusIndex("MINT_CONFIRMED")
-                          ? "text-confirmed"
-                          : statusIndex(status) >= statusIndex("MINT_QUEUED")
-                            ? "text-primary"
-                            : "text-muted-foreground"
-                      }>
+                    <div className="flex justify-between gap-3 border-b pb-3">
+                      <span>Credential</span>
+                      <span>
                         {statusIndex(status) >= statusIndex("MINT_CONFIRMED")
                           ? "Minted"
                           : statusIndex(status) >= statusIndex("MINT_QUEUED")
@@ -252,24 +248,24 @@ export default function JoinStatus() {
                       </span>
                     </div>
                     <div className="flex justify-between gap-3">
-                      <span className="text-muted-foreground">Membership</span>
-                      <span className={isComplete ? "text-confirmed" : "text-muted-foreground"}>
+                      <span>Membership</span>
+                      <span>
                         {isComplete ? "Active" : "Pending"}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-primary/25 bg-primary/8 p-5">
-                  <ShieldCheck className="mb-3 h-5 w-5 text-primary" />
-                  <p className="text-sm leading-6 text-muted-foreground">
+                <div className="rounded-lg border p-5">
+                  <ShieldCheck className="mb-3 h-5 w-5" />
+                  <p className="text-sm leading-6">
                     Your membership activates only after payment, attestation, mint, and chain confirmation all complete.
                   </p>
                 </div>
 
                 {!publicKey && isComplete && (
-                  <div className="rounded-lg border border-accent/25 bg-accent/8 p-5">
-                    <p className="text-sm leading-6 text-muted-foreground">
+                  <div className="rounded-lg border p-5">
+                    <p className="text-sm leading-6">
                       Connect your Solana wallet to bind this membership to your account.
                     </p>
                   </div>

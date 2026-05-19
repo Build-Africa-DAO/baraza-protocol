@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a0d0a"/>
+      <stop offset="100%" stop-color="#13180f"/>
+    </linearGradient>
+    <linearGradient id="warm" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#F4D06F"/>
+      <stop offset="100%" stop-color="#FF8811"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.78" cy="0.18" r="0.65">
+      <stop offset="0%" stop-color="#FF8811" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#FF8811" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="dots" width="32" height="32" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.4" fill="#F4D06F" fill-opacity="0.08"/>
+    </pattern>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#dots)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+
+  <g transform="translate(72 88)">
+    <rect width="56" height="56" rx="14" fill="#F4D06F" fill-opacity="0.12" stroke="#F4D06F" stroke-opacity="0.35" stroke-width="1.5"/>
+    <path d="M16 28 L26 38 L40 22" stroke="#F4D06F" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <text x="76" y="38" font-family="'Hanken Grotesk', 'Inter', sans-serif" font-size="26" font-weight="700" fill="#F4D06F" letter-spacing="0.5">Baraza Protocol</text>
+  </g>
+
+  <g transform="translate(72 220)">
+    <text font-family="'Hanken Grotesk', 'Inter', sans-serif" font-weight="800" font-size="92" fill="#f5f1e6" letter-spacing="-2">
+      <tspan x="0" y="0">Launch your</tspan>
+      <tspan x="0" y="108" fill="url(#warm)">community DAO</tspan>
+    </text>
+  </g>
+
+  <g transform="translate(72 470)">
+    <text font-family="'Hanken Grotesk', 'Inter', sans-serif" font-size="30" font-weight="500" fill="#bfb9a8">
+      <tspan x="0" y="0">Phone-first treasury and governance for chamas,</tspan>
+      <tspan x="0" y="42">SACCOs, welfare groups, and co-operatives.</tspan>
+    </text>
+  </g>
+
+  <g transform="translate(72 600)">
+    <rect width="138" height="14" rx="7" fill="#F4D06F" fill-opacity="0.18"/>
+    <rect width="138" height="14" rx="7" fill="url(#warm)" fill-opacity="0.85"/>
+  </g>
+
+  <g transform="translate(900 88)" opacity="0.85">
+    <rect x="0" y="0" width="228" height="60" rx="30" fill="#F4D06F" fill-opacity="0.10" stroke="#F4D06F" stroke-opacity="0.35"/>
+    <circle cx="32" cy="30" r="7" fill="#F4D06F"/>
+    <text x="54" y="38" font-family="'Hanken Grotesk', 'Inter', sans-serif" font-size="20" font-weight="700" fill="#F4D06F" letter-spacing="0.4">M-Pesa · Solana</text>
+  </g>
+</svg>

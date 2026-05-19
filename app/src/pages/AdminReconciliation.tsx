@@ -5,6 +5,7 @@ import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import Layout from "@/components/Layout";
 import { truncateAddress } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useSeo } from "@/lib/seo";
 
 const ADMIN_WALLETS = (import.meta.env.VITE_ADMIN_WALLETS ?? "")
   .split(",")
@@ -24,24 +25,20 @@ const mintJobs = [
 ];
 
 function StatusChip({ value }: { value: string }) {
-  const isGood = value.includes("CONFIRMED") || value === "200 OK";
-  const isBad = value.includes("FAILED") || value.includes("REVIEW");
   return (
-    <span
-      className={
-        isGood
-          ? "rounded-full border border-confirmed/30 bg-confirmed/10 px-2.5 py-1 font-mono text-[11px] uppercase tracking-wide text-confirmed"
-          : isBad
-            ? "rounded-full border border-destructive/30 bg-destructive/10 px-2.5 py-1 font-mono text-[11px] uppercase tracking-wide text-destructive"
-            : "rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 font-mono text-[11px] uppercase tracking-wide text-primary"
-      }
-    >
+    <span className="rounded-full px-2.5 py-1 font-mono text-[11px] uppercase tracking-wide">
       {value}
     </span>
   );
 }
 
 export default function AdminReconciliation() {
+  useSeo({
+    title: "Admin reconciliation",
+    description: "Operator console for payment reconciliation and mint job retries.",
+    path: "/admin",
+    noIndex: true,
+  });
   const { publicKey, connected } = useWallet();
   const { setVisible } = useWalletModal();
   const { toast } = useToast();
@@ -69,15 +66,15 @@ export default function AdminReconciliation() {
       <Layout>
         <section className="py-20">
           <div className="mx-auto max-w-md px-4 text-center">
-            <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl bg-destructive/10 text-destructive">
+            <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl">
               <ShieldOff className="h-7 w-7" />
             </div>
-            <h1 className="font-display text-2xl font-bold text-foreground">Access restricted</h1>
-            <p className="mt-3 text-sm text-muted-foreground">
+            <h1 className="font-display text-2xl font-bold">Access restricted</h1>
+            <p className="mt-3 text-sm">
               This page is for Baraza operators. Connect with an authorised wallet to continue.
             </p>
             {connected && publicKey ? (
-              <p className="mt-4 font-mono text-xs text-muted-foreground">
+              <p className="mt-4 font-mono text-xs">
                 Signed in as {truncateAddress(publicKey.toBase58())}
               </p>
             ) : (
@@ -90,7 +87,7 @@ export default function AdminReconciliation() {
               </button>
             )}
             {!allowlistConfigured && (
-              <p className="mt-4 text-[11px] text-muted-foreground/70">
+              <p className="mt-4 text-[11px]">
                 Operators: set <code className="font-mono">VITE_ADMIN_WALLETS</code> to enable this page.
               </p>
             )}
@@ -104,11 +101,11 @@ export default function AdminReconciliation() {
     <Layout>
       <section className="py-10 md:py-14">
         <div className="container mx-auto px-4">
-          <header className="mb-8 flex flex-col justify-between gap-4 border-b border-border pb-6 md:flex-row md:items-end">
+          <header className="mb-8 flex flex-col justify-between gap-4 border-b pb-6 md:flex-row md:items-end">
             <div>
-              <p className="font-mono text-xs uppercase tracking-widest text-primary">Admin</p>
-              <h1 className="mt-2 font-display text-3xl font-bold text-foreground">Payment Reconciliation</h1>
-              <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+              <p className="font-mono text-xs uppercase tracking-widest">Admin</p>
+              <h1 className="mt-2 font-display text-3xl font-bold">Payment Reconciliation</h1>
+              <p className="mt-2 max-w-2xl text-sm">
                 Operational view for payment orders, webhook events, mint jobs, refunds, manual reviews, and audit events.
               </p>
             </div>
@@ -137,26 +134,26 @@ export default function AdminReconciliation() {
               ["Mint Queue Depth", "45 jobs", "Est. clearance 4m"],
             ].map(([label, value, note]) => (
               <div key={label} className="baraza-card p-5">
-                <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">{label}</p>
-                <p className="mt-2 font-display text-2xl font-bold text-foreground">{value}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{note}</p>
+                <p className="font-mono text-xs uppercase tracking-widest">{label}</p>
+                <p className="mt-2 font-display text-2xl font-bold">{value}</p>
+                <p className="mt-1 text-sm">{note}</p>
               </div>
             ))}
           </div>
 
           <div className="baraza-card mb-6 overflow-x-auto p-5">
             <div className="mb-4 flex flex-col justify-between gap-3 md:flex-row md:items-center">
-              <h2 className="font-display text-xl font-semibold text-foreground">Payment Orders</h2>
+              <h2 className="font-display text-xl font-semibold">Payment Orders</h2>
               <input
                 type="search"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary/50"
+                className="rounded-lg border px-3 py-2 text-sm outline-none"
                 placeholder="Search by order ID"
               />
             </div>
             <table className="w-full min-w-[760px] text-left text-sm">
-              <thead className="border-b border-border font-mono text-xs uppercase tracking-widest text-muted-foreground">
+              <thead className="border-b font-mono text-xs uppercase tracking-widest">
                 <tr>
                   <th className="pb-3 font-normal">Order ID</th>
                   <th className="pb-3 font-normal">Amount</th>
@@ -168,25 +165,25 @@ export default function AdminReconciliation() {
               <tbody>
                 {filteredOrders.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="py-8 text-center text-sm text-muted-foreground">
+                    <td colSpan={5} className="py-8 text-center text-sm">
                       No orders match &ldquo;{searchTerm}&rdquo;.
                     </td>
                   </tr>
                 ) : (
                   filteredOrders.map(([id, amount, status, time, action]) => (
-                    <tr key={id} className="border-b border-border/70 last:border-b-0">
-                      <td className="py-4 font-mono text-foreground">{id}</td>
-                      <td className="py-4 text-foreground">{amount}</td>
+                    <tr key={id} className="border-b last:border-b-0">
+                      <td className="py-4 font-mono">{id}</td>
+                      <td className="py-4">{amount}</td>
                       <td className="py-4"><StatusChip value={status} /></td>
-                      <td className="py-4 text-muted-foreground">{time}</td>
+                      <td className="py-4">{time}</td>
                       <td className="py-4 text-right">
                         {action === "-" ? (
-                          <span className="text-muted-foreground">-</span>
+                          <span>-</span>
                         ) : (
                           <button
                             type="button"
                             onClick={() => notifyNotWired(action)}
-                            className="text-primary hover:underline"
+                            className="hover:underline"
                           >
                             {action}
                           </button>
@@ -201,12 +198,12 @@ export default function AdminReconciliation() {
 
           <div className="grid gap-6 lg:grid-cols-2">
             <div className="baraza-card overflow-x-auto p-5">
-              <h2 className="mb-4 font-display text-xl font-semibold text-foreground">Mint Jobs</h2>
+              <h2 className="mb-4 font-display text-xl font-semibold">Mint Jobs</h2>
               <table className="w-full text-left text-sm">
                 <tbody>
                   {mintJobs.map(([id, status, action]) => (
-                    <tr key={id} className="border-b border-border/70 last:border-b-0">
-                      <td className="py-4 font-mono text-foreground">{id}</td>
+                    <tr key={id} className="border-b last:border-b-0">
+                      <td className="py-4 font-mono">{id}</td>
                       <td className="py-4"><StatusChip value={status} /></td>
                       <td className="py-4 text-right">
                         {action === "-" ? (
@@ -215,7 +212,7 @@ export default function AdminReconciliation() {
                           <button
                             type="button"
                             onClick={() => notifyNotWired(action)}
-                            className="text-primary hover:underline"
+                            className="hover:underline"
                           >
                             {action}
                           </button>
@@ -228,7 +225,7 @@ export default function AdminReconciliation() {
             </div>
 
             <div className="baraza-card overflow-x-auto p-5">
-              <h2 className="mb-4 font-display text-xl font-semibold text-foreground">Webhook Events</h2>
+              <h2 className="mb-4 font-display text-xl font-semibold">Webhook Events</h2>
               <table className="w-full text-left text-sm">
                 <tbody>
                   {[
@@ -236,9 +233,9 @@ export default function AdminReconciliation() {
                     ["mint.failed", "/api/mint-jobs/MNT-1028", "503 UNAVAIL"],
                     ["dao.created", "/api/communities", "201 CREATED"],
                   ].map(([event, target, response]) => (
-                    <tr key={event} className="border-b border-border/70 last:border-b-0">
-                      <td className="py-4 font-mono text-foreground">{event}</td>
-                      <td className="py-4 text-muted-foreground">{target}</td>
+                    <tr key={event} className="border-b last:border-b-0">
+                      <td className="py-4 font-mono">{event}</td>
+                      <td className="py-4">{target}</td>
                       <td className="py-4 text-right"><StatusChip value={response} /></td>
                     </tr>
                   ))}

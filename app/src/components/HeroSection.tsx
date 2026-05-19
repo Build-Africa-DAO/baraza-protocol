@@ -1,215 +1,237 @@
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { motion, type Variants } from "framer-motion";
-import { ArrowRight, Banknote, CheckCircle2, ShieldCheck, TrendingUp, Users, Vote } from "lucide-react";
-import { DotPattern } from "@/components/ui/dot-pattern";
-import { ShimmerButton } from "@/components/ui/shimmer-button";
+import { useEffect, useState, type MouseEvent } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ArrowRight, Banknote, ShieldCheck, Users, Vote, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const stats = [
-  { label: "Sample groups modeled", value: "180+" },
-  { label: "Sample member records", value: "2.4K+" },
-  { label: "Sample funds visible", value: "KSh 12M+" },
+  { label: "Built on Solana", value: "Solana" },
+  { label: "Phone-first onboarding", value: "M-Pesa" },
+  { label: "Solana · Stellar live", value: "Multi-chain" },
 ];
 
-const communityTypes = ["community", "DAO", "SACCO", "co-operative", "chama", "welfare group"];
+const communityTypes = ["chama", "SACCO", "co-op", "welfare group", "community DAO"];
 
-const container: Variants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.09 } },
-};
-
-const item: Variants = {
-  hidden: { opacity: 0, y: 22 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, ease: [0.4, 0, 0.2, 1] as [number, number, number, number] },
+const walkthroughFrames: Array<{
+  label: string;
+  title: string;
+  detail: string;
+  progress: string;
+  icon: LucideIcon;
+}> = [
+  {
+    label: "Invite",
+    title: "Share the DAO link",
+    detail: "Members open the invite and review the rules before joining.",
+    progress: "25%",
+    icon: Users,
   },
-};
+  {
+    label: "Dues",
+    title: "Confirm payments",
+    detail: "M-Pesa confirmations attach to member requests and treasury records.",
+    progress: "50%",
+    icon: Banknote,
+  },
+  {
+    label: "Vote",
+    title: "Reach quorum",
+    detail: "Active members vote and see the decision status update clearly.",
+    progress: "75%",
+    icon: Vote,
+  },
+  {
+    label: "Release",
+    title: "Move funds by rule",
+    detail: "Approved proposals become governed treasury movement.",
+    progress: "100%",
+    icon: ShieldCheck,
+  },
+];
 
 function RotatingCommunityText() {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [isChanging, setIsChanging] = useState(false);
+  const [index, setIndex] = useState(0);
 
   useEffect(() => {
-    const interval = window.setInterval(() => {
-      setIsChanging(true);
-
-      window.setTimeout(() => {
-        setActiveIndex((index) => (index + 1) % communityTypes.length);
-        setIsChanging(false);
-      }, 180);
-    }, 2200);
-
-    return () => window.clearInterval(interval);
+    const id = window.setInterval(() => {
+      setIndex((i) => (i + 1) % communityTypes.length);
+    }, 2400);
+    return () => window.clearInterval(id);
   }, []);
 
-  const activeType = communityTypes[activeIndex];
-
   return (
-    <span className="block overflow-hidden">
-      <span className="block">
-        <span className="text-secondary">Create</span>{" "}
-        <span className="text-accent">your</span>
+    <span className="block max-w-[11ch] overflow-hidden sm:max-w-none">
+      <span className="block text-foreground">
+        Launch your
       </span>
-      <span className="block min-h-[1.05em] text-primary">
-        <span
-          className={cn(
-            "inline-block whitespace-nowrap transition-all duration-200 ease-out",
-            isChanging ? "-translate-y-2 opacity-0" : "translate-y-0 opacity-100"
-          )}
-        >
-          {activeType}
-        </span>
+      <span className="relative block min-h-[1.08em]">
+        <AnimatePresence mode="wait">
+          <motion.span
+          key={communityTypes[index]}
+            initial={{ opacity: 0, y: 18, filter: "blur(8px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            exit={{ opacity: 0, y: -14, filter: "blur(8px)" }}
+            transition={{ duration: 0.34, ease: [0.32, 0.72, 0, 1] }}
+            className="absolute left-0 top-0 inline-block max-w-full bg-gradient-to-r from-primary via-warm to-accent bg-clip-text text-transparent"
+          >
+            {communityTypes[index]}
+          </motion.span>
+        </AnimatePresence>
       </span>
     </span>
   );
 }
 
 function HeroPreview() {
-  const activity = [
-    { label: "Dues confirmed", value: "KSh 84K", icon: Banknote, tone: "text-primary" },
-    { label: "Proposal passed", value: "73%", icon: Vote, tone: "text-dao" },
-    { label: "Treasury growth", value: "+18%", icon: TrendingUp, tone: "text-confirmed" },
-  ];
+  const [activeFrame, setActiveFrame] = useState(0);
+  const frame = walkthroughFrames[activeFrame];
+  const Icon = frame.icon;
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setActiveFrame((index) => (index + 1) % walkthroughFrames.length);
+    }, 5200);
+
+    return () => window.clearInterval(interval);
+  }, []);
+
+  const handleScrollToFlow = (event: MouseEvent<HTMLAnchorElement>) => {
+    const target = document.getElementById("flow-walkthrough");
+    if (!target) return;
+    event.preventDefault();
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.history.replaceState(null, "", "#flow-walkthrough");
+  };
 
   return (
-    <motion.div
-      variants={item}
-      className="hidden min-[860px]:block"
-      aria-hidden
-    >
-      <div className="relative ml-auto max-w-sm">
-        <div className="absolute -inset-4 rounded-[2rem] bg-primary/10 blur-3xl" />
-        <div className="relative overflow-hidden rounded-2xl border border-primary/18 bg-card/70 p-4 shadow-[var(--shadow-deep)] backdrop-blur-xl">
-          <div className="mb-4 flex items-center justify-between">
+    <div className="mt-4 block min-[860px]:mt-0">
+      <div className="relative mx-auto max-w-md min-[860px]:ml-auto">
+        <a
+          href="#flow-walkthrough"
+          aria-label="See the full flow walkthrough"
+          onClick={handleScrollToFlow}
+          className="group relative block overflow-hidden rounded-xl p-3 sm:rounded-2xl sm:p-4 focus-visible:outline-none focus-visible:ring-2"
+        >
+          <div className="mb-3 flex items-center justify-between gap-3 sm:mb-4 sm:gap-4">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-primary">Treasury pulse</p>
-              <p className="mt-1 font-display text-2xl font-black text-foreground">KSh 2.4M</p>
+              <p className="text-[11px] font-semibold uppercase tracking-widest">Flow preview</p>
+              <p className="mt-1 font-display text-xl font-black sm:text-2xl">How it works</p>
             </div>
-            <div className="grid h-11 w-11 place-items-center rounded-xl bg-confirmed/12 text-confirmed">
-              <CheckCircle2 className="h-5 w-5" />
+            <div className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold sm:gap-2 sm:px-3 sm:py-1.5 sm:text-xs">
+              4 steps
+              <ArrowRight className="h-4 w-4" />
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
-            {activity.map((item) => {
-              const Icon = item.icon;
-              return (
-                <div key={item.label} className="rounded-lg border border-border/55 bg-background/35 p-3">
-                  <Icon className={cn("mb-3 h-4 w-4", item.tone)} />
-                  <p className="font-display text-lg font-bold text-foreground">{item.value}</p>
-                  <p className="mt-1 text-[10px] leading-3 text-muted-foreground">{item.label}</p>
+          <div className="relative aspect-[16/8.4] w-full overflow-hidden rounded-lg p-3 sm:aspect-video sm:rounded-xl sm:p-4">
+            <div className="pointer-events-none absolute inset-3 z-0 rounded-lg" />
+            <div className="relative z-10 flex h-full flex-col justify-between">
+              <div className="flex items-start justify-between">
+                <div className="grid h-10 w-10 place-items-center rounded-lg sm:h-12 sm:w-12 sm:rounded-xl">
+                  <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
                 </div>
-              );
-            })}
+                <span className="rounded-full px-3 py-1 text-[11px] font-bold">
+                  {frame.label}
+                </span>
+              </div>
+
+              <div>
+                <h3 className="font-display text-lg font-black leading-tight sm:text-2xl">{frame.title}</h3>
+                <p className="mt-1.5 max-w-sm text-xs font-medium leading-relaxed sm:mt-2 sm:text-sm">{frame.detail}</p>
+              </div>
+            </div>
           </div>
 
-          <div className="mt-4 rounded-lg border border-border/55 bg-surface/55 p-3">
+          <div className="mt-3 rounded-lg p-2.5 sm:mt-4 sm:p-3">
             <div className="mb-2 flex items-center justify-between text-[11px] font-semibold">
-              <span className="text-muted-foreground">Member vote</span>
-              <span className="text-primary">Aligned</span>
+              <span>Walkthrough progress</span>
+              <span>{frame.progress}</span>
             </div>
-            <div className="h-2 overflow-hidden rounded-full bg-muted">
-              <div className="h-full w-[73%] rounded-full bg-gradient-to-r from-primary via-accent to-confirmed" />
+            <div className="h-2 overflow-hidden rounded-full">
+              <div
+                className="h-full rounded-full"
+                style={{ width: frame.progress }}
+              />
             </div>
           </div>
-        </div>
+
+          <div className="mt-2 grid grid-cols-4 gap-1.5 sm:mt-3" aria-hidden>
+            {walkthroughFrames.map((step, index) => (
+              <span
+                key={step.label}
+                className={cn(
+                  "h-1.5 rounded-full transition-colors duration-300",
+                  index === activeFrame ? "bg-primary" : "bg-muted",
+                )}
+              />
+            ))}
+          </div>
+        </a>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
 export default function HeroSection() {
   return (
-    <section className="relative overflow-hidden border-b border-primary/10 pt-16 pb-7 sm:pt-20 sm:pb-8 lg:pt-20">
-      <div className="absolute inset-0 pointer-events-none" aria-hidden>
-        <div className="absolute inset-0 ambient-globe-layer" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/88 to-background/20" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/60" />
-        <DotPattern
-          width={28}
-          height={28}
-          cr={1}
-          className="fill-primary/7 [mask-image:linear-gradient(to_bottom,black,transparent_78%)]"
-        />
-      </div>
-
+    <section className="relative overflow-hidden pt-16 pb-2 sm:pt-20 sm:pb-3 lg:pt-20">
       <div className="container relative z-10 mx-auto max-w-7xl px-4">
-        <motion.div
-          variants={container}
-          initial={false}
-          animate="show"
-          className="min-[860px]:grid min-[860px]:grid-cols-[minmax(0,1fr)_minmax(18rem,0.62fr)] min-[860px]:items-center min-[860px]:gap-10"
-        >
+        <div className="min-[860px]:grid min-[860px]:grid-cols-[minmax(0,1fr)_minmax(18rem,0.62fr)] min-[860px]:items-center min-[860px]:gap-10">
           <div className="max-w-2xl">
-            <motion.div
-              variants={item}
-              className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/8 px-3.5 py-1.5 text-xs font-semibold text-primary sm:mb-6"
-            >
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold sm:mb-6">
               <ShieldCheck className="h-3.5 w-3.5" />
               Community DAO treasury, voting, and membership
-            </motion.div>
+            </div>
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-primary">
+              Most popular: SACCOs and welfare groups
+            </div>
 
-            <motion.h1
-              variants={item}
-              className="font-display text-5xl font-black leading-[0.92] tracking-normal text-foreground sm:text-6xl lg:text-7xl"
+            <h1
+              className="font-display text-[clamp(3rem,12vw,4.6rem)] font-black leading-[0.9] tracking-tight sm:text-[clamp(4rem,6.7vw,5.45rem)]"
               aria-live="polite"
             >
               <RotatingCommunityText />
-            </motion.h1>
+            </h1>
 
-            <motion.p
-              variants={item}
-              className="mt-4 max-w-xl text-base leading-7 text-muted-foreground sm:mt-5 sm:text-lg sm:leading-8"
-            >
+            <p className="mt-4 max-w-xl text-base leading-7 sm:mt-5 sm:text-lg sm:leading-8">
               Browse chamas, SACCOs, welfare groups, and co-operatives with shared
               treasury visibility, member voting, and phone-first M-Pesa participation.
-            </motion.p>
+            </p>
 
-            <motion.div variants={item} className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row min-[860px]:flex-col min-[1040px]:flex-row">
-              <Link to="/communities" tabIndex={-1} className="sm:w-auto min-[860px]:w-full min-[1040px]:w-auto">
-                <ShimmerButton
-                  background="linear-gradient(135deg, #F4D06F, #FF8811)"
-                  shimmerColor="rgba(255,255,255,0.5)"
-                  className="w-full justify-center rounded-xl px-6 py-4 text-base font-extrabold uppercase tracking-wide sm:w-auto min-[860px]:w-full min-[1040px]:w-auto"
-                >
-                  Browse Community DAOs
-                  <ArrowRight className="h-4 w-4" />
-                </ShimmerButton>
+            <div className="mt-5 flex flex-col gap-2 sm:mt-8 sm:flex-row sm:gap-3 min-[860px]:flex-col min-[1040px]:flex-row">
+              <Link
+                to="/communities"
+                className="btn-warm inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-4 text-base font-extrabold uppercase tracking-wide sm:w-auto min-[860px]:w-full min-[1040px]:w-auto"
+              >
+                Browse Community DAOs
+                <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link to="/create" className="btn-ghost justify-center px-6 py-4 text-sm font-bold sm:w-auto min-[860px]:w-full min-[1040px]:w-auto">
-                Create a Community DAO
+              <Link to="/create" className="btn-primary inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-4 text-base font-extrabold uppercase tracking-wide sm:w-auto min-[860px]:w-full min-[1040px]:w-auto">
+                Launch a Community DAO
               </Link>
-            </motion.div>
+            </div>
 
-            <motion.div variants={item} className="mt-6 grid max-w-xl grid-cols-3 gap-3">
+            <div className="mt-4 grid max-w-xl grid-cols-3 gap-2 sm:mt-6 sm:gap-3">
               {stats.map((stat) => (
-                <div key={stat.label} className="border-l border-primary/18 pl-3">
-                  <p className="font-display text-lg font-bold text-foreground sm:text-xl">{stat.value}</p>
-                  <p className="mt-1 text-[11px] leading-4 text-muted-foreground">{stat.label}</p>
+                <div key={stat.label} className="border-l pl-3">
+                  <p className="font-display text-lg font-bold sm:text-xl">{stat.value}</p>
+                  <p className="mt-1 text-[11px] leading-4">{stat.label}</p>
                 </div>
               ))}
-            </motion.div>
+            </div>
           </div>
 
           <HeroPreview />
-        </motion.div>
+        </div>
 
-        <motion.div
-          variants={item}
-          initial={false}
-          animate="show"
-          className="mt-6 hidden flex-wrap items-center gap-3 border-t border-primary/10 pt-4 text-xs text-muted-foreground sm:flex"
-        >
+        <div className="mt-5 hidden flex-wrap items-center gap-3 border-t pt-4 text-xs min-[860px]:flex">
           <span className="inline-flex items-center gap-2">
-            <Users className="h-3.5 w-3.5 text-primary" />
+            <Users className="h-3.5 w-3.5" />
             Built for chamas, SACCOs, co-ops, and welfare groups
           </span>
-          <span className="hidden h-1 w-1 rounded-full bg-primary/40 sm:inline-block" />
+          <span className="hidden h-1 w-1 rounded-full sm:inline-block" />
           <span>Collect dues, approve spending, and keep every member aligned.</span>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

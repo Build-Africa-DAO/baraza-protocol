@@ -1,5 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Compass, Home, PlusCircle, UserRound, type LucideIcon } from 'lucide-react';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletModal } from '@solana/wallet-adapter-react-ui';
+import { Compass, Home, PlusCircle, UserRound, Wallet, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface NavItem {
@@ -44,6 +46,27 @@ function NavLink({ item, location }: { item: NavItem; location: ReturnType<typeo
   );
 }
 
+function WalletAction() {
+  const { connected, publicKey } = useWallet();
+  const { setVisible } = useWalletModal();
+  const label = connected && publicKey ? 'Wallet' : 'Connect';
+
+  return (
+    <button
+      type="button"
+      onClick={() => setVisible(true)}
+      className={cn(
+        'col-start-5 flex flex-col items-center gap-1 rounded-md px-2 py-2 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70',
+        connected ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
+      )}
+      aria-label={connected ? 'Wallet connected. Change wallet' : 'Connect wallet'}
+    >
+      <Wallet className="h-5 w-5" />
+      {label}
+    </button>
+  );
+}
+
 export default function MobileBottomNav() {
   const location = useLocation();
   const createActive = isPathActive(location.pathname, '/create');
@@ -53,7 +76,7 @@ export default function MobileBottomNav() {
       aria-label="Mobile navigation"
       className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-background/92 backdrop-blur-xl md:hidden"
     >
-      <div className="mx-auto grid max-w-md grid-cols-4 items-end px-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2">
+      <div className="mx-auto grid max-w-md grid-cols-5 items-end px-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2">
         {leftItems.map((item) => (
           <NavLink key={item.path} item={item} location={location} />
         ))}
@@ -76,6 +99,8 @@ export default function MobileBottomNav() {
         {rightItems.map((item) => (
           <NavLink key={item.path} item={item} location={location} />
         ))}
+
+        <WalletAction />
       </div>
     </nav>
   );

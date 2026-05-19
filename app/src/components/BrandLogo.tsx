@@ -7,8 +7,8 @@ interface BrandLogoProps {
 }
 
 const sizes = {
-  sm: { icon: 28, font: "text-base" },
-  md: { icon: 36, font: "text-xl" },
+  sm: { icon: 30, font: "text-base" },
+  md: { icon: 38, font: "text-xl" },
   lg: { icon: 48, font: "text-3xl" },
 };
 
@@ -16,19 +16,19 @@ export function BrandLogo({ className, iconOnly = false, size = "md" }: BrandLog
   const { icon, font } = sizes[size];
 
   return (
-    <div className={cn("flex items-center gap-2.5", className)}>
+    <div className={cn("flex items-center gap-2.5 leading-none", className)}>
       <img
         src="/baraza-logo.svg"
         alt={iconOnly ? "Baraza logo" : ""}
         width={icon}
         height={icon}
-        className="shrink-0"
+        className="shrink-0 rounded-[9px]"
       />
 
       {!iconOnly && (
         <span
           className={cn(
-            "font-display font-bold tracking-tight text-foreground",
+            "font-display font-extrabold tracking-tight text-foreground",
             font,
           )}
         >
