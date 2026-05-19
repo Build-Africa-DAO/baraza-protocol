@@ -26,34 +26,27 @@ const platformLinks = [
   },
 ];
 
-const aiPrompts = [
-  "Help me choose the best DAO setup for a welfare group",
-  "Explain how M-Pesa dues connect to voting",
-  "What should members see before joining?",
-];
-
 export default function AIPlatformSection() {
   const { open } = useAshaChat();
 
   return (
-    <section className="relative py-12 md:py-16" id="ai-platform">
+    <section className="relative py-8 md:py-12" id="ai-platform">
       <div className="container mx-auto max-w-7xl px-4">
-        <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr] lg:items-stretch">
-          <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/12 via-card to-card p-5 shadow-[var(--shadow-card)] md:p-7">
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-primary">
+        <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr] lg:items-stretch">
+          <div className="rounded-2xl border border-primary/20 bg-card p-5 shadow-[var(--shadow-card)] md:p-6">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-primary">
               <Sparkles className="h-3.5 w-3.5" />
-              Website + platform + AI
+              Baraza platform
             </div>
-            <h2 className="font-display text-3xl font-black leading-tight md:text-4xl">
-              One place to understand, launch, and manage a community DAO.
+            <h2 className="font-display text-2xl font-black leading-tight md:text-3xl">
+              Website, operating platform, and AI guide in one clean flow.
             </h2>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">
-              Baraza now works as both the public website and the operating platform:
-              visitors learn the model, organizers launch communities, members vote,
-              and Asha helps everyone move through the right next step.
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground md:text-base md:leading-7">
+              Visitors can understand the model, organizers can launch a DAO, members can
+              vote and track funds, and Asha is available when someone needs a next step.
             </p>
 
-            <div className="mt-6 flex flex-col gap-2 sm:flex-row">
+            <div className="mt-5 flex flex-col gap-2 sm:flex-row">
               <button
                 type="button"
                 onClick={() => open("Help me set up a community DAO on Baraza")}
@@ -72,17 +65,17 @@ export default function AIPlatformSection() {
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-3">
             {platformLinks.map((item) => {
               const Icon = item.icon;
               return (
                 <Link
                   key={item.label}
                   to={item.to}
-                  className="group rounded-2xl border border-border/70 bg-card p-5 transition-all hover:border-primary/40 hover:bg-surface"
+                  className="group rounded-2xl border border-border/70 bg-card/70 p-4 transition-all hover:border-primary/40 hover:bg-surface"
                 >
-                  <div className="mb-5 flex items-center justify-between">
-                    <div className="grid h-11 w-11 place-items-center rounded-xl border border-primary/20 bg-primary/10 text-primary">
+                  <div className="mb-4 flex items-center justify-between">
+                    <div className="grid h-10 w-10 place-items-center rounded-xl border border-primary/20 bg-primary/10 text-primary">
                       <Icon className="h-5 w-5" />
                     </div>
                     <span className="text-[0.65rem] font-bold uppercase tracking-widest text-primary">
@@ -90,37 +83,11 @@ export default function AIPlatformSection() {
                     </span>
                   </div>
                   <h3 className="font-display text-lg font-bold leading-tight">{item.title}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.detail}</p>
-                  <ArrowRight className="mt-5 h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.detail}</p>
+                  <ArrowRight className="mt-4 h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
                 </Link>
               );
             })}
-          </div>
-        </div>
-
-        <div className="mt-4 rounded-2xl border border-border/70 bg-surface/70 p-4 md:p-5">
-          <div className="grid gap-4 lg:grid-cols-[auto_1fr] lg:items-center">
-            <div className="inline-flex items-center gap-3">
-              <div className="grid h-11 w-11 place-items-center rounded-xl bg-primary/10 text-primary">
-                <Bot className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-primary">Asha AI guide</p>
-                <p className="text-sm text-muted-foreground">Fast answers for organizers and members.</p>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {aiPrompts.map((prompt) => (
-                <button
-                  key={prompt}
-                  type="button"
-                  onClick={() => open(prompt)}
-                  className="rounded-full border border-border/70 px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
-                >
-                  {prompt}
-                </button>
-              ))}
-            </div>
           </div>
         </div>
       </div>

@@ -1,16 +1,13 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState, type MouseEvent } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Banknote, ShieldCheck, Users, Vote, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const stats = [
-  { label: "Built on Solana", value: "Solana" },
-  { label: "Phone-first onboarding", value: "M-Pesa" },
-  { label: "Solana · Stellar live", value: "Multi-chain" },
+  { label: "Treasury and votes", value: "Govern" },
+  { label: "M-Pesa onboarding", value: "Mobile" },
+  { label: "Member dashboards", value: "Track" },
 ];
-
-const communityTypes = ["chama", "SACCO", "co-op", "welfare group", "community DAO"];
 
 const walkthroughFrames: Array<{
   label: string;
@@ -49,34 +46,12 @@ const walkthroughFrames: Array<{
   },
 ];
 
-function RotatingCommunityText() {
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      setIndex((i) => (i + 1) % communityTypes.length);
-    }, 2400);
-    return () => window.clearInterval(id);
-  }, []);
-
+function HeroHeadline() {
   return (
-    <span className="block max-w-[11ch] overflow-hidden sm:max-w-none">
-      <span className="block text-foreground">
-        Launch your
-      </span>
-      <span className="relative block min-h-[1.08em]">
-        <AnimatePresence mode="wait">
-          <motion.span
-          key={communityTypes[index]}
-            initial={{ opacity: 0, y: 18, filter: "blur(8px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            exit={{ opacity: 0, y: -14, filter: "blur(8px)" }}
-            transition={{ duration: 0.34, ease: [0.32, 0.72, 0, 1] }}
-            className="absolute left-0 top-0 inline-block max-w-full bg-gradient-to-r from-primary via-warm to-accent bg-clip-text text-transparent"
-          >
-            {communityTypes[index]}
-          </motion.span>
-        </AnimatePresence>
+    <span className="block max-w-[12ch] sm:max-w-none">
+      <span className="block text-foreground">Launch your</span>
+      <span className="block bg-gradient-to-r from-primary via-warm to-accent bg-clip-text text-transparent">
+        community DAO
       </span>
     </span>
   );
@@ -110,46 +85,46 @@ function HeroPreview() {
           href="#flow-walkthrough"
           aria-label="See the full flow walkthrough"
           onClick={handleScrollToFlow}
-          className="group relative block overflow-hidden rounded-xl p-3 sm:rounded-2xl sm:p-4 focus-visible:outline-none focus-visible:ring-2"
+          className="group relative block overflow-hidden rounded-xl border border-border/60 bg-card p-3 sm:rounded-2xl sm:p-4 focus-visible:outline-none focus-visible:ring-2"
         >
           <div className="mb-3 flex items-center justify-between gap-3 sm:mb-4 sm:gap-4">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-widest">Flow preview</p>
               <p className="mt-1 font-display text-xl font-black sm:text-2xl">How it works</p>
             </div>
-            <div className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold sm:gap-2 sm:px-3 sm:py-1.5 sm:text-xs">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary sm:gap-2 sm:px-3 sm:py-1.5 sm:text-xs">
               4 steps
               <ArrowRight className="h-4 w-4" />
             </div>
           </div>
 
-          <div className="relative aspect-[16/8.4] w-full overflow-hidden rounded-lg p-3 sm:aspect-video sm:rounded-xl sm:p-4">
-            <div className="pointer-events-none absolute inset-3 z-0 rounded-lg" />
+          <div className="relative aspect-[16/8.4] w-full overflow-hidden rounded-lg bg-surface p-3 sm:aspect-video sm:rounded-xl sm:p-4">
+            <div className="pointer-events-none absolute inset-0 rounded-lg bg-gradient-to-br from-primary/20 via-transparent to-confirmed/15" />
             <div className="relative z-10 flex h-full flex-col justify-between">
               <div className="flex items-start justify-between">
-                <div className="grid h-10 w-10 place-items-center rounded-lg sm:h-12 sm:w-12 sm:rounded-xl">
+                <div className="grid h-10 w-10 place-items-center rounded-lg border border-primary/25 bg-primary/12 text-primary sm:h-12 sm:w-12 sm:rounded-xl">
                   <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
                 </div>
-                <span className="rounded-full px-3 py-1 text-[11px] font-bold">
+                <span className="rounded-full border border-primary/25 bg-background/65 px-3 py-1 text-[11px] font-bold text-primary">
                   {frame.label}
                 </span>
               </div>
 
               <div>
-                <h3 className="font-display text-lg font-black leading-tight sm:text-2xl">{frame.title}</h3>
-                <p className="mt-1.5 max-w-sm text-xs font-medium leading-relaxed sm:mt-2 sm:text-sm">{frame.detail}</p>
+                <h3 className="font-display text-lg font-black leading-tight text-foreground sm:text-2xl">{frame.title}</h3>
+                <p className="mt-1.5 max-w-sm text-xs font-medium leading-relaxed text-muted-foreground sm:mt-2 sm:text-sm">{frame.detail}</p>
               </div>
             </div>
           </div>
 
-          <div className="mt-3 rounded-lg p-2.5 sm:mt-4 sm:p-3">
+          <div className="mt-3 rounded-lg bg-surface p-2.5 sm:mt-4 sm:p-3">
             <div className="mb-2 flex items-center justify-between text-[11px] font-semibold">
               <span>Walkthrough progress</span>
               <span>{frame.progress}</span>
             </div>
-            <div className="h-2 overflow-hidden rounded-full">
+            <div className="h-2 overflow-hidden rounded-full bg-muted">
               <div
-                className="h-full rounded-full"
+                className="h-full rounded-full bg-primary transition-[width] duration-500"
                 style={{ width: frame.progress }}
               />
             </div>
@@ -174,31 +149,27 @@ function HeroPreview() {
 
 export default function HeroSection() {
   return (
-    <section className="relative overflow-hidden pt-16 pb-2 sm:pt-20 sm:pb-3 lg:pt-20">
+    <section className="relative overflow-hidden pt-14 pb-8 sm:pt-20 lg:pt-20">
       <div className="container relative z-10 mx-auto max-w-7xl px-4">
         <div className="min-[860px]:grid min-[860px]:grid-cols-[minmax(0,1fr)_minmax(18rem,0.62fr)] min-[860px]:items-center min-[860px]:gap-10">
           <div className="max-w-2xl">
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold sm:mb-6">
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-border/50 bg-muted/60 px-3.5 py-1.5 text-xs font-semibold text-muted-foreground sm:mb-6">
               <ShieldCheck className="h-3.5 w-3.5" />
               Community DAO treasury, voting, and membership
             </div>
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-primary">
-              Most popular: SACCOs and welfare groups
-            </div>
-
             <h1
-              className="font-display text-[clamp(3rem,12vw,4.6rem)] font-black leading-[0.9] tracking-tight sm:text-[clamp(4rem,6.7vw,5.45rem)]"
+              className="font-display text-[clamp(3.1rem,11vw,4.7rem)] font-black leading-[0.9] tracking-tight sm:text-[clamp(4rem,6.5vw,5.35rem)]"
               aria-live="polite"
             >
-              <RotatingCommunityText />
+              <HeroHeadline />
             </h1>
 
-            <p className="mt-4 max-w-xl text-base leading-7 sm:mt-5 sm:text-lg sm:leading-8">
-              Browse chamas, SACCOs, welfare groups, and co-operatives with shared
-              treasury visibility, member voting, and phone-first M-Pesa participation.
+            <p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
+              A clean operating platform for chamas, SACCOs, welfare groups, and co-operatives:
+              collect dues, vote on proposals, and keep the treasury visible.
             </p>
 
-            <div className="mt-5 flex flex-col gap-2 sm:mt-8 sm:flex-row sm:gap-3 min-[860px]:flex-col min-[1040px]:flex-row">
+            <div className="mt-6 flex flex-col gap-2 sm:mt-8 sm:flex-row sm:gap-3 min-[860px]:flex-col min-[1040px]:flex-row">
               <Link
                 to="/communities"
                 className="btn-warm inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-4 text-base font-extrabold uppercase tracking-wide sm:w-auto min-[860px]:w-full min-[1040px]:w-auto"
@@ -211,11 +182,11 @@ export default function HeroSection() {
               </Link>
             </div>
 
-            <div className="mt-4 grid max-w-xl grid-cols-3 gap-2 sm:mt-6 sm:gap-3">
+            <div className="mt-6 grid max-w-xl grid-cols-3 gap-2 sm:gap-3">
               {stats.map((stat) => (
-                <div key={stat.label} className="border-l pl-3">
-                  <p className="font-display text-lg font-bold sm:text-xl">{stat.value}</p>
-                  <p className="mt-1 text-[11px] leading-4">{stat.label}</p>
+                <div key={stat.label} className="rounded-xl border border-border/60 bg-card/55 p-3">
+                  <p className="font-display text-base font-bold sm:text-lg">{stat.value}</p>
+                  <p className="mt-1 text-[10px] leading-4 text-muted-foreground">{stat.label}</p>
                 </div>
               ))}
             </div>
@@ -224,14 +195,7 @@ export default function HeroSection() {
           <HeroPreview />
         </div>
 
-        <div className="mt-5 hidden flex-wrap items-center gap-3 border-t pt-4 text-xs min-[860px]:flex">
-          <span className="inline-flex items-center gap-2">
-            <Users className="h-3.5 w-3.5" />
-            Built for chamas, SACCOs, co-ops, and welfare groups
-          </span>
-          <span className="hidden h-1 w-1 rounded-full sm:inline-block" />
-          <span>Collect dues, approve spending, and keep every member aligned.</span>
-        </div>
+        <div className="mt-8 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
       </div>
     </section>
   );
