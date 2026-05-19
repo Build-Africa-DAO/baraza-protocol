@@ -227,19 +227,19 @@ const AshaChat: React.FC = () => {
             >
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-white" />
+                  <Sparkles className="w-4 h-4 text-primary-foreground" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-white leading-none">Asha</h4>
-                  <p className="text-[10px] text-white/60 mt-0.5">Your Baraza guide</p>
+                  <h4 className="text-sm font-semibold text-primary-foreground leading-none">Asha</h4>
+                  <p className="text-[10px] text-primary-foreground/70 mt-0.5">Your Baraza guide</p>
                 </div>
               </div>
               <button
                 onClick={close}
                 aria-label="Close chat"
-                className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center hover:bg-white/25 transition-colors"
+                className="w-8 h-8 rounded-full bg-primary-foreground/12 flex items-center justify-center text-primary-foreground ring-1 ring-primary-foreground/20 hover:bg-primary-foreground/22 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground"
               >
-                <X className="w-3.5 h-3.5 text-white" />
+                <X className="w-4 h-4" strokeWidth={2.6} />
               </button>
             </div>
 
