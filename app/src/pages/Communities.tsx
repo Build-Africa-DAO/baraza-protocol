@@ -49,7 +49,7 @@ export default function Communities() {
       {/* Page header */}
       <section className="relative pt-28 pb-12 overflow-hidden">
         <div className="container mx-auto px-4 relative z-10">
-          <CommunityBanner className="mb-8 min-h-[15rem]">
+          <CommunityBanner className="mb-8 min-h-[20rem]" communities={communities}>
             <div className="max-w-2xl p-6 md:p-8">
             <p className="text-xs font-semibold uppercase tracking-widest mb-2">
               Discover
