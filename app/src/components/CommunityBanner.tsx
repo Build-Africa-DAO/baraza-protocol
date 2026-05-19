@@ -61,7 +61,7 @@ export default function CommunityBanner({
         className="community-banner-slide absolute inset-0 h-full w-full object-cover"
         loading="lazy"
       />
-      <div className="absolute inset-0 bg-gradient-to-r from-background via-background/82 to-background/28" />
+      <div className="absolute inset-0 bg-gradient-to-r from-background via-background/88 to-background/22" />
       <div className="absolute inset-0 bg-gradient-to-t from-background/92 via-transparent to-background/30" />
       <div className="absolute inset-0 bg-primary/8 mix-blend-soft-light" />
       {children && <div className="relative z-10">{children}</div>}

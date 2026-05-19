@@ -182,15 +182,17 @@ const CreateCommunity: React.FC = () => {
               Back
             </button>
 
-            <CommunityBanner className="mb-8 p-5">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center">
+            <CommunityBanner type="cooperative" className="mb-8 min-h-[11.5rem] p-0">
+            <div className="max-w-2xl p-6 md:p-7">
+              <div className="mb-4 flex items-center gap-3">
+                <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-primary/25 bg-background/72 text-primary shadow-lg backdrop-blur">
                   <Users className="w-5 h-5" />
                 </div>
-                <h1 className="font-display text-2xl font-bold">Launch a Community DAO</h1>
+                <h1 className="font-display text-2xl font-black leading-tight text-foreground drop-shadow md:text-3xl">
+                  Launch a Community DAO
+                </h1>
               </div>
-              <p className="text-sm mb-8">
+              <p className="max-w-xl text-sm font-semibold leading-6 text-foreground/92 drop-shadow md:text-base md:leading-7">
                 Launch a DAO where members can contribute, submit governance proposals, and manage a shared treasury with explicit governance rules.
               </p>
             </div>
