@@ -1,8 +1,9 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, PlayCircle, Search, X } from "lucide-react";
+import { Menu, PlayCircle, Search, Sparkles, X } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import ChainSelector from "@/components/ChainSelector";
+import { useAshaChat } from "@/contexts/AshaChatContext";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
@@ -26,6 +27,7 @@ export default function Header({ walletSlot }: HeaderProps) {
   const [query, setQuery] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
+  const { open: openAsha } = useAshaChat();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -53,6 +55,11 @@ export default function Header({ walletSlot }: HeaderProps) {
     window.setTimeout(() => {
       document.getElementById("flow-walkthrough")?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 80);
+  };
+
+  const openAiGuide = () => {
+    openAsha("Help me use Baraza as a community DAO platform");
+    setMobileOpen(false);
   };
 
   return (
@@ -101,6 +108,14 @@ export default function Header({ walletSlot }: HeaderProps) {
             >
               <PlayCircle className="h-4 w-4" />
               Tutorial
+            </button>
+            <button
+              type="button"
+              onClick={openAiGuide}
+              className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-sm font-bold text-primary transition-colors hover:bg-primary/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+            >
+              <Sparkles className="h-4 w-4" />
+              AI Guide
             </button>
           </nav>
         </div>
@@ -204,6 +219,14 @@ export default function Header({ walletSlot }: HeaderProps) {
             >
               <PlayCircle className="h-4 w-4" />
               Video tutorial
+            </button>
+            <button
+              type="button"
+              onClick={openAiGuide}
+              className="inline-flex items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm font-semibold text-primary transition-all hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+            >
+              <Sparkles className="h-4 w-4" />
+              Ask Asha AI
             </button>
             <form
               className="relative mt-2"

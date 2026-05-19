@@ -17,19 +17,29 @@ const INITIAL_MESSAGES: Message[] = [
   {
     id: '1',
     role: 'asha',
-    text: "Habari! I'm Asha, your Baraza guide. Ask me anything about creating groups, managing funds, or voting.",
+    text: "Habari! I'm Asha, your Baraza AI guide. I can help you understand the website, launch a community DAO, manage members, or plan a vote.",
     time: timestamp(),
   },
 ];
 
 const QUICK_REPLIES = [
   'How do I create a group?',
+  'Help me plan my DAO',
   'How does voting work?',
   'How are funds managed?',
-  'What is a Chama?',
 ];
 
 const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
+  {
+    keywords: ['ai', 'asha', 'guide', 'copilot', 'assistant', 'platform', 'use baraza'],
+    reply:
+      'Baraza combines the website, the operating platform, and Asha AI in one flow. Use the website to understand the model, Explore to find communities, Launch to create one, dashboards to manage treasury and votes, and ask me when you need help choosing settings or explaining the next action.',
+  },
+  {
+    keywords: ['plan', 'setup', 'best dao setup', 'rules', 'quorum', 'threshold'],
+    reply:
+      'A solid setup starts with your group type, monthly dues, quorum, approval threshold, and voting period. For most welfare groups, start with 51% quorum, 66% approval, a 7-day vote window, and clear rules for emergency spending. Then invite members to review before joining.',
+  },
   {
     keywords: ['create', 'start', 'new group', 'community', 'chama', 'sacco'],
     reply:

@@ -1,5 +1,6 @@
 import Layout from "@/components/Layout";
 import HeroSection from "@/components/HeroSection";
+import AIPlatformSection from "@/components/AIPlatformSection";
 import FlowWalkthrough from "@/components/FlowWalkthrough";
 import FeaturesSection from "@/components/FeaturesSection";
 import { CommunityMarquee } from "@/components/CommunityMarquee";
@@ -17,6 +18,7 @@ export default function Index() {
   return (
     <Layout>
       <HeroSection />
+      <AIPlatformSection />
       <FlowWalkthrough />
       <CommunityMarquee />
       <FeaturesSection />
