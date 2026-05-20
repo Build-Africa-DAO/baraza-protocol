@@ -86,8 +86,8 @@ export default function MobileBottomNav() {
             to="/create"
             aria-current={createActive ? 'page' : undefined}
             className={cn(
-              'flex h-14 w-14 -translate-y-3 items-center justify-center rounded-full shadow-[0_8px_24px_hsl(44_100%_50%/0.35)] transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70',
-              'bg-gradient-to-br from-[hsl(44,100%,50%)] to-[hsl(17,97%,49%)] text-primary-foreground',
+              'flex h-14 w-14 -translate-y-3 items-center justify-center rounded-full shadow-[var(--shadow-warm)] transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70',
+              'bg-primary text-primary-foreground',
               createActive && 'scale-105',
             )}
           >

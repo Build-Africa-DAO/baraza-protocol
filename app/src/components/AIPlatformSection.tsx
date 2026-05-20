@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Bot, Compass, LayoutDashboard, Sparkles, WalletCards } from "lucide-react";
-import { useAshaChat } from "@/contexts/AshaChatContext";
+import { useAshaChat } from "@/hooks/useAshaChat";
 
 const platformLinks = [
   {

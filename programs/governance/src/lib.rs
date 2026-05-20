@@ -111,10 +111,10 @@ pub mod governance {
         Ok(())
     }
 
-    /// Permissionless. After `voting_starts_at_slot`, any caller may write the
-    /// eligibility snapshot. The membership program is the source of truth for
-    /// `total_eligible_weight` / `total_eligible_members`; both are passed in by
-    /// the caller and should be validated via CPI in a future revision.
+    /// Admin-triggered snapshot placeholder. The membership program is the
+    /// source of truth for `total_eligible_weight` / `total_eligible_members`;
+    /// both are passed in by the admin and should be validated via CPI in a
+    /// future revision.
     pub fn activate_proposal(
         ctx: Context<ActivateProposal>,
         total_eligible_weight: u64,
@@ -145,16 +145,17 @@ pub mod governance {
     pub fn cast_vote(
         ctx: Context<CastVote>,
         support: VoteSupport,
-        weight: u64,
         reason_uri: Option<String>,
     ) -> Result<()> {
-        require!(weight > 0, GovError::ZeroWeightVote);
         if let Some(ref uri) = reason_uri {
             require!(
                 uri.len() <= MAX_METADATA_URI_LEN,
                 GovError::MetadataUriTooLong
             );
         }
+
+        let weight = ctx.accounts.voter_member.voting_weight;
+        require!(weight > 0, GovError::ZeroWeightVote);
 
         let prop = &mut ctx.accounts.proposal;
         require!(
@@ -165,10 +166,6 @@ pub mod governance {
             ctx.accounts.voter_member.community == prop.community
                 && ctx.accounts.voter_member.wallet_address == ctx.accounts.voter.key(),
             GovError::MemberMismatch
-        );
-        require!(
-            weight == ctx.accounts.voter_member.voting_weight,
-            GovError::VoteWeightMismatch
         );
         require!(
             prop.status == ProposalStatus::Active,
@@ -336,8 +333,10 @@ pub mod governance {
 
         let signer = ctx.accounts.canceler.key();
         let is_admin = signer == cfg.admin_authority;
-        let is_proposer_in_pending =
-            prop.status == ProposalStatus::Pending && signer == prop.creator_member;
+        let creator_member = &ctx.accounts.creator_member;
+        let is_proposer_in_pending = prop.status == ProposalStatus::Pending
+            && creator_member.key() == prop.creator_member
+            && creator_member.wallet_address == signer;
         require!(is_admin || is_proposer_in_pending, GovError::Unauthorized);
 
         prop.canceled_at_slot = Some(Clock::get()?.slot);
@@ -705,6 +704,11 @@ pub struct CancelProposal<'info> {
     #[account(mut)]
     pub proposal: Account<'info, ProposalAccount>,
 
+    #[account(
+        constraint = creator_member.key() == proposal.creator_member @ GovError::MemberMismatch,
+    )]
+    pub creator_member: Account<'info, MemberAccount>,
+
     pub canceler: Signer<'info>,
 }
 
@@ -825,8 +829,6 @@ pub enum GovError {
     MemberMismatch,
     #[msg("Proposal threshold not met")]
     ProposalThresholdNotMet,
-    #[msg("Vote weight does not match member voting weight")]
-    VoteWeightMismatch,
 }
 
 // ─────────────────────── Helpers ───────────────────────

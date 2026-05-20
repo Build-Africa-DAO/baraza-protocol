@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { ChainContext, type ChainContextValue } from '@/components/ChainProvider';
+import { ChainContext, type ChainContextValue } from '@/contexts/chain-context';
 
 export function useChain(): ChainContextValue {
   const ctx = useContext(ChainContext);

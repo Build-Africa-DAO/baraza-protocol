@@ -4,78 +4,140 @@
 
 @layer base {
   :root {
-    /* Baraza Design System v3: Dark Charcoal + Amber Gold */
+    /* Baraza Design System v6: Clean Ledger + Warm Gold + Trust Green */
 
-    /* Backgrounds: deep charcoal, warm-tinted */
-    --background: 84 17% 5%;
-    --foreground: 44 100% 95%;
+    --background: 150 14% 98%;
+    --foreground: 154 18% 9%;
 
-    --card: 88 14% 8%;
-    --card-foreground: 44 100% 95%;
+    --card: 0 0% 100%;
+    --card-foreground: 154 18% 9%;
 
-    --popover: 88 14% 7%;
-    --popover-foreground: 44 100% 95%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 154 18% 9%;
 
-    /* Brand: Amber Gold primary */
-    --primary: 44 100% 50%;
-    --primary-foreground: 84 17% 5%;
+    /* Brand: organizer gold */
+    --primary: 42 88% 45%;
+    --primary-foreground: 154 18% 9%;
 
-    /* Secondary: warm off-white */
-    --secondary: 44 100% 95%;
-    --secondary-foreground: 84 17% 5%;
+    /* Secondary: charcoal action */
+    --secondary: 154 18% 13%;
+    --secondary-foreground: 150 14% 98%;
 
-    --muted: 90 10% 14%;
-    --muted-foreground: 44 60% 68%;
+    --muted: 150 16% 93%;
+    --muted-foreground: 156 8% 36%;
 
-    /* Accent: Blaze Orange for urgency / pending */
-    --accent: 17 97% 49%;
-    --accent-foreground: 44 100% 95%;
+    /* Accent: trusted action green */
+    --accent: 151 52% 34%;
+    --accent-foreground: 150 14% 98%;
 
     /* Destructive: muted red */
     --destructive: 0 72% 51%;
-    --destructive-foreground: 44 100% 95%;
+    --destructive-foreground: 0 0% 96%;
 
-    --border: 44 100% 18%;
-    --input: 90 10% 14%;
-    --ring: 44 100% 50%;
+    --border: 152 14% 82%;
+    --input: 150 16% 93%;
+    --ring: 42 88% 45%;
 
     --radius: 0.5rem;
 
     /* Extended semantic tokens */
-    --warm: 44 100% 50%;
-    --warm-foreground: 84 17% 5%;
-    --orange: 17 97% 49%;
+    --warm: 42 88% 45%;
+    --warm-foreground: 154 18% 9%;
+    --orange: 23 86% 49%;
 
     /* DAO / governance: Blue Violet */
-    --dao: 270 85% 50%;
-    --dao-foreground: 44 100% 95%;
+    --dao: 258 72% 54%;
+    --dao-foreground: 0 0% 96%;
 
     /* Network / chain: Azure Blue */
-    --network: 217 100% 50%;
-    --network-foreground: 44 100% 95%;
+    --network: 211 90% 44%;
+    --network-foreground: 0 0% 96%;
 
     /* Confirmed / trusted financial state: muted green */
-    --confirmed: 142 60% 40%;
-    --confirmed-foreground: 44 100% 95%;
+    --confirmed: 151 52% 34%;
+    --confirmed-foreground: 0 0% 96%;
 
-    --surface: 90 12% 10%;
-    --surface-hover: 90 10% 14%;
+    --surface: 150 18% 95%;
+    --surface-hover: 150 16% 90%;
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(44,100%,50%) 0%, hsl(44,100%,72%) 50%, hsl(44,100%,95%) 100%);
-    --gradient-warm: linear-gradient(135deg, hsl(44,100%,50%) 0%, hsl(17,97%,49%) 100%);
-    --gradient-dao: linear-gradient(135deg, hsl(270,85%,50%) 0%, hsl(217,100%,50%) 100%);
-    --gradient-surface: linear-gradient(180deg, hsl(88,14%,8%) 0%, hsl(84,17%,5%) 100%);
-    --gradient-hero: radial-gradient(ellipse 55% 42% at 72% 10%, hsl(44 100% 50% / 0.22) 0%, transparent 58%),
-                     radial-gradient(ellipse 44% 36% at 55% 20%, hsl(270 85% 50% / 0.12) 0%, transparent 65%),
-                     linear-gradient(135deg, hsl(84,17%,5%) 0%, hsl(90,12%,10%) 50%, hsl(44,60%,9%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(42 88% 42%) 0%, hsl(43 88% 55%) 52%, hsl(151 52% 34%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(42 88% 44%) 0%, hsl(23 86% 49%) 100%);
+    --gradient-dao: linear-gradient(135deg, hsl(258 72% 54%) 0%, hsl(211 90% 44%) 100%);
+    --gradient-surface: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(150 14% 98%) 100%);
+    --gradient-hero: radial-gradient(ellipse 48% 38% at 78% 8%, hsl(42 88% 45% / 0.18) 0%, transparent 62%),
+                     radial-gradient(ellipse 42% 34% at 18% 18%, hsl(151 52% 34% / 0.1) 0%, transparent 64%),
+                     radial-gradient(ellipse 30% 24% at 55% 0%, hsl(211 90% 44% / 0.08) 0%, transparent 70%),
+                     linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(150 14% 98%) 55%, hsl(150 20% 94%) 100%);
 
     /* Shadows */
-    --shadow-card:  0 4px 24px -4px hsl(84 17% 2% / 0.70);
-    --shadow-glow:  0 0 40px hsl(44 100% 50% / 0.25);
-    --shadow-warm:  0 4px 24px hsl(44 100% 50% / 0.28);
+    --shadow-card:  0 16px 42px -28px hsl(154 18% 9% / 0.3);
+    --shadow-glow:  0 0 34px hsl(42 88% 45% / 0.18);
+    --shadow-warm:  0 8px 28px hsl(42 88% 45% / 0.2);
+    --shadow-dao:   0 0 34px hsl(258 72% 54% / 0.14);
+    --shadow-deep:  0 28px 80px -30px hsl(154 18% 9% / 0.42);
+  }
+
+  .dark {
+    /* Baraza Design System v6: Charcoal + Warm Gold + Trust Green */
+
+    --background: 150 16% 4%;
+    --foreground: 150 14% 96%;
+
+    --card: 150 12% 7%;
+    --card-foreground: 150 14% 96%;
+
+    --popover: 150 12% 6%;
+    --popover-foreground: 150 14% 96%;
+
+    --primary: 43 82% 56%;
+    --primary-foreground: 0 0% 4%;
+
+    --secondary: 0 0% 94%;
+    --secondary-foreground: 0 0% 4%;
+
+    --muted: 150 10% 13%;
+    --muted-foreground: 150 7% 62%;
+
+    --accent: 142 47% 44%;
+    --accent-foreground: 0 0% 4%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 96%;
+
+    --border: 43 42% 20%;
+    --input: 150 10% 13%;
+    --ring: 43 82% 56%;
+
+    --warm: 43 82% 56%;
+    --warm-foreground: 0 0% 4%;
+    --orange: 28 88% 54%;
+
+    --dao: 270 85% 50%;
+    --dao-foreground: 0 0% 96%;
+
+    --network: 217 100% 50%;
+    --network-foreground: 0 0% 96%;
+
+    --confirmed: 142 60% 40%;
+    --confirmed-foreground: 0 0% 96%;
+
+    --surface: 150 11% 9%;
+    --surface-hover: 150 10% 13%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(43,82%,46%) 0%, hsl(43,82%,58%) 58%, hsl(142,47%,44%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(43,82%,50%) 0%, hsl(36,82%,58%) 100%);
+    --gradient-dao: linear-gradient(135deg, hsl(270,85%,50%) 0%, hsl(217,100%,50%) 100%);
+    --gradient-surface: linear-gradient(180deg, hsl(150 12% 7%) 0%, hsl(150 16% 4%) 100%);
+    --gradient-hero: radial-gradient(ellipse 55% 42% at 72% 10%, hsl(43 82% 56% / 0.14) 0%, transparent 58%),
+                     radial-gradient(ellipse 44% 36% at 55% 20%, hsl(217 100% 50% / 0.08) 0%, transparent 65%),
+                     linear-gradient(135deg, hsl(150 16% 4%) 0%, hsl(150 12% 6%) 50%, hsl(142 30% 7%) 100%);
+
+    --shadow-card:  0 4px 24px -4px hsl(0 0% 0% / 0.75);
+    --shadow-glow:  0 0 40px hsl(43 82% 56% / 0.22);
+    --shadow-warm:  0 4px 24px hsl(43 82% 56% / 0.24);
     --shadow-dao:   0 0 40px hsl(270 85% 50% / 0.18);
-    --shadow-deep:  0 20px 60px -10px hsl(84 17% 2% / 0.85);
+    --shadow-deep:  0 20px 60px -10px hsl(0 0% 0% / 0.90);
   }
 }
 
@@ -282,7 +344,7 @@
     background: hsl(var(--surface)) !important;
   }
   .wallet-adapter-modal-overlay {
-    background: hsl(254, 31%, 8%, 0.86) !important;
+    background: hsl(0, 0%, 2%, 0.88) !important;
   }
   .wallet-adapter-dropdown-list {
     background: hsl(var(--card)) !important;

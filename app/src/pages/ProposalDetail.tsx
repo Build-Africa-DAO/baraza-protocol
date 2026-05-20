@@ -1,7 +1,8 @@
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, Loader2, ThumbsDown, ThumbsUp } from "lucide-react";
 import Layout from "@/components/Layout";
-import { DEFAULT_GOVERNANCE, MOCK_DECISIONS } from "@/lib/constants";
+import { DEFAULT_GOVERNANCE } from "@/lib/constants";
+import { useDecision } from "@/hooks/useBarazaData";
 import { daysRemaining, formatKSh } from "@/lib/utils";
 import { useWalletGuard } from "@/hooks/useWalletGuard";
 import { useBarazaContract } from "@/hooks/useBarazaContract";
@@ -13,7 +14,7 @@ import { useSeo } from "@/lib/seo";
 
 export default function ProposalDetail() {
   const { id, decisionId } = useParams<{ id: string; decisionId: string }>();
-  const proposal = MOCK_DECISIONS.find((item) => item.id === decisionId);
+  const proposal = useDecision(decisionId ?? '');
   const { community } = useCommunity(proposal?.communityId);
   const { requireWallet } = useWalletGuard({ action: "vote on this proposal" });
   const { castVote, isPending } = useBarazaContract();
@@ -56,7 +57,7 @@ export default function ProposalDetail() {
     ? Math.round((totalVotes / proposal.totalMembers) * 100)
     : 0;
   const days = daysRemaining(proposal.endsAt);
-  const stage = proposal.lifecycleStage ?? inferStage(proposal.status);
+  const stage = inferStage(proposal.status);
   const stageMeta = STAGE_META[stage];
   const StageIcon = stageMeta.icon;
   const isVotable = stageMeta.votable;

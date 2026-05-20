@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, UserPlus, Users, TrendingUp, MessageSquare } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, UserPlus, Users, TrendingUp, MessageSquare } from "lucide-react";
 import { MagicCard } from "@/components/ui/magic-card";
 import { formatKSh, cn } from "@/lib/utils";
 import { getCommunityBannerImage } from "@/lib/communityVisuals";
 import { CHAINS, type Chain } from "@/lib/chain";
+import { getBountyStatsForCommunity } from "@/lib/bounties";
 
 interface CommunityCardProps {
   id: string;
@@ -35,16 +36,17 @@ export default function CommunityCard({
   const tc = typeConfig[type] ?? typeConfig.other;
   const chainMeta = CHAINS[chain];
   const isList = layout === "list";
+  const bountyStats = getBountyStatsForCommunity(id);
 
   return (
     <article className="h-full">
-      <MagicCard className="h-full" gradientColor="#FFBB00" gradientSize={200} gradientOpacity={0.06}>
+      <MagicCard className="h-full" gradientColor="hsl(var(--primary))" gradientSize={200} gradientOpacity={0.06}>
         <div className={cn(
           "h-full overflow-hidden",
           isList && "sm:flex",
           "bg-card border border-border/60 rounded-xl",
           "transition-all duration-300",
-          "hover:border-primary/30 hover:shadow-[0_0_24px_hsl(44_100%_50%/0.18)]",
+          "hover:border-primary/30 hover:shadow-[0_0_24px_hsl(22_100%_52%/0.18)]",
         )}>
           <div className={cn("relative h-28 overflow-hidden", isList && "sm:h-full sm:min-h-56 sm:w-64 sm:shrink-0")}>
             <img
@@ -94,6 +96,19 @@ export default function CommunityCard({
                 </div>
               </div>
             </div>
+
+          {bountyStats.featured && (
+            <div className="mt-4 rounded-lg border border-secondary/25 bg-secondary/10 p-3">
+              <div className="mb-1 flex items-center justify-between gap-3">
+                <span className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-secondary">
+                  <BriefcaseBusiness className="h-3.5 w-3.5" />
+                  {bountyStats.open} open {bountyStats.open === 1 ? "bounty" : "bounties"}
+                </span>
+                <span className="text-[10px] font-bold text-accent">{formatKSh(bountyStats.totalRewardKes)}</span>
+              </div>
+              <p className="truncate text-xs font-semibold text-foreground">{bountyStats.featured.title}</p>
+            </div>
+          )}
 
           <div className="mt-5 grid grid-cols-3 gap-1.5 border-t border-border/40 pt-4">
             <div className="flex flex-col items-center text-center gap-0.5">

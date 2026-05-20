@@ -12,8 +12,36 @@ declare_id!("CxNwpwExBQedJDYeuspyUUtHjeNr52wy6BTFPFbXWSL7");
 pub mod payment_attestation {
     use super::*;
 
+    pub fn initialize_config(
+        ctx: Context<InitializeConfig>,
+        trusted_attester: Pubkey,
+    ) -> Result<()> {
+        let config = &mut ctx.accounts.config;
+        config.authority = ctx.accounts.authority.key();
+        config.trusted_attester = trusted_attester;
+        config.bump = ctx.bumps.config;
+        Ok(())
+    }
+
+    pub fn transfer_trusted_attester(
+        ctx: Context<MutateConfig>,
+        trusted_attester: Pubkey,
+    ) -> Result<()> {
+        let config = &mut ctx.accounts.config;
+        require!(
+            config.authority == ctx.accounts.authority.key(),
+            PaymentAttestationError::Unauthorized
+        );
+        config.trusted_attester = trusted_attester;
+        Ok(())
+    }
+
     pub fn attest_payment(ctx: Context<AttestPayment>, params: AttestPaymentParams) -> Result<()> {
         params.validate()?;
+        require!(
+            ctx.accounts.config.trusted_attester == ctx.accounts.attester.key(),
+            PaymentAttestationError::Unauthorized
+        );
 
         let attestation = &mut ctx.accounts.attestation;
         attestation.order_id_hash = params.order_id_hash;
@@ -60,6 +88,10 @@ pub mod payment_attestation {
             ctx.accounts.consumer.key() == attestation.attester,
             PaymentAttestationError::Unauthorized
         );
+        require!(
+            ctx.accounts.config.trusted_attester == ctx.accounts.consumer.key(),
+            PaymentAttestationError::Unauthorized
+        );
 
         attestation.consumed = true;
         attestation.consumed_at_slot = Some(Clock::get()?.slot);
@@ -78,6 +110,14 @@ pub mod payment_attestation {
             PaymentAttestationError::Unauthorized
         );
         require!(
+            ctx.accounts.config.trusted_attester == ctx.accounts.attester.key(),
+            PaymentAttestationError::Unauthorized
+        );
+        require!(
+            !attestation.voided,
+            PaymentAttestationError::AlreadyVoided
+        );
+        require!(
             !attestation.consumed,
             PaymentAttestationError::AlreadyConsumed
         );
@@ -93,6 +133,17 @@ pub mod payment_attestation {
 }
 
 pub const PROVIDER_ENVIRONMENT_MAX_LEN: usize = 16;
+
+#[account]
+pub struct PaymentConfigAccount {
+    pub authority: Pubkey,
+    pub trusted_attester: Pubkey,
+    pub bump: u8,
+}
+
+impl PaymentConfigAccount {
+    pub const SIZE: usize = 32 + 32 + 1;
+}
 
 #[account]
 pub struct PaymentAttestationAccount {
@@ -167,8 +218,43 @@ impl AttestPaymentParams {
 }
 
 #[derive(Accounts)]
+pub struct InitializeConfig<'info> {
+    #[account(
+        init,
+        payer = authority,
+        space = 8 + PaymentConfigAccount::SIZE,
+        seeds = [b"payment_config"],
+        bump,
+    )]
+    pub config: Account<'info, PaymentConfigAccount>,
+
+    #[account(mut)]
+    pub authority: Signer<'info>,
+
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct MutateConfig<'info> {
+    #[account(
+        mut,
+        seeds = [b"payment_config"],
+        bump = config.bump,
+    )]
+    pub config: Account<'info, PaymentConfigAccount>,
+
+    pub authority: Signer<'info>,
+}
+
+#[derive(Accounts)]
 #[instruction(params: AttestPaymentParams)]
 pub struct AttestPayment<'info> {
+    #[account(
+        seeds = [b"payment_config"],
+        bump = config.bump,
+    )]
+    pub config: Account<'info, PaymentConfigAccount>,
+
     #[account(
         init,
         payer = attester,
@@ -186,6 +272,12 @@ pub struct AttestPayment<'info> {
 
 #[derive(Accounts)]
 pub struct ConsumePaymentForMint<'info> {
+    #[account(
+        seeds = [b"payment_config"],
+        bump = config.bump,
+    )]
+    pub config: Account<'info, PaymentConfigAccount>,
+
     #[account(mut)]
     pub attestation: Account<'info, PaymentAttestationAccount>,
 
@@ -194,6 +286,12 @@ pub struct ConsumePaymentForMint<'info> {
 
 #[derive(Accounts)]
 pub struct VoidPaymentAttestation<'info> {
+    #[account(
+        seeds = [b"payment_config"],
+        bump = config.bump,
+    )]
+    pub config: Account<'info, PaymentConfigAccount>,
+
     #[account(mut)]
     pub attestation: Account<'info, PaymentAttestationAccount>,
 
@@ -229,6 +327,8 @@ pub enum PaymentAttestationError {
     AttestationExpired,
     #[msg("Payment attestation has been voided")]
     AttestationVoided,
+    #[msg("Payment attestation has already been voided")]
+    AlreadyVoided,
     #[msg("Payment amount must be greater than zero")]
     InvalidAmount,
     #[msg("Provider environment is invalid")]

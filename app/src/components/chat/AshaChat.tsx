@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X, Send, Sparkles } from 'lucide-react';
-import { useAshaChat } from '@/contexts/AshaChatContext';
+import { useAshaChat } from '@/hooks/useAshaChat';
 
 interface Message {
   id: string;
@@ -130,6 +130,8 @@ const AshaChat: React.FC = () => {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const responseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const focusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -137,8 +139,11 @@ const AshaChat: React.FC = () => {
 
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 200);
+      focusTimerRef.current = setTimeout(() => inputRef.current?.focus(), 200);
     }
+    return () => {
+      if (focusTimerRef.current !== null) clearTimeout(focusTimerRef.current);
+    };
   }, [isOpen]);
 
   // Send pending message from hero search bar
@@ -171,7 +176,8 @@ const AshaChat: React.FC = () => {
     setInput('');
     setIsTyping(true);
 
-    setTimeout(() => {
+    if (responseTimerRef.current !== null) clearTimeout(responseTimerRef.current);
+    responseTimerRef.current = setTimeout(() => {
       setIsTyping(false);
       const ashaMsg: Message = {
         id: (Date.now() + 1).toString(),

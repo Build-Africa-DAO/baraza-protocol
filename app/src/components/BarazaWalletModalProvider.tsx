@@ -19,8 +19,9 @@ function readyStateLabel(readyState: WalletReadyState): string {
 }
 
 export default function BarazaWalletModalProvider({ children }: BarazaWalletModalProviderProps) {
-  const { wallets, select } = useWallet();
+  const { wallets, select, connect, wallet, connecting } = useWallet();
   const [visible, setVisible] = useState(false);
+  const [pendingConnectWallet, setPendingConnectWallet] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
   const visibleWallets = useMemo(
@@ -42,6 +43,23 @@ export default function BarazaWalletModalProvider({ children }: BarazaWalletModa
   );
 
   const close = useCallback(() => setVisible(false), []);
+
+  useEffect(() => {
+    if (!pendingConnectWallet || connecting || wallet?.adapter.name !== pendingConnectWallet) return;
+
+    let cancelled = false;
+    connect()
+      .catch((error) => {
+        if (!cancelled) console.error('[Wallet Connect Error]', error instanceof Error ? error.message : error);
+      })
+      .finally(() => {
+        if (!cancelled) setPendingConnectWallet(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [connect, connecting, pendingConnectWallet, wallet]);
 
   useEffect(() => {
     if (!visible) return;
@@ -125,6 +143,7 @@ export default function BarazaWalletModalProvider({ children }: BarazaWalletModa
                     disabled={unsupported}
                     onClick={() => {
                       select(wallet.adapter.name);
+                      setPendingConnectWallet(wallet.adapter.name);
                       close();
                     }}
                     className={cn(

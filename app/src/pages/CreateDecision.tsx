@@ -9,12 +9,16 @@ import { useCommunity } from '@/hooks/useCommunities';
 import CommunityBanner from '@/components/CommunityBanner';
 import { DEFAULT_GOVERNANCE } from '@/lib/constants';
 import { useSeo } from '@/lib/seo';
+import { useCreateDecision } from '@/hooks/useBarazaData';
+import { useWallet } from '@solana/wallet-adapter-react';
 
 const CreateDecision: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { requireWallet, isReady } = useWalletGuard({ action: 'submit governance proposals' });
   const { toast } = useToast();
+  const { publicKey } = useWallet();
+  const { create: createDecision } = useCreateDecision();
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -112,10 +116,18 @@ const CreateDecision: React.FC = () => {
     await requireWallet(async () => {
       setIsPending(true);
       try {
-        toast({
-          title: 'Proposal submission is in preview mode',
-          description: 'The proposal form is ready. On-chain voting will activate after governance deployment.',
+        const decision = await createDecision({
+          communityId: community.id,
+          title: form.title.trim(),
+          description: form.description.trim(),
+          fundingAmount: Number(form.fundingAmount),
+          proposedBy: publicKey?.toBase58() ?? 'Anonymous',
+          durationDays: Number(form.duration),
         });
+        if (decision) {
+          toast({ title: 'Proposal submitted', description: 'Your proposal is now open for member voting.' });
+          navigate(`/dashboard/${community.id}`);
+        }
       } finally {
         setIsPending(false);
       }

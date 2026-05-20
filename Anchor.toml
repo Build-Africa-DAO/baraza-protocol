@@ -7,14 +7,14 @@ governance = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
 community_registry = "CmnZpkH1Y9d5oh4PNqRTYAyMRhFqLkXq2fJh6cN6jPbm"
 membership = "EnCvLHcm2dSjwKjskwihHbuHWLQKjPKMLGJJxbPiaDup"
 payment_attestation = "CxNwpwExBQedJDYeuspyUUtHjeNr52wy6BTFPFbXWSL7"
-treasury_vault = "TreasuryVAULTPRoGRamPLaCeHoLderaaaaaaaaaaaaa"
+treasury_vault = "FmXLgUDL4RaNwP6rX3FcmvGypx96B4Yw1RzV6rZwwUhb"
 
 [programs.devnet]
 governance = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
 community_registry = "CmnZpkH1Y9d5oh4PNqRTYAyMRhFqLkXq2fJh6cN6jPbm"
 membership = "EnCvLHcm2dSjwKjskwihHbuHWLQKjPKMLGJJxbPiaDup"
 payment_attestation = "CxNwpwExBQedJDYeuspyUUtHjeNr52wy6BTFPFbXWSL7"
-treasury_vault = "TreasuryVAULTPRoGRamPLaCeHoLderaaaaaaaaaaaaa"
+treasury_vault = "FmXLgUDL4RaNwP6rX3FcmvGypx96B4Yw1RzV6rZwwUhb"
 
 [registry]
 url = "https://api.apr.dev"

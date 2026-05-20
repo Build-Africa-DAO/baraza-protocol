@@ -12,7 +12,7 @@ export const ShimmerButton = React.forwardRef<HTMLButtonElement, ShimmerButtonPr
   (
     {
       shimmerColor = "rgba(255,255,255,0.4)",
-      background = "linear-gradient(135deg, #9DD9D2, #FFF8F0, #F4D06F)",
+      background = "linear-gradient(135deg, #CC4400, #FF6622, #FF8844)",
       className,
       children,
       ...props

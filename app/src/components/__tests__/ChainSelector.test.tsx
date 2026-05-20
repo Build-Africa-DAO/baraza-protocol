@@ -51,18 +51,18 @@ describe('ChainSelector — open state', () => {
     }
   });
 
-  it('disables Stellar with a Phase 2 label', () => {
+  it('disables Stellar with an integration-pending label', () => {
     renderSelector();
     fireEvent.click(screen.getByRole('button', { name: /network: solana/i }));
-    const stellarOption = screen.getByRole('option', { name: /stellar.*phase 2/i });
+    const stellarOption = screen.getByRole('option', { name: /stellar.*integration pending/i });
     expect(stellarOption).toBeDisabled();
   });
 
-  it('disables all non-Solana chains with Soon labels', () => {
+  it('disables all non-Solana chains with integration-pending labels', () => {
     renderSelector();
     fireEvent.click(screen.getByRole('button', { name: /network: solana/i }));
     for (const name of ['ethereum', 'base', 'arbitrum', 'optimism', 'polygon', 'bnb chain', 'celo']) {
-      expect(screen.getByRole('option', { name: new RegExp(`${name}.*soon`, 'i') })).toBeDisabled();
+      expect(screen.getByRole('option', { name: new RegExp(`${name}.*integration pending`, 'i') })).toBeDisabled();
     }
   });
 

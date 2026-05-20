@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Compass, PlusCircle, ShieldCheck, UserRound, Wallet } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, Compass, PlusCircle, ShieldCheck, UserRound, Wallet } from "lucide-react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import Layout from "@/components/Layout";
@@ -10,6 +10,7 @@ import { listMembershipsForWallet } from "@/lib/memberships";
 import { useCommunities } from "@/hooks/useCommunities";
 import { CHAINS } from "@/lib/chain";
 import { useSeo } from "@/lib/seo";
+import { getBountyStatsForCommunity, getOpenBountiesForCommunity } from "@/lib/bounties";
 
 export default function Profile() {
   useSeo({
@@ -38,6 +39,12 @@ export default function Profile() {
       })
       .filter((entry): entry is { record: ReturnType<typeof listMembershipsForWallet>[number]; community: typeof communities[number] } => entry !== null);
   }, [address, communities]);
+
+  const memberBounties = useMemo(() => {
+    return myMemberships.flatMap(({ community }) =>
+      getOpenBountiesForCommunity(community.id).map((bounty) => ({ bounty, community })),
+    );
+  }, [myMemberships]);
 
   if (!connected || !publicKey) {
     return (
@@ -187,6 +194,56 @@ export default function Profile() {
                         Launch a Community DAO
                       </Link>
                     </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="baraza-card p-5">
+                <div className="mb-5 flex items-center justify-between">
+                  <h2 className="font-mono text-xs uppercase tracking-widest">
+                    Bounty announcements {memberBounties.length > 0 && `(${memberBounties.length})`}
+                  </h2>
+                  <BriefcaseBusiness className="h-4 w-4 text-secondary" />
+                </div>
+
+                {memberBounties.length > 0 ? (
+                  <div className="space-y-3">
+                    {memberBounties.slice(0, 4).map(({ bounty, community }) => {
+                      const stats = getBountyStatsForCommunity(community.id);
+                      return (
+                        <Link
+                          key={bounty.id}
+                          to={`/dashboard/${community.id}`}
+                          className="group flex items-start gap-4 rounded-lg border p-4 transition-colors hover:border-secondary/40"
+                        >
+                          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border bg-secondary/10">
+                            <BriefcaseBusiness className="h-4 w-4 text-secondary" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="font-display text-sm font-bold">{bounty.title}</p>
+                              <span className="rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+                                {bounty.category}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {community.name} · {formatKSh(bounty.rewardKes)} · {bounty.submissions} submissions
+                            </p>
+                            <p className="mt-2 text-xs text-muted-foreground">
+                              {stats.open} open bounties in this community.
+                            </p>
+                          </div>
+                          <ArrowRight className="mt-1 h-4 w-4 shrink-0" />
+                        </Link>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-dashed p-6 text-center">
+                    <p className="font-display text-base font-semibold">No bounty announcements yet</p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Join a community to see paid events, integrations, and contributor tasks here.
+                    </p>
                   </div>
                 )}
               </div>

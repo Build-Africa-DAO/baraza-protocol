@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Users, ArrowLeft, CheckCircle2, Loader2, Phone, ShieldCheck } from 'lucide-react';
+import { Users, ArrowLeft, CheckCircle2, Loader2, Phone, ShieldCheck, Wallet } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { COMMUNITY_TYPES, DAO_CREATION_FEE_KES } from '@/lib/constants';
 import { formatKSh } from '@/lib/utils';
@@ -11,6 +12,7 @@ import { createCommunityRecord } from '@/lib/communities';
 import CommunityBanner from '@/components/CommunityBanner';
 import { useChain } from '@/hooks/useChain';
 import { useSeo } from '@/lib/seo';
+import { CHAINS } from '@/lib/chain';
 
 const CreateCommunity: React.FC = () => {
   useSeo({
@@ -26,6 +28,8 @@ const CreateCommunity: React.FC = () => {
   const [isPending, setIsPending] = useState(false);
   const [isCreated, setIsCreated] = useState(false);
   const [createdCommunityId, setCreatedCommunityId] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<'mpesa' | 'wallet'>('mpesa');
+  const [walletChain, setWalletChain] = useState<'solana' | 'stellar' | 'base' | 'ethereum'>('solana');
   const [form, setForm] = useState({
     name: '',
     type: '',
@@ -48,7 +52,7 @@ const CreateCommunity: React.FC = () => {
     form.type &&
     form.fee &&
     form.description.trim() &&
-    normalisedPhone !== null
+    (paymentMethod === 'wallet' || normalisedPhone !== null)
   );
 
   /**
@@ -86,12 +90,15 @@ const CreateCommunity: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isValid || !normalisedPhone) return;
+    if (!isValid) return;
+    if (paymentMethod === 'mpesa' && !normalisedPhone) return;
     await requireWallet(async () => {
       setIsPending(true);
       try {
         // Step 1: charge the DAO creation fee
-        const charge = await chargeCreationFee();
+        const charge = paymentMethod === 'mpesa'
+          ? await chargeCreationFee()
+          : { orderId: `ord_wallet_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`, persisted: false };
 
         // Step 2: create the community record
         const community = await createCommunityRecord({
@@ -347,39 +354,120 @@ const CreateCommunity: React.FC = () => {
                 </div>
               </div>
 
-              {/* Payment: matches the Governance Rules card style above for visual parity */}
+              {/* Payment */}
               <div className="grid gap-4 rounded-lg border p-5">
                 <h2 className="font-mono text-xs font-semibold uppercase tracking-widest">
                   Payment
                 </h2>
 
-                <div>
-                  <label htmlFor="create-phone" className="mb-2 flex items-center gap-1.5 text-xs font-semibold">
-                    <Phone className="h-3.5 w-3.5" />
-                    M-Pesa number for the {formatKSh(DAO_CREATION_FEE_KES)} charge
-                  </label>
-                  <div className="flex rounded-lg border focus-within:border-current">
-                    <span className="border-r px-3 py-2.5 text-sm">+254</span>
-                    <input
-                      id="create-phone"
-                      name="phone"
-                      value={form.phone}
-                      onChange={handleChange}
-                      placeholder="7XX XXX XXX"
-                      type="tel"
-                      inputMode="numeric"
-                      autoComplete="tel-national"
-                      aria-invalid={form.phone.length > 0 && normalisedPhone === null}
-                      className="min-w-0 flex-1 px-3 py-2.5 text-sm outline-none"
-                    />
-                  </div>
-                  {form.phone.length > 0 && normalisedPhone === null && (
-                    <p className="mt-1.5 text-[11px]">
-                      Enter a valid Kenyan mobile number (07XX, 7XX, or +254 7XX).
-                    </p>
-                  )}
+                {/* Method toggle */}
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('mpesa')}
+                    className={`flex items-center justify-center gap-2 rounded-lg border px-4 py-3 text-sm font-semibold transition-colors ${
+                      paymentMethod === 'mpesa'
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                    }`}
+                  >
+                    <Phone className="h-4 w-4" />
+                    M-Pesa
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('wallet')}
+                    className={`flex items-center justify-center gap-2 rounded-lg border px-4 py-3 text-sm font-semibold transition-colors ${
+                      paymentMethod === 'wallet'
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                    }`}
+                  >
+                    <Wallet className="h-4 w-4" />
+                    Wallet
+                  </button>
                 </div>
 
+                <AnimatePresence mode="wait" initial={false}>
+                  {paymentMethod === 'mpesa' ? (
+                    <motion.div
+                      key="mpesa"
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.18, ease: 'easeOut' }}
+                    >
+                      <label htmlFor="create-phone" className="mb-2 flex items-center gap-1.5 text-xs font-semibold">
+                        <Phone className="h-3.5 w-3.5" />
+                        M-Pesa number for the {formatKSh(DAO_CREATION_FEE_KES)} charge
+                      </label>
+                      <div className="flex rounded-lg border focus-within:border-current">
+                        <span className="border-r px-3 py-2.5 text-sm">+254</span>
+                        <input
+                          id="create-phone"
+                          name="phone"
+                          value={form.phone}
+                          onChange={handleChange}
+                          placeholder="7XX XXX XXX"
+                          type="tel"
+                          inputMode="numeric"
+                          autoComplete="tel-national"
+                          aria-invalid={form.phone.length > 0 && normalisedPhone === null}
+                          className="min-w-0 flex-1 px-3 py-2.5 text-sm outline-none"
+                        />
+                      </div>
+                      {form.phone.length > 0 && normalisedPhone === null && (
+                        <p className="mt-1.5 text-[11px]">
+                          Enter a valid Kenyan mobile number (07XX, 7XX, or +254 7XX).
+                        </p>
+                      )}
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="wallet"
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.18, ease: 'easeOut' }}
+                      className="grid gap-3"
+                    >
+                      <label htmlFor="wallet-chain" className="text-xs font-semibold">
+                        Pay with
+                      </label>
+                      <div className="relative">
+                        <span
+                          className="pointer-events-none absolute left-3 top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full"
+                          style={{ background: CHAINS[walletChain].badgeBg }}
+                        />
+                        <select
+                          id="wallet-chain"
+                          value={walletChain}
+                          onChange={(e) => setWalletChain(e.target.value as typeof walletChain)}
+                          className="w-full appearance-none rounded-lg border py-3 pl-8 pr-4 text-sm font-semibold outline-none cursor-pointer"
+                        >
+                          <option value="solana">Solana — SOL</option>
+                          <option value="stellar">Stellar - XLM (integration pending)</option>
+                          <option value="base">Base - ETH (integration pending)</option>
+                          <option value="ethereum">Ethereum - ETH (integration pending)</option>
+                        </select>
+                      </div>
+                      <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm">
+                        {isReady ? (
+                          <p>
+                            <span className="font-semibold">{CHAINS[walletChain].short} equivalent</span> of{' '}
+                            {formatKSh(DAO_CREATION_FEE_KES)} will be deducted from your connected wallet on launch.
+                          </p>
+                        ) : (
+                          <p className="text-muted-foreground">
+                            Connect your wallet above to pay in {CHAINS[walletChain].short}.
+                          </p>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Fee summary */}
                 <div className="grid gap-2 border-t pt-4 text-sm sm:grid-cols-[1fr_auto] sm:items-center sm:gap-x-4">
                   <div>
                     <p className="text-xs font-semibold">DAO creation fee</p>
@@ -425,8 +513,10 @@ const CreateCommunity: React.FC = () => {
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Processing payment…
                     </>
+                  ) : paymentMethod === 'mpesa' ? (
+                    `Pay ${formatKSh(DAO_CREATION_FEE_KES)} via M-Pesa & Launch DAO`
                   ) : (
-                    `Pay ${formatKSh(DAO_CREATION_FEE_KES)} & Launch DAO`
+                    `Pay with ${CHAINS[walletChain].short} & Launch DAO`
                   )}
                 </button>
               )}

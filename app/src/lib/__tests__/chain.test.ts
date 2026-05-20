@@ -8,7 +8,7 @@ describe('CHAINS metadata', () => {
     }
   });
 
-  it('marks only Solana as enabled; others are placeholders', () => {
+  it('marks only Solana as enabled until app integrations are wired', () => {
     expect(CHAINS.solana.enabled).toBe(true);
     for (const id of ['stellar', 'ethereum', 'base', 'arbitrum', 'optimism', 'polygon', 'bnb', 'celo'] as const) {
       expect(CHAINS[id].enabled).toBe(false);
@@ -16,15 +16,10 @@ describe('CHAINS metadata', () => {
     }
   });
 
-  it('uses correct comingSoon labels', () => {
-    expect(CHAINS.stellar.comingSoon).toBe('Phase 2');
-    expect(CHAINS.base.comingSoon).toBe('Soon');
-    expect(CHAINS.ethereum.comingSoon).toBe('Soon');
-    expect(CHAINS.arbitrum.comingSoon).toBe('Soon');
-    expect(CHAINS.optimism.comingSoon).toBe('Soon');
-    expect(CHAINS.polygon.comingSoon).toBe('Soon');
-    expect(CHAINS.bnb.comingSoon).toBe('Soon');
-    expect(CHAINS.celo.comingSoon).toBe('Soon');
+  it('uses integration-pending labels for disabled chains', () => {
+    for (const id of ['stellar', 'ethereum', 'base', 'arbitrum', 'optimism', 'polygon', 'bnb', 'celo'] as const) {
+      expect(CHAINS[id].comingSoon).toBe('Integration pending');
+    }
   });
 
   it('uses brand-correct badge colors', () => {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   AlertTriangle,
@@ -10,6 +10,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
+import { useWallet } from "@solana/wallet-adapter-react";
 import Layout from "@/components/Layout";
 import { useCommunity } from "@/hooks/useCommunities";
 import { useToast } from "@/hooks/use-toast";
@@ -82,14 +83,33 @@ export default function JoinDao() {
     noIndex: true,
   });
   const { setVisible } = useWalletModal();
+  const { connected, publicKey, connecting } = useWallet();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [phone, setPhone] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pendingWalletJoin, setPendingWalletJoin] = useState(false);
 
   const amount = community?.membershipFee ?? 0;
   const normalisedPhone = normaliseKenyanPhone(phone);
   const canSubmit = normalisedPhone !== null && amount > 0 && !isSubmitting;
+
+  function startWalletJoin(walletAddress: string) {
+    if (!id || amount <= 0) return;
+    const orderId = `ord_wallet_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    toast({
+      title: "Wallet join started",
+      description: `Membership dues will be signed from ${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}.`,
+    });
+    navigate(`/join/${id}/status?orderId=${encodeURIComponent(orderId)}&rail=wallet`);
+  }
+
+  useEffect(() => {
+    if (!pendingWalletJoin || !connected || !publicKey) return;
+    setPendingWalletJoin(false);
+    startWalletJoin(publicKey.toBase58());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connected, pendingWalletJoin, publicKey]);
 
   async function handleMpesaSubmit() {
     if (!canSubmit || !id || !normalisedPhone) return;
@@ -231,11 +251,19 @@ export default function JoinDao() {
                   </p>
                   <button
                     type="button"
-                    onClick={() => setVisible(true)}
+                    onClick={() => {
+                      if (connected && publicKey) {
+                        startWalletJoin(publicKey.toBase58());
+                        return;
+                      }
+                      setPendingWalletJoin(true);
+                      setVisible(true);
+                    }}
+                    disabled={connecting || amount <= 0}
                     className="btn-ghost mt-5 w-full justify-center gap-2 py-3 text-sm font-bold"
                   >
                     <Wallet className="h-4 w-4" />
-                    Connect wallet
+                    {connecting ? "Connecting..." : connected ? "Pay with connected wallet" : "Connect wallet"}
                   </button>
                 </div>
               </div>

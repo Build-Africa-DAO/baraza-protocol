@@ -47,7 +47,7 @@ export default function Communities() {
   return (
     <Layout>
       {/* Page header */}
-      <section className="relative pt-28 pb-12 overflow-hidden">
+      <section className="relative pt-20 pb-8 overflow-hidden sm:pt-28 sm:pb-12">
         <div className="container mx-auto px-4 relative z-10">
           <CommunityBanner className="mb-8 min-h-[20rem]" communities={communities}>
             <div className="max-w-2xl p-6 md:p-8">
@@ -95,8 +95,8 @@ export default function Communities() {
           </div>
 
           {/* Controls */}
-          <div className="mb-8 grid gap-3 lg:grid-cols-[1fr_auto_auto_auto]">
-            {/* Search */}
+          <div className="mb-8 flex flex-col gap-3 lg:flex-row">
+            {/* Search — full width, always first */}
             <div className="relative flex-1">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" />
               <input
@@ -120,60 +120,61 @@ export default function Communities() {
               />
             </div>
 
-            {/* Type filter */}
-            <div className="relative">
-              <SlidersHorizontal className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" />
-              <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                className={cn(
-                  "appearance-none rounded-xl border",
-                  "pl-10 pr-8 py-3 text-sm",
-                  "outline-none cursor-pointer",
-                  "min-w-[160px]",
-                )}
-                aria-label="Filter by type"
-              >
-                <option value="all">All Types</option>
-                {COMMUNITY_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
-                ))}
-              </select>
+            {/* Filter row: type selector + layout toggle side-by-side on mobile */}
+            <div className="flex gap-3">
+              {/* Type filter */}
+              <div className="relative flex-1 lg:flex-none">
+                <SlidersHorizontal className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" />
+                <select
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value)}
+                  className={cn(
+                    "w-full appearance-none rounded-xl border",
+                    "pl-10 pr-8 py-3 text-sm",
+                    "outline-none cursor-pointer",
+                    "lg:min-w-[160px]",
+                  )}
+                  aria-label="Filter by type"
+                >
+                  <option value="all">All Types</option>
+                  {COMMUNITY_TYPES.map((t) => (
+                    <option key={t.value} value={t.value}>{t.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 rounded-xl border p-1 shrink-0" aria-label="Choose layout">
+                {[
+                  { value: "grid" as const, label: "Grid", icon: Grid2X2 },
+                  { value: "list" as const, label: "List", icon: List },
+                ].map(({ value, label, icon: Icon }) => {
+                  const active = layout === value;
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setLayout(value)}
+                      aria-pressed={active}
+                      className={cn(
+                        "inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-bold focus-visible:outline-none focus-visible:ring-2",
+                        active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 rounded-xl border p-1" aria-label="Choose layout">
-              {[
-                { value: "grid" as const, label: "Grid", icon: Grid2X2 },
-                { value: "list" as const, label: "List", icon: List },
-              ].map(({ value, label, icon: Icon }) => {
-                const active = layout === value;
-                return (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setLayout(value)}
-                    aria-pressed={active}
-                    className={cn(
-                      "inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-bold focus-visible:outline-none focus-visible:ring-2",
-                      active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    <Icon className="h-4 w-4" />
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Start CTA */}
-            <Link to="/create" tabIndex={-1}>
-              <button
-                type="button"
-                className="text-sm font-bold px-5 py-3 rounded-xl whitespace-nowrap inline-flex items-center gap-2"
-              >
-                <PlusCircle className="w-4 h-4" />
-                Launch a DAO
-              </button>
+            {/* Launch CTA — full width on mobile */}
+            <Link
+              to="/create"
+              className="text-sm font-bold px-5 py-3 rounded-xl whitespace-nowrap inline-flex items-center justify-center gap-2 border border-border/70 hover:border-primary/50 transition-colors lg:justify-start"
+            >
+              <PlusCircle className="w-4 h-4" />
+              Launch a DAO
             </Link>
           </div>
 
@@ -266,7 +267,7 @@ export default function Communities() {
               </p>
               <p className="text-sm mb-6">
                 {chainFilter === "stellar"
-                  ? "Stellar is on the Phase 2 roadmap. Switch to Solana to see active communities."
+                  ? "Stellar contract support is built, but the app integration is still pending. Switch to Solana to see active communities."
                   : "Try a different type, or start your own Community DAO."}
               </p>
               <Link to="/create" className="btn-primary inline-flex items-center gap-2 text-sm">

@@ -3,29 +3,29 @@ import { useParams, Link } from 'react-router-dom';
 import {
   Users, TrendingUp, Vote, History, PlusCircle, CreditCard,
   ArrowLeft, Calendar, ShieldCheck, ReceiptText,
-  LayoutDashboard, Wallet as WalletIcon, ExternalLink, Activity, Images,
+  LayoutDashboard, Wallet as WalletIcon, ExternalLink, Activity, Images, BriefcaseBusiness,
 } from 'lucide-react';
 import LiveStatCard from '@/components/community/LiveStatCard';
 import ActivityFeed from '@/components/community/ActivityFeed';
 import MemberDirectory from '@/components/community/MemberDirectory';
 import Layout from '@/components/Layout';
 import DecisionCard from '@/components/DecisionCard';
-import { MOCK_DECISIONS } from '@/lib/constants';
 import { formatKSh } from '@/lib/utils';
+import { useDecisions } from '@/hooks/useBarazaData';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { useCommunity } from '@/hooks/useCommunities';
 import { getActiveMembership } from '@/lib/memberships';
 import CommunityBanner from '@/components/CommunityBanner';
 import CommunityGallery from '@/components/CommunityGallery';
+import BountyBoard from '@/components/BountyBoard';
 import { CHAINS } from '@/lib/chain';
 import { NETWORK_LABEL } from '@/lib/network';
 import { useSeo } from '@/lib/seo';
+import { getBountyStatsForCommunity } from '@/lib/bounties';
 
-type DashboardTab = 'overview' | 'members' | 'governance' | 'gallery' | 'activity' | 'wallet';
+type DashboardTab = 'overview' | 'members' | 'governance' | 'bounties' | 'gallery' | 'activity' | 'wallet';
 
-const dashboardGlobeUrl =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuAhAO65kkwr6zxxrtYjpZm23ugp7boCWsRE_kTE7O3PUPmonOS4vJUPPGp_AALnUHlCa23XX7HVjJ3lfv_cs2mIWSzHwYBQIvrue4TcJGeHUsuQLKSNOuhSpHNySzZ8pUcK9MLmMfeh0l2ciNsph8EcgoHMr86aCmoQZLn2qesMSBGPMStXx9CHE1aW6vpRO1bQ13KDvFm92lVbqFLdD6qie_U66bf4EIKpbK6LxxS-9a0Q4YK3m0GuJPePOTqqPhC9tTuWGu4UnIo";
 
 const CommunityDashboard: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -36,6 +36,7 @@ const CommunityDashboard: React.FC = () => {
   const [walletSol, setWalletSol] = useState<number | null>(null);
 
   const { community, isLoading, error } = useCommunity(id);
+  const { active: activeDecisions, past: pastDecisions, all: allDecisions } = useDecisions(id ?? '');
 
   useSeo({
     title: community ? `${community.name} dashboard` : "Community dashboard",
@@ -165,19 +166,11 @@ const CommunityDashboard: React.FC = () => {
     );
   }
 
-  const decisions = MOCK_DECISIONS.filter((d) => d.communityId === community.id);
-  const activeDecisions = decisions.filter((d) => d.status === 'active');
-  const pastDecisions = decisions.filter((d) => d.status === 'completed');
+  const bountyStats = getBountyStatsForCommunity(community.id);
 
   return (
     <Layout>
       <section className="relative overflow-hidden py-8 md:py-12">
-        <div className="pointer-events-none absolute inset-0" aria-hidden>
-          <div
-            className="absolute inset-0 bg-cover bg-[center_right] opacity-20 mix-blend-screen"
-            style={{ backgroundImage: `url(${dashboardGlobeUrl})` }}
-          />
-        </div>
         <div className="container relative z-10 mx-auto px-4">
           {/* Back */}
           <Link
@@ -252,7 +245,7 @@ const CommunityDashboard: React.FC = () => {
           </div>
 
           {/* Live stats grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-8">
             <LiveStatCard
               icon={TrendingUp}
               label="DAO Treasury"
@@ -284,6 +277,14 @@ const CommunityDashboard: React.FC = () => {
               bg=""
               showDelta={false}
             />
+            <LiveStatCard
+              icon={BriefcaseBusiness}
+              label="Open Bounties"
+              value={bountyStats.open}
+              color=""
+              bg=""
+              showDelta={false}
+            />
           </div>
 
           {/* Tabs */}
@@ -292,6 +293,7 @@ const CommunityDashboard: React.FC = () => {
               { key: 'overview', label: 'Overview', icon: LayoutDashboard },
               { key: 'members', label: 'Members', icon: Users },
               { key: 'governance', label: 'Governance', icon: Vote },
+              { key: 'bounties', label: 'Bounties', icon: BriefcaseBusiness },
               { key: 'gallery', label: 'Gallery', icon: Images },
               { key: 'activity', label: 'Activity', icon: Activity },
               { key: 'wallet', label: 'Wallet', icon: WalletIcon },
@@ -394,6 +396,8 @@ const CommunityDashboard: React.FC = () => {
                 </div>
               </div>
 
+              <BountyBoard communityId={community.id} communityName={community.name} compact />
+
               <div className="premium-glass rounded-xl p-5">
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="font-display text-base font-semibold">Governance rules</h3>
@@ -467,7 +471,7 @@ const CommunityDashboard: React.FC = () => {
                 </div>
               )}
 
-              {decisions.length === 0 && (
+              {allDecisions.length === 0 && (
                 <div className="baraza-card p-10 text-center">
                   <Vote className="w-8 h-8 mx-auto mb-3" />
                   <p className="text-sm">No governance proposals yet. Be the first to submit one!</p>
@@ -483,6 +487,31 @@ const CommunityDashboard: React.FC = () => {
                   Submit a new proposal
                 </Link>
               )}
+            </div>
+          )}
+
+          {/* Bounties tab */}
+          {activeTab === 'bounties' && (
+            <div className="space-y-6">
+              <BountyBoard communityId={community.id} communityName={community.name} />
+              <div className="premium-glass rounded-xl p-5">
+                <div className="mb-4 flex items-center gap-2">
+                  <Activity className="h-4 w-4" />
+                  <h3 className="font-display text-base font-semibold">Announcement impact</h3>
+                </div>
+                <div className="grid gap-3 md:grid-cols-3">
+                  {[
+                    ['Events', 'Event bounties appear in the community activity feed and member profile.'],
+                    ['Integrations', 'Technical bounties connect DAO needs to builders and auditors.'],
+                    ['Member profile', 'Members can see paid opportunities attached to their communities.'],
+                  ].map(([label, detail]) => (
+                    <div key={label} className="rounded-lg border p-4">
+                      <p className="font-mono text-[10px] uppercase tracking-widest text-primary">{label}</p>
+                      <p className="mt-2 text-sm leading-6 text-muted-foreground">{detail}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 

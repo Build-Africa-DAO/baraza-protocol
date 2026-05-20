@@ -1,9 +1,10 @@
 /**
- * Chain selection: Solana vs Stellar.
+ * Chain selection.
  *
  * Distinct from `lib/network.ts`, which selects the Solana cluster
  * (mainnet/devnet/testnet). This module is about which blockchain the
- * user is browsing — Solana now, Stellar in Phase 2.
+ * user is browsing. Contract implementations exist across Solana, Stellar,
+ * and EVM, but only Solana is enabled until app client wiring lands.
  */
 
 export type Chain =
@@ -27,14 +28,12 @@ export interface ChainMeta {
   comingSoon?: string;
 }
 
-// Solana is the only currently-enabled chain. Others are placeholders to
-// communicate the multi-chain roadmap; selecting them is blocked in
-// ChainSelector and DB writes are rejected by the CHECK constraint in
-// supabase/migrations/001_communities_governance_columns.sql.
-//
-// To actually enable Stellar (Phase 2): widen the DB CHECK + wire Soroban.
-// To enable Base / Ethereum: integrate wagmi/RainbowKit alongside the
-// Solana wallet adapter and add EVM-side program logic.
+const INTEGRATION_PENDING = 'Integration pending';
+
+// Solana is the only currently-enabled chain. Other contracts may exist, but
+// selecting them is blocked until app clients, addresses, and transaction flows
+// are wired in. ChainSelector blocks disabled chains, and DB writes are rejected
+// by the CHECK constraint in supabase/migrations/001_communities_governance_columns.sql.
 export const CHAINS: Record<Chain, ChainMeta> = {
   solana: {
     id: 'solana',
@@ -51,7 +50,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     badgeBg: '#0066FF',
     badgeText: '#FFFFFF',
     enabled: false,
-    comingSoon: 'Phase 2',
+    comingSoon: INTEGRATION_PENDING,
   },
   ethereum: {
     id: 'ethereum',
@@ -60,7 +59,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     badgeBg: '#627EEA',
     badgeText: '#FFFFFF',
     enabled: false,
-    comingSoon: 'Soon',
+    comingSoon: INTEGRATION_PENDING,
   },
   base: {
     id: 'base',
@@ -69,7 +68,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     badgeBg: '#0052FF',
     badgeText: '#FFFFFF',
     enabled: false,
-    comingSoon: 'Soon',
+    comingSoon: INTEGRATION_PENDING,
   },
   arbitrum: {
     id: 'arbitrum',
@@ -78,7 +77,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     badgeBg: '#28A0F0',
     badgeText: '#FFFFFF',
     enabled: false,
-    comingSoon: 'Soon',
+    comingSoon: INTEGRATION_PENDING,
   },
   optimism: {
     id: 'optimism',
@@ -87,7 +86,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     badgeBg: '#FF0420',
     badgeText: '#FFFFFF',
     enabled: false,
-    comingSoon: 'Soon',
+    comingSoon: INTEGRATION_PENDING,
   },
   polygon: {
     id: 'polygon',
@@ -96,7 +95,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     badgeBg: '#8247E5',
     badgeText: '#FFFFFF',
     enabled: false,
-    comingSoon: 'Soon',
+    comingSoon: INTEGRATION_PENDING,
   },
   bnb: {
     id: 'bnb',
@@ -105,18 +104,18 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     badgeBg: '#F3BA2F',
     badgeText: '#0B132B',
     enabled: false,
-    comingSoon: 'Soon',
+    comingSoon: INTEGRATION_PENDING,
   },
   celo: {
-    // Mobile-first L1, designed for emerging markets — strongest EVM fit for
-    // Baraza's chama / SACCO users when EVM support is added.
+    // Mobile-first L1, designed for emerging markets. It is the strongest EVM
+    // fit for Baraza's chama / SACCO users once EVM app support is wired.
     id: 'celo',
     label: 'Celo',
     short: 'CELO',
     badgeBg: '#35D07F',
     badgeText: '#0B132B',
     enabled: false,
-    comingSoon: 'Soon',
+    comingSoon: INTEGRATION_PENDING,
   },
 };
 

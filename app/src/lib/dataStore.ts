@@ -66,7 +66,7 @@ export interface Contribution {
 export interface ActivityEvent {
   id: string;
   communityId: string;
-  type: 'member_joined' | 'decision_created' | 'vote_cast' | 'decision_completed' | 'fund_deposit';
+  type: 'member_joined' | 'decision_created' | 'vote_cast' | 'decision_completed' | 'fund_deposit' | 'bounty_opened';
   message: string;
   timestamp: number;
 }
@@ -235,8 +235,8 @@ const SEED_DECISIONS: Decision[] = [
     votesAgainst: 8,
     totalMembers: 47,
     status: 'active',
-    createdAt: '2025-05-01',
-    endsAt: '2025-06-15',
+    createdAt: '2026-05-01',
+    endsAt: '2026-06-15',
     voters: {},
   },
   {
@@ -250,8 +250,8 @@ const SEED_DECISIONS: Decision[] = [
     votesAgainst: 3,
     totalMembers: 47,
     status: 'active',
-    createdAt: '2025-04-28',
-    endsAt: '2025-06-12',
+    createdAt: '2026-04-28',
+    endsAt: '2026-06-12',
     voters: {},
   },
   {
@@ -280,8 +280,8 @@ const SEED_DECISIONS: Decision[] = [
     votesAgainst: 12,
     totalMembers: 123,
     status: 'active',
-    createdAt: '2025-05-02',
-    endsAt: '2025-06-16',
+    createdAt: '2026-05-02',
+    endsAt: '2026-06-16',
     voters: {},
   },
   {
@@ -295,8 +295,8 @@ const SEED_DECISIONS: Decision[] = [
     votesAgainst: 18,
     totalMembers: 123,
     status: 'active',
-    createdAt: '2025-04-20',
-    endsAt: '2025-06-10',
+    createdAt: '2026-04-20',
+    endsAt: '2026-07-10',
     voters: {},
   },
   {
@@ -310,8 +310,8 @@ const SEED_DECISIONS: Decision[] = [
     votesAgainst: 5,
     totalMembers: 89,
     status: 'active',
-    createdAt: '2025-05-05',
-    endsAt: '2025-06-18',
+    createdAt: '2026-05-05',
+    endsAt: '2026-06-18',
     voters: {},
   },
   {
@@ -325,8 +325,8 @@ const SEED_DECISIONS: Decision[] = [
     votesAgainst: 4,
     totalMembers: 34,
     status: 'active',
-    createdAt: '2025-05-03',
-    endsAt: '2025-06-14',
+    createdAt: '2026-05-03',
+    endsAt: '2026-07-14',
     voters: {},
   },
 ];
@@ -384,6 +384,13 @@ class BarazaDataStore {
           type: 'fund_deposit',
           message: `Monthly contributions received from 12 members`,
           timestamp: Date.now() - 60000 * 120,
+        },
+        {
+          id: `init-${c.id}-3`,
+          communityId: c.id,
+          type: 'bounty_opened',
+          message: `Bounty board announcement posted for members and contributors`,
+          timestamp: Date.now() - 60000 * 180,
         },
       ]);
     });

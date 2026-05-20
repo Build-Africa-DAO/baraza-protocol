@@ -1,14 +1,16 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, PlayCircle, Search, Sparkles, X } from "lucide-react";
+import { Menu, Moon, PlayCircle, Search, Sparkles, Sun, X } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import ChainSelector from "@/components/ChainSelector";
-import { useAshaChat } from "@/contexts/AshaChatContext";
+import { useAshaChat } from "@/hooks/useAshaChat";
+import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
   { path: "/", label: "About" },
   { path: "/communities", label: "Explore" },
+  { path: "/bounties", label: "Bounties" },
   { path: "/evaluate", label: "Evaluate" },
   { path: "/create", label: "Launch" },
   { path: "/profile", label: "Profile" },
@@ -28,6 +30,7 @@ export default function Header({ walletSlot }: HeaderProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { open: openAsha } = useAshaChat();
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -139,6 +142,16 @@ export default function Header({ walletSlot }: HeaderProps) {
           {walletSlot && <div className="hidden sm:block">{walletSlot}</div>}
 
           <button
+            type="button"
+            onClick={toggleTheme}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-border/70 bg-surface/70 text-muted-foreground transition-colors hover:border-primary/45 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
+
+          <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-surface hover:text-foreground md:hidden"
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
@@ -245,6 +258,15 @@ export default function Header({ walletSlot }: HeaderProps) {
               />
             </form>
             <div className="mt-2 flex flex-col gap-2 border-t border-border/50 pt-3">
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="inline-flex items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm font-semibold text-foreground/80 transition-all hover:bg-surface hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+                aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              >
+                {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                {theme === "dark" ? "Light mode" : "Dark mode"}
+              </button>
               <ChainSelector variant="mobile" />
               {walletSlot}
             </div>

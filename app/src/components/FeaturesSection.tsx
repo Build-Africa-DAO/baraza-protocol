@@ -61,9 +61,9 @@ function WorkflowCard({ step, index }: { step: (typeof workflow)[number]; index:
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 18 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
+      initial={{ y: 18 }}
+      whileInView={{ y: 0 }}
+      viewport={{ once: true, amount: 0 }}
       transition={{ delay: index * 0.05 }}
       className={cn(
         "group relative rounded-xl border border-border/70 bg-card/78 p-5 shadow-[var(--shadow-card)]",
@@ -103,17 +103,17 @@ export default function FeaturesSection() {
         <div className="mb-10 grid gap-6 lg:grid-cols-[0.78fr_1fr] lg:items-end">
           <div>
             <motion.p
-              initial={{ opacity: 0, y: 14 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              initial={{ y: 14 }}
+              whileInView={{ y: 0 }}
+              viewport={{ once: true, amount: 0 }}
               className="text-xs font-semibold uppercase tracking-widest text-primary"
             >
               Product workflow
             </motion.p>
             <motion.h2
-              initial={{ opacity: 0, y: 14 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              initial={{ y: 14 }}
+              whileInView={{ y: 0 }}
+              viewport={{ once: true, amount: 0 }}
               transition={{ delay: 0.05 }}
               className="mt-3 max-w-2xl font-display text-3xl font-bold leading-tight text-foreground md:text-4xl"
             >
@@ -121,9 +121,9 @@ export default function FeaturesSection() {
             </motion.h2>
           </div>
           <motion.p
-            initial={{ opacity: 0, y: 14 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            initial={{ y: 14 }}
+            whileInView={{ y: 0 }}
+            viewport={{ once: true, amount: 0 }}
             transition={{ delay: 0.1 }}
             className="max-w-2xl text-base leading-relaxed text-muted-foreground lg:justify-self-end"
           >
@@ -140,9 +140,9 @@ export default function FeaturesSection() {
           </div>
 
           <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            initial={{ y: 18 }}
+            whileInView={{ y: 0 }}
+            viewport={{ once: true, amount: 0 }}
             className="rounded-xl border border-border/70 bg-surface/70 p-5 shadow-[var(--shadow-card)]"
           >
             <div className="mb-5 flex items-center justify-between">

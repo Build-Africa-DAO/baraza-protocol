@@ -21,13 +21,13 @@ export default function CTASection() {
     <section className="py-20">
       <div className="container mx-auto px-4">
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          initial={{ y: 24 }}
+          whileInView={{ y: 0 }}
+          viewport={{ once: true, amount: 0 }}
           transition={{ duration: 0.5 }}
           className="grid overflow-hidden rounded-2xl border border-border/70 bg-card/75 shadow-[var(--shadow-deep)] lg:grid-cols-[0.9fr_1.1fr]"
         >
-          <div className="border-b border-border/70 p-8 md:p-10 lg:border-b-0 lg:border-r">
+          <div className="border-b border-border/70 p-5 sm:p-8 md:p-10 lg:border-b-0 lg:border-r">
             <p className="text-xs font-semibold uppercase tracking-widest text-accent">Launch a treasury</p>
             <h2 className="mt-3 max-w-xl font-display text-3xl font-bold leading-tight text-foreground md:text-4xl">
               Launch a community DAO with rules everyone can inspect
@@ -40,7 +40,7 @@ export default function CTASection() {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link to="/create" tabIndex={-1}>
                 <ShimmerButton
-                  background="linear-gradient(135deg, #F4D06F, #FF8811)"
+                  background="var(--gradient-warm)"
                   shimmerColor="rgba(255,255,255,0.5)"
                   className="w-full justify-center rounded-lg px-7 py-3.5 text-sm font-bold sm:w-auto"
                 >
@@ -63,7 +63,7 @@ export default function CTASection() {
             </div>
           </div>
 
-          <div className="grid gap-3 bg-surface/45 p-5 md:grid-cols-2 md:p-6">
+          <div className="grid gap-3 bg-surface/45 p-4 sm:p-5 sm:grid-cols-2 md:p-6">
             {steps.map((step, index) => {
               const Icon = step.icon;
 

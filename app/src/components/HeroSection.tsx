@@ -149,7 +149,8 @@ function HeroPreview() {
 
 export default function HeroSection() {
   return (
-    <section className="relative overflow-hidden pt-14 pb-8 sm:pt-20 lg:pt-20">
+    <section className="relative overflow-hidden bg-[image:var(--gradient-hero)] pt-14 pb-8 sm:pt-20 lg:pt-20">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
       <div className="container relative z-10 mx-auto max-w-7xl px-4">
         <div className="min-[860px]:grid min-[860px]:grid-cols-[minmax(0,1fr)_minmax(18rem,0.62fr)] min-[860px]:items-center min-[860px]:gap-10">
           <div className="max-w-2xl">

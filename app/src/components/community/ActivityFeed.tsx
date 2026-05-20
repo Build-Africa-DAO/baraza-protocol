@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UserPlus, Vote, ThumbsUp, CheckCircle2, PiggyBank } from 'lucide-react';
+import { BriefcaseBusiness, UserPlus, Vote, ThumbsUp, CheckCircle2, PiggyBank } from 'lucide-react';
 import { useActivities } from '@/hooks/useBarazaData';
 import type { ActivityEvent } from '@/lib/dataStore';
 
@@ -10,6 +10,7 @@ const iconMap: Record<ActivityEvent['type'], { icon: React.ElementType; color: s
   vote_cast: { icon: ThumbsUp, color: 'text-secondary', bg: 'bg-secondary/15' },
   decision_completed: { icon: CheckCircle2, color: 'text-primary', bg: 'bg-primary/15' },
   fund_deposit: { icon: PiggyBank, color: 'text-accent', bg: 'bg-accent/15' },
+  bounty_opened: { icon: BriefcaseBusiness, color: 'text-secondary', bg: 'bg-secondary/15' },
 };
 
 function timeAgo(ts: number): string {
