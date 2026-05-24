@@ -1,9 +1,15 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BriefcaseBusiness, CalendarDays, ExternalLink, Search, SlidersHorizontal, Trophy } from 'lucide-react';
+import { ArrowRight, BriefcaseBusiness, CalendarDays, PlusCircle, Search, Send, SlidersHorizontal, Trophy } from 'lucide-react';
 import Layout from '@/components/Layout';
 import CommunityBanner from '@/components/CommunityBanner';
-import { listBounties, type BountyStatus } from '@/lib/bounties';
+import {
+  createBountyRecord,
+  listBounties,
+  listBountySubmissions,
+  submitBountyWork,
+  type BountyStatus,
+} from '@/lib/bounties';
 import { useCommunities } from '@/hooks/useCommunities';
 import { formatKSh, cn } from '@/lib/utils';
 import { useSeo } from '@/lib/seo';
@@ -45,7 +51,25 @@ export default function Bounties() {
   const { communities } = useCommunities();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<BountyStatus | 'all'>('open');
-  const bounties = listBounties();
+  const [bounties, setBounties] = useState(() => listBounties());
+  const [showPostForm, setShowPostForm] = useState(false);
+  const [submitFor, setSubmitFor] = useState<string | null>(null);
+  const [formMessage, setFormMessage] = useState<string | null>(null);
+  const [newBounty, setNewBounty] = useState({
+    communityId: '',
+    title: '',
+    category: 'General',
+    rewardKes: '',
+    deadline: '',
+    summary: '',
+    skills: '',
+  });
+  const [submission, setSubmission] = useState({
+    contributor: '',
+    workUrl: '',
+    note: '',
+  });
+  const refreshBounties = () => setBounties(listBounties());
 
   const communityById = useMemo(
     () => new Map(communities.map((community) => [community.id, community])),
@@ -64,6 +88,53 @@ export default function Bounties() {
     .filter((bounty) => bounty.status === 'open')
     .reduce((sum, bounty) => sum + bounty.rewardKes, 0);
 
+  const handleCreateBounty = () => {
+    const community = communityById.get(newBounty.communityId);
+    try {
+      createBountyRecord({
+        communityId: newBounty.communityId,
+        postedBy: community?.name ?? 'Baraza community',
+        title: newBounty.title,
+        category: newBounty.category,
+        rewardKes: Number(newBounty.rewardKes),
+        deadline: newBounty.deadline,
+        summary: newBounty.summary,
+        skills: newBounty.skills.split(','),
+      });
+      setNewBounty({
+        communityId: '',
+        title: '',
+        category: 'General',
+        rewardKes: '',
+        deadline: '',
+        summary: '',
+        skills: '',
+      });
+      setShowPostForm(false);
+      setFormMessage('Bounty posted to Baraza.');
+      refreshBounties();
+    } catch (err) {
+      setFormMessage(err instanceof Error ? err.message : 'Could not post bounty.');
+    }
+  };
+
+  const handleSubmitWork = (bountyId: string) => {
+    try {
+      submitBountyWork({
+        bountyId,
+        contributor: submission.contributor,
+        workUrl: submission.workUrl,
+        note: submission.note,
+      });
+      setSubmission({ contributor: '', workUrl: '', note: '' });
+      setSubmitFor(null);
+      setFormMessage('Submission recorded in Baraza.');
+      refreshBounties();
+    } catch (err) {
+      setFormMessage(err instanceof Error ? err.message : 'Could not submit work.');
+    }
+  };
+
   return (
     <Layout>
       <section className="relative pt-28 pb-12">
@@ -75,6 +146,17 @@ export default function Bounties() {
               <p className="mt-3 max-w-xl text-sm leading-6">
                 Paid community work across events, integrations, creative tasks, research, and operations.
               </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowPostForm((value) => !value);
+                  setFormMessage(null);
+                }}
+                className="btn-warm mt-5 inline-flex items-center gap-2 text-sm"
+              >
+                <PlusCircle className="h-4 w-4" />
+                Post bounty
+              </button>
               <div className="mt-5 grid max-w-md grid-cols-2 gap-3">
                 <div className="rounded-lg border bg-background/40 p-3">
                   <p className="font-display text-2xl font-bold">{bounties.filter((b) => b.status === 'open').length}</p>
@@ -87,6 +169,96 @@ export default function Bounties() {
               </div>
             </div>
           </CommunityBanner>
+
+          {showPostForm && (
+            <div className="baraza-card mb-6 p-5">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-xs font-semibold">Community</label>
+                  <select
+                    value={newBounty.communityId}
+                    onChange={(event) => setNewBounty((current) => ({ ...current, communityId: event.target.value }))}
+                    className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none"
+                  >
+                    <option value="">Select community</option>
+                    {communities.map((community) => (
+                      <option key={community.id} value={community.id}>{community.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-2 block text-xs font-semibold">Title</label>
+                  <input
+                    value={newBounty.title}
+                    onChange={(event) => setNewBounty((current) => ({ ...current, title: event.target.value }))}
+                    className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none"
+                    placeholder="e.g. Website landing page"
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-xs font-semibold">Category</label>
+                  <input
+                    value={newBounty.category}
+                    onChange={(event) => setNewBounty((current) => ({ ...current, category: event.target.value }))}
+                    className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none"
+                    placeholder="Design, Dev, Events"
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-xs font-semibold">Reward KSh</label>
+                  <input
+                    value={newBounty.rewardKes}
+                    onChange={(event) => setNewBounty((current) => ({ ...current, rewardKes: event.target.value }))}
+                    type="number"
+                    min="1"
+                    className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none"
+                    placeholder="25000"
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-xs font-semibold">Deadline</label>
+                  <input
+                    value={newBounty.deadline}
+                    onChange={(event) => setNewBounty((current) => ({ ...current, deadline: event.target.value }))}
+                    type="date"
+                    className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-xs font-semibold">Skills</label>
+                  <input
+                    value={newBounty.skills}
+                    onChange={(event) => setNewBounty((current) => ({ ...current, skills: event.target.value }))}
+                    className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none"
+                    placeholder="React, Design, Research"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="mb-2 block text-xs font-semibold">Brief</label>
+                  <textarea
+                    value={newBounty.summary}
+                    onChange={(event) => setNewBounty((current) => ({ ...current, summary: event.target.value }))}
+                    className="min-h-24 w-full rounded-lg border px-3 py-2.5 text-sm outline-none"
+                    placeholder="Describe the work, deliverables, and review expectations."
+                  />
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleCreateBounty}
+                className="btn-primary mt-4 gap-2 px-4 py-2 text-sm"
+              >
+                <PlusCircle className="h-4 w-4" />
+                Publish bounty
+              </button>
+            </div>
+          )}
+
+          {formMessage && (
+            <div className="mb-6 rounded-lg border px-4 py-3 text-sm">
+              {formMessage}
+            </div>
+          )}
 
           <div className="mb-6 grid gap-3 lg:grid-cols-[1fr_auto]">
             <div className="relative">
@@ -159,17 +331,57 @@ export default function Bounties() {
                         Open DAO
                         <ArrowRight className="h-3.5 w-3.5" />
                       </Link>
-                      <a
-                        href={bounty.externalUrl}
-                        target="_blank"
-                        rel="noreferrer"
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSubmitFor(submitFor === bounty.id ? null : bounty.id);
+                          setFormMessage(null);
+                        }}
                         className="btn-primary justify-center gap-2 px-3 py-2 text-xs font-bold"
                       >
-                        Open on Dework
-                        <ExternalLink className="h-3.5 w-3.5" />
-                      </a>
+                        Submit work
+                        <Send className="h-3.5 w-3.5" />
+                      </button>
                     </div>
                   </div>
+
+                  {submitFor === bounty.id && (
+                    <div className="mt-4 grid gap-3 border-t pt-4">
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <input
+                          value={submission.contributor}
+                          onChange={(event) => setSubmission((current) => ({ ...current, contributor: event.target.value }))}
+                          className="rounded-lg border px-3 py-2.5 text-sm outline-none"
+                          placeholder="Contributor name"
+                        />
+                        <input
+                          value={submission.workUrl}
+                          onChange={(event) => setSubmission((current) => ({ ...current, workUrl: event.target.value }))}
+                          className="rounded-lg border px-3 py-2.5 text-sm outline-none"
+                          placeholder="Work URL"
+                        />
+                      </div>
+                      <textarea
+                        value={submission.note}
+                        onChange={(event) => setSubmission((current) => ({ ...current, note: event.target.value }))}
+                        className="min-h-20 rounded-lg border px-3 py-2.5 text-sm outline-none"
+                        placeholder="Add a note for reviewers"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleSubmitWork(bounty.id)}
+                        className="btn-warm w-fit gap-2 px-4 py-2 text-sm"
+                      >
+                        <Send className="h-4 w-4" />
+                        Record submission
+                      </button>
+                      {listBountySubmissions(bounty.id).length > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          {listBountySubmissions(bounty.id).length} Baraza submission records stored locally.
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </article>
               );
             })}

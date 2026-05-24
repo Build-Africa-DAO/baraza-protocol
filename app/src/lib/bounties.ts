@@ -12,43 +12,32 @@ export interface Bounty {
   postedBy: string;
   summary: string;
   skills: string[];
-  externalUrl: string;
 }
 
-export const DEWORK_BOUNTY_URL = 'https://dework.xyz/';
-
-export function getDeworkWorkspaceUrl(): string {
-  return import.meta.env.VITE_DEWORK_WORKSPACE_URL?.trim() || DEWORK_BOUNTY_URL;
+export interface BountySubmission {
+  id: string;
+  bountyId: string;
+  contributor: string;
+  workUrl: string;
+  note: string;
+  submittedAt: string;
 }
 
-export function buildDeworkBountyUrl(input: Pick<Bounty, 'id' | 'title' | 'category'>): string {
-  const rawUrl = getDeworkWorkspaceUrl();
-  try {
-    const url = new URL(rawUrl);
-    url.searchParams.set('source', 'baraza');
-    url.searchParams.set('bounty', input.id);
-    url.searchParams.set('q', input.title);
-    url.searchParams.set('category', input.category);
-    return url.toString();
-  } catch {
-    return DEWORK_BOUNTY_URL;
-  }
+export interface CreateBountyInput {
+  communityId: string;
+  postedBy: string;
+  title: string;
+  category: string;
+  rewardKes: number;
+  deadline: string;
+  summary: string;
+  skills: string[];
 }
 
-export function buildDeworkPostBountyUrl(communityName: string): string {
-  const rawUrl = getDeworkWorkspaceUrl();
-  try {
-    const url = new URL(rawUrl);
-    url.searchParams.set('source', 'baraza');
-    url.searchParams.set('intent', 'post-bounty');
-    url.searchParams.set('community', communityName);
-    return url.toString();
-  } catch {
-    return DEWORK_BOUNTY_URL;
-  }
-}
+const LOCAL_BOUNTIES_KEY = 'baraza.bounties.v1';
+const LOCAL_SUBMISSIONS_KEY = 'baraza.bountySubmissions.v1';
 
-const BOUNTIES: Bounty[] = [
+const SEED_BOUNTIES: Bounty[] = [
   {
     id: 'b-ky-brand',
     communityId: '1',
@@ -61,7 +50,6 @@ const BOUNTIES: Bounty[] = [
     postedBy: 'Kibera Youth Collective',
     summary: 'Create reusable poster and WhatsApp story templates for member businesses.',
     skills: ['Canva', 'Branding', 'Social media'],
-    externalUrl: DEWORK_BOUNTY_URL,
   },
   {
     id: 'b-ky-training',
@@ -75,7 +63,6 @@ const BOUNTIES: Bounty[] = [
     postedBy: 'Kibera Youth Collective',
     summary: 'Run a Saturday workshop on savings, pricing, and mobile-money records.',
     skills: ['Training', 'Events', 'Finance'],
-    externalUrl: DEWORK_BOUNTY_URL,
   },
   {
     id: 'b-mm-supplier',
@@ -89,7 +76,6 @@ const BOUNTIES: Bounty[] = [
     postedBy: 'Mama Mboga Association',
     summary: 'Collect weekly market prices and publish a simple member buying guide.',
     skills: ['Research', 'Sheets', 'Procurement'],
-    externalUrl: DEWORK_BOUNTY_URL,
   },
   {
     id: 'b-mm-photo',
@@ -103,7 +89,6 @@ const BOUNTIES: Bounty[] = [
     postedBy: 'Mama Mboga Association',
     summary: 'Photograph 25 vendor stalls for online catalogues and delivery menus.',
     skills: ['Photography', 'Events', 'Content'],
-    externalUrl: DEWORK_BOUNTY_URL,
   },
   {
     id: 'b-tb-audit',
@@ -117,7 +102,6 @@ const BOUNTIES: Bounty[] = [
     postedBy: 'TechBridge Nairobi',
     summary: 'Review governance contract assumptions and produce issue-ranked audit notes.',
     skills: ['Solana', 'Rust', 'Security'],
-    externalUrl: DEWORK_BOUNTY_URL,
   },
   {
     id: 'b-tb-mentor',
@@ -131,7 +115,6 @@ const BOUNTIES: Bounty[] = [
     postedBy: 'TechBridge Nairobi',
     summary: 'Host a practical pair-programming session for junior DAO members.',
     skills: ['Mentoring', 'React', 'Community'],
-    externalUrl: DEWORK_BOUNTY_URL,
   },
   {
     id: 'b-mh-site',
@@ -145,7 +128,6 @@ const BOUNTIES: Bounty[] = [
     postedBy: 'Mwanzo Housing Sacco',
     summary: 'Document Plot 3 access roads, utilities, and boundary markers for members.',
     skills: ['Photography', 'Reporting', 'Mapping'],
-    externalUrl: DEWORK_BOUNTY_URL,
   },
   {
     id: 'b-mh-legal',
@@ -159,15 +141,57 @@ const BOUNTIES: Bounty[] = [
     postedBy: 'Mwanzo Housing Sacco',
     summary: 'Prepare a member-readable title due-diligence checklist before purchase votes.',
     skills: ['Legal ops', 'Research', 'Real estate'],
-    externalUrl: DEWORK_BOUNTY_URL,
   },
 ];
 
+function readLocalBounties(): Bounty[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(LOCAL_BOUNTIES_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeLocalBounties(bounties: Bounty[]): void {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(LOCAL_BOUNTIES_KEY, JSON.stringify(bounties));
+}
+
+function readSubmissions(): BountySubmission[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(LOCAL_SUBMISSIONS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeSubmissions(submissions: BountySubmission[]): void {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(LOCAL_SUBMISSIONS_KEY, JSON.stringify(submissions));
+}
+
+function splitSkills(raw: string[]): string[] {
+  return raw.map((skill) => skill.trim()).filter(Boolean).slice(0, 6);
+}
+
 export function listBounties(): Bounty[] {
-  return BOUNTIES.map((bounty) => ({
-    ...bounty,
-    externalUrl: buildDeworkBountyUrl(bounty),
-  }));
+  const submissions = readSubmissions();
+  return [...SEED_BOUNTIES, ...readLocalBounties()]
+    .map((bounty) => ({
+      ...bounty,
+      submissions: bounty.submissions + submissions.filter((submission) => submission.bountyId === bounty.id).length,
+    }))
+    .sort((a, b) => {
+      const statusRank = Number(b.status === 'open') - Number(a.status === 'open');
+      if (statusRank !== 0) return statusRank;
+      return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+    });
 }
 
 export function getBountiesForCommunity(communityId: string): Bounty[] {
@@ -176,6 +200,60 @@ export function getBountiesForCommunity(communityId: string): Bounty[] {
 
 export function getOpenBountiesForCommunity(communityId: string): Bounty[] {
   return getBountiesForCommunity(communityId).filter((bounty) => bounty.status === 'open');
+}
+
+export function createBountyRecord(input: CreateBountyInput): Bounty {
+  if (!input.communityId) throw new Error('Choose a community.');
+  if (!input.title.trim()) throw new Error('Bounty title is required.');
+  if (!input.summary.trim()) throw new Error('Bounty summary is required.');
+  if (!Number.isFinite(input.rewardKes) || input.rewardKes <= 0) throw new Error('Reward must be greater than zero.');
+  if (!input.deadline) throw new Error('Deadline is required.');
+
+  const bounty: Bounty = {
+    id: `b-local-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+    communityId: input.communityId,
+    title: input.title.trim(),
+    category: input.category.trim() || 'General',
+    rewardKes: input.rewardKes,
+    deadline: input.deadline,
+    submissions: 0,
+    status: 'open',
+    postedBy: input.postedBy,
+    summary: input.summary.trim(),
+    skills: splitSkills(input.skills),
+  };
+
+  writeLocalBounties([bounty, ...readLocalBounties()]);
+  return bounty;
+}
+
+export function submitBountyWork(input: {
+  bountyId: string;
+  contributor: string;
+  workUrl: string;
+  note: string;
+}): BountySubmission {
+  if (!input.bountyId) throw new Error('Choose a bounty.');
+  if (!input.contributor.trim()) throw new Error('Contributor name is required.');
+  if (!input.workUrl.trim()) throw new Error('Work URL is required.');
+
+  const submission: BountySubmission = {
+    id: `sub-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+    bountyId: input.bountyId,
+    contributor: input.contributor.trim(),
+    workUrl: input.workUrl.trim(),
+    note: input.note.trim(),
+    submittedAt: new Date().toISOString(),
+  };
+
+  writeSubmissions([submission, ...readSubmissions()]);
+  return submission;
+}
+
+export function listBountySubmissions(bountyId: string): BountySubmission[] {
+  return readSubmissions()
+    .filter((submission) => submission.bountyId === bountyId)
+    .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
 }
 
 export function getBountyStatsForCommunity(communityId: string) {

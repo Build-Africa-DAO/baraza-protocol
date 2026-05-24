@@ -26,7 +26,6 @@ Set these in Project Settings → Environment Variables:
 - `VITE_STELLAR_NETWORK` — `testnet`, `mainnet`, or `custom`
 - `VITE_STELLAR_HORIZON_URL` — Horizon URL used for Stellar balance and tx confirmation
 - `VITE_STELLAR_NETWORK_PASSPHRASE` — Stellar network passphrase
-- `VITE_DEWORK_WORKSPACE_URL` — Dework workspace used for bounty posting and submissions
 
 For Stellar testnet review:
 ```bash
