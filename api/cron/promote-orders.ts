@@ -37,9 +37,19 @@ function isAuthorized(req: Request): boolean {
   const cronSecret = process.env.CRON_SECRET;
   // Allow unauthenticated calls when no secret is configured (dev / preview
   // without the secret set). Production should always set CRON_SECRET.
-  if (!cronSecret) return true;
+  if (!cronSecret) return process.env.VERCEL_ENV !== 'production' && process.env.NODE_ENV !== 'production';
   const header = req.headers.get('authorization') ?? '';
   return header === `Bearer ${cronSecret}`;
+}
+
+function paymentOrderFilter(from: string): string {
+  const params = new URLSearchParams({
+    status: `eq.${from}`,
+  });
+  if (process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production') {
+    params.set('provider_environment', 'eq.production');
+  }
+  return params.toString();
 }
 
 async function patchOrders(from: string, to: string): Promise<number> {
@@ -48,7 +58,7 @@ async function patchOrders(from: string, to: string): Promise<number> {
   if (!url || !serviceKey) return 0;
 
   const res = await fetch(
-    `${url}/rest/v1/payment_orders?status=eq.${encodeURIComponent(from)}`,
+    `${url}/rest/v1/payment_orders?${paymentOrderFilter(from)}`,
     {
       method: 'PATCH',
       headers: {

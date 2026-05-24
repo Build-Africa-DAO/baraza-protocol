@@ -20,6 +20,11 @@ interface ActivateRequest {
   walletAddress: string;
 }
 
+interface PaymentOrderRow {
+  status: string;
+  community_id: string;
+}
+
 function json(body: unknown, init?: ResponseInit): Response {
   return new Response(JSON.stringify(body), {
     ...init,
@@ -40,7 +45,7 @@ const TERMINAL_POSITIVE_STATUSES = new Set([
   'RECONCILED',
 ]);
 
-async function fetchOrderStatus(url: string, serviceKey: string, orderId: string): Promise<string | null> {
+async function fetchOrder(url: string, serviceKey: string, orderId: string): Promise<PaymentOrderRow | null> {
   const res = await fetch(
     `${url}/rest/v1/payment_orders?order_id=eq.${encodeURIComponent(orderId)}&select=status,community_id`,
     {
@@ -51,8 +56,8 @@ async function fetchOrderStatus(url: string, serviceKey: string, orderId: string
     },
   );
   if (!res.ok) return null;
-  const rows = (await res.json().catch(() => [])) as Array<{ status: string; community_id: string }>;
-  return rows[0]?.status ?? null;
+  const rows = (await res.json().catch(() => [])) as PaymentOrderRow[];
+  return rows[0] ?? null;
 }
 
 async function findExistingMembership(
@@ -154,13 +159,19 @@ export default async function handler(req: Request): Promise<Response> {
   if (!body.walletAddress) return bad('walletAddress is required');
 
   // Gate: order must be in a terminal positive state.
-  const orderStatus = await fetchOrderStatus(url, serviceKey, body.orderId);
-  if (!orderStatus) {
+  const order = await fetchOrder(url, serviceKey, body.orderId);
+  if (!order) {
     return bad(`Order ${body.orderId} not found`, 404);
   }
-  if (!TERMINAL_POSITIVE_STATUSES.has(orderStatus)) {
+  if (order.community_id !== body.communityId) {
     return bad(
-      `Order ${body.orderId} is in status ${orderStatus}; activation requires INDEXER_CONFIRMED or RECONCILED.`,
+      `Order ${body.orderId} belongs to a different community.`,
+      403,
+    );
+  }
+  if (!TERMINAL_POSITIVE_STATUSES.has(order.status)) {
+    return bad(
+      `Order ${body.orderId} is in status ${order.status}; activation requires INDEXER_CONFIRMED or RECONCILED.`,
       409,
     );
   }

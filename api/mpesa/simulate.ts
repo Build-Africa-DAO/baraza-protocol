@@ -53,6 +53,26 @@ function badRequest(message: string): Response {
   return json({ error: 'invalid_request', message }, { status: 400 });
 }
 
+function forbidden(message: string): Response {
+  return json({ error: 'forbidden', message }, { status: 403 });
+}
+
+function isProduction(): boolean {
+  return process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production';
+}
+
+function isSimulatorAuthorized(req: Request): boolean {
+  if (!isProduction()) return true;
+  if (process.env.MPESA_SIMULATOR_ENABLED !== 'true') return false;
+
+  const secret = process.env.MPESA_SIMULATOR_SECRET;
+  if (!secret) return false;
+
+  const auth = req.headers.get('authorization') ?? '';
+  const headerSecret = req.headers.get('x-simulator-secret') ?? '';
+  return auth === `Bearer ${secret}` || headerSecret === secret;
+}
+
 function generateOrderId(): string {
   const ts = Date.now().toString(36);
   const rand = Math.random().toString(36).slice(2, 8);
@@ -111,6 +131,9 @@ export default async function handler(req: Request): Promise<Response> {
 
   if (req.method !== 'POST') {
     return json({ error: 'method_not_allowed' }, { status: 405 });
+  }
+  if (!isSimulatorAuthorized(req)) {
+    return forbidden('M-Pesa simulator is disabled in production.');
   }
 
   let body: SimulateRequest;
