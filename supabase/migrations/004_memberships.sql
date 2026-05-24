@@ -44,3 +44,10 @@ CREATE INDEX IF NOT EXISTS memberships_status_idx         ON memberships (status
 CREATE UNIQUE INDEX IF NOT EXISTS memberships_active_community_wallet_unique
   ON memberships (community_id, wallet_address)
   WHERE status IN ('PENDING', 'ACTIVE');
+
+ALTER TABLE memberships ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Memberships are publicly readable" ON memberships;
+CREATE POLICY "Memberships are publicly readable"
+  ON memberships FOR SELECT
+  USING (true);

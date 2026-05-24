@@ -2,11 +2,10 @@ import { useState } from "react";
 import {
   Banknote,
   CheckCircle2,
+  CircleDollarSign,
   ClipboardList,
   Link2,
-  MousePointer2,
   ShieldCheck,
-  Smartphone,
   Users,
   Vote,
   type LucideIcon,
@@ -36,9 +35,9 @@ const flows: Record<FlowKey, { label: string; title: string; steps: FlowStep[] }
       },
       {
         title: "Pay dues",
-        detail: "M-Pesa payment confirmation is attached to the membership request.",
-        icon: Smartphone,
-        stat: "KSh",
+        detail: "Members can pay by M-Pesa or Stellar XLM, then attach proof to the membership request.",
+        icon: CircleDollarSign,
+        stat: "KES/XLM",
       },
       {
         title: "Vote",
@@ -72,9 +71,9 @@ const flows: Record<FlowKey, { label: string; title: string; steps: FlowStep[] }
       },
       {
         title: "Confirm money",
-        detail: "Payment attestations connect off-chain collections to on-chain state.",
+        detail: "M-Pesa confirmations and Stellar settlement checks connect payments to on-chain state.",
         icon: Banknote,
-        stat: "Paid",
+        stat: "Verified",
       },
       {
         title: "Release by rule",
@@ -143,7 +142,6 @@ export default function FlowWalkthrough() {
                   {flows[key].label}
                 </button>
               ))}
-              <MousePointer2 className="pointer-events-none absolute -bottom-8 left-[52%] h-7 w-7 rotate-[-18deg] md:-bottom-10 md:h-9 md:w-9" />
             </div>
 
             {/* Flow content */}

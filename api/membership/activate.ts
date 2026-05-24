@@ -18,11 +18,14 @@ interface ActivateRequest {
   orderId: string;
   communityId: string;
   walletAddress: string;
+  activationSecret: string;
 }
 
 interface PaymentOrderRow {
   status: string;
   community_id: string;
+  activation_secret_hash: string | null;
+  wallet_address: string | null;
 }
 
 function json(body: unknown, init?: ResponseInit): Response {
@@ -47,7 +50,7 @@ const TERMINAL_POSITIVE_STATUSES = new Set([
 
 async function fetchOrder(url: string, serviceKey: string, orderId: string): Promise<PaymentOrderRow | null> {
   const res = await fetch(
-    `${url}/rest/v1/payment_orders?order_id=eq.${encodeURIComponent(orderId)}&select=status,community_id`,
+    `${url}/rest/v1/payment_orders?order_id=eq.${encodeURIComponent(orderId)}&select=status,community_id,activation_secret_hash,wallet_address`,
     {
       headers: {
         apikey: serviceKey,
@@ -58,6 +61,33 @@ async function fetchOrder(url: string, serviceKey: string, orderId: string): Pro
   if (!res.ok) return null;
   const rows = (await res.json().catch(() => [])) as PaymentOrderRow[];
   return rows[0] ?? null;
+}
+
+async function hashActivationSecret(secret: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(secret));
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function bindOrderWallet(
+  url: string,
+  serviceKey: string,
+  orderId: string,
+  walletAddress: string,
+): Promise<boolean> {
+  const res = await fetch(
+    `${url}/rest/v1/payment_orders?order_id=eq.${encodeURIComponent(orderId)}&wallet_address=is.null`,
+    {
+      method: 'PATCH',
+      headers: {
+        apikey: serviceKey,
+        Authorization: `Bearer ${serviceKey}`,
+        'content-type': 'application/json',
+        Prefer: 'return=representation',
+      },
+      body: JSON.stringify({ wallet_address: walletAddress }),
+    },
+  );
+  return res.ok;
 }
 
 async function findExistingMembership(
@@ -157,6 +187,7 @@ export default async function handler(req: Request): Promise<Response> {
   if (!body.orderId) return bad('orderId is required');
   if (!body.communityId) return bad('communityId is required');
   if (!body.walletAddress) return bad('walletAddress is required');
+  if (!body.activationSecret) return bad('activationSecret is required');
 
   // Gate: order must be in a terminal positive state.
   const order = await fetchOrder(url, serviceKey, body.orderId);
@@ -174,6 +205,18 @@ export default async function handler(req: Request): Promise<Response> {
       `Order ${body.orderId} is in status ${order.status}; activation requires INDEXER_CONFIRMED or RECONCILED.`,
       409,
     );
+  }
+  if (!order.activation_secret_hash) {
+    return bad(`Order ${body.orderId} cannot be activated because it was created without an activation secret.`, 409);
+  }
+  if (await hashActivationSecret(body.activationSecret) !== order.activation_secret_hash) {
+    return bad('Activation secret does not match this payment order.', 403);
+  }
+  if (order.wallet_address && order.wallet_address !== body.walletAddress) {
+    return bad('Order is already bound to a different wallet.', 403);
+  }
+  if (!order.wallet_address) {
+    await bindOrderWallet(url, serviceKey, body.orderId, body.walletAddress);
   }
 
   // Idempotent: return existing membership if one already exists.

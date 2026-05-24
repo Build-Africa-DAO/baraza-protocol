@@ -94,7 +94,15 @@ const SELECT_COLUMNS =
  * configured (caller should fall back to mock progression) OR when the
  * order does not exist.
  */
-export async function fetchPaymentOrder(orderId: string): Promise<PaymentOrder | null> {
+export async function fetchPaymentOrder(orderId: string, activationSecret?: string): Promise<PaymentOrder | null> {
+  if (activationSecret) {
+    const params = new URLSearchParams({ orderId, activationSecret });
+    const res = await fetch(`/api/payment-orders/status?${params.toString()}`);
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`Could not fetch payment order (${res.status}).`);
+    return (await res.json()) as PaymentOrder;
+  }
+
   const client = getSupabaseClient();
   if (!client) return null;
 

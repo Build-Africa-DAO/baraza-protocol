@@ -38,6 +38,13 @@ CREATE INDEX IF NOT EXISTS stellar_settlements_status_idx
 CREATE INDEX IF NOT EXISTS stellar_settlements_created_at_idx
   ON stellar_settlements (created_at DESC);
 
+ALTER TABLE stellar_settlements ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Stellar settlements are publicly readable" ON stellar_settlements;
+CREATE POLICY "Stellar settlements are publicly readable"
+  ON stellar_settlements FOR SELECT
+  USING (true);
+
 DROP TRIGGER IF EXISTS stellar_settlements_set_updated_at ON stellar_settlements;
 CREATE TRIGGER stellar_settlements_set_updated_at
   BEFORE UPDATE ON stellar_settlements

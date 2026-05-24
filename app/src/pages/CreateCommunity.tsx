@@ -78,7 +78,7 @@ const CreateCommunity: React.FC = () => {
         }),
       });
       if (res.ok) {
-        const data = (await res.json()) as { orderId?: string; persisted?: boolean };
+        const data = (await res.json()) as { orderId?: string; activationSecret?: string; persisted?: boolean };
         if (data.orderId) {
           return { orderId: data.orderId, persisted: data.persisted ?? false };
         }
@@ -475,7 +475,7 @@ const CreateCommunity: React.FC = () => {
                           className="w-full appearance-none rounded-lg border py-3 pl-8 pr-4 text-sm font-semibold outline-none cursor-pointer"
                         >
                           <option value="solana">Solana — SOL</option>
-                          <option value="stellar">Stellar - XLM (integration pending)</option>
+                          <option value="stellar">Stellar - XLM settlement proof</option>
                           <option value="base">Base - ETH (integration pending)</option>
                           <option value="ethereum">Ethereum - ETH (integration pending)</option>
                         </select>
@@ -484,7 +484,7 @@ const CreateCommunity: React.FC = () => {
                         {isReady ? (
                           <p>
                             <span className="font-semibold">{CHAINS[walletChain].short} equivalent</span> of{' '}
-                            {formatKSh(DAO_CREATION_FEE_KES)} will be deducted from your connected wallet on launch.
+                            {formatKSh(DAO_CREATION_FEE_KES)} will be recorded against the launch order.
                           </p>
                         ) : (
                           <p className="text-muted-foreground">

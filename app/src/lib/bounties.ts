@@ -1,3 +1,5 @@
+import { getSupabaseClient } from '@/lib/communities';
+
 export type BountyStatus = 'open' | 'in_review' | 'awarded';
 
 export interface Bounty {
@@ -36,6 +38,28 @@ export interface CreateBountyInput {
 
 const LOCAL_BOUNTIES_KEY = 'baraza.bounties.v1';
 const LOCAL_SUBMISSIONS_KEY = 'baraza.bountySubmissions.v1';
+
+interface BountyRow {
+  id: string;
+  community_id: string;
+  title: string;
+  category: string;
+  reward_kes: number | string;
+  deadline: string;
+  status: BountyStatus;
+  posted_by: string;
+  summary: string;
+  skills: string[] | null;
+}
+
+interface BountySubmissionRow {
+  id: string;
+  bounty_id: string;
+  contributor: string;
+  work_url: string;
+  note: string | null;
+  submitted_at: string;
+}
 
 const SEED_BOUNTIES: Bounty[] = [
   {
@@ -180,22 +204,80 @@ function splitSkills(raw: string[]): string[] {
   return raw.map((skill) => skill.trim()).filter(Boolean).slice(0, 6);
 }
 
+function bountyFromRow(row: BountyRow, submissions = 0): Bounty {
+  return {
+    id: row.id,
+    communityId: row.community_id,
+    title: row.title,
+    category: row.category,
+    rewardKes: Number(row.reward_kes),
+    deadline: row.deadline,
+    submissions,
+    status: row.status,
+    postedBy: row.posted_by,
+    summary: row.summary,
+    skills: row.skills ?? [],
+  };
+}
+
+function submissionFromRow(row: BountySubmissionRow): BountySubmission {
+  return {
+    id: row.id,
+    bountyId: row.bounty_id,
+    contributor: row.contributor,
+    workUrl: row.work_url,
+    note: row.note ?? '',
+    submittedAt: row.submitted_at,
+  };
+}
+
+function sortBounties(bounties: Bounty[]): Bounty[] {
+  return [...bounties].sort((a, b) => {
+    const statusRank = Number(b.status === 'open') - Number(a.status === 'open');
+    if (statusRank !== 0) return statusRank;
+    return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+  });
+}
+
 export function listBounties(): Bounty[] {
   const submissions = readSubmissions();
-  return [...SEED_BOUNTIES, ...readLocalBounties()]
+  return sortBounties([...SEED_BOUNTIES, ...readLocalBounties()]
     .map((bounty) => ({
       ...bounty,
       submissions: bounty.submissions + submissions.filter((submission) => submission.bountyId === bounty.id).length,
-    }))
-    .sort((a, b) => {
-      const statusRank = Number(b.status === 'open') - Number(a.status === 'open');
-      if (statusRank !== 0) return statusRank;
-      return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
-    });
+    })));
+}
+
+export async function listBountiesAsync(): Promise<Bounty[]> {
+  const client = getSupabaseClient();
+  if (!client) return listBounties();
+
+  const [{ data: rows, error: bountyError }, { data: submissionRows, error: submissionError }] = await Promise.all([
+    client
+      .from('bounties')
+      .select('id,community_id,title,category,reward_kes,deadline,status,posted_by,summary,skills'),
+    client
+      .from('bounty_submissions')
+      .select('bounty_id'),
+  ]);
+
+  if (bountyError) throw bountyError;
+  if (submissionError) throw submissionError;
+
+  const counts = new Map<string, number>();
+  (submissionRows ?? []).forEach((row: { bounty_id: string }) => {
+    counts.set(row.bounty_id, (counts.get(row.bounty_id) ?? 0) + 1);
+  });
+
+  return sortBounties((rows ?? []).map((row) => bountyFromRow(row as BountyRow, counts.get(row.id) ?? 0)));
 }
 
 export function getBountiesForCommunity(communityId: string): Bounty[] {
   return listBounties().filter((bounty) => bounty.communityId === communityId);
+}
+
+export async function getBountiesForCommunityAsync(communityId: string): Promise<Bounty[]> {
+  return (await listBountiesAsync()).filter((bounty) => bounty.communityId === communityId);
 }
 
 export function getOpenBountiesForCommunity(communityId: string): Bounty[] {
@@ -227,6 +309,57 @@ export function createBountyRecord(input: CreateBountyInput): Bounty {
   return bounty;
 }
 
+export async function createBountyRecordAsync(input: CreateBountyInput): Promise<Bounty> {
+  const bounty = validateAndBuildBounty(input);
+  const client = getSupabaseClient();
+  if (!client) {
+    writeLocalBounties([bounty, ...readLocalBounties()]);
+    return bounty;
+  }
+
+  const { data, error } = await client
+    .from('bounties')
+    .insert({
+      id: bounty.id,
+      community_id: bounty.communityId,
+      title: bounty.title,
+      category: bounty.category,
+      reward_kes: bounty.rewardKes,
+      deadline: bounty.deadline,
+      status: bounty.status,
+      posted_by: bounty.postedBy,
+      summary: bounty.summary,
+      skills: bounty.skills,
+    })
+    .select('id,community_id,title,category,reward_kes,deadline,status,posted_by,summary,skills')
+    .single();
+
+  if (error) throw error;
+  return bountyFromRow(data as BountyRow);
+}
+
+function validateAndBuildBounty(input: CreateBountyInput): Bounty {
+  if (!input.communityId) throw new Error('Choose a community.');
+  if (!input.title.trim()) throw new Error('Bounty title is required.');
+  if (!input.summary.trim()) throw new Error('Bounty summary is required.');
+  if (!Number.isFinite(input.rewardKes) || input.rewardKes <= 0) throw new Error('Reward must be greater than zero.');
+  if (!input.deadline) throw new Error('Deadline is required.');
+
+  return {
+    id: `b-local-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+    communityId: input.communityId,
+    title: input.title.trim(),
+    category: input.category.trim() || 'General',
+    rewardKes: input.rewardKes,
+    deadline: input.deadline,
+    submissions: 0,
+    status: 'open',
+    postedBy: input.postedBy,
+    summary: input.summary.trim(),
+    skills: splitSkills(input.skills),
+  };
+}
+
 export function submitBountyWork(input: {
   bountyId: string;
   contributor: string;
@@ -250,10 +383,74 @@ export function submitBountyWork(input: {
   return submission;
 }
 
+export async function submitBountyWorkAsync(input: {
+  bountyId: string;
+  contributor: string;
+  workUrl: string;
+  note: string;
+}): Promise<BountySubmission> {
+  const submission = validateAndBuildSubmission(input);
+  const client = getSupabaseClient();
+  if (!client) {
+    writeSubmissions([submission, ...readSubmissions()]);
+    return submission;
+  }
+
+  const { data, error } = await client
+    .from('bounty_submissions')
+    .insert({
+      id: submission.id,
+      bounty_id: submission.bountyId,
+      contributor: submission.contributor,
+      work_url: submission.workUrl,
+      note: submission.note,
+      submitted_at: submission.submittedAt,
+    })
+    .select('id,bounty_id,contributor,work_url,note,submitted_at')
+    .single();
+
+  if (error) throw error;
+  return submissionFromRow(data as BountySubmissionRow);
+}
+
+function validateAndBuildSubmission(input: {
+  bountyId: string;
+  contributor: string;
+  workUrl: string;
+  note: string;
+}): BountySubmission {
+  if (!input.bountyId) throw new Error('Choose a bounty.');
+  if (!input.contributor.trim()) throw new Error('Contributor name is required.');
+  if (!input.workUrl.trim()) throw new Error('Work URL is required.');
+
+  return {
+    id: `sub-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+    bountyId: input.bountyId,
+    contributor: input.contributor.trim(),
+    workUrl: input.workUrl.trim(),
+    note: input.note.trim(),
+    submittedAt: new Date().toISOString(),
+  };
+}
+
 export function listBountySubmissions(bountyId: string): BountySubmission[] {
   return readSubmissions()
     .filter((submission) => submission.bountyId === bountyId)
     .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+}
+
+export async function listBountySubmissionsAsync(bountyId: string): Promise<BountySubmission[]> {
+  const client = getSupabaseClient();
+  if (!client) return listBountySubmissions(bountyId);
+
+  const { data, error } = await client
+    .from('bounty_submissions')
+    .select('id,bounty_id,contributor,work_url,note,submitted_at')
+    .eq('bounty_id', bountyId)
+    .order('submitted_at', { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []).map((row) => submissionFromRow(row as BountySubmissionRow));
 }
 
 export function getBountyStatsForCommunity(communityId: string) {

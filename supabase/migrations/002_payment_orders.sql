@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS payment_orders (
   provider              text         NOT NULL DEFAULT 'africastalking',
   provider_environment  text         NOT NULL DEFAULT 'sandbox',
   provider_reference    text,
+  activation_secret_hash text,
+  wallet_address        text,
   amount_expected       numeric(20, 2) NOT NULL,
   amount_received       numeric(20, 2),
   currency              text         NOT NULL DEFAULT 'KES',
@@ -47,6 +49,13 @@ CREATE INDEX IF NOT EXISTS payment_orders_community_id_idx ON payment_orders (co
 CREATE INDEX IF NOT EXISTS payment_orders_status_idx       ON payment_orders (status);
 CREATE INDEX IF NOT EXISTS payment_orders_phone_hash_idx   ON payment_orders (phone_hash);
 CREATE INDEX IF NOT EXISTS payment_orders_created_at_idx   ON payment_orders (created_at DESC);
+
+ALTER TABLE payment_orders ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Payment orders are readable by exact order id" ON payment_orders;
+CREATE POLICY "Payment orders are readable by exact order id"
+  ON payment_orders FOR SELECT
+  USING (false);
 
 -- Touch updated_at on every UPDATE so admin dashboards can sort by recency.
 CREATE OR REPLACE FUNCTION set_updated_at()

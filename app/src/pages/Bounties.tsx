@@ -1,13 +1,15 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, BriefcaseBusiness, CalendarDays, PlusCircle, Search, Send, SlidersHorizontal, Trophy } from 'lucide-react';
 import Layout from '@/components/Layout';
 import CommunityBanner from '@/components/CommunityBanner';
 import {
-  createBountyRecord,
+  createBountyRecordAsync,
   listBounties,
-  listBountySubmissions,
-  submitBountyWork,
+  listBountiesAsync,
+  listBountySubmissionsAsync,
+  submitBountyWorkAsync,
+  type BountySubmission,
   type BountyStatus,
 } from '@/lib/bounties';
 import { useCommunities } from '@/hooks/useCommunities';
@@ -52,6 +54,7 @@ export default function Bounties() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<BountyStatus | 'all'>('open');
   const [bounties, setBounties] = useState(() => listBounties());
+  const [submissionCounts, setSubmissionCounts] = useState<Record<string, number>>({});
   const [showPostForm, setShowPostForm] = useState(false);
   const [submitFor, setSubmitFor] = useState<string | null>(null);
   const [formMessage, setFormMessage] = useState<string | null>(null);
@@ -69,7 +72,23 @@ export default function Bounties() {
     workUrl: '',
     note: '',
   });
-  const refreshBounties = () => setBounties(listBounties());
+  const refreshBounties = async () => {
+    const nextBounties = await listBountiesAsync();
+    setBounties(nextBounties);
+    const entries = await Promise.all(
+      nextBounties.map(async (bounty): Promise<[string, BountySubmission[]]> => [
+        bounty.id,
+        await listBountySubmissionsAsync(bounty.id),
+      ]),
+    );
+    setSubmissionCounts(Object.fromEntries(entries.map(([id, submissions]) => [id, submissions.length])));
+  };
+
+  useEffect(() => {
+    void refreshBounties().catch((err) => {
+      setFormMessage(err instanceof Error ? err.message : 'Could not load bounties.');
+    });
+  }, []);
 
   const communityById = useMemo(
     () => new Map(communities.map((community) => [community.id, community])),
@@ -88,10 +107,10 @@ export default function Bounties() {
     .filter((bounty) => bounty.status === 'open')
     .reduce((sum, bounty) => sum + bounty.rewardKes, 0);
 
-  const handleCreateBounty = () => {
+  const handleCreateBounty = async () => {
     const community = communityById.get(newBounty.communityId);
     try {
-      createBountyRecord({
+      await createBountyRecordAsync({
         communityId: newBounty.communityId,
         postedBy: community?.name ?? 'Baraza community',
         title: newBounty.title,
@@ -112,15 +131,15 @@ export default function Bounties() {
       });
       setShowPostForm(false);
       setFormMessage('Bounty posted to Baraza.');
-      refreshBounties();
+      await refreshBounties();
     } catch (err) {
       setFormMessage(err instanceof Error ? err.message : 'Could not post bounty.');
     }
   };
 
-  const handleSubmitWork = (bountyId: string) => {
+  const handleSubmitWork = async (bountyId: string) => {
     try {
-      submitBountyWork({
+      await submitBountyWorkAsync({
         bountyId,
         contributor: submission.contributor,
         workUrl: submission.workUrl,
@@ -129,7 +148,7 @@ export default function Bounties() {
       setSubmission({ contributor: '', workUrl: '', note: '' });
       setSubmitFor(null);
       setFormMessage('Submission recorded in Baraza.');
-      refreshBounties();
+      await refreshBounties();
     } catch (err) {
       setFormMessage(err instanceof Error ? err.message : 'Could not submit work.');
     }
@@ -245,7 +264,7 @@ export default function Bounties() {
               </div>
               <button
                 type="button"
-                onClick={handleCreateBounty}
+                onClick={() => void handleCreateBounty()}
                 className="btn-primary mt-4 gap-2 px-4 py-2 text-sm"
               >
                 <PlusCircle className="h-4 w-4" />
@@ -369,15 +388,15 @@ export default function Bounties() {
                       />
                       <button
                         type="button"
-                        onClick={() => handleSubmitWork(bounty.id)}
+                        onClick={() => void handleSubmitWork(bounty.id)}
                         className="btn-warm w-fit gap-2 px-4 py-2 text-sm"
                       >
                         <Send className="h-4 w-4" />
                         Record submission
                       </button>
-                      {listBountySubmissions(bounty.id).length > 0 && (
+                      {(submissionCounts[bounty.id] ?? 0) > 0 && (
                         <p className="text-xs text-muted-foreground">
-                          {listBountySubmissions(bounty.id).length} Baraza submission records stored locally.
+                          {submissionCounts[bounty.id]} Baraza submission records stored for review.
                         </p>
                       )}
                     </div>

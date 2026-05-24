@@ -1,6 +1,7 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, BriefcaseBusiness, CalendarDays, Megaphone, Trophy } from 'lucide-react';
-import { getBountiesForCommunity, type Bounty } from '@/lib/bounties';
+import { getBountiesForCommunity, getBountiesForCommunityAsync, type Bounty } from '@/lib/bounties';
 import { formatKSh, cn } from '@/lib/utils';
 
 interface BountyBoardProps {
@@ -75,7 +76,22 @@ function BountyCard({ bounty, compact = false }: { bounty: Bounty; compact?: boo
 }
 
 export default function BountyBoard({ communityId, communityName = 'this community', compact = false }: BountyBoardProps) {
-  const bounties = getBountiesForCommunity(communityId);
+  const [bounties, setBounties] = useState(() => getBountiesForCommunity(communityId));
+
+  useEffect(() => {
+    let cancelled = false;
+    getBountiesForCommunityAsync(communityId)
+      .then((nextBounties) => {
+        if (!cancelled) setBounties(nextBounties);
+      })
+      .catch(() => {
+        if (!cancelled) setBounties(getBountiesForCommunity(communityId));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [communityId]);
+
   const openCount = bounties.filter((bounty) => bounty.status === 'open').length;
   const rewardPool = bounties
     .filter((bounty) => bounty.status === 'open')

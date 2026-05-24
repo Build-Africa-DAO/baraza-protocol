@@ -31,6 +31,7 @@ interface SimulateRequest {
 
 interface SimulateResponse {
   orderId: string;
+  activationSecret: string;
   status: 'PAYMENT_PENDING' | 'PAYMENT_CONFIRMED';
   amount: number;
   currency: string;
@@ -79,8 +80,20 @@ function generateOrderId(): string {
   return `ord_sim_${ts}_${rand}`;
 }
 
+function generateActivationSecret(): string {
+  const bytes = new Uint8Array(24);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function hashActivationSecret(secret: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(secret));
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
 async function persistOrder(input: {
   orderId: string;
+  activationSecret: string;
   request: SimulateRequest;
 }): Promise<boolean> {
   const url = process.env.SUPABASE_URL?.replace(/\/$/, '');
@@ -102,6 +115,7 @@ async function persistOrder(input: {
       membership_tier_id: input.request.tierId ?? null,
       provider: 'africastalking',
       provider_environment: 'sandbox',
+      activation_secret_hash: await hashActivationSecret(input.activationSecret),
       amount_expected: input.request.amount,
       currency: input.request.currency ?? 'KES',
       status: 'PAYMENT_CONFIRMED',
@@ -154,10 +168,12 @@ export default async function handler(req: Request): Promise<Response> {
   }
 
   const orderId = generateOrderId();
-  const persisted = await persistOrder({ orderId, request: body });
+  const activationSecret = generateActivationSecret();
+  const persisted = await persistOrder({ orderId, activationSecret, request: body });
 
   const response: SimulateResponse = {
     orderId,
+    activationSecret,
     status: 'PAYMENT_CONFIRMED',
     amount: body.amount,
     currency: body.currency ?? 'KES',

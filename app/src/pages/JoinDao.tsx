@@ -116,6 +116,7 @@ export default function JoinDao() {
     setIsSubmitting(true);
 
     let orderId: string | null = null;
+    let activationSecret: string | null = null;
     let usedFallback = false;
 
     try {
@@ -130,8 +131,9 @@ export default function JoinDao() {
         }),
       });
       if (res.ok) {
-        const data = (await res.json()) as { orderId?: string };
+        const data = (await res.json()) as { orderId?: string; activationSecret?: string };
         orderId = data.orderId ?? null;
+        activationSecret = data.activationSecret ?? null;
       }
     } catch {
       // network/CORS/local-dev-no-vercel — fall through to mock
@@ -152,7 +154,8 @@ export default function JoinDao() {
     // Reset state before navigating so re-entering the page (back button)
     // doesn't leave the button permanently disabled.
     setIsSubmitting(false);
-    navigate(`/join/${id}/status?orderId=${encodeURIComponent(orderId)}`);
+    const secretParam = activationSecret ? `&activationSecret=${encodeURIComponent(activationSecret)}` : "";
+    navigate(`/join/${id}/status?orderId=${encodeURIComponent(orderId)}${secretParam}`);
   }
 
   return (
@@ -242,12 +245,12 @@ export default function JoinDao() {
                       <Wallet className="h-5 w-5" />
                     </div>
                     <div>
-                      <h2 className="font-display text-base font-semibold">Join with wallet</h2>
+                      <h2 className="font-display text-base font-semibold">Join with wallet or Stellar</h2>
                       <p className="text-xs">Optional chain-first path</p>
                     </div>
                   </div>
                   <p className="text-sm leading-6">
-                    Connect Phantom, Solflare, or Coinbase Wallet and pay membership dues directly from your wallet.
+                    Connect a Solana wallet for credentials, or settle dues with Stellar XLM and record the transaction from your profile.
                   </p>
                   <button
                     type="button"
@@ -265,6 +268,12 @@ export default function JoinDao() {
                     <Wallet className="h-4 w-4" />
                     {connecting ? "Connecting..." : connected ? "Pay with connected wallet" : "Connect wallet"}
                   </button>
+                  <Link
+                    to="/profile"
+                    className="btn-ghost mt-3 w-full justify-center gap-2 py-3 text-sm font-bold"
+                  >
+                    Record Stellar XLM
+                  </Link>
                 </div>
               </div>
 

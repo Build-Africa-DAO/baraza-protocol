@@ -70,6 +70,7 @@ export default function JoinStatus() {
   const { community } = useCommunity(id);
   const { publicKey } = useWallet();
   const orderId = params.get("orderId") ?? "";
+  const activationSecret = params.get("activationSecret") ?? "";
 
   useSeo({
     title: community ? `Join status — ${community.name}` : "Join status",
@@ -120,7 +121,7 @@ export default function JoinStatus() {
     const poll = async () => {
       if (cancelled) return;
       try {
-        const order = await fetchPaymentOrder(orderId);
+        const order = await fetchPaymentOrder(orderId, activationSecret);
         if (cancelled) return;
         if (!order) {
           setErrorMessage(`Order ${orderId} not found in Supabase. Verify migrations + service role key.`);
@@ -143,7 +144,7 @@ export default function JoinStatus() {
       cancelled = true;
       if (timer !== undefined) window.clearTimeout(timer);
     };
-  }, [isLocalOrder, hasSupabase, orderId]);
+  }, [isLocalOrder, hasSupabase, orderId, activationSecret]);
 
   // ─── On RECONCILED (or INDEXER_CONFIRMED) with a wallet present, record the
   //     membership locally for the dashboard AND try to persist via the
@@ -157,7 +158,7 @@ export default function JoinStatus() {
     recordActiveMembership(id, publicKey.toBase58());
     membershipRecordedRef.current = true;
 
-    if (!orderId || orderId.startsWith("ord_local_")) return;
+    if (!orderId || orderId.startsWith("ord_local_") || !activationSecret) return;
 
     fetch("/api/membership/activate", {
       method: "POST",
@@ -166,11 +167,12 @@ export default function JoinStatus() {
         orderId,
         communityId: id,
         walletAddress: publicKey.toBase58(),
+        activationSecret,
       }),
     }).catch(() => {
       // Server endpoint unreachable; localStorage write is the source of truth.
     });
-  }, [status, publicKey, id, orderId]);
+  }, [status, publicKey, id, orderId, activationSecret]);
 
   const stepStates = useMemo(
     () => DISPLAY_STEPS.map((step) => ({ ...step, state: deriveStepState(step.minStatus, status) })),
