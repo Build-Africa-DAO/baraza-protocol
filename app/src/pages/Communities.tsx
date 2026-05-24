@@ -267,7 +267,7 @@ export default function Communities() {
               </p>
               <p className="text-sm mb-6">
                 {chainFilter === "stellar"
-                  ? "Stellar contract support is built, but the app integration is still pending. Switch to Solana to see active communities."
+                  ? "No communities have selected Stellar as their settlement rail yet. Launch one and use XLM payment verification for member dues."
                   : "Try a different type, or start your own Community DAO."}
               </p>
               <Link to="/create" className="btn-primary inline-flex items-center gap-2 text-sm">

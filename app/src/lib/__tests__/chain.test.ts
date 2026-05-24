@@ -8,16 +8,17 @@ describe('CHAINS metadata', () => {
     }
   });
 
-  it('marks only Solana as enabled until app integrations are wired', () => {
+  it('marks Solana and Stellar as enabled', () => {
     expect(CHAINS.solana.enabled).toBe(true);
-    for (const id of ['stellar', 'ethereum', 'base', 'arbitrum', 'optimism', 'polygon', 'bnb', 'celo'] as const) {
+    expect(CHAINS.stellar.enabled).toBe(true);
+    for (const id of ['ethereum', 'base', 'arbitrum', 'optimism', 'polygon', 'bnb', 'celo'] as const) {
       expect(CHAINS[id].enabled).toBe(false);
       expect(CHAINS[id].comingSoon).toBeTruthy();
     }
   });
 
   it('uses integration-pending labels for disabled chains', () => {
-    for (const id of ['stellar', 'ethereum', 'base', 'arbitrum', 'optimism', 'polygon', 'bnb', 'celo'] as const) {
+    for (const id of ['ethereum', 'base', 'arbitrum', 'optimism', 'polygon', 'bnb', 'celo'] as const) {
       expect(CHAINS[id].comingSoon).toBe('Integration pending');
     }
   });

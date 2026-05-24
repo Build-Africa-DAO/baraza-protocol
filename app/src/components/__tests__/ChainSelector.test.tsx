@@ -51,11 +51,13 @@ describe('ChainSelector — open state', () => {
     }
   });
 
-  it('disables Stellar with an integration-pending label', () => {
+  it('allows Stellar selection', () => {
     renderSelector();
     fireEvent.click(screen.getByRole('button', { name: /network: solana/i }));
-    const stellarOption = screen.getByRole('option', { name: /stellar.*integration pending/i });
-    expect(stellarOption).toBeDisabled();
+    const stellarOption = screen.getByRole('option', { name: /^stellar$/i });
+    expect(stellarOption).not.toBeDisabled();
+    fireEvent.click(stellarOption);
+    expect(screen.getByRole('button', { name: /network: stellar/i })).toBeInTheDocument();
   });
 
   it('disables all non-Solana chains with integration-pending labels', () => {
@@ -85,13 +87,12 @@ describe('ChainSelector — open state', () => {
 });
 
 describe('ChainSelector — keyboard navigation', () => {
-  it('ArrowDown skips the disabled Stellar entry (one option enabled)', () => {
+  it('ArrowDown can focus Stellar as the next enabled option', () => {
     renderSelector();
     const trigger = screen.getByRole('button', { name: /network: solana/i });
     fireEvent.click(trigger);
 
-    // Solana (index 0) is enabled, Stellar (index 1) is not. ArrowDown should
-    // land on the same enabled option since there's only one.
+    // Solana (index 0) and Stellar (index 1) are enabled.
     fireEvent.keyDown(window, { key: 'ArrowDown' });
 
     // No crash, listbox still open
@@ -119,9 +120,7 @@ describe('ChainSelector — persistence', () => {
     expect(window.localStorage.getItem('baraza:chain')).toBe('solana');
   });
 
-  it('reads the initial chain from localStorage if present (Stellar fallthrough enabled for read)', () => {
-    // Even though Stellar can't be selected via the UI, the storage layer
-    // accepts it as a valid value (filter happens in CHAIN_LIST, not on read).
+  it('reads the initial chain from localStorage if present', () => {
     window.localStorage.setItem('baraza:chain', 'stellar');
     renderSelector();
     expect(screen.getByRole('button', { name: /network: stellar/i })).toBeInTheDocument();

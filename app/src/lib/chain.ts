@@ -3,8 +3,9 @@
  *
  * Distinct from `lib/network.ts`, which selects the Solana cluster
  * (mainnet/devnet/testnet). This module is about which blockchain the
- * user is browsing. Contract implementations exist across Solana, Stellar,
- * and EVM, but only Solana is enabled until app client wiring lands.
+ * user is browsing. Solana handles membership credentials and governance.
+ * Stellar is enabled as the payment/settlement rail. EVM chains stay disabled
+ * until app clients, addresses, and transaction flows are wired in.
  */
 
 export type Chain =
@@ -30,10 +31,10 @@ export interface ChainMeta {
 
 const INTEGRATION_PENDING = 'Integration pending';
 
-// Solana is the only currently-enabled chain. Other contracts may exist, but
-// selecting them is blocked until app clients, addresses, and transaction flows
-// are wired in. ChainSelector blocks disabled chains, and DB writes are rejected
-// by the CHECK constraint in supabase/migrations/001_communities_governance_columns.sql.
+// EVM contracts may exist, but selecting them is blocked until app clients,
+// addresses, and transaction flows are wired in. ChainSelector blocks disabled
+// chains, and DB writes are rejected by the CHECK constraint in
+// supabase/migrations/001_communities_governance_columns.sql.
 export const CHAINS: Record<Chain, ChainMeta> = {
   solana: {
     id: 'solana',
@@ -49,8 +50,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     short: 'XLM',
     badgeBg: '#0066FF',
     badgeText: '#FFFFFF',
-    enabled: false,
-    comingSoon: INTEGRATION_PENDING,
+    enabled: true,
   },
   ethereum: {
     id: 'ethereum',
