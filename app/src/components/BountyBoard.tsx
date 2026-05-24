@@ -1,4 +1,4 @@
-import { BriefcaseBusiness, CalendarDays, Megaphone, Trophy } from 'lucide-react';
+import { BriefcaseBusiness, CalendarDays, ExternalLink, Megaphone, Trophy } from 'lucide-react';
 import { getBountiesForCommunity, type Bounty } from '@/lib/bounties';
 import { formatKSh, cn } from '@/lib/utils';
 
@@ -61,6 +61,16 @@ function BountyCard({ bounty, compact = false }: { bounty: Bounty; compact?: boo
           </span>
         ))}
       </div>
+
+      <a
+        href={bounty.externalUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="btn-ghost mt-4 w-full justify-center gap-2 px-3 py-2 text-xs font-bold"
+      >
+        Open on Dework
+        <ExternalLink className="h-3.5 w-3.5" />
+      </a>
     </article>
   );
 }

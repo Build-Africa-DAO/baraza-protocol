@@ -12,7 +12,10 @@ export interface Bounty {
   postedBy: string;
   summary: string;
   skills: string[];
+  externalUrl: string;
 }
+
+export const DEWORK_BOUNTY_URL = 'https://dework.xyz/';
 
 const BOUNTIES: Bounty[] = [
   {
@@ -27,6 +30,7 @@ const BOUNTIES: Bounty[] = [
     postedBy: 'Kibera Youth Collective',
     summary: 'Create reusable poster and WhatsApp story templates for member businesses.',
     skills: ['Canva', 'Branding', 'Social media'],
+    externalUrl: DEWORK_BOUNTY_URL,
   },
   {
     id: 'b-ky-training',
@@ -40,6 +44,7 @@ const BOUNTIES: Bounty[] = [
     postedBy: 'Kibera Youth Collective',
     summary: 'Run a Saturday workshop on savings, pricing, and mobile-money records.',
     skills: ['Training', 'Events', 'Finance'],
+    externalUrl: DEWORK_BOUNTY_URL,
   },
   {
     id: 'b-mm-supplier',
@@ -53,6 +58,7 @@ const BOUNTIES: Bounty[] = [
     postedBy: 'Mama Mboga Association',
     summary: 'Collect weekly market prices and publish a simple member buying guide.',
     skills: ['Research', 'Sheets', 'Procurement'],
+    externalUrl: DEWORK_BOUNTY_URL,
   },
   {
     id: 'b-mm-photo',
@@ -66,6 +72,7 @@ const BOUNTIES: Bounty[] = [
     postedBy: 'Mama Mboga Association',
     summary: 'Photograph 25 vendor stalls for online catalogues and delivery menus.',
     skills: ['Photography', 'Events', 'Content'],
+    externalUrl: DEWORK_BOUNTY_URL,
   },
   {
     id: 'b-tb-audit',
@@ -79,6 +86,7 @@ const BOUNTIES: Bounty[] = [
     postedBy: 'TechBridge Nairobi',
     summary: 'Review governance contract assumptions and produce issue-ranked audit notes.',
     skills: ['Solana', 'Rust', 'Security'],
+    externalUrl: DEWORK_BOUNTY_URL,
   },
   {
     id: 'b-tb-mentor',
@@ -92,6 +100,7 @@ const BOUNTIES: Bounty[] = [
     postedBy: 'TechBridge Nairobi',
     summary: 'Host a practical pair-programming session for junior DAO members.',
     skills: ['Mentoring', 'React', 'Community'],
+    externalUrl: DEWORK_BOUNTY_URL,
   },
   {
     id: 'b-mh-site',
@@ -105,6 +114,7 @@ const BOUNTIES: Bounty[] = [
     postedBy: 'Mwanzo Housing Sacco',
     summary: 'Document Plot 3 access roads, utilities, and boundary markers for members.',
     skills: ['Photography', 'Reporting', 'Mapping'],
+    externalUrl: DEWORK_BOUNTY_URL,
   },
   {
     id: 'b-mh-legal',
@@ -118,6 +128,7 @@ const BOUNTIES: Bounty[] = [
     postedBy: 'Mwanzo Housing Sacco',
     summary: 'Prepare a member-readable title due-diligence checklist before purchase votes.',
     skills: ['Legal ops', 'Research', 'Real estate'],
+    externalUrl: DEWORK_BOUNTY_URL,
   },
 ];
 

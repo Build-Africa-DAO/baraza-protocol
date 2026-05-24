@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BriefcaseBusiness, CalendarDays, Search, SlidersHorizontal, Trophy } from 'lucide-react';
+import { ArrowRight, BriefcaseBusiness, CalendarDays, ExternalLink, Search, SlidersHorizontal, Trophy } from 'lucide-react';
 import Layout from '@/components/Layout';
 import CommunityBanner from '@/components/CommunityBanner';
 import { listBounties, type BountyStatus } from '@/lib/bounties';
@@ -154,10 +154,21 @@ export default function Bounties() {
                         {daysLeft(bounty.deadline)}
                       </span>
                     </div>
-                    <Link to={`/dashboard/${bounty.communityId}`} className="btn-ghost justify-center gap-2 px-3 py-2 text-xs font-bold">
-                      Open DAO
-                      <ArrowRight className="h-3.5 w-3.5" />
-                    </Link>
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <Link to={`/dashboard/${bounty.communityId}`} className="btn-ghost justify-center gap-2 px-3 py-2 text-xs font-bold">
+                        Open DAO
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </Link>
+                      <a
+                        href={bounty.externalUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn-primary justify-center gap-2 px-3 py-2 text-xs font-bold"
+                      >
+                        Open on Dework
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </a>
+                    </div>
                   </div>
                 </article>
               );
