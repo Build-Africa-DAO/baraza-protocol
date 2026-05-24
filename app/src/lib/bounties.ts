@@ -17,6 +17,37 @@ export interface Bounty {
 
 export const DEWORK_BOUNTY_URL = 'https://dework.xyz/';
 
+export function getDeworkWorkspaceUrl(): string {
+  return import.meta.env.VITE_DEWORK_WORKSPACE_URL?.trim() || DEWORK_BOUNTY_URL;
+}
+
+export function buildDeworkBountyUrl(input: Pick<Bounty, 'id' | 'title' | 'category'>): string {
+  const rawUrl = getDeworkWorkspaceUrl();
+  try {
+    const url = new URL(rawUrl);
+    url.searchParams.set('source', 'baraza');
+    url.searchParams.set('bounty', input.id);
+    url.searchParams.set('q', input.title);
+    url.searchParams.set('category', input.category);
+    return url.toString();
+  } catch {
+    return DEWORK_BOUNTY_URL;
+  }
+}
+
+export function buildDeworkPostBountyUrl(communityName: string): string {
+  const rawUrl = getDeworkWorkspaceUrl();
+  try {
+    const url = new URL(rawUrl);
+    url.searchParams.set('source', 'baraza');
+    url.searchParams.set('intent', 'post-bounty');
+    url.searchParams.set('community', communityName);
+    return url.toString();
+  } catch {
+    return DEWORK_BOUNTY_URL;
+  }
+}
+
 const BOUNTIES: Bounty[] = [
   {
     id: 'b-ky-brand',
@@ -133,11 +164,14 @@ const BOUNTIES: Bounty[] = [
 ];
 
 export function listBounties(): Bounty[] {
-  return BOUNTIES;
+  return BOUNTIES.map((bounty) => ({
+    ...bounty,
+    externalUrl: buildDeworkBountyUrl(bounty),
+  }));
 }
 
 export function getBountiesForCommunity(communityId: string): Bounty[] {
-  return BOUNTIES.filter((bounty) => bounty.communityId === communityId);
+  return listBounties().filter((bounty) => bounty.communityId === communityId);
 }
 
 export function getOpenBountiesForCommunity(communityId: string): Bounty[] {

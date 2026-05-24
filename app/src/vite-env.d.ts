@@ -14,6 +14,7 @@ interface ImportMetaEnv {
   readonly VITE_STELLAR_NETWORK: string | undefined;
   readonly VITE_STELLAR_HORIZON_URL: string | undefined;
   readonly VITE_STELLAR_NETWORK_PASSPHRASE: string | undefined;
+  readonly VITE_DEWORK_WORKSPACE_URL: string | undefined;
   readonly VITE_WALLETCONNECT_PROJECT_ID: string | undefined;
   readonly VITE_ADMIN_WALLETS: string | undefined;
 }

@@ -22,7 +22,7 @@ import BountyBoard from '@/components/BountyBoard';
 import { CHAINS } from '@/lib/chain';
 import { NETWORK_LABEL } from '@/lib/network';
 import { useSeo } from '@/lib/seo';
-import { getBountyStatsForCommunity } from '@/lib/bounties';
+import { buildDeworkPostBountyUrl, getBountyStatsForCommunity } from '@/lib/bounties';
 
 type DashboardTab = 'overview' | 'members' | 'governance' | 'bounties' | 'gallery' | 'activity' | 'wallet';
 
@@ -321,6 +321,17 @@ const CommunityDashboard: React.FC = () => {
                 <PlusCircle className="w-3.5 h-3.5" />
                 New Proposal
               </Link>
+            )}
+            {activeTab === 'bounties' && (
+              <a
+                href={buildDeworkPostBountyUrl(community.name)}
+                target="_blank"
+                rel="noreferrer"
+                className="btn-primary text-xs flex items-center gap-1.5 px-3 py-2"
+              >
+                <PlusCircle className="w-3.5 h-3.5" />
+                Post on Dework
+              </a>
             )}
           </div>
 
