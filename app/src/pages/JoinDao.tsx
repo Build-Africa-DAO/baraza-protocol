@@ -7,6 +7,7 @@ import {
   CreditCard,
   Loader2,
   Phone,
+  Stars,
   Wallet,
 } from "lucide-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
@@ -20,9 +21,9 @@ import CommunityBanner from "@/components/CommunityBanner";
 import { useSeo } from "@/lib/seo";
 
 const joinSteps = [
-  { label: "Phone entered", state: "current" },
-  { label: "OTP verified", state: "pending" },
-  { label: "Payment started", state: "pending" },
+  { label: "Invite opened", state: "current" },
+  { label: "Payment rail selected", state: "pending" },
+  { label: "Payment proof submitted", state: "pending" },
   { label: "Payment confirmed", state: "pending" },
   { label: "Credential minted", state: "pending" },
   { label: "Active DAO member", state: "pending" },
@@ -87,12 +88,18 @@ export default function JoinDao() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [phone, setPhone] = useState("");
+  const [stellarTxHash, setStellarTxHash] = useState("");
+  const [stellarAmountXlm, setStellarAmountXlm] = useState("1");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isVerifyingStellar, setIsVerifyingStellar] = useState(false);
   const [pendingWalletJoin, setPendingWalletJoin] = useState(false);
 
   const amount = community?.membershipFee ?? 0;
   const normalisedPhone = normaliseKenyanPhone(phone);
   const canSubmit = normalisedPhone !== null && amount > 0 && !isSubmitting;
+  const canVerifyStellar = /^[a-f0-9]{64}$/i.test(stellarTxHash.trim()) &&
+    Number(stellarAmountXlm) > 0 &&
+    !isVerifyingStellar;
 
   function startWalletJoin(walletAddress: string) {
     if (!id || amount <= 0) return;
@@ -158,6 +165,53 @@ export default function JoinDao() {
     navigate(`/join/${id}/status?orderId=${encodeURIComponent(orderId)}${secretParam}`);
   }
 
+  async function handleStellarSubmit() {
+    if (!id || !canVerifyStellar) return;
+    setIsVerifyingStellar(true);
+
+    try {
+      const res = await fetch("/api/stellar/verify-payment", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          communityId: id,
+          txHash: stellarTxHash.trim().toLowerCase(),
+          amountXlm: Number(stellarAmountXlm),
+        }),
+      });
+      const data = (await res.json()) as {
+        orderId?: string;
+        activationSecret?: string | null;
+        ledger?: number;
+        amountXlm?: number;
+        persisted?: boolean;
+        message?: string;
+      };
+
+      if (!res.ok || !data.orderId) {
+        throw new Error(data.message ?? "Could not verify Stellar payment.");
+      }
+
+      toast({
+        title: "Stellar payment verified",
+        description: data.persisted
+          ? `Ledger ${data.ledger ?? "confirmed"} · ${data.amountXlm ?? stellarAmountXlm} XLM recorded.`
+          : "Verified through Horizon. Supabase is offline, so this will continue in local demo mode.",
+      });
+
+      const secretParam = data.activationSecret ? `&activationSecret=${encodeURIComponent(data.activationSecret)}` : "";
+      navigate(`/join/${id}/status?orderId=${encodeURIComponent(data.orderId)}${secretParam}&rail=stellar`);
+    } catch (err) {
+      toast({
+        title: "Stellar verification failed",
+        description: err instanceof Error ? err.message : "Check the transaction hash and try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsVerifyingStellar(false);
+    }
+  }
+
   return (
     <Layout>
       <section className="relative overflow-hidden py-8 md:py-12">
@@ -178,7 +232,7 @@ export default function JoinDao() {
                       {community?.name ?? "Community DAO"}
                     </h1>
                     <p className="mt-2 max-w-xl text-sm leading-6">
-                      Start with M-Pesa dues, then link a Solana wallet to receive your Membership Credential.
+                      Pay dues through M-Pesa or Stellar, then link a Solana wallet to receive your Membership Credential.
                     </p>
                   </div>
                   <div className="w-full rounded-lg border px-4 py-3 md:w-auto md:text-right">
@@ -191,7 +245,7 @@ export default function JoinDao() {
               </div>
               </CommunityBanner>
 
-              <div className="grid gap-4 p-5 md:grid-cols-2 md:p-6">
+              <div className="grid gap-4 p-5 lg:grid-cols-3 md:p-6">
                 <div className="rounded-lg border p-5">
                   <div className="mb-4 flex items-center gap-3">
                     <div className="grid h-10 w-10 place-items-center rounded-lg">
@@ -242,15 +296,68 @@ export default function JoinDao() {
                 <div className="rounded-lg border p-5">
                   <div className="mb-4 flex items-center gap-3">
                     <div className="grid h-10 w-10 place-items-center rounded-lg">
+                      <Stars className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h2 className="font-display text-base font-semibold">Stellar XLM</h2>
+                      <p className="text-xs">Verify on-chain payment</p>
+                    </div>
+                  </div>
+                  <p className="text-sm leading-6">
+                    Paste a Stellar transaction hash after sending XLM. Baraza verifies Horizon and records a payment order.
+                  </p>
+
+                  <label htmlFor="stellar-amount" className="mb-2 mt-4 block text-xs font-semibold">Expected XLM</label>
+                  <input
+                    id="stellar-amount"
+                    value={stellarAmountXlm}
+                    onChange={(event) => setStellarAmountXlm(event.target.value)}
+                    className="w-full rounded-lg border px-3 py-3 text-sm outline-none"
+                    inputMode="decimal"
+                    placeholder="1"
+                  />
+
+                  <label htmlFor="stellar-tx" className="mb-2 mt-3 block text-xs font-semibold">Transaction hash</label>
+                  <input
+                    id="stellar-tx"
+                    value={stellarTxHash}
+                    onChange={(event) => setStellarTxHash(event.target.value)}
+                    className="w-full rounded-lg border px-3 py-3 font-mono text-xs outline-none"
+                    placeholder="64-character tx hash"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => void handleStellarSubmit()}
+                    disabled={!canVerifyStellar}
+                    className="btn-warm mt-5 w-full justify-center gap-2 py-3 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isVerifyingStellar ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Verifying Stellar...
+                      </>
+                    ) : (
+                      <>
+                        <Stars className="h-4 w-4" />
+                        Verify Stellar Payment
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="rounded-lg border p-5">
+                  <div className="mb-4 flex items-center gap-3">
+                    <div className="grid h-10 w-10 place-items-center rounded-lg">
                       <Wallet className="h-5 w-5" />
                     </div>
                     <div>
-                      <h2 className="font-display text-base font-semibold">Join with wallet or Stellar</h2>
+                      <h2 className="font-display text-base font-semibold">Solana wallet</h2>
                       <p className="text-xs">Optional chain-first path</p>
                     </div>
                   </div>
                   <p className="text-sm leading-6">
-                    Connect a Solana wallet for credentials, or settle dues with Stellar XLM and record the transaction from your profile.
+                    Connect Phantom, Solflare, or Coinbase Wallet for credentials and governance signing.
                   </p>
                   <button
                     type="button"
@@ -268,11 +375,8 @@ export default function JoinDao() {
                     <Wallet className="h-4 w-4" />
                     {connecting ? "Connecting..." : connected ? "Pay with connected wallet" : "Connect wallet"}
                   </button>
-                  <Link
-                    to="/profile"
-                    className="btn-ghost mt-3 w-full justify-center gap-2 py-3 text-sm font-bold"
-                  >
-                    Record Stellar XLM
+                  <Link to="/profile" className="mt-3 inline-flex text-xs font-semibold">
+                    Manage linked Stellar account
                   </Link>
                 </div>
               </div>

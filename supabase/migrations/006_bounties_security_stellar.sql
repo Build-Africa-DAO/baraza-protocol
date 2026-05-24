@@ -9,6 +9,9 @@ ALTER TABLE payment_orders
 
 CREATE INDEX IF NOT EXISTS payment_orders_wallet_address_idx
   ON payment_orders (wallet_address);
+CREATE UNIQUE INDEX IF NOT EXISTS payment_orders_provider_reference_unique
+  ON payment_orders (provider, provider_reference)
+  WHERE provider_reference IS NOT NULL;
 
 ALTER TABLE payment_orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE memberships ENABLE ROW LEVEL SECURITY;
