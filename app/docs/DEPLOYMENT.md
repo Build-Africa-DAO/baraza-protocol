@@ -23,6 +23,16 @@ vercel --prod
 Set these in Project Settings → Environment Variables:
 - `VITE_RPC_ENDPOINT` — Optional custom RPC
 - `VITE_PROGRAM_ID` — Baraza program ID once deployed
+- `VITE_STELLAR_NETWORK` — `testnet`, `mainnet`, or `custom`
+- `VITE_STELLAR_HORIZON_URL` — Horizon URL used for Stellar balance and tx confirmation
+- `VITE_STELLAR_NETWORK_PASSPHRASE` — Stellar network passphrase
+
+For Stellar testnet review:
+```bash
+VITE_STELLAR_NETWORK=testnet
+VITE_STELLAR_HORIZON_URL=https://horizon-testnet.stellar.org
+VITE_STELLAR_NETWORK_PASSPHRASE="Test SDF Network ; September 2015"
+```
 
 ## SPA Routing
 `vercel.json` rewrites all routes to `/index.html` for React Router compatibility.

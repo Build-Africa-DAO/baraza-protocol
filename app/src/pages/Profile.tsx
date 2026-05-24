@@ -8,6 +8,7 @@ import {
   Loader2,
   PlusCircle,
   RefreshCw,
+  ReceiptText,
   ShieldCheck,
   Trash2,
   UserRound,
@@ -24,6 +25,7 @@ import { CHAINS } from "@/lib/chain";
 import { useSeo } from "@/lib/seo";
 import { getBountyStatsForCommunity, getOpenBountiesForCommunity } from "@/lib/bounties";
 import {
+  confirmStellarTransaction,
   fetchStellarBalances,
   getStellarConfig,
   isValidStellarPublicKey,
@@ -34,6 +36,11 @@ import {
   getLinkedStellarAccount,
   saveLinkedStellarAccount,
 } from "@/lib/stellarAccounts";
+import {
+  listStellarSettlements,
+  recordStellarSettlement,
+  type StellarSettlementRecord,
+} from "@/lib/stellarSettlements";
 
 export default function Profile() {
   useSeo({
@@ -51,6 +58,10 @@ export default function Profile() {
   const [stellarBalances, setStellarBalances] = useState<StellarBalance[]>([]);
   const [stellarMessage, setStellarMessage] = useState<string | null>(null);
   const [isLoadingStellar, setIsLoadingStellar] = useState(false);
+  const [stellarTxHash, setStellarTxHash] = useState("");
+  const [settlementMessage, setSettlementMessage] = useState<string | null>(null);
+  const [isCheckingSettlement, setIsCheckingSettlement] = useState(false);
+  const [stellarSettlements, setStellarSettlements] = useState<StellarSettlementRecord[]>([]);
 
   // Address is only needed below the early-return, but `useMemo` MUST be called
   // unconditionally on every render — so compute it here (defaulting to "")
@@ -82,6 +93,8 @@ export default function Profile() {
     setStellarInput(linked ?? "");
     setStellarBalances([]);
     setStellarMessage(null);
+    setSettlementMessage(null);
+    setStellarSettlements(listStellarSettlements(address));
   }, [address]);
 
   const refreshStellarBalances = async (account = stellarAccount) => {
@@ -125,6 +138,45 @@ export default function Profile() {
     setStellarInput("");
     setStellarBalances([]);
     setStellarMessage(null);
+    setSettlementMessage(null);
+  };
+
+  const handleVerifySettlement = async () => {
+    if (!address || !stellarAccount) return;
+    const txHash = stellarTxHash.trim().toLowerCase();
+    if (!/^[a-f0-9]{64}$/.test(txHash)) {
+      setSettlementMessage("Enter a valid 64-character Stellar transaction hash.");
+      return;
+    }
+    if (!stellarConfig.enabled) {
+      setSettlementMessage("Set Stellar Horizon env vars to verify transactions.");
+      return;
+    }
+
+    setIsCheckingSettlement(true);
+    setSettlementMessage(null);
+    try {
+      const confirmation = await confirmStellarTransaction(txHash, stellarConfig);
+      const record = recordStellarSettlement({
+        ownerWallet: address,
+        stellarAccount,
+        txHash,
+        confirmation,
+      });
+      setStellarSettlements(listStellarSettlements(address));
+      setSettlementMessage(
+        record.status === 'CONFIRMED'
+          ? `Settlement confirmed in ledger ${record.ledger}.`
+          : record.status === 'FAILED'
+            ? "Transaction was found but did not succeed."
+            : "Transaction was not found on this Stellar network.",
+      );
+      if (record.status === 'CONFIRMED') setStellarTxHash("");
+    } catch (err) {
+      setSettlementMessage(err instanceof Error ? err.message : "Could not verify Stellar transaction.");
+    } finally {
+      setIsCheckingSettlement(false);
+    }
   };
 
   if (!connected || !publicKey) {
@@ -273,6 +325,71 @@ export default function Profile() {
                       <div key={`${balance.type}:${balance.assetCode}:${balance.assetIssuer ?? 'native'}`} className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-xs">
                         <span className="font-semibold">{balance.assetCode}</span>
                         <span className="font-mono">{balance.balance}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="baraza-card p-5">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <h2 className="font-mono text-xs uppercase tracking-widest">
+                    Stellar tx check
+                  </h2>
+                  <ReceiptText className="h-4 w-4" />
+                </div>
+
+                <label htmlFor="stellar-tx" className="mb-2 block text-xs font-semibold">
+                  Transaction hash
+                </label>
+                <input
+                  id="stellar-tx"
+                  value={stellarTxHash}
+                  onChange={(e) => {
+                    setStellarTxHash(e.target.value);
+                    setSettlementMessage(null);
+                  }}
+                  className="w-full rounded-lg border px-3 py-2.5 font-mono text-xs outline-none"
+                  placeholder="64-character hash"
+                  autoComplete="off"
+                  spellCheck={false}
+                />
+
+                <button
+                  type="button"
+                  onClick={() => void handleVerifySettlement()}
+                  disabled={!stellarAccount || !stellarTxHash.trim() || isCheckingSettlement}
+                  className="btn-primary mt-3 w-full justify-center gap-2 px-3 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isCheckingSettlement ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ReceiptText className="h-3.5 w-3.5" />}
+                  Verify settlement
+                </button>
+
+                {!stellarAccount && (
+                  <p className="mt-3 text-xs leading-5">
+                    Link a Stellar account before recording settlements.
+                  </p>
+                )}
+                {settlementMessage && (
+                  <p className="mt-3 text-xs leading-5">
+                    {settlementMessage}
+                  </p>
+                )}
+
+                {stellarSettlements.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    {stellarSettlements.slice(0, 3).map((record) => (
+                      <div key={record.settlementId} className="rounded-lg border px-3 py-2 text-xs">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="font-semibold">{record.status}</span>
+                          <span className="font-mono">{record.assetCode}</span>
+                        </div>
+                        <p className="mt-1 break-all font-mono text-[10px]">
+                          {record.txHash}
+                        </p>
+                        <p className="mt-1 text-[10px]">
+                          {record.ledger ? `Ledger ${record.ledger}` : "No ledger confirmation"}
+                        </p>
                       </div>
                     ))}
                   </div>
