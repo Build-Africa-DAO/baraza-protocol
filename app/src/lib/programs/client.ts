@@ -4,28 +4,42 @@ import type { AnchorWallet } from '@solana/wallet-adapter-react';
 
 import { IDL as COMMUNITY_REGISTRY_IDL, type CommunityRegistry } from './idl/community_registry';
 import { IDL as GOVERNANCE_IDL, type Governance } from './idl/governance';
+import { IDL as MEMBERSHIP_IDL, type Membership } from './idl/membership';
+import { IDL as PAYMENT_ATTESTATION_IDL, type PaymentAttestation } from './idl/payment_attestation';
+import { IDL as TREASURY_VAULT_IDL, type TreasuryVault } from './idl/treasury_vault';
 import {
   COMMUNITY_REGISTRY_PROGRAM_ID,
   GOVERNANCE_PROGRAM_ID,
   communityPda,
   govConfigPda,
+  paymentConfigPda,
   proposalPda,
+  treasuryVaultPda,
   voteReceiptPda,
+  MEMBERSHIP_PROGRAM_ID,
+  PAYMENT_ATTESTATION_PROGRAM_ID,
+  TREASURY_VAULT_PROGRAM_ID,
 } from './pda';
 
 export type VoteSupportArg = 'for' | 'against' | 'abstain';
 
 const DEFAULT_GOV_PARAMS = {
-  proposalMaxVotingTime: new BN(7 * 24 * 60 * 60), // 7 days in seconds
-  quorumVotes: new BN(1),
-  voteThresholdBps: 5001, // simple majority
-  proposalLimit: null,
-  vetoAuthority: null,
+  votingDelaySlots: new BN(0),
+  votingPeriodSlots: new BN(108_000),
+  timelockDelaySlots: new BN(0),
+  gracePeriodSlots: new BN(216_000),
+  quorumBps: 500,
+  approvalThresholdBps: 5001,
+  proposalThresholdWeight: new BN(1),
+  vetoerAuthority: null,
 };
 
 export class BarazaChainClient {
   private registry: Program<CommunityRegistry>;
   private governance: Program<Governance>;
+  private membership: Program<Membership>;
+  private paymentAttestation: Program<PaymentAttestation>;
+  private treasuryVault: Program<TreasuryVault>;
 
   constructor(provider: Provider) {
     this.registry = new Program<CommunityRegistry>(
@@ -38,6 +52,72 @@ export class BarazaChainClient {
       GOVERNANCE_PROGRAM_ID,
       provider,
     );
+    this.membership = new Program<Membership>(
+      MEMBERSHIP_IDL,
+      MEMBERSHIP_PROGRAM_ID,
+      provider,
+    );
+    this.paymentAttestation = new Program<PaymentAttestation>(
+      PAYMENT_ATTESTATION_IDL,
+      PAYMENT_ATTESTATION_PROGRAM_ID,
+      provider,
+    );
+    this.treasuryVault = new Program<TreasuryVault>(
+      TREASURY_VAULT_IDL,
+      TREASURY_VAULT_PROGRAM_ID,
+      provider,
+    );
+  }
+
+  async fetchCommunity(communityKey: PublicKey) {
+    return this.registry.account.communityAccount.fetchNullable(communityKey);
+  }
+
+  async fetchCommunityBySlug(slug: string) {
+    const [communityKey] = communityPda(slug);
+    return this.fetchCommunity(communityKey);
+  }
+
+  async fetchMembershipTier(tierKey: PublicKey) {
+    return this.membership.account.membershipTierAccount.fetchNullable(tierKey);
+  }
+
+  async fetchMember(memberKey: PublicKey) {
+    return this.membership.account.memberAccount.fetchNullable(memberKey);
+  }
+
+  async fetchPaymentConfig() {
+    const [configKey] = paymentConfigPda();
+    return this.paymentAttestation.account.paymentConfigAccount
+      .fetchNullable(configKey)
+      .catch(() => null);
+  }
+
+  async fetchPaymentAttestation(attestationKey: PublicKey) {
+    return this.paymentAttestation.account.paymentAttestationAccount.fetchNullable(attestationKey);
+  }
+
+  async fetchGovConfig(communityKey: PublicKey) {
+    const [configKey] = govConfigPda(communityKey);
+    return this.governance.account.communityConfigAccount.fetchNullable(configKey);
+  }
+
+  async fetchProposal(proposalKey: PublicKey) {
+    return this.governance.account.proposalAccount.fetchNullable(proposalKey);
+  }
+
+  async fetchVoteReceipt(receiptKey: PublicKey) {
+    return this.governance.account.voteReceiptAccount.fetchNullable(receiptKey);
+  }
+
+  async fetchTreasuryVault(communityKey: PublicKey) {
+    const [vaultKey] = treasuryVaultPda(communityKey);
+    return this.treasuryVault.account.treasuryVaultAccount.fetchNullable(vaultKey);
+  }
+
+  async fetchTreasuryBalance(communityKey: PublicKey): Promise<number> {
+    const [vaultKey] = treasuryVaultPda(communityKey);
+    return this.treasuryVault.provider.connection.getBalance(vaultKey, 'confirmed');
   }
 
   async createCommunity(slug: string, name: string, metadataUri: string): Promise<string> {
@@ -135,4 +215,9 @@ export function createBarazaClient(
     preflightCommitment: 'confirmed',
   });
   return new BarazaChainClient(provider);
+}
+
+export function createBarazaReadClient(connection: Connection): BarazaChainClient {
+  const readProvider: Provider = { connection };
+  return new BarazaChainClient(readProvider);
 }

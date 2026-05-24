@@ -14,9 +14,14 @@
 //!   - Payment attestation consumption (payment_attestation program).
 
 use anchor_lang::prelude::*;
-use membership::{MemberAccount, MembershipStatus};
 
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+declare_id!("DzMhDFtq2s2bUn4LNDVzDLLnbbRQ8jW1FKeWPQDDq25A");
+
+pub const MEMBERSHIP_PROGRAM_ID: Pubkey = Pubkey::new_from_array([
+    30, 147, 47, 230, 187, 54, 1, 75, 4, 119, 91, 36, 81, 222, 32, 243, 226, 244, 69, 60, 91,
+    134, 195, 150, 88, 30, 91, 60, 90, 21, 102, 190,
+]);
+pub const MEMBER_ACCOUNT_DISCRIMINATOR: [u8; 8] = [173, 25, 100, 97, 192, 177, 84, 139];
 
 #[program]
 pub mod governance {
@@ -61,17 +66,15 @@ pub mod governance {
         let cfg = &ctx.accounts.config;
         let now = Clock::get()?.slot;
 
+        let creator_member = load_member_account(&ctx.accounts.creator_member)?;
+        require!(creator_member.status == MembershipStatus::Active, GovError::MemberNotActive);
         require!(
-            ctx.accounts.creator_member.status == MembershipStatus::Active,
-            GovError::MemberNotActive
-        );
-        require!(
-            ctx.accounts.creator_member.community == ctx.accounts.community.key()
-                && ctx.accounts.creator_member.wallet_address == ctx.accounts.creator.key(),
+            creator_member.community == ctx.accounts.community.key()
+                && creator_member.wallet_address == ctx.accounts.creator.key(),
             GovError::MemberMismatch
         );
         require!(
-            ctx.accounts.creator_member.voting_weight >= cfg.proposal_threshold_weight,
+            creator_member.voting_weight >= cfg.proposal_threshold_weight,
             GovError::ProposalThresholdNotMet
         );
 
@@ -154,17 +157,15 @@ pub mod governance {
             );
         }
 
-        let weight = ctx.accounts.voter_member.voting_weight;
+        let voter_member = load_member_account(&ctx.accounts.voter_member)?;
+        let weight = voter_member.voting_weight;
         require!(weight > 0, GovError::ZeroWeightVote);
 
         let prop = &mut ctx.accounts.proposal;
+        require!(voter_member.status == MembershipStatus::Active, GovError::MemberNotActive);
         require!(
-            ctx.accounts.voter_member.status == MembershipStatus::Active,
-            GovError::MemberNotActive
-        );
-        require!(
-            ctx.accounts.voter_member.community == prop.community
-                && ctx.accounts.voter_member.wallet_address == ctx.accounts.voter.key(),
+            voter_member.community == prop.community
+                && voter_member.wallet_address == ctx.accounts.voter.key(),
             GovError::MemberMismatch
         );
         require!(
@@ -333,9 +334,9 @@ pub mod governance {
 
         let signer = ctx.accounts.canceler.key();
         let is_admin = signer == cfg.admin_authority;
-        let creator_member = &ctx.accounts.creator_member;
+        let creator_member = load_member_account(&ctx.accounts.creator_member)?;
         let is_proposer_in_pending = prop.status == ProposalStatus::Pending
-            && creator_member.key() == prop.creator_member
+            && ctx.accounts.creator_member.key() == prop.creator_member
             && creator_member.wallet_address == signer;
         require!(is_admin || is_proposer_in_pending, GovError::Unauthorized);
 
@@ -374,6 +375,54 @@ pub mod governance {
 }
 
 // ─────────────────────── Constants ───────────────────────
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, Debug)]
+pub enum MembershipStatus {
+    Pending,
+    Active,
+    Suspended,
+    Revoked,
+    Expired,
+    Migrated,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub struct MemberAccount {
+    pub member_id_hash: [u8; 32],
+    pub community: Pubkey,
+    pub user_id_hash: [u8; 32],
+    pub wallet_address: Pubkey,
+    pub tier: Pubkey,
+    pub status: MembershipStatus,
+    pub voting_weight: u64,
+    pub joined_at_slot: u64,
+    pub activated_at_slot: Option<u64>,
+    pub expires_at_slot: Option<u64>,
+    pub revoked_at_slot: Option<u64>,
+    pub migrated_from_member: Option<Pubkey>,
+    pub migrated_to_member: Option<Pubkey>,
+    pub membership_mint: Option<Pubkey>,
+    pub membership_token_account: Option<Pubkey>,
+    pub payment_order_id_hash: [u8; 32],
+    pub metadata_uri: String,
+    pub bump: u8,
+}
+
+fn load_member_account(account: &UncheckedAccount) -> Result<MemberAccount> {
+    require_keys_eq!(
+        *account.owner,
+        MEMBERSHIP_PROGRAM_ID,
+        GovError::MemberMismatch
+    );
+
+    let data = account.try_borrow_data()?;
+    require!(
+        data.len() >= 8 && data[..8] == MEMBER_ACCOUNT_DISCRIMINATOR,
+        GovError::MemberMismatch
+    );
+    let mut member_bytes: &[u8] = &data[8..];
+    Ok(MemberAccount::deserialize(&mut member_bytes)?)
+}
 
 pub const MAX_METADATA_URI_LEN: usize = 256;
 
@@ -627,7 +676,8 @@ pub struct CreateProposal<'info> {
     )]
     pub config: Account<'info, CommunityConfigAccount>,
 
-    pub creator_member: Account<'info, MemberAccount>,
+    /// CHECK: manually validates owner, discriminator, and serialized fields.
+    pub creator_member: UncheckedAccount<'info>,
 
     #[account(
         init,
@@ -676,7 +726,8 @@ pub struct CastVote<'info> {
     #[account(mut)]
     pub proposal: Account<'info, ProposalAccount>,
 
-    pub voter_member: Account<'info, MemberAccount>,
+    /// CHECK: manually validates owner, discriminator, and serialized fields.
+    pub voter_member: UncheckedAccount<'info>,
 
     #[account(
         init,
@@ -707,7 +758,8 @@ pub struct CancelProposal<'info> {
     #[account(
         constraint = creator_member.key() == proposal.creator_member @ GovError::MemberMismatch,
     )]
-    pub creator_member: Account<'info, MemberAccount>,
+    /// CHECK: manually validates owner, discriminator, and serialized fields.
+    pub creator_member: UncheckedAccount<'info>,
 
     pub canceler: Signer<'info>,
 }

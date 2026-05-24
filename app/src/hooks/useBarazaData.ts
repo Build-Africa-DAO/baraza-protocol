@@ -12,6 +12,11 @@ import { PublicKey } from '@solana/web3.js';
 import { dataStore } from '@/lib/dataStore';
 import { createBarazaClient, toSlug, communityPda, proposalPda, type VoteSupportArg } from '@/lib/programs';
 import type { BarazaChainClient } from '@/lib/programs';
+import {
+  getDecisionChainMapping,
+  saveCommunityChainMapping,
+  saveDecisionChainMapping,
+} from '@/lib/chainMappings';
 
 // ---------- Low-level subscription ----------
 
@@ -31,10 +36,6 @@ function useStoreSnapshot<T>(selector: () => T, deps: DependencyList = []): T {
 }
 
 // ---------- Chain client ----------
-
-// Maps local decision IDs to their on-chain proposal PublicKey (base58).
-// In-memory only; reset on page refresh. Phase 2 will persist this via the chain.
-const proposalKeyCache = new Map<string, string>();
 
 function nextProposalId(): number {
   const key = 'baraza_proposal_seq';
@@ -130,15 +131,27 @@ export function useCreateCommunity() {
     setError(null);
     try {
       // Attempt on-chain registration (non-blocking: failure falls through to local)
+      let chainResult: { slug: string; communityKey: PublicKey; signature: string } | null = null;
       if (client) {
         const slug = toSlug(data.name);
         try {
-          await client.createCommunity(slug, data.name, '');
+          const signature = await client.createCommunity(slug, data.name, '');
+          const [communityKey] = communityPda(slug);
+          chainResult = { slug, communityKey, signature };
         } catch (chainErr) {
           console.warn('[baraza] createCommunity on-chain failed (local fallback):', chainErr);
         }
       }
       const community = await dataStore.createCommunity(data);
+      if (chainResult) {
+        saveCommunityChainMapping({
+          localId: community.id,
+          chain: 'solana',
+          slug: chainResult.slug,
+          communityAddress: chainResult.communityKey.toBase58(),
+          createTxSignature: chainResult.signature,
+        });
+      }
       return community;
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to create community');
@@ -210,12 +223,17 @@ export function useCreateDecision() {
               creatorMember,
             );
             const [proposalKey] = proposalPda(communityKey, proposalId);
-            // Cache proposal key so castVote can find it
             const localDecision = await dataStore.createDecision(data);
             if (localDecision) {
-              proposalKeyCache.set(localDecision.id, proposalKey.toBase58());
+              saveDecisionChainMapping({
+                localId: localDecision.id,
+                communityLocalId: data.communityId,
+                chain: 'solana',
+                proposalAddress: proposalKey.toBase58(),
+                proposalId,
+                createTxSignature: sig,
+              });
             }
-            console.info(`[baraza] proposal created on-chain: ${sig}`);
             return localDecision;
           } catch (chainErr) {
             console.warn('[baraza] createProposal on-chain failed (local fallback):', chainErr);
@@ -250,16 +268,15 @@ export function useCastVote() {
     try {
       // Attempt on-chain vote when both member key and cached proposal key are available
       if (client && voterMemberKey) {
-        const cachedProposalKey = proposalKeyCache.get(decisionId);
-        if (cachedProposalKey) {
+        const decisionMapping = getDecisionChainMapping(decisionId);
+        if (decisionMapping) {
           const support: VoteSupportArg = voteType === 'for' ? 'for' : 'against';
           try {
-            const sig = await client.castVote(
-              new PublicKey(cachedProposalKey),
+            await client.castVote(
+              new PublicKey(decisionMapping.proposalAddress),
               new PublicKey(voterMemberKey),
               support,
             );
-            console.info(`[baraza] vote cast on-chain: ${sig}`);
           } catch (chainErr) {
             console.warn('[baraza] castVote on-chain failed (local fallback):', chainErr);
           }

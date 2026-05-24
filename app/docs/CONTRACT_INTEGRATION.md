@@ -1,48 +1,106 @@
 # Baraza - Contract Integration Checklist
 
-**Status:** Preview mode (mock data). Write flows blocked.  
-**Programs:** `community_registry`, `membership`, `payment_attestation`, `governance`, `treasury_vault`  
-**Chains:** Solana (primary), Stellar, EVM (Ethereum, Base, Arbitrum, Polygon, Optimism)  
+**Status:** Preview mode. Contract source is present for Solana and EVM; frontend write flows remain guarded until deployed addresses, IDLs, ABIs, and transaction builders are wired end-to-end.
+**Programs:** `community_registry`, `membership`, `payment_attestation`, `governance`, `treasury_vault`
+**Chains:** Solana (primary), Stellar, EVM (Ethereum, Base, Arbitrum, Polygon, Optimism)
 **Ref:** See `CROSS_CHAIN_DEPLOYMENT_CHECKLIST.md` before any testnet or mainnet rollout.
+
+## Latest Local Verification
+
+- [x] Solana workspace builds with `cargo check` from repo root.
+- [x] Solana Rust unit tests pass with `cargo test`.
+- [x] Anchor CLI `0.30.1` is installed locally.
+- [x] `cargo-build-sbf` is installed locally.
+- [x] `anchor build` passes and generates SBF/IDL artifacts.
+- [x] `anchor test --skip-local-validator --skip-build` deploys all five programs to a running local validator and passes the executable-program smoke test.
+- [x] Local instruction-level happy path passes: create community, initialize payment/governance config, create tier, register member, attest/consume payment, activate member, create/activate proposal, cast vote, initialize treasury vault, deposit SOL, record SPL deposit, enable withdrawals, and release SOL.
+- [x] Local negative checks assert expected program errors for unauthorized payment attestations, mismatched attestation activation, inactive-member proposal creation, invalid proposal transitions, double voting, and treasury release while withdrawals are disabled.
+- [x] Cross-program validation drift guards compare hard-coded program IDs, account discriminators, and mirrored account layouts against the source programs before the Anchor smoke flow runs.
+- [x] Drift-only smoke mode passes without a validator: `npm run test:contracts:drift` from `app/`.
+- [x] EVM contracts are cloned into `contracts/evm` and rebranded to Baraza.
+- [x] EVM `forge build` passes.
+- [x] EVM `forge test` passes: 209 passed, 0 failed.
+- [x] Frontend env templates include all five Solana program IDs.
+- [x] Frontend contract artifacts are present: all five Solana IDLs/types under `src/lib/programs/idl` and curated EVM ABIs under `src/lib/evm`.
+- [x] Frontend read client instantiates all five Solana programs and exposes PDA/account readers for community, membership, payment attestation, governance, and treasury vault accounts.
+- [x] Frontend persists local-to-chain mappings for Solana community and proposal accounts when on-chain writes succeed.
+- [x] Frontend read/mapping unit tests cover local-to-chain mapping persistence and mapped treasury/proposal reads.
+- [x] CI runs `npm run test:contracts:drift` so cross-program validation drift fails PRs without requiring a validator.
+
+Notes:
+
+- `cargo check` and `cargo test` emit Anchor/Rust cfg warnings from macro expansion, but finish successfully.
+- `cargo install --locked anchor-cli --version 0.30.1` fails on old `time 0.3.29` with this Rust toolchain; the unlocked install produced a working `anchor-cli 0.30.1`.
+- Anchor IDL generation is currently handled through a local patched `anchor-syn 0.30.1` under `third_party/anchor-syn-0.30.1`.
+- Full local Anchor deploy/test currently requires a shell with `solana-test-validator` on `PATH`; the Windows shell used on 2026-05-22 has Anchor CLI but not the Solana CLI/test validator. Previous expanded negative-path verification ran through WSL Ubuntu 24.04 on a clean temporary validator at `http://127.0.0.1:8896`.
+- `Anchor.toml` uses `node tests/anchor-smoke.mjs` as the post-deploy integration smoke test and only configures `[programs.localnet]` until devnet deployment is complete.
+- From `app/`, `npm run test:contracts:smoke` runs the full localnet smoke flow and expects all five programs deployed/executable at the `[programs.localnet]` IDs.
+- When Solana CLI is unavailable, run `npm run test:contracts:drift` from `app/` to validate cross-program IDs/discriminators/layout mirrors without contacting a validator. Direct usage is also available with `node tests/anchor-smoke.mjs --drift-only`, and automation may set `ANCHOR_SMOKE_DRIFT_ONLY=1`.
+- The smoke test reuses an existing `payment_config` PDA only when the authority and trusted attester match the current payer; otherwise it fails with an explicit config mismatch.
+- `membership` validates payment attestation accounts by owner, discriminator, and deserialization instead of importing the `payment_attestation` crate directly.
+- `governance` validates membership accounts by owner, discriminator, and deserialization instead of importing the `membership` crate directly.
+- `forge build` emits lint warnings for timestamp comparisons and unsafe casts, but compiles successfully.
+- `npm run typecheck`, `npm run build`, and focused frontend tests for contract mapping/read wiring pass. Vite still emits existing wallet/dependency polyfill and chunk-size warnings.
+- `useBarazaContract.ts` now reads treasury PDA balances and proposal vote tallies when given resolvable on-chain addresses; local community/proposal IDs resolve through `src/lib/chainMappings.ts` when mappings exist.
+- EVM fork tests no-op locally unless `ETH_RPC_MAINNET` is set.
 
 ## Stage 0 - Repo Structure
 
 - [x] Solana: confirm all five Anchor programs build cleanly with `cargo check` from repo root
 - [ ] Stellar: add Soroban contract source or generated bindings to repo
-- [x] EVM: run `scripts/setup_baraza_evm.sh` or otherwise add Solidity contracts and Foundry / Hardhat artifacts to repo
+- [x] EVM: Solidity contracts and Foundry artifacts are present in `contracts/evm`
 - [x] Create `/contracts` directory with subdirs: `solana/`, `stellar/`, `evm/`
-- [ ] Add `.env.local.example` with all required keys and no real values committed
+- [x] Add `.env.local.example` with required keys and no real secrets committed
 
 ## Stage 1 - Solana Deployment
 
+- [x] Install Anchor CLI on the local machine
+- [x] Install `cargo-build-sbf`
+- [x] Resolve Anchor `0.30.1` IDL build compatibility with current `proc-macro2`
+- [x] Run `anchor build` successfully for all five programs
+- [x] Start/configure a local validator for Anchor deploy verification
+- [x] Run local Anchor deploy smoke test for all five programs
+- [x] Add instruction-level happy path test for community, payment attestation, membership activation, proposal creation, and voting
+- [x] Add treasury-vault instruction-level integration tests for initialization, SOL deposits, SPL deposit audit recording, withdrawal toggle, and SOL release
+- [x] Add negative-path Anchor integration tests for double voting and disabled treasury withdrawals
+- [x] Add remaining negative-path Anchor integration tests for bad signers, mismatched attestation, inactive members, and invalid proposal transitions
+- [x] Add smoke-test drift guards for manual cross-program validation constants and mirrored account layouts
+- [x] Add drift-only smoke mode for validator-free cross-program validation checks
+- [x] Add contract drift check to CI
+- [x] Remove undeployed devnet program IDs from `Anchor.toml`; keep devnet IDs unset until real deploy
 - [ ] Deploy `community_registry` to devnet; record program ID
 - [ ] Deploy `membership` to devnet; record program ID
 - [ ] Deploy `payment_attestation` to devnet; record program ID
 - [ ] Deploy `governance` to devnet; record program ID
 - [ ] Deploy `treasury_vault` to devnet; record program ID
-- [ ] Run `anchor test` against devnet for all five programs
 - [ ] Call `payment_attestation.initialize_config`; set config PDA and trusted attester signer
-- [ ] Copy generated IDLs to `src/lib/idl/`
-- [ ] Set all five program IDs in `.env.local`
-- [ ] **⚠️ Transfer program upgrade authority to Squads multisig after deploy**
+- [x] Copy generated IDLs/types to `src/lib/programs/idl/`
+- [x] Add env variables for all five program IDs
+- [ ] Set deployed program IDs in `.env.local`
+- [ ] HIGH RISK: Transfer program upgrade authority to Squads multisig after deploy
 
 ## Stage 2 - Stellar Deployment
 
+- [ ] Add Soroban contract source or generated bindings to `contracts/stellar`
 - [ ] Deploy Soroban contracts to Futurenet / testnet; record contract IDs
 - [ ] Validate contract size is within Soroban limit
 - [ ] Fund contract account with XLM for base reserves
 - [ ] Record contract IDs in `.env.local`
 - [ ] Add `src/lib/stellar.ts` client module for settlement, refunds, and payouts
-- [ ] **⚠️ Confirm bridge (LayerZero / Wormhole) Stellar support before enabling cross-chain flows**
-- [ ] **⚠️ Confirm oracle strategy for Stellar (Pyth / DIA; Chainlink not available)**
+- [ ] HIGH RISK: Confirm bridge (LayerZero / Wormhole) Stellar support before enabling cross-chain flows
+- [ ] HIGH RISK: Confirm oracle strategy for Stellar (Pyth / DIA; Chainlink not available)
 
 ## Stage 3 - EVM Deployment
 
+- [x] Add EVM contracts to `contracts/evm`
+- [x] Confirm `forge build`
+- [x] Confirm `forge test`
+- [x] Export curated app-facing EVM ABIs from `src/lib/evm`
 - [ ] Deploy governance contracts to each EVM testnet: Sepolia, Base Sepolia, and other supported networks
 - [ ] Verify source on each block explorer
 - [ ] Record addresses per network in `.env.local`
 - [ ] Add `src/lib/evm.ts` client module
-- [ ] **⚠️ Transfer ownership to Gnosis Safe on each chain immediately after deploy**
+- [ ] HIGH RISK: Transfer ownership to Gnosis Safe on each chain immediately after deploy
 
 ## Stage 4 - `useBarazaContract.ts`: Remove Preview Guards
 
@@ -50,10 +108,13 @@ Replace mock data one flow at a time. Do not remove a guard until the program is
 
 ### 4a - Read Flows
 
+- [x] Add typed client readers and PDA helpers for all five Solana programs
 - [ ] Wire `fetchCommunity` to `community_registry` account read
 - [ ] Wire `fetchMembership` to `membership` account read
-- [ ] Wire `fetchProposal` to `governance` account read
-- [ ] Wire `fetchTreasury` to `treasury_vault` account read
+- [x] Wire `fetchProposal` to `governance` account read when passed a proposal PDA
+- [x] Wire `fetchTreasury` to `treasury_vault` PDA balance read when community key/slug can be resolved
+- [x] Persist on-chain community/proposal addresses so page-level local IDs resolve without fallback guesses
+- [ ] Persist on-chain member addresses after real membership activation is wired
 - [ ] Remove read-path mock data from `src/lib/constants.ts` after each flow is verified
 
 ### 4b - Join Flow
@@ -61,7 +122,7 @@ Replace mock data one flow at a time. Do not remove a guard until the program is
 - [ ] Derive membership PDA for connected wallet
 - [ ] Wire `joinCommunity` instruction via `membership` program
 - [ ] Confirm consumed payment attestation is validated on-chain before activation
-- [ ] **⚠️ Membership asset minting needs real mint CPI path; do not mark complete until minting works**
+- [ ] HIGH RISK: Membership asset minting needs real mint CPI path; do not mark complete until minting works
 - [ ] Remove preview guard in `useBarazaContract.ts` for join
 
 ### 4c - Vote Flow
@@ -78,7 +139,7 @@ tx.add(ix);
 - [ ] Derive `proposal` PDA from `proposalId`
 - [ ] Derive `community` PDA from community slug / ID
 - [ ] Wire `castVote` instruction as shown above
-- [ ] **⚠️ Governance activation still uses admin-supplied eligibility snapshot; do not treat as fully decentralized until membership snapshot CPI is implemented**
+- [ ] HIGH RISK: Governance activation still uses admin-supplied eligibility snapshot; do not treat as fully decentralized until membership snapshot CPI is implemented
 - [ ] Remove preview guard for vote
 
 ### 4d - Create Proposal Flow
@@ -92,7 +153,7 @@ tx.add(ix);
 
 - [ ] Wire payment attestation submission via `payment_attestation` program
 - [ ] Confirm config PDA and trusted attester signer are present before any payment call
-- [ ] **⚠️ Treasury withdrawals must stay disabled until executed-proposal validation or Squads multisig control is wired**
+- [ ] HIGH RISK: Treasury withdrawals must stay disabled until executed-proposal validation or Squads multisig control is wired
 - [ ] Wire `treasury_vault` withdrawal only after proposal execution validation is confirmed
 - [ ] Remove preview guard for payment; withdrawal guard stays until treasury wiring is complete
 
@@ -109,8 +170,8 @@ Enable chains one at a time, only after the UI can submit and confirm real trans
 
 ## Stage 6 - RPC Fallback (`src/lib/rpc.ts`)
 
-- [ ] Confirm fallback order: `VITE_RPC_ENDPOINT` to `api.devnet.solana.com` to `clusterApiUrl('devnet')`
-- [ ] Add mainnet fallback chain before mainnet launch
+- [ ] Confirm fallback order: `VITE_RPC_ENDPOINT` to `clusterApiUrl(VITE_SOLANA_NETWORK)`
+- [ ] Add dedicated mainnet fallback endpoints before mainnet launch
 - [ ] Test `withRpcFallback` by intentionally killing the primary endpoint
 - [ ] Add alerting / logging when fallback is triggered
 
@@ -142,7 +203,7 @@ Check read, write, and guard removal in that order for each page.
 - [ ] Vote counts read from on-chain tally
 - [ ] Vote button wired after Stage 4c is complete
 - [ ] Vote button gated by `useWalletGuard` and eligibility snapshot check
-- [ ] **⚠️ Do not show vote button as enabled until eligibility is confirmed on-chain**
+- [ ] HIGH RISK: Do not show vote button as enabled until eligibility is confirmed on-chain
 
 ### Create Proposal Page
 
@@ -159,7 +220,7 @@ Check read, write, and guard removal in that order for each page.
 ### Settings / Admin Page
 
 - [ ] Governance parameter display reads from on-chain config
-- [ ] **⚠️ Any admin write action must go through Squads multisig; no direct EOA admin calls**
+- [ ] HIGH RISK: Any admin write action must go through Squads multisig; no direct EOA admin calls
 
 ## Stage 8 - Cross-chain Wiring (LayerZero / Wormhole)
 
@@ -168,7 +229,7 @@ Check read, write, and guard removal in that order for each page.
 - [ ] Replay protection confirmed with nonces / domain separators
 - [ ] Relayer funded on all chains
 - [ ] Cross-chain proposal execution tested end-to-end on testnet
-- [ ] **⚠️ Stellar bridge support confirmed with LayerZero / Wormhole team before enabling**
+- [ ] HIGH RISK: Stellar bridge support confirmed with LayerZero / Wormhole team before enabling
 
 ## Stage 9 - Promote Gate: Testnet to Mainnet
 
@@ -190,8 +251,9 @@ Check read, write, and guard removal in that order for each page.
 Blocking items:
 
 1. External audit not started
-2. Write flows still behind preview guards
-3. Membership mint CPI path not implemented
-4. Treasury withdrawal guard not removable until proposal execution validation is wired
-5. Stellar oracle and bridge support unconfirmed
-6. Squads multisig not yet controlling program upgrade authority
+2. Solana programs not deployed to devnet from this checkout
+3. Write flows still behind preview guards
+4. Membership mint CPI path not implemented
+5. Treasury withdrawal guard not removable until proposal execution validation is wired
+6. Stellar oracle and bridge support unconfirmed
+7. Squads multisig not yet controlling program upgrade authority

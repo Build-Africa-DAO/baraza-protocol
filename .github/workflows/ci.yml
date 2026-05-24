@@ -26,6 +26,9 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Contract drift check
+        run: npm run test:contracts:drift
+
       - name: TypeScript
         run: npm run typecheck
 

@@ -6,9 +6,13 @@
  *  - Read methods: use withRpcFallback + cached results
  *  - Write methods: require connected wallet + toast feedback
  */
-import { useCallback, useRef, useState } from 'react';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
 import { useToast } from '@/hooks/use-toast';
+import { dataStore } from '@/lib/dataStore';
+import { communityPda, createBarazaReadClient, toSlug } from '@/lib/programs';
+import { getCommunityChainMapping, getDecisionChainMapping } from '@/lib/chainMappings';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -46,6 +50,19 @@ function fromCache<T>(key: string): T | null {
   return entry.data as T;
 }
 
+function setCache<T>(key: string, data: T): T {
+  cache.set(key, { data, ts: Date.now() });
+  return data;
+}
+
+function tryPublicKey(value: string): PublicKey | null {
+  try {
+    return new PublicKey(value);
+  } catch {
+    return null;
+  }
+}
+
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 interface UseBarazaContractResult {
@@ -63,11 +80,25 @@ interface UseBarazaContractResult {
 }
 
 export function useBarazaContract(): UseBarazaContractResult {
+  const { connection } = useConnection();
   const { publicKey, connected } = useWallet();
   const { toast } = useToast();
   const [isPending, setIsPending] = useState(false);
+  const readClient = useMemo(() => createBarazaReadClient(connection), [connection]);
   // Prevent duplicate in-flight transactions
   const pendingTxRef = useRef<Set<string>>(new Set());
+
+  const resolveCommunityKey = useCallback((communityId: string): PublicKey => {
+    const publicKeyValue = tryPublicKey(communityId);
+    if (publicKeyValue) return publicKeyValue;
+
+    const mapping = getCommunityChainMapping(communityId);
+    if (mapping) return new PublicKey(mapping.communityAddress);
+
+    const community = dataStore.getCommunity(communityId);
+    const slug = community ? toSlug(community.name) : toSlug(communityId);
+    return communityPda(slug)[0];
+  }, []);
 
   // ── Reads ──────────────────────────────────────────────────────────────────
 
@@ -77,12 +108,16 @@ export function useBarazaContract(): UseBarazaContractResult {
       const cached = fromCache<number>(cacheKey);
       if (cached !== null) return cached;
 
-      // Program deployment note: derive the community treasury PDA and call
-      // conn.getBalance(pda) once the Baraza Anchor program is deployed.
-      void communityId;
-      return 0;
+      try {
+        const communityKey = resolveCommunityKey(communityId);
+        const balance = await readClient.fetchTreasuryBalance(communityKey);
+        return setCache(cacheKey, balance);
+      } catch (error) {
+        console.warn('[baraza] fetchTreasuryBalance on-chain read failed:', error);
+        return 0;
+      }
     },
-    []
+    [readClient, resolveCommunityKey]
   );
 
   const fetchVoteState = useCallback(
@@ -91,10 +126,28 @@ export function useBarazaContract(): UseBarazaContractResult {
       const cached = fromCache<VoteState>(cacheKey);
       if (cached !== null) return cached;
 
-      // In production: fetch from Anchor program account
-      return null;
+      const decisionMapping = getDecisionChainMapping(proposalId);
+      const proposalKey = decisionMapping
+        ? new PublicKey(decisionMapping.proposalAddress)
+        : tryPublicKey(proposalId);
+      if (!proposalKey) return null;
+
+      try {
+        const proposal = await readClient.fetchProposal(proposalKey);
+        if (!proposal) return null;
+
+        return setCache(cacheKey, {
+          communityId: proposal.community.toBase58(),
+          proposalId,
+          votesFor: proposal.forWeight.toNumber(),
+          votesAgainst: proposal.againstWeight.toNumber(),
+        });
+      } catch (error) {
+        console.warn('[baraza] fetchVoteState on-chain read failed:', error);
+        return null;
+      }
     },
-    []
+    [readClient]
   );
 
   // ── Writes ─────────────────────────────────────────────────────────────────

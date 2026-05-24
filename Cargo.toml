@@ -2,6 +2,9 @@
 members = ["programs/*"]
 resolver = "2"
 
+[patch.crates-io]
+anchor-syn = { path = "third_party/anchor-syn-0.30.1" }
+
 [profile.release]
 overflow-checks = true
 lto = "fat"

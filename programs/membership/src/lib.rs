@@ -12,9 +12,14 @@
 //!     from the wallet alone.
 
 use anchor_lang::prelude::*;
-use payment_attestation::PaymentAttestationAccount;
 
-declare_id!("EnCvLHcm2dSjwKjskwihHbuHWLQKjPKMLGJJxbPiaDup");
+declare_id!("34MQRw2XSScvMYTiyYLix31qnrmh9vARwpmXM6ycNtuK");
+
+pub const PAYMENT_ATTESTATION_PROGRAM_ID: Pubkey = Pubkey::new_from_array([
+    148, 84, 165, 82, 236, 107, 78, 109, 100, 65, 21, 86, 199, 209, 101, 143, 100, 33, 228,
+    227, 189, 128, 123, 16, 16, 241, 218, 166, 217, 30, 128, 56,
+]);
+pub const PAYMENT_ATTESTATION_DISCRIMINATOR: [u8; 8] = [62, 247, 19, 32, 195, 26, 7, 197];
 
 #[program]
 pub mod membership {
@@ -157,7 +162,21 @@ pub mod membership {
     ) -> Result<()> {
         let member = &mut ctx.accounts.member;
         let tier = &ctx.accounts.tier;
-        let attestation = &ctx.accounts.payment_attestation;
+        require_keys_eq!(
+            *ctx.accounts.payment_attestation.owner,
+            PAYMENT_ATTESTATION_PROGRAM_ID,
+            MembershipError::PaymentAttestationMismatch
+        );
+
+        let attestation_data = ctx.accounts.payment_attestation.try_borrow_data()?;
+        require!(
+            attestation_data.len() >= 8
+                && attestation_data[..8] == PAYMENT_ATTESTATION_DISCRIMINATOR,
+            MembershipError::PaymentAttestationMismatch
+        );
+        let mut attestation_bytes: &[u8] = &attestation_data[8..];
+        let attestation = PaymentAttestationAccount::deserialize(&mut attestation_bytes)?;
+
         require!(
             member.status == MembershipStatus::Pending,
             MembershipError::InvalidStateTransition
@@ -378,6 +397,26 @@ impl MembershipTierAccount {
         + 1; // bump
 }
 
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub struct PaymentAttestationAccount {
+    pub order_id_hash: [u8; 32],
+    pub community: Pubkey,
+    pub tier: Pubkey,
+    pub member_id_hash: [u8; 32],
+    pub recipient_wallet: Pubkey,
+    pub amount_smallest_unit: u64,
+    pub currency_code: [u8; 3],
+    pub provider_reference_hash: [u8; 32],
+    pub provider_environment: String,
+    pub attester: Pubkey,
+    pub expires_at_slot: u64,
+    pub consumed: bool,
+    pub consumed_at_slot: Option<u64>,
+    pub voided: bool,
+    pub voided_at_slot: Option<u64>,
+    pub bump: u8,
+}
+
 #[account]
 pub struct MemberAccount {
     pub member_id_hash: [u8; 32],
@@ -560,7 +599,8 @@ pub struct ActivateMember<'info> {
     )]
     pub tier: Account<'info, MembershipTierAccount>,
 
-    pub payment_attestation: Account<'info, PaymentAttestationAccount>,
+    /// CHECK: manually validates owner, discriminator, and serialized fields.
+    pub payment_attestation: UncheckedAccount<'info>,
 
     /// Baraza backend signer authorized to mint.
     pub minter: Signer<'info>,

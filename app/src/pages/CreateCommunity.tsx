@@ -13,6 +13,9 @@ import CommunityBanner from '@/components/CommunityBanner';
 import { useChain } from '@/hooks/useChain';
 import { useSeo } from '@/lib/seo';
 import { CHAINS } from '@/lib/chain';
+import { useBarazaChain } from '@/hooks/useBarazaData';
+import { communityPda, toSlug } from '@/lib/programs';
+import { saveCommunityChainMapping } from '@/lib/chainMappings';
 
 const CreateCommunity: React.FC = () => {
   useSeo({
@@ -25,6 +28,7 @@ const CreateCommunity: React.FC = () => {
   const { requireWallet, isReady } = useWalletGuard({ action: 'launch a community DAO' });
   const { toast } = useToast();
   const { chain, chainMeta } = useChain();
+  const chainClient = useBarazaChain();
   const [isPending, setIsPending] = useState(false);
   const [isCreated, setIsCreated] = useState(false);
   const [createdCommunityId, setCreatedCommunityId] = useState<string | null>(null);
@@ -101,6 +105,22 @@ const CreateCommunity: React.FC = () => {
           : { orderId: `ord_wallet_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`, persisted: false };
 
         // Step 2: create the community record
+        let chainResult: { slug: string; communityAddress: string; signature: string } | null = null;
+        if (chain === 'solana' && chainClient) {
+          const slug = toSlug(form.name);
+          try {
+            const signature = await chainClient.createCommunity(slug, form.name, '');
+            const [communityKey] = communityPda(slug);
+            chainResult = {
+              slug,
+              communityAddress: communityKey.toBase58(),
+              signature,
+            };
+          } catch (chainErr) {
+            console.warn('[baraza] createCommunity on-chain failed (record-only fallback):', chainErr);
+          }
+        }
+
         const community = await createCommunityRecord({
           name: form.name,
           type: form.type,
@@ -112,6 +132,15 @@ const CreateCommunity: React.FC = () => {
           votingPeriodDays: Number(form.votingPeriod),
           treasuryPolicy: form.treasuryPolicy as 'multisig-ready' | 'proposal-only' | 'manual-review',
         });
+        if (chainResult) {
+          saveCommunityChainMapping({
+            localId: community.id,
+            chain: 'solana',
+            slug: chainResult.slug,
+            communityAddress: chainResult.communityAddress,
+            createTxSignature: chainResult.signature,
+          });
+        }
         setCreatedCommunityId(community.id);
         setIsCreated(true);
         toast({

@@ -19,7 +19,7 @@
 use anchor_lang::prelude::*;
 use anchor_lang::system_program;
 
-declare_id!("FmXLgUDL4RaNwP6rX3FcmvGypx96B4Yw1RzV6rZwwUhb");
+declare_id!("ApPdkfooQLdVN8gAXRnddbtttruYNihiwjanYtXUnxYy");
 
 #[program]
 pub mod treasury_vault {
