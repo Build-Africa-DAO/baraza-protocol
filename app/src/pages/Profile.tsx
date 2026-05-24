@@ -1,6 +1,18 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, BriefcaseBusiness, Compass, PlusCircle, ShieldCheck, UserRound, Wallet } from "lucide-react";
+import {
+  ArrowRight,
+  BriefcaseBusiness,
+  Compass,
+  Link2,
+  Loader2,
+  PlusCircle,
+  RefreshCw,
+  ShieldCheck,
+  Trash2,
+  UserRound,
+  Wallet,
+} from "lucide-react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import Layout from "@/components/Layout";
@@ -11,6 +23,17 @@ import { useCommunities } from "@/hooks/useCommunities";
 import { CHAINS } from "@/lib/chain";
 import { useSeo } from "@/lib/seo";
 import { getBountyStatsForCommunity, getOpenBountiesForCommunity } from "@/lib/bounties";
+import {
+  fetchStellarBalances,
+  getStellarConfig,
+  isValidStellarPublicKey,
+  type StellarBalance,
+} from "@/lib/stellar";
+import {
+  clearLinkedStellarAccount,
+  getLinkedStellarAccount,
+  saveLinkedStellarAccount,
+} from "@/lib/stellarAccounts";
 
 export default function Profile() {
   useSeo({
@@ -22,6 +45,12 @@ export default function Profile() {
   const { publicKey, connected, wallet } = useWallet();
   const { setVisible } = useWalletModal();
   const { communities } = useCommunities();
+  const stellarConfig = useMemo(() => getStellarConfig(), []);
+  const [stellarAccount, setStellarAccount] = useState<string | null>(null);
+  const [stellarInput, setStellarInput] = useState("");
+  const [stellarBalances, setStellarBalances] = useState<StellarBalance[]>([]);
+  const [stellarMessage, setStellarMessage] = useState<string | null>(null);
+  const [isLoadingStellar, setIsLoadingStellar] = useState(false);
 
   // Address is only needed below the early-return, but `useMemo` MUST be called
   // unconditionally on every render — so compute it here (defaulting to "")
@@ -45,6 +74,58 @@ export default function Profile() {
       getOpenBountiesForCommunity(community.id).map((bounty) => ({ bounty, community })),
     );
   }, [myMemberships]);
+
+  useEffect(() => {
+    if (!address) return;
+    const linked = getLinkedStellarAccount(address);
+    setStellarAccount(linked);
+    setStellarInput(linked ?? "");
+    setStellarBalances([]);
+    setStellarMessage(null);
+  }, [address]);
+
+  const refreshStellarBalances = async (account = stellarAccount) => {
+    if (!account) return;
+    if (!stellarConfig.enabled) {
+      setStellarMessage("Set VITE_STELLAR_NETWORK or VITE_STELLAR_HORIZON_URL to enable live Stellar balance checks.");
+      return;
+    }
+
+    setIsLoadingStellar(true);
+    setStellarMessage(null);
+    try {
+      const balances = await fetchStellarBalances(account, stellarConfig);
+      setStellarBalances(balances);
+    } catch (err) {
+      setStellarBalances([]);
+      setStellarMessage(err instanceof Error ? err.message : "Could not load Stellar balances.");
+    } finally {
+      setIsLoadingStellar(false);
+    }
+  };
+
+  const handleSaveStellar = () => {
+    if (!address) return;
+    if (!isValidStellarPublicKey(stellarInput.trim())) {
+      setStellarMessage("Enter a valid Stellar public key.");
+      return;
+    }
+    const saved = saveLinkedStellarAccount(address, stellarInput);
+    setStellarAccount(saved);
+    setStellarInput(saved);
+    setStellarBalances([]);
+    setStellarMessage("Stellar account linked.");
+    void refreshStellarBalances(saved);
+  };
+
+  const handleClearStellar = () => {
+    if (!address) return;
+    clearLinkedStellarAccount(address);
+    setStellarAccount(null);
+    setStellarInput("");
+    setStellarBalances([]);
+    setStellarMessage(null);
+  };
 
   if (!connected || !publicKey) {
     return (
@@ -111,6 +192,91 @@ export default function Profile() {
                   Linking a second wallet lets you sign from multiple devices.{" "}
                   <span>Coming soon.</span>
                 </p>
+              </div>
+
+              <div className="baraza-card p-5">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <h2 className="font-mono text-xs uppercase tracking-widest">
+                    Stellar settlement
+                  </h2>
+                  <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider">
+                    <span
+                      aria-hidden
+                      className="h-1.5 w-1.5 rounded-full"
+                      style={{ background: CHAINS.stellar.badgeBg }}
+                    />
+                    {stellarConfig.network}
+                  </span>
+                </div>
+
+                <label htmlFor="stellar-account" className="mb-2 block text-xs font-semibold">
+                  Stellar public key
+                </label>
+                <div className="flex rounded-lg border focus-within:border-current">
+                  <span className="grid w-10 place-items-center border-r">
+                    <Link2 className="h-4 w-4" />
+                  </span>
+                  <input
+                    id="stellar-account"
+                    value={stellarInput}
+                    onChange={(e) => {
+                      setStellarInput(e.target.value);
+                      setStellarMessage(null);
+                    }}
+                    className="min-w-0 flex-1 px-3 py-2.5 font-mono text-xs outline-none"
+                    placeholder="G..."
+                    autoComplete="off"
+                    spellCheck={false}
+                  />
+                </div>
+
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={handleSaveStellar}
+                    disabled={!stellarInput.trim()}
+                    className="btn-primary gap-2 px-3 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <Link2 className="h-3.5 w-3.5" />
+                    Link
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void refreshStellarBalances()}
+                    disabled={!stellarAccount || isLoadingStellar}
+                    className="btn-ghost gap-2 px-3 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isLoadingStellar ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                    Refresh
+                  </button>
+                  {stellarAccount && (
+                    <button
+                      type="button"
+                      onClick={handleClearStellar}
+                      className="btn-ghost gap-2 px-3 py-2 text-xs"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Remove
+                    </button>
+                  )}
+                </div>
+
+                {stellarMessage && (
+                  <p className="mt-3 text-xs leading-5">
+                    {stellarMessage}
+                  </p>
+                )}
+
+                {stellarBalances.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    {stellarBalances.slice(0, 3).map((balance) => (
+                      <div key={`${balance.type}:${balance.assetCode}:${balance.assetIssuer ?? 'native'}`} className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-xs">
+                        <span className="font-semibold">{balance.assetCode}</span>
+                        <span className="font-mono">{balance.balance}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="baraza-card p-5">
