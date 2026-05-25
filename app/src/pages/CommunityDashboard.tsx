@@ -4,7 +4,7 @@ import {
   Users, TrendingUp, Vote, History, PlusCircle, CreditCard,
   ArrowLeft, Calendar, ShieldCheck, ReceiptText,
   LayoutDashboard, Wallet as WalletIcon, ExternalLink, Activity,
-  Images, BriefcaseBusiness, Crown, Lightbulb, Trophy, Map,
+  Images, BriefcaseBusiness, Crown, Lightbulb, Trophy, MapIcon,
   Layers, Settings, ChevronRight, Menu, X,
 } from 'lucide-react';
 import LiveStatCard from '@/components/community/LiveStatCard';
@@ -51,7 +51,7 @@ const TABS: TabDef[] = [
   { key: 'roles',        label: 'Roles',                icon: Crown,         group: 'Community' },
   { key: 'suggestions',  label: 'Community Suggestions',icon: Lightbulb,     group: 'Community' },
   { key: 'leaderboard',  label: 'Leaderboards',         icon: Trophy,        group: 'Community' },
-  { key: 'roadmap',      label: 'Roadmap',              icon: Map,           group: 'Community' },
+  { key: 'roadmap',      label: 'Roadmap',              icon: MapIcon,       group: 'Community' },
   { key: 'combined',     label: 'Combined Board',       icon: Layers,        group: 'Community' },
   { key: 'governance',   label: 'Governance',           icon: Vote,          group: 'Work' },
   { key: 'bounties',     label: 'Bounties',             icon: BriefcaseBusiness, group: 'Work' },
