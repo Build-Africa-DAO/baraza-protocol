@@ -22,6 +22,7 @@ supabase/migrations/003_payment_attestations.sql
 supabase/migrations/004_memberships.sql
 supabase/migrations/005_stellar_settlements.sql
 supabase/migrations/006_bounties_security_stellar.sql
+supabase/migrations/007_enable_evm_community_rails.sql
 ```
 
 Easiest path: Supabase dashboard → SQL Editor → paste each migration in order

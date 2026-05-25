@@ -68,6 +68,7 @@ Run every file in `supabase/migrations/` in filename order before testing durabl
 004_memberships.sql
 005_stellar_settlements.sql
 006_bounties_security_stellar.sql
+007_enable_evm_community_rails.sql
 ```
 
 Dashboard path: Supabase -> SQL Editor -> paste each migration in order.

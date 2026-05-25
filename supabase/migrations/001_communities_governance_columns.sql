@@ -18,7 +18,7 @@ ALTER TABLE communities
 -- writer can't sneak in an unsupported value.
 ALTER TABLE communities
   ADD CONSTRAINT communities_chain_chk
-    CHECK (chain IN ('solana', 'stellar'));
+    CHECK (chain IN ('solana', 'stellar', 'base', 'arbitrum', 'optimism', 'celo'));
 
 ALTER TABLE communities
   ADD CONSTRAINT communities_treasury_policy_chk

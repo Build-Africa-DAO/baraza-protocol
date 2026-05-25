@@ -82,6 +82,7 @@ push-baraza.bat  simple git push helper
 - Product requirements: `app/docs/PRD.md`
 - MVP build architecture: `app/docs/MVP_ARCHITECTURE.md`
 - Extracted DAO logic reference: `app/docs/DAO_LOGIC_REFERENCE.md`
+- Governance contract roadmap: `app/docs/GOVERNANCE_CONTRACT_ROADMAP.md`
 - Deployment notes: `app/docs/DEPLOYMENT.md`
 - Contract integration notes: `app/docs/CONTRACT_INTEGRATION.md`
 - Supabase schema starter: `app/docs/SUPABASE_SCHEMA.sql`

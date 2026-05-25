@@ -12,7 +12,7 @@ import { createCommunityRecord } from '@/lib/communities';
 import CommunityBanner from '@/components/CommunityBanner';
 import { useChain } from '@/hooks/useChain';
 import { useSeo } from '@/lib/seo';
-import { CHAINS } from '@/lib/chain';
+import { CHAINS, type Chain } from '@/lib/chain';
 import { useBarazaChain } from '@/hooks/useBarazaData';
 import { communityPda, toSlug } from '@/lib/programs';
 import { saveCommunityChainMapping } from '@/lib/chainMappings';
@@ -33,7 +33,7 @@ const CreateCommunity: React.FC = () => {
   const [isCreated, setIsCreated] = useState(false);
   const [createdCommunityId, setCreatedCommunityId] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'mpesa' | 'wallet'>('mpesa');
-  const [walletChain, setWalletChain] = useState<'solana' | 'stellar' | 'base' | 'ethereum'>('solana');
+  const [walletChain, setWalletChain] = useState<Extract<Chain, 'solana' | 'stellar' | 'base' | 'arbitrum' | 'optimism' | 'celo'>>('solana');
   const [form, setForm] = useState({
     name: '',
     type: '',
@@ -476,8 +476,10 @@ const CreateCommunity: React.FC = () => {
                         >
                           <option value="solana">Solana — SOL</option>
                           <option value="stellar">Stellar - XLM settlement proof</option>
-                          <option value="base">Base - ETH (integration pending)</option>
-                          <option value="ethereum">Ethereum - ETH (integration pending)</option>
+                          <option value="base">Base - ETH governance review</option>
+                          <option value="arbitrum">Arbitrum - ETH governance review</option>
+                          <option value="optimism">Optimism - ETH governance review</option>
+                          <option value="celo">Celo - CELO governance review</option>
                         </select>
                       </div>
                       <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm">

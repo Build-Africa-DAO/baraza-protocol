@@ -60,10 +60,23 @@ describe('ChainSelector — open state', () => {
     expect(screen.getByRole('button', { name: /network: stellar/i })).toBeInTheDocument();
   });
 
-  it('disables all non-Solana chains with integration-pending labels', () => {
+  it('allows EVM review rail selection', () => {
     renderSelector();
     fireEvent.click(screen.getByRole('button', { name: /network: solana/i }));
-    for (const name of ['ethereum', 'base', 'arbitrum', 'optimism', 'polygon', 'bnb chain', 'celo']) {
+
+    for (const name of ['base', 'arbitrum', 'optimism', 'celo']) {
+      const option = screen.getByRole('option', { name: new RegExp(`^${name}$`, 'i') });
+      expect(option).not.toBeDisabled();
+    }
+
+    fireEvent.click(screen.getByRole('option', { name: /^base$/i }));
+    expect(screen.getByRole('button', { name: /network: base/i })).toBeInTheDocument();
+  });
+
+  it('disables unsupported EVM chains with integration-pending labels', () => {
+    renderSelector();
+    fireEvent.click(screen.getByRole('button', { name: /network: solana/i }));
+    for (const name of ['ethereum', 'polygon', 'bnb chain']) {
       expect(screen.getByRole('option', { name: new RegExp(`${name}.*integration pending`, 'i') })).toBeDisabled();
     }
   });
@@ -92,7 +105,7 @@ describe('ChainSelector — keyboard navigation', () => {
     const trigger = screen.getByRole('button', { name: /network: solana/i });
     fireEvent.click(trigger);
 
-    // Solana (index 0) and Stellar (index 1) are enabled.
+    // Solana (index 0), Stellar (index 1), and selected EVM rails are enabled.
     fireEvent.keyDown(window, { key: 'ArrowDown' });
 
     // No crash, listbox still open
@@ -121,8 +134,8 @@ describe('ChainSelector — persistence', () => {
   });
 
   it('reads the initial chain from localStorage if present', () => {
-    window.localStorage.setItem('baraza:chain', 'stellar');
+    window.localStorage.setItem('baraza:chain', 'base');
     renderSelector();
-    expect(screen.getByRole('button', { name: /network: stellar/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /network: base/i })).toBeInTheDocument();
   });
 });

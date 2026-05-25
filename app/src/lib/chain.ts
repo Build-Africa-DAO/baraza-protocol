@@ -4,8 +4,9 @@
  * Distinct from `lib/network.ts`, which selects the Solana cluster
  * (mainnet/devnet/testnet). This module is about which blockchain the
  * user is browsing. Solana handles membership credentials and governance.
- * Stellar is enabled as the payment/settlement rail. EVM chains stay disabled
- * until app clients, addresses, and transaction flows are wired in.
+ * Stellar is enabled as the payment/settlement rail. Base, Arbitrum,
+ * Optimism, and Celo are enabled as EVM target rails for community setup, but
+ * contract execution still remains gated by the governance-contract roadmap.
  */
 
 export type Chain =
@@ -30,11 +31,11 @@ export interface ChainMeta {
 }
 
 const INTEGRATION_PENDING = 'Integration pending';
+const GOVERNANCE_REVIEW = 'Governance review';
 
-// EVM contracts may exist, but selecting them is blocked until app clients,
-// addresses, and transaction flows are wired in. ChainSelector blocks disabled
-// chains, and DB writes are rejected by the CHECK constraint in
-// supabase/migrations/001_communities_governance_columns.sql.
+// Ethereum, Polygon, and BNB stay blocked until a concrete app/client path is
+// selected. Base, Arbitrum, Optimism, and Celo are selectable for planning and
+// persistence, with real execution gated by contract review.
 export const CHAINS: Record<Chain, ChainMeta> = {
   solana: {
     id: 'solana',
@@ -67,8 +68,8 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     short: 'BASE',
     badgeBg: '#0052FF',
     badgeText: '#FFFFFF',
-    enabled: false,
-    comingSoon: INTEGRATION_PENDING,
+    enabled: true,
+    comingSoon: GOVERNANCE_REVIEW,
   },
   arbitrum: {
     id: 'arbitrum',
@@ -76,8 +77,8 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     short: 'ARB',
     badgeBg: '#28A0F0',
     badgeText: '#FFFFFF',
-    enabled: false,
-    comingSoon: INTEGRATION_PENDING,
+    enabled: true,
+    comingSoon: GOVERNANCE_REVIEW,
   },
   optimism: {
     id: 'optimism',
@@ -85,8 +86,8 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     short: 'OP',
     badgeBg: '#FF0420',
     badgeText: '#FFFFFF',
-    enabled: false,
-    comingSoon: INTEGRATION_PENDING,
+    enabled: true,
+    comingSoon: GOVERNANCE_REVIEW,
   },
   polygon: {
     id: 'polygon',
@@ -114,8 +115,8 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     short: 'CELO',
     badgeBg: '#35D07F',
     badgeText: '#0B132B',
-    enabled: false,
-    comingSoon: INTEGRATION_PENDING,
+    enabled: true,
+    comingSoon: GOVERNANCE_REVIEW,
   },
 };
 
@@ -138,7 +139,14 @@ export function readStoredChain(): Chain {
   if (typeof window === 'undefined') return DEFAULT_CHAIN;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (raw === 'solana' || raw === 'stellar') return raw;
+    if (
+      raw === 'solana' ||
+      raw === 'stellar' ||
+      raw === 'base' ||
+      raw === 'arbitrum' ||
+      raw === 'optimism' ||
+      raw === 'celo'
+    ) return raw;
   } catch {
     /* ignore */
   }

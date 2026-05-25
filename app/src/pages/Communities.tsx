@@ -14,9 +14,26 @@ type ChainFilter = "all" | Chain;
 
 const CHAIN_FILTERS: { value: ChainFilter; label: string; dot?: string }[] = [
   { value: "all", label: "All Networks" },
-  { value: "solana", label: CHAINS.solana.label, dot: CHAINS.solana.badgeBg },
-  { value: "stellar", label: CHAINS.stellar.label, dot: CHAINS.stellar.badgeBg },
+  ...Object.values(CHAINS)
+    .filter((chain) => chain.enabled)
+    .map((chain) => ({ value: chain.id, label: chain.label, dot: chain.badgeBg })),
 ];
+
+function emptyChainTitle(chainFilter: ChainFilter): string {
+  if (chainFilter === "all") return "No DAOs match that filter yet";
+  if (chainFilter === "solana") return "No Solana communities match that filter";
+  return `No ${CHAINS[chainFilter].label} communities yet`;
+}
+
+function emptyChainDescription(chainFilter: ChainFilter): string {
+  if (chainFilter === "stellar") {
+    return "No communities have selected Stellar as their settlement rail yet. Launch one and use XLM payment verification for member dues.";
+  }
+  if (chainFilter !== "all" && chainFilter !== "solana") {
+    return `No communities have selected ${CHAINS[chainFilter].label} yet. Launch one to track the governance contract rollout for that rail.`;
+  }
+  return "Try a different type, or start your own Community DAO.";
+}
 
 export default function Communities() {
   useSeo({
@@ -259,16 +276,10 @@ export default function Communities() {
                 <Search className="w-6 h-6" />
               </div>
               <p className="font-display text-base font-semibold mb-1">
-                {chainFilter === "stellar"
-                  ? "No Stellar communities yet"
-                  : chainFilter === "solana"
-                    ? "No Solana communities match that filter"
-                    : "No DAOs match that filter yet"}
+                {emptyChainTitle(chainFilter)}
               </p>
               <p className="text-sm mb-6">
-                {chainFilter === "stellar"
-                  ? "No communities have selected Stellar as their settlement rail yet. Launch one and use XLM payment verification for member dues."
-                  : "Try a different type, or start your own Community DAO."}
+                {emptyChainDescription(chainFilter)}
               </p>
               <Link to="/create" className="btn-primary inline-flex items-center gap-2 text-sm">
                 <PlusCircle className="w-4 h-4" /> Launch a Community DAO
