@@ -6,8 +6,8 @@ const platformLinks = [
   {
     icon: Compass,
     label: "Discover",
-    title: "Find active chamas",
-    detail: "Browse chamas, SACCOs, co-ops, and welfare groups with live filters.",
+    title: "Find active DAOs & chamas",
+    detail: "Browse DAOs, chamas, SACCOs, and welfare groups with live filters.",
     to: "/communities",
   },
   {
@@ -42,7 +42,7 @@ export default function AIPlatformSection() {
               Website, operating platform, and AI guide in one clean flow.
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground md:text-base md:leading-7">
-              Visitors can understand the model, organisers can launch a chama, members can
+              Visitors can understand the model, organisers can launch a DAO or chama, members can
               vote and track funds, and Asha is available when someone needs a next step.
             </p>
 

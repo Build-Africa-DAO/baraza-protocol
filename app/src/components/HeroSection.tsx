@@ -7,10 +7,10 @@ import { cn } from "@/lib/utils";
 const stats = [
   { label: "Treasury and votes", value: "Govern" },
   { label: "M-Pesa onboarding", value: "Mobile" },
-  { label: "Member dashboards", value: "Track" },
+  { label: "Activity tracking", value: "Track" },
 ];
 
-const headlineWords = ["chama", "SACCO", "co-operative"];
+const headlineWords = ["DAO", "chama", "SACCO"];
 
 const walkthroughFrames: Array<{
   label: string;
@@ -184,7 +184,7 @@ export default function HeroSection() {
           <div className="max-w-2xl">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-border/50 bg-muted/60 px-3.5 py-1.5 text-xs font-semibold text-muted-foreground sm:mb-6">
               <ShieldCheck className="h-3.5 w-3.5" />
-              Chama, SACCO, and co-operative treasury
+              DAO, Chama &amp; SACCO treasury
             </div>
             <h1
               className="font-display text-[clamp(3.1rem,11vw,4.7rem)] font-black leading-[0.9] tracking-tight sm:text-[clamp(4rem,6.5vw,5.35rem)]"
@@ -194,7 +194,7 @@ export default function HeroSection() {
             </h1>
 
             <p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
-              A clean operating platform for chamas, SACCOs, welfare groups, and co-operatives:
+              A clean operating platform for DAOs, chamas, and SACCOs:
               collect dues, vote on proposals, and keep the treasury visible.
             </p>
 
@@ -203,11 +203,11 @@ export default function HeroSection() {
                 to="/communities"
                 className="btn-warm inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-4 text-base font-extrabold uppercase tracking-wide sm:w-auto min-[860px]:w-full min-[1040px]:w-auto"
               >
-                Browse groups
+                Browse DAOs
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link to="/create" className="btn-primary inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-4 text-base font-extrabold uppercase tracking-wide sm:w-auto min-[860px]:w-full min-[1040px]:w-auto">
-                Launch your chama
+                Launch a DAO
               </Link>
             </div>
 

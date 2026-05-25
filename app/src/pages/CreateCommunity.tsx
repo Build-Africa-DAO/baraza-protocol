@@ -19,13 +19,13 @@ import { saveCommunityChainMapping } from '@/lib/chainMappings';
 
 const CreateCommunity: React.FC = () => {
   useSeo({
-    title: "Launch your chama",
+    title: "Launch a DAO",
     description:
       "Spin up a chama, SACCO, welfare group, or co-operative on Baraza. Set membership rules, dues, quorum, and M-Pesa contribution paths in a single guided flow.",
     path: "/create",
   });
   const navigate = useNavigate();
-  const { requireWallet, isReady } = useWalletGuard({ action: 'launch your chama' });
+  const { requireWallet, isReady } = useWalletGuard({ action: 'launch a DAO' });
   const { toast } = useToast();
   const { chain } = useChain();
   const chainClient = useBarazaChain();
@@ -239,7 +239,7 @@ const CreateCommunity: React.FC = () => {
                   <Users className="w-5 h-5" />
                 </div>
                 <h1 className="font-display text-2xl font-black leading-tight text-foreground drop-shadow md:text-3xl">
-                  Launch your chama
+                  Launch a DAO
                 </h1>
               </div>
               <p className="max-w-xl text-sm font-semibold leading-6 text-foreground/92 drop-shadow md:text-base md:leading-7">

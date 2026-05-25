@@ -92,7 +92,7 @@ export default function MobileBottomNav() {
             )}
           >
             <PlusCircle className="h-7 w-7" />
-            <span className="sr-only">Launch your chama</span>
+            <span className="sr-only">Launch a DAO</span>
           </Link>
         </div>
 

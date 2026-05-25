@@ -21,23 +21,23 @@ const CHAIN_FILTERS: { value: ChainFilter; label: string; dot?: string }[] = [
 
 function emptyChainTitle(chainFilter: ChainFilter): string {
   if (chainFilter === "all") return "No groups match that filter yet";
-  if (chainFilter === "solana") return "No Solana chamas match that filter";
-  return `No ${CHAINS[chainFilter].label} chamas yet`;
+  if (chainFilter === "solana") return "No Solana DAOs or chamas match that filter";
+  return `No ${CHAINS[chainFilter].label} DAOs or chamas yet`;
 }
 
 function emptyChainDescription(chainFilter: ChainFilter): string {
   if (chainFilter === "stellar") {
-    return "No chamas have selected Stellar as their settlement rail yet. Launch one and use XLM payment verification for member dues.";
+    return "No DAOs or chamas have selected Stellar as their settlement rail yet. Launch one and use XLM payment verification for member dues.";
   }
   if (chainFilter !== "all" && chainFilter !== "solana") {
-    return `No chamas have selected ${CHAINS[chainFilter].label} yet. Launch one to track the governance contract rollout for that rail.`;
+    return `No DAOs or chamas have selected ${CHAINS[chainFilter].label} yet. Launch one to track the governance contract rollout for that rail.`;
   }
-  return "Try a different type, or launch your own chama.";
+  return "Try a different type, or launch your own DAO or chama.";
 }
 
 export default function Communities() {
   useSeo({
-    title: "Browse groups",
+    title: "Browse DAOs",
     description:
       "Discover chamas, SACCOs, welfare groups, and co-operatives on Baraza. Filter by community type and treasury rail to find a group to join or evaluate.",
     path: "/communities",
@@ -72,10 +72,10 @@ export default function Communities() {
               Discover
             </p>
             <h1 className="font-display text-3xl md:text-4xl font-bold mb-3">
-              Chamas and SACCOs
+              DAOs &amp; Chamas
             </h1>
             <p>
-              Find a chama to join, or explore how groups are governing KES funds with Baraza.
+              Find a DAO or chama to join, or explore how groups are governing KES funds with Baraza.
             </p>
           </div>
           </CommunityBanner>
@@ -191,7 +191,7 @@ export default function Communities() {
               className="text-sm font-bold px-5 py-3 rounded-xl whitespace-nowrap inline-flex items-center justify-center gap-2 border border-border/70 hover:border-primary/50 transition-colors lg:justify-start"
             >
               <PlusCircle className="w-4 h-4" />
-              Launch your chama
+              Launch a DAO
             </Link>
           </div>
 
@@ -282,7 +282,7 @@ export default function Communities() {
                 {emptyChainDescription(chainFilter)}
               </p>
               <Link to="/create" className="btn-primary inline-flex items-center gap-2 text-sm">
-                <PlusCircle className="w-4 h-4" /> Launch your chama
+                <PlusCircle className="w-4 h-4" /> Launch a DAO
               </Link>
             </div>
           )}

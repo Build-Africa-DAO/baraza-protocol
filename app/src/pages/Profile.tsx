@@ -413,7 +413,7 @@ export default function Profile() {
                     Your memberships {myMemberships.length > 0 && `(${myMemberships.length})`}
                   </h2>
                   <Link to="/communities" className="text-sm hover:underline">
-                    Browse groups
+                    Browse DAOs
                   </Link>
                 </div>
 
@@ -470,11 +470,11 @@ export default function Profile() {
                     <div className="mt-5 flex flex-col items-center justify-center gap-2 sm:flex-row">
                       <Link to="/communities" className="btn-warm inline-flex items-center gap-2 text-sm">
                         <Compass className="h-4 w-4" />
-                        Browse groups
+                        Browse DAOs
                       </Link>
                       <Link to="/create" className="btn-ghost inline-flex items-center gap-2 text-sm">
                         <PlusCircle className="h-4 w-4" />
-                        Launch your chama
+                        Launch a DAO
                       </Link>
                     </div>
                   </div>

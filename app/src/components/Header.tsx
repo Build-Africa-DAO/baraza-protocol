@@ -16,7 +16,7 @@ const navLinks = [
   { path: "/profile", label: "Profile" },
 ];
 
-const quickSearches = ["SACCO", "chama", "welfare group", "M-Pesa", "governance"];
+const quickSearches = ["DAO", "SACCO", "chama", "welfare group", "governance"];
 
 interface HeaderProps {
   walletSlot?: ReactNode;
@@ -61,7 +61,7 @@ export default function Header({ walletSlot }: HeaderProps) {
   };
 
   const openAiGuide = () => {
-    openAsha("Help me use Baraza for my chama");
+    openAsha("Help me use Baraza for my DAO or chama");
     setMobileOpen(false);
   };
 
