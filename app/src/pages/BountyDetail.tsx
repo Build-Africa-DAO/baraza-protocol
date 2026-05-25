@@ -31,7 +31,7 @@ const statusLabel: Record<BountyStatus, string> = {
   open: 'Open',
   in_progress: 'In progress',
   in_review: 'Under review',
-  awarded: 'Awarded',
+  awarded: 'Approved',
   paid: 'Approved',
 };
 

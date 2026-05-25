@@ -21,7 +21,6 @@ const STATUS_OPTIONS: { value: BountyStatus | 'all'; label: string }[] = [
   { value: 'open', label: 'Open' },
   { value: 'in_progress', label: 'In progress' },
   { value: 'in_review', label: 'Under review' },
-  { value: 'awarded', label: 'Awarded' },
   { value: 'paid', label: 'Approved' },
 ];
 
@@ -29,7 +28,7 @@ const statusLabel: Record<BountyStatus, string> = {
   open: 'Open',
   in_progress: 'In progress',
   in_review: 'Under review',
-  awarded: 'Awarded',
+  awarded: 'Approved',
   paid: 'Approved',
 };
 
@@ -41,7 +40,7 @@ const statusClass: Record<BountyStatus, string> = {
   paid: 'border-confirmed/50 bg-confirmed/15 text-confirmed',
 };
 
-const BOARD_COLUMNS: BountyStatus[] = ['open', 'in_progress', 'in_review', 'awarded', 'paid'];
+const BOARD_COLUMNS: BountyStatus[] = ['open', 'in_progress', 'in_review', 'paid'];
 type ViewMode = 'board' | 'grid' | 'list';
 
 function daysLeft(deadline: string) {
