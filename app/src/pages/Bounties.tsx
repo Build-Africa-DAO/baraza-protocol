@@ -19,20 +19,26 @@ import { useSeo } from '@/lib/seo';
 const STATUS_OPTIONS: { value: BountyStatus | 'all'; label: string }[] = [
   { value: 'all', label: 'All bounties' },
   { value: 'open', label: 'Open' },
+  { value: 'in_progress', label: 'In progress' },
   { value: 'in_review', label: 'In review' },
   { value: 'awarded', label: 'Awarded' },
+  { value: 'paid', label: 'Paid' },
 ];
 
 const statusLabel: Record<BountyStatus, string> = {
   open: 'Open',
+  in_progress: 'In progress',
   in_review: 'In review',
   awarded: 'Awarded',
+  paid: 'Paid',
 };
 
 const statusClass: Record<BountyStatus, string> = {
   open: 'border-confirmed/40 bg-confirmed/10 text-confirmed',
-  in_review: 'border-primary/40 bg-primary/10 text-primary',
+  in_progress: 'border-primary/40 bg-primary/10 text-primary',
+  in_review: 'border-accent/40 bg-accent/10 text-accent',
   awarded: 'border-secondary/40 bg-secondary/10 text-secondary',
+  paid: 'border-confirmed/50 bg-confirmed/15 text-confirmed',
 };
 
 function daysLeft(deadline: string) {
@@ -158,7 +164,10 @@ export default function Bounties() {
     <Layout>
       <section className="relative pt-28 pb-12">
         <div className="container mx-auto px-4">
-          <CommunityBanner className="mb-8 min-h-[18rem] p-6 md:p-8">
+          <CommunityBanner
+            className="mb-8 min-h-[18rem] p-6 md:p-8"
+            imageUrl="https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=1400&q=80"
+          >
             <div className="max-w-2xl">
               <p className="mb-2 font-mono text-xs uppercase tracking-widest">Baraza marketplace</p>
               <h1 className="font-display text-3xl font-bold md:text-5xl">Bounty board</h1>

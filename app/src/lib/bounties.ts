@@ -1,6 +1,7 @@
 import { getSupabaseClient } from '@/lib/communities';
 
-export type BountyStatus = 'open' | 'in_review' | 'awarded';
+/** Full task lifecycle: open → in_progress → in_review → awarded → paid */
+export type BountyStatus = 'open' | 'in_progress' | 'in_review' | 'awarded' | 'paid';
 
 export interface Bounty {
   id: string;
@@ -14,6 +15,12 @@ export interface Bounty {
   postedBy: string;
   summary: string;
   skills: string[];
+  /** Wallet address or display name of the assigned contributor, if any. */
+  assignee?: string;
+  /** Maximum number of applicants allowed (0 = unlimited). */
+  maxApplicants?: number;
+  /** If true, only verified community members may apply. */
+  roleGated?: boolean;
 }
 
 export interface BountySubmission {
@@ -23,6 +30,9 @@ export interface BountySubmission {
   workUrl: string;
   note: string;
   submittedAt: string;
+  /** Approval state set by the admin after review. */
+  status?: 'pending' | 'approved' | 'rejected';
+  reviewedAt?: string;
 }
 
 export interface CreateBountyInput {
@@ -34,6 +44,8 @@ export interface CreateBountyInput {
   deadline: string;
   summary: string;
   skills: string[];
+  maxApplicants?: number;
+  roleGated?: boolean;
 }
 
 const LOCAL_BOUNTIES_KEY = 'baraza.bounties.v1';
@@ -59,6 +71,8 @@ interface BountySubmissionRow {
   work_url: string;
   note: string | null;
   submitted_at: string;
+  status?: string;
+  reviewed_at?: string;
 }
 
 const SEED_BOUNTIES: Bounty[] = [
@@ -100,6 +114,8 @@ const SEED_BOUNTIES: Bounty[] = [
     postedBy: 'Mama Mboga Association',
     summary: 'Collect weekly market prices and publish a simple member buying guide.',
     skills: ['Research', 'Sheets', 'Procurement'],
+    assignee: 'Wanjiru M.',
+    roleGated: true,
   },
   {
     id: 'b-mm-photo',
@@ -135,10 +151,26 @@ const SEED_BOUNTIES: Bounty[] = [
     rewardKes: 22000,
     deadline: '2026-06-12',
     submissions: 5,
-    status: 'awarded',
+    status: 'paid',
     postedBy: 'TechBridge Nairobi',
     summary: 'Host a practical pair-programming session for junior DAO members.',
     skills: ['Mentoring', 'React', 'Community'],
+    assignee: 'David K.',
+  },
+  {
+    id: 'b-tb-onchain',
+    communityId: '3',
+    title: 'Solana program deployment guide',
+    category: 'Dev',
+    rewardKes: 35000,
+    deadline: '2026-06-20',
+    submissions: 2,
+    status: 'in_progress',
+    postedBy: 'TechBridge Nairobi',
+    summary: 'Write a step-by-step guide for deploying Anchor programs to devnet.',
+    skills: ['Solana', 'Anchor', 'Technical writing'],
+    assignee: 'Amara T.',
+    roleGated: true,
   },
   {
     id: 'b-mh-site',
@@ -165,6 +197,72 @@ const SEED_BOUNTIES: Bounty[] = [
     postedBy: 'Mwanzo Housing Sacco',
     summary: 'Prepare a member-readable title due-diligence checklist before purchase votes.',
     skills: ['Legal ops', 'Research', 'Real estate'],
+  },
+  {
+    id: 'b-kf-soil',
+    communityId: '5',
+    title: 'Soil analysis report — Kakamega',
+    category: 'Research',
+    rewardKes: 32000,
+    deadline: '2026-06-18',
+    submissions: 0,
+    status: 'open',
+    postedBy: 'Kakamega Farmers DAO',
+    summary: 'Collect and summarise soil test results from 10 member plots to inform collective input purchases.',
+    skills: ['Agronomy', 'Research', 'Reporting'],
+  },
+  {
+    id: 'b-kf-stellar',
+    communityId: '5',
+    title: 'Stellar M-Pesa anchor integration guide',
+    category: 'Dev',
+    rewardKes: 72000,
+    deadline: '2026-06-25',
+    submissions: 1,
+    status: 'open',
+    postedBy: 'Kakamega Farmers DAO',
+    summary: 'Document the SEP-24 flow for depositing KES via M-Pesa into the DAO treasury on Stellar testnet.',
+    skills: ['Stellar', 'SEP-24', 'M-Pesa', 'Technical writing'],
+  },
+  {
+    id: 'b-wt-swahili',
+    communityId: '6',
+    title: 'Governance docs — Swahili translation',
+    category: 'Translation',
+    rewardKes: 14000,
+    deadline: '2026-06-15',
+    submissions: 3,
+    status: 'open',
+    postedBy: 'Westlands Traders Circle',
+    summary: 'Translate the DAO constitution and voting rules into Swahili for non-English-speaking members.',
+    skills: ['Swahili', 'Translation', 'Legal ops'],
+  },
+  {
+    id: 'b-wt-newsletter',
+    communityId: '6',
+    title: 'Monthly market update newsletter',
+    category: 'Writing',
+    rewardKes: 8500,
+    deadline: '2026-06-12',
+    submissions: 6,
+    status: 'in_review',
+    postedBy: 'Westlands Traders Circle',
+    summary: 'Write a concise member newsletter covering import prices, exchange rates, and DAO treasury update.',
+    skills: ['Writing', 'Finance', 'Editing'],
+    assignee: 'Halima O.',
+  },
+  {
+    id: 'b-ky-stellar-onboard',
+    communityId: '1',
+    title: 'Stellar wallet onboarding workshop',
+    category: 'Events',
+    rewardKes: 28000,
+    deadline: '2026-06-28',
+    submissions: 2,
+    status: 'open',
+    postedBy: 'Kibera Youth Collective',
+    summary: 'Run a hands-on workshop teaching members how to set up a Stellar wallet and receive KES payouts.',
+    skills: ['Stellar', 'Training', 'Community'],
   },
 ];
 
@@ -228,6 +326,8 @@ function submissionFromRow(row: BountySubmissionRow): BountySubmission {
     workUrl: row.work_url,
     note: row.note ?? '',
     submittedAt: row.submitted_at,
+    status: (row.status as BountySubmission['status']) ?? 'pending',
+    reviewedAt: row.reviewed_at,
   };
 }
 
@@ -241,11 +341,14 @@ function sortBounties(bounties: Bounty[]): Bounty[] {
 
 export function listBounties(): Bounty[] {
   const submissions = readSubmissions();
-  return sortBounties([...SEED_BOUNTIES, ...readLocalBounties()]
-    .map((bounty) => ({
-      ...bounty,
-      submissions: bounty.submissions + submissions.filter((submission) => submission.bountyId === bounty.id).length,
-    })));
+  const local = readLocalBounties();
+  // Local entries shadow seeds with the same id (status overrides, reassignments, etc.)
+  const localIds = new Set(local.map((b) => b.id));
+  const merged = [...SEED_BOUNTIES.filter((b) => !localIds.has(b.id)), ...local];
+  return sortBounties(merged.map((bounty) => ({
+    ...bounty,
+    submissions: bounty.submissions + submissions.filter((s) => s.bountyId === bounty.id).length,
+  })));
 }
 
 export async function listBountiesAsync(): Promise<Bounty[]> {
@@ -451,6 +554,52 @@ export async function listBountySubmissionsAsync(bountyId: string): Promise<Boun
 
   if (error) throw error;
   return (data ?? []).map((row) => submissionFromRow(row as BountySubmissionRow));
+}
+
+/**
+ * Advance (or regress) a bounty to a new status, optionally updating the assignee.
+ * Works on both seed and locally-created bounties.
+ */
+export function updateBountyStatus(
+  bountyId: string,
+  newStatus: BountyStatus,
+  assignee?: string,
+): Bounty | null {
+  // Resolve the full bounty (merged seeds + local)
+  const all = listBounties();
+  const bounty = all.find((b) => b.id === bountyId);
+  if (!bounty) return null;
+
+  const updated: Bounty = { ...bounty, status: newStatus };
+  // Only change assignee when caller explicitly passes a value
+  if (assignee !== undefined) updated.assignee = assignee || undefined;
+
+  const local = readLocalBounties();
+  const existingIdx = local.findIndex((b) => b.id === bountyId);
+  if (existingIdx >= 0) {
+    local[existingIdx] = updated;
+  } else {
+    // Copy seed bounty into local store with overrides
+    local.push(updated);
+  }
+  writeLocalBounties(local);
+  return updated;
+}
+
+/** Set the approval status on a submitted piece of work. */
+export function updateSubmissionStatus(
+  submissionId: string,
+  status: 'approved' | 'rejected',
+): void {
+  const submissions = readSubmissions();
+  const idx = submissions.findIndex((s) => s.id === submissionId);
+  if (idx < 0) return;
+  submissions[idx] = {
+    ...submissions[idx],
+    status,
+    reviewedAt: new Date().toISOString(),
+  };
+  writeSubmissions(submissions);
 }
 
 export function getBountyStatsForCommunity(communityId: string) {
