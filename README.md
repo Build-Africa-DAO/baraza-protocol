@@ -70,6 +70,7 @@ Roadmap features must not block the MVP loop or be treated as acceptance criteri
 ```text
 app/
   src/           React UI, routes, hooks, and Solana client logic
+  api/           Vercel serverless API routes deployed with the app root
   docs/          product, architecture, deployment, and contract notes
   package.json   app scripts and dependencies
 vercel.json      root deploy config for Vercel
