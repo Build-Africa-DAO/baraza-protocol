@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState, type MouseEvent } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Banknote, ShieldCheck, Users, Vote, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -8,6 +9,8 @@ const stats = [
   { label: "M-Pesa onboarding", value: "Mobile" },
   { label: "Member dashboards", value: "Track" },
 ];
+
+const headlineWords = ["chama DAO", "SACCO", "co-operative"];
 
 const walkthroughFrames: Array<{
   label: string;
@@ -47,11 +50,35 @@ const walkthroughFrames: Array<{
 ];
 
 function HeroHeadline() {
+  const [activeWord, setActiveWord] = useState(0);
+  const prefersReducedMotion = useReducedMotion();
+  const word = headlineWords[activeWord];
+
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+    const interval = window.setInterval(() => {
+      setActiveWord((index) => (index + 1) % headlineWords.length);
+    }, 2400);
+
+    return () => window.clearInterval(interval);
+  }, [prefersReducedMotion]);
+
   return (
-    <span className="block max-w-[12ch] sm:max-w-none">
+    <span className="block max-w-[13ch] sm:max-w-none">
       <span className="block text-foreground">Launch your</span>
-      <span className="block bg-gradient-to-r from-primary via-warm to-accent bg-clip-text text-transparent">
-        chama DAO
+      <span className="relative block min-h-[1em] overflow-hidden">
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.span
+            key={word}
+            className="block bg-gradient-to-r from-primary via-warm to-accent bg-clip-text text-transparent"
+            initial={prefersReducedMotion ? false : { y: "0.35em", opacity: 0 }}
+            animate={prefersReducedMotion ? undefined : { y: 0, opacity: 1 }}
+            exit={prefersReducedMotion ? undefined : { y: "-0.35em", opacity: 0 }}
+            transition={{ duration: 0.28, ease: "easeOut" }}
+          >
+            {word}
+          </motion.span>
+        </AnimatePresence>
       </span>
     </span>
   );
@@ -156,7 +183,7 @@ export default function HeroSection() {
           <div className="max-w-2xl">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-border/50 bg-muted/60 px-3.5 py-1.5 text-xs font-semibold text-muted-foreground sm:mb-6">
               <ShieldCheck className="h-3.5 w-3.5" />
-              Chama treasury, voting, and membership
+              Chama, SACCO, and co-operative treasury
             </div>
             <h1
               className="font-display text-[clamp(3.1rem,11vw,4.7rem)] font-black leading-[0.9] tracking-tight sm:text-[clamp(4rem,6.5vw,5.35rem)]"
