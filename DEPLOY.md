@@ -82,7 +82,7 @@ After redeploy completes:
 Vercel dashboard → Functions → Crons. The schedule from `vercel.json`:
 
 ```
-* * * * *    /api/cron/promote-orders
+0 0 * * *    /api/cron/promote-orders
 ```
 
 Cron runs only on the **Pro plan**. On Hobby plan the schedule is registered

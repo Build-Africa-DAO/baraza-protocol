@@ -14,7 +14,7 @@
   "crons": [
     {
       "path": "/api/cron/promote-orders",
-      "schedule": "* * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }
