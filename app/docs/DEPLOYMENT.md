@@ -1,36 +1,54 @@
 # Deployment Guide
 
 ## Prerequisites
-- Node.js ≥ 18
+
+- Node.js >= 20
 - Vercel account + CLI (`npm i -g vercel`)
 - Git repository
+- Supabase project for durable production flows
 
 ## Vercel Deployment
 
-### First-time setup
+### First-Time Setup
+
 ```bash
 cd app
 vercel
-# Follow prompts: link to project, set framework to Vite
 ```
 
-### Production deploy
+Follow the prompts and link to the `baraza-protocol` Vite project.
+
+### Production Deploy
+
 ```bash
 vercel --prod
 ```
 
-### Environment Variables (Vercel Dashboard)
-Set these in Project Settings → Environment Variables:
-- `VITE_RPC_ENDPOINT` — Optional custom RPC
-- `VITE_PROGRAM_ID` — Baraza program ID once deployed
-- `VITE_STELLAR_NETWORK` — `testnet`, `mainnet`, or `custom`
-- `VITE_STELLAR_HORIZON_URL` — Horizon URL used for Stellar balance and tx confirmation
-- `VITE_STELLAR_NETWORK_PASSPHRASE` — Stellar network passphrase
-- `STELLAR_NETWORK` — server-side Stellar verifier network, usually matching `VITE_STELLAR_NETWORK`
-- `STELLAR_HORIZON_URL` — server-side Horizon URL used by `/api/stellar/verify-payment`
-- `STELLAR_TREASURY_ACCOUNT` — optional Stellar public key; when set, verified payments must land here
+The root `vercel.json` is the canonical deploy config for this repo.
+
+## Environment Variables
+
+Set these in Vercel Project Settings -> Environment Variables.
+
+| Variable | Scope | Notes |
+| --- | --- | --- |
+| `VITE_RPC_ENDPOINT` | Build-time, optional | Custom Solana RPC |
+| `VITE_SOLANA_NETWORK` | Build-time | `devnet` for review |
+| `VITE_PROGRAM_ID` | Build-time, optional | Baraza program ID once deployed |
+| `VITE_SUPABASE_URL` | Build-time | Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Build-time | Supabase anon key |
+| `SUPABASE_URL` | Runtime | Supabase project URL for API routes |
+| `SUPABASE_SERVICE_ROLE_KEY` | Runtime, secret | Server-only service role key |
+| `CRON_SECRET` | Runtime, secret | Bearer token for manual cron calls |
+| `VITE_STELLAR_NETWORK` | Build-time | `testnet` for review |
+| `VITE_STELLAR_HORIZON_URL` | Build-time | Horizon URL for balances and tx checks |
+| `VITE_STELLAR_NETWORK_PASSPHRASE` | Build-time | Testnet passphrase for review |
+| `STELLAR_NETWORK` | Runtime | Server-side Stellar verifier network |
+| `STELLAR_HORIZON_URL` | Runtime | Server-side Horizon URL |
+| `STELLAR_TREASURY_ACCOUNT` | Runtime, recommended | Enforces that verified XLM reaches the DAO treasury |
 
 For Stellar testnet review:
+
 ```bash
 VITE_STELLAR_NETWORK=testnet
 VITE_STELLAR_HORIZON_URL=https://horizon-testnet.stellar.org
@@ -39,11 +57,57 @@ STELLAR_NETWORK=testnet
 STELLAR_HORIZON_URL=https://horizon-testnet.stellar.org
 ```
 
+## Supabase Migrations
+
+Run every file in `supabase/migrations/` in filename order before testing durable production flows:
+
+```text
+001_communities_governance_columns.sql
+002_payment_orders.sql
+003_payment_attestations.sql
+004_memberships.sql
+005_stellar_settlements.sql
+006_bounties_security_stellar.sql
+```
+
+Dashboard path: Supabase -> SQL Editor -> paste each migration in order.
+
+CLI path:
+
+```bash
+supabase link --project-ref <project-ref>
+supabase db push
+```
+
+## Production Review Status
+
+- Vercel project is linked from `.vercel/project.json`.
+- Non-secret production/development envs for Solana devnet and Stellar testnet have been added from this workspace.
+- Supabase production migrations are not run from this workspace because no Supabase project ref, database URL, or service role key is available.
+- Live Stellar Horizon verification was tested with a real testnet payment hash: `018b8cde8e3987212bb0ec6d10b98e34a2ef95a40da3e80d1d829be4760173c8`.
+
+## Smoke Test
+
+After redeploy completes:
+
+```text
+1. Open the production URL.
+2. Browse /communities and confirm seed DAOs render.
+3. Create a community and confirm it persists to the Supabase communities table.
+4. Join with M-Pesa simulator and confirm a payment_orders row is created.
+5. Wait for cron or call /api/cron/promote-orders with CRON_SECRET.
+6. Confirm payment status advances to RECONCILED and memberships receives a row.
+7. Join with Stellar by sending 1 XLM on testnet, pasting the tx hash, and confirming the Stellar status path.
+8. Open /dashboard/<id> and /profile to confirm member-facing state.
+```
+
 ## SPA Routing
-`vercel.json` rewrites all routes to `/index.html` for React Router compatibility.
+
+`vercel.json` rewrites non-API routes to `/index.html` for React Router compatibility.
 
 ## Build Settings
-- **Framework**: Vite
-- **Build Command**: `npm run build`
-- **Output Directory**: `dist`
-- **Install Command**: `npm install --legacy-peer-deps`
+
+- Framework: Vite
+- Build command: `cd app && npm install && npm run build`
+- Output directory: `app/dist`
+- Install command: `echo skip`

@@ -39,6 +39,14 @@ export default defineConfig({
           }
 
           if (
+            id.includes('/node_modules/@stellar/') ||
+            id.includes('/node_modules/@noble/') ||
+            id.includes('/node_modules/@scure/')
+          ) {
+            return 'stellar-vendor';
+          }
+
+          if (
             id.includes('/node_modules/react/') ||
             id.includes('/node_modules/react-dom/') ||
             id.includes('/node_modules/react-router-dom/')
@@ -56,12 +64,6 @@ export default defineConfig({
           }
         },
       },
-    },
-  },
-  optimizeDeps: {
-    esbuildOptions: {
-      target: 'esnext',
-      define: { global: 'globalThis' },
     },
   },
 });

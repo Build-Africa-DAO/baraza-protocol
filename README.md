@@ -4,7 +4,7 @@ Baraza is a phone-first community governance and membership product for African 
 
 ```text
 Create community
--> Join with wallet or live Africa's Talking sandbox M-Pesa flow
+  -> Join with wallet, M-Pesa simulator, or Stellar XLM verification
 -> Reconcile payment
 -> Mint/display membership asset
 -> Activate MemberAccount
@@ -28,6 +28,7 @@ The active app in this repo is the Vite React SPA in `app/`. The root `vercel.js
 MVP payment methods:
 
 - M-Pesa through Africa's Talking live sandbox for the first demo.
+- Stellar XLM transaction-hash verification through Horizon for review/demo flows.
 - Optional wallet-native crypto checkout through Solana Pay or Solana Commerce Kit.
 
 Not MVP:
@@ -35,7 +36,7 @@ Not MVP:
 - x402 payment.
 - Credit/debit card checkout.
 - Cross-chain bridge checkout.
-- Multi-chain payment-method picker.
+- Broad multi-chain payment-method picker beyond Solana + Stellar.
 
 x402 can be useful later for pay-per-request APIs, agent services, gated content, or micro-access flows. It should not be used as the first membership checkout rail.
 
@@ -57,7 +58,7 @@ MVP off-chain:
 
 Roadmap only:
 
-- Stellar settlement, Stellar Disbursement Platform, and SEP/anchor flows for off-ramp, contributor payouts, or refunds.
+- Stellar Disbursement Platform and SEP/anchor flows for off-ramp, contributor payouts, or refunds.
 - LI.FI, Circle CCTP, Allbridge, Mayan, Jupiter swaps, and other bridge/swap routing.
 - x402, card checkout, multi-chain checkout, and broad payment-method picker.
 - Bounty escrow, auctions, displaced-bid refunds, AI review, growth marketplace, and investment-like tokens.
@@ -88,32 +89,34 @@ Treat `MVP_ARCHITECTURE.md` as the source of truth for implementation scope. `DA
 
 ## Current Implementation Status
 
-The app is currently a frontend prototype, not an MVP-complete product.
+The app is currently an integrated review build, not an MVP-complete production product.
 
 Working today:
 
 - Vite React SPA builds from `app/`.
 - Wallet adapter wiring is present for Phantom, Solflare, and Coinbase Wallet.
-- Community, proposal, membership, and treasury screens render from mock data.
+- Community, proposal, membership, treasury, and bounty screens render from Supabase when configured, with local fallback data for review.
 - The contract hook exists at `app/src/hooks/useBarazaContract.ts` and blocks unwired write flows instead of submitting no-op transactions.
-- Community creation saves to Supabase when configured, or to localStorage in local development.
+- Community creation and bounty workflows save to Supabase when configured, or to localStorage in local development.
+- Join dues can be verified through the M-Pesa simulator or Stellar testnet/mainnet Horizon.
 - The app uses the Baraza SVG mark from `app/public/baraza-logo.svg` for the header/footer logo and favicon.
 - The active colour palette is `#8ECAE6`, `#219EBC`, `#023047`, `#FFB703`, and `#FB8500`.
 
 Current prototype guardrails:
 
-- Join, create-community, proposal creation, and vote actions do not complete until real persistence, payment, and Solana program instructions are wired.
+- Proposal creation and vote actions still need real Solana program instructions before they are production-grade.
 - Unknown community IDs render a not-found state instead of falling back to the first mock community.
 - The dashboard "New Decision" link now targets the registered route `/dashboard/:id/decisions/create`.
 - New community success is ready to navigate by created community ID once persistence returns a real record.
 
-Before demo readiness, the prototype must separate mock/demo states from real membership and governance states. User-facing final success requires payment reconciliation, mint confirmation, and indexer or polling confirmation.
+Before production readiness, the app still needs real provider webhooks, deployed Solana program instructions, production Supabase migrations, and reviewer-verified Vercel environment variables.
 
 ## Local Development
 
 ```bash
+nvm use 20
 cd app
-npm install --legacy-peer-deps
+npm install
 npm run dev
 ```
 
@@ -145,16 +148,28 @@ Common variables:
 | `VITE_PROGRAM_ID` | No | Baraza on-chain program ID |
 | `VITE_SUPABASE_URL` | No | Supabase URL for off-chain metadata/state |
 | `VITE_SUPABASE_ANON_KEY` | No | Supabase anon key |
+| `SUPABASE_URL` | Yes for server persistence | Supabase project URL for API routes |
+| `SUPABASE_SERVICE_ROLE_KEY` | Yes for server persistence | Server-only Supabase service role key |
+| `STELLAR_NETWORK` | No | Server-side Stellar network, usually `testnet` for review |
+| `STELLAR_HORIZON_URL` | No | Server-side Horizon URL |
+| `STELLAR_TREASURY_ACCOUNT` | Recommended | Stellar account that verified XLM payments must reach |
 
 Never expose payment provider secrets, webhook secrets, private keys, or admin credentials in frontend code.
+
+## Reviewer Readiness
+
+- Vercel is linked to `baraza-protocol`.
+- Non-secret review envs for Solana devnet and Stellar testnet are configured in Vercel production/development.
+- Supabase production envs are still required: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `SUPABASE_URL`, and `SUPABASE_SERVICE_ROLE_KEY`.
+- Run all SQL files in `supabase/migrations/` in filename order before testing durable production flows.
+- A live Stellar testnet payment was verified locally through `/api/stellar/verify-payment` using Horizon ledger `2731921`.
 
 ## Deployment
 
 The root Vercel config runs:
 
 ```bash
-npm --prefix app install --legacy-peer-deps
-npm --prefix app run build
+cd app && npm install && npm run build
 ```
 
 and serves `app/dist`.

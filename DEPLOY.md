@@ -20,6 +20,8 @@ supabase/migrations/001_communities_governance_columns.sql
 supabase/migrations/002_payment_orders.sql
 supabase/migrations/003_payment_attestations.sql
 supabase/migrations/004_memberships.sql
+supabase/migrations/005_stellar_settlements.sql
+supabase/migrations/006_bounties_security_stellar.sql
 ```
 
 Easiest path: Supabase dashboard → SQL Editor → paste each migration in order
@@ -44,9 +46,20 @@ Preview + Development**:
 | `CRON_SECRET` | Runtime, secret | Any random string (`openssl rand -hex 32`) |
 | `VITE_SOLANA_NETWORK` | Build-time | `devnet` (or `mainnet`) |
 | `VITE_RPC_ENDPOINT` | Build-time, optional | Helius/QuickNode URL if you want a private RPC |
+| `VITE_STELLAR_NETWORK` | Build-time | `testnet` for review |
+| `VITE_STELLAR_HORIZON_URL` | Build-time | `https://horizon-testnet.stellar.org` for review |
+| `VITE_STELLAR_NETWORK_PASSPHRASE` | Build-time | `Test SDF Network ; September 2015` for testnet |
+| `STELLAR_NETWORK` | Runtime | `testnet` for review |
+| `STELLAR_HORIZON_URL` | Runtime | `https://horizon-testnet.stellar.org` for review |
+| `STELLAR_TREASURY_ACCOUNT` | Runtime, recommended | Stellar public key that XLM dues must reach |
 | `VITE_ADMIN_WALLETS` | Build-time, optional | Comma-separated pubkeys allowed to view `/admin` |
 
 After adding, redeploy (or just push another commit) for env vars to apply.
+
+Current Vercel status from this workspace:
+
+- Added non-secret production/development review envs for Solana devnet, Stellar testnet, and `CRON_SECRET`.
+- Still blocked on Supabase values and a real `STELLAR_TREASURY_ACCOUNT`; add those in Vercel before production review.
 
 ## 4. Smoke test
 
@@ -89,8 +102,9 @@ curl -X GET https://<your-domain>/api/cron/promote-orders \
   production.
 - **No phone auth.** `memberships.user_id_hash` uses `wallet:<address>` as a
   placeholder until phone-first signup is wired (per `MVP_ARCHITECTURE.md §4`).
-- **Stellar disabled.** UI surfaces it as Phase 2; no code path attempts a
-  Stellar tx.
+- **Stellar verifier is live, payouts are not.** The app can verify XLM payment
+  hashes through Horizon, but Stellar Disbursement Platform and SEP/anchor
+  payout/off-ramp flows are still roadmap work.
 
 ## Rollback
 
