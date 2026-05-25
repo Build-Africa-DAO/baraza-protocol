@@ -24,7 +24,7 @@ export default function ProposalDetail() {
     title: proposal && community
       ? `${proposal.title} — ${community.name}`
       : proposal?.title ?? "Proposal",
-    description: proposal?.description ?? "View proposal details, vote, and track quorum on a Baraza chama DAO.",
+    description: proposal?.description ?? "View proposal details, vote, and track quorum on Baraza.",
     path: id && decisionId ? `/dashboard/${id}/decisions/${decisionId}` : undefined,
     noIndex: true,
   });
@@ -157,7 +157,7 @@ export default function ProposalDetail() {
                     className="btn-warm justify-center gap-2 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ThumbsUp className="h-4 w-4" />}
-                    Sign to Support
+                    Cast support vote
                   </button>
                   <button
                     type="button"
@@ -166,11 +166,11 @@ export default function ProposalDetail() {
                     className="btn-ghost justify-center gap-2 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ThumbsDown className="h-4 w-4" />}
-                    Sign to Object
+                    Cast objection vote
                   </button>
                 </div>
                 <p className="mt-3 text-xs">
-                  Your vote is signed by your wallet and recorded on Solana.
+                  Your vote is recorded after account approval.
                 </p>
               </div>
             </main>

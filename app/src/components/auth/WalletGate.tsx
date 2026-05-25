@@ -11,15 +11,15 @@ interface WalletGateProps {
 }
 
 const perks = [
-  { icon: Users, text: 'Create and manage your communities' },
+  { icon: Users, text: 'Create and manage your groups' },
   { icon: Vote, text: 'Propose and vote on decisions' },
-  { icon: Shield, text: 'Secure, wallet-based identity — no passwords' },
+  { icon: Shield, text: 'Secure account-based identity - no passwords' },
 ];
 
 const WalletGate: React.FC<WalletGateProps> = ({
   children,
   title = 'Sign in to continue',
-  description = 'Connect your Solana wallet to access this page.',
+  description = 'Connect your Solana account to access this page.',
 }) => {
   const { connected } = useWallet();
 
@@ -65,13 +65,13 @@ const WalletGate: React.FC<WalletGateProps> = ({
               ))}
             </ul>
 
-            {/* Wallet button — centred, full width override via CSS */}
+            {/* Account button */}
             <div className="flex justify-center">
-              <WalletMultiButton>Connect Wallet</WalletMultiButton>
+              <WalletMultiButton>Connect your account</WalletMultiButton>
             </div>
 
             <p className="text-[10px] text-muted-foreground text-center mt-4">
-              Supports Phantom and Solflare — no account required
+              Supports Phantom and Solflare
             </p>
           </div>
         </div>

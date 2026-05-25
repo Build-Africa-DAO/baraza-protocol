@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatKSh(amount: number): string {
-  return `KSh ${amount.toLocaleString('en-KE')}`;
+  return `KES ${amount.toLocaleString('en-KE')}`;
 }
 
 export function formatUSD(amount: number): string {

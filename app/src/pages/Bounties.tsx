@@ -224,7 +224,7 @@ export default function Bounties() {
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-xs font-semibold">Reward KSh</label>
+                  <label className="mb-2 block text-xs font-semibold">Reward KES</label>
                   <input
                     value={newBounty.rewardKes}
                     onChange={(event) => setNewBounty((current) => ({ ...current, rewardKes: event.target.value }))}
@@ -347,7 +347,7 @@ export default function Bounties() {
                     </div>
                     <div className="flex flex-col gap-2 sm:flex-row">
                       <Link to={`/dashboard/${bounty.communityId}`} className="btn-ghost justify-center gap-2 px-3 py-2 text-xs font-bold">
-                        Open DAO
+                        Open group
                         <ArrowRight className="h-3.5 w-3.5" />
                       </Link>
                       <button
@@ -358,7 +358,7 @@ export default function Bounties() {
                         }}
                         className="btn-primary justify-center gap-2 px-3 py-2 text-xs font-bold"
                       >
-                        Submit work
+                        Send work update
                         <Send className="h-3.5 w-3.5" />
                       </button>
                     </div>

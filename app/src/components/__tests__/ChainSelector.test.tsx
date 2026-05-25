@@ -20,7 +20,7 @@ function renderSelector() {
 describe('ChainSelector — closed state', () => {
   it('renders the current chain (Solana by default)', () => {
     renderSelector();
-    expect(screen.getByRole('button', { name: /network: solana/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /solana selected/i })).toBeInTheDocument();
   });
 
   it('does not render the listbox when closed', () => {
@@ -30,7 +30,7 @@ describe('ChainSelector — closed state', () => {
 
   it('toggles open on trigger click', () => {
     renderSelector();
-    const trigger = screen.getByRole('button', { name: /network: solana/i });
+    const trigger = screen.getByRole('button', { name: /solana selected/i });
     fireEvent.click(trigger);
     expect(screen.getByRole('listbox')).toBeInTheDocument();
     expect(trigger).toHaveAttribute('aria-expanded', 'true');
@@ -40,7 +40,7 @@ describe('ChainSelector — closed state', () => {
 describe('ChainSelector — open state', () => {
   it('lists all 9 chains, with Solana as the selected option', () => {
     renderSelector();
-    fireEvent.click(screen.getByRole('button', { name: /network: solana/i }));
+    fireEvent.click(screen.getByRole('button', { name: /solana selected/i }));
     const listbox = screen.getByRole('listbox');
     const options = within(listbox).getAllByRole('option');
     expect(options).toHaveLength(9);
@@ -53,16 +53,16 @@ describe('ChainSelector — open state', () => {
 
   it('allows Stellar selection', () => {
     renderSelector();
-    fireEvent.click(screen.getByRole('button', { name: /network: solana/i }));
+    fireEvent.click(screen.getByRole('button', { name: /solana selected/i }));
     const stellarOption = screen.getByRole('option', { name: /^stellar$/i });
     expect(stellarOption).not.toBeDisabled();
     fireEvent.click(stellarOption);
-    expect(screen.getByRole('button', { name: /network: stellar/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /stellar selected/i })).toBeInTheDocument();
   });
 
   it('allows EVM review rail selection', () => {
     renderSelector();
-    fireEvent.click(screen.getByRole('button', { name: /network: solana/i }));
+    fireEvent.click(screen.getByRole('button', { name: /solana selected/i }));
 
     for (const name of ['base', 'arbitrum', 'optimism', 'celo']) {
       const option = screen.getByRole('option', { name: new RegExp(`^${name}$`, 'i') });
@@ -70,12 +70,12 @@ describe('ChainSelector — open state', () => {
     }
 
     fireEvent.click(screen.getByRole('option', { name: /^base$/i }));
-    expect(screen.getByRole('button', { name: /network: base/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /base selected/i })).toBeInTheDocument();
   });
 
   it('disables unsupported EVM chains with integration-pending labels', () => {
     renderSelector();
-    fireEvent.click(screen.getByRole('button', { name: /network: solana/i }));
+    fireEvent.click(screen.getByRole('button', { name: /solana selected/i }));
     for (const name of ['ethereum', 'polygon', 'bnb chain']) {
       expect(screen.getByRole('option', { name: new RegExp(`${name}.*integration pending`, 'i') })).toBeDisabled();
     }
@@ -83,7 +83,7 @@ describe('ChainSelector — open state', () => {
 
   it('closes on Escape', () => {
     renderSelector();
-    fireEvent.click(screen.getByRole('button', { name: /network: solana/i }));
+    fireEvent.click(screen.getByRole('button', { name: /solana selected/i }));
     expect(screen.getByRole('listbox')).toBeInTheDocument();
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
@@ -91,7 +91,7 @@ describe('ChainSelector — open state', () => {
 
   it('closes on outside click', () => {
     const { container } = renderSelector();
-    fireEvent.click(screen.getByRole('button', { name: /network: solana/i }));
+    fireEvent.click(screen.getByRole('button', { name: /solana selected/i }));
     expect(screen.getByRole('listbox')).toBeInTheDocument();
     // mousedown outside the component should trigger close.
     fireEvent.mouseDown(container.ownerDocument.body);
@@ -102,7 +102,7 @@ describe('ChainSelector — open state', () => {
 describe('ChainSelector — keyboard navigation', () => {
   it('ArrowDown can focus Stellar as the next enabled option', () => {
     renderSelector();
-    const trigger = screen.getByRole('button', { name: /network: solana/i });
+    const trigger = screen.getByRole('button', { name: /solana selected/i });
     fireEvent.click(trigger);
 
     // Solana (index 0), Stellar (index 1), and selected EVM rails are enabled.
@@ -114,7 +114,7 @@ describe('ChainSelector — keyboard navigation', () => {
 
   it('ArrowUp closes nothing and lands on enabled option', () => {
     renderSelector();
-    fireEvent.click(screen.getByRole('button', { name: /network: solana/i }));
+    fireEvent.click(screen.getByRole('button', { name: /solana selected/i }));
     fireEvent.keyDown(window, { key: 'ArrowUp' });
     expect(screen.getByRole('listbox')).toBeInTheDocument();
   });
@@ -126,7 +126,7 @@ describe('ChainSelector — persistence', () => {
     // Initial: nothing in storage (cleared in beforeEach)
     expect(window.localStorage.getItem('baraza:chain')).toBeNull();
 
-    fireEvent.click(screen.getByRole('button', { name: /network: solana/i }));
+    fireEvent.click(screen.getByRole('button', { name: /solana selected/i }));
     // Clicking the already-selected Solana option still triggers a write.
     fireEvent.click(screen.getByRole('option', { name: /solana/i }));
 
@@ -136,6 +136,6 @@ describe('ChainSelector — persistence', () => {
   it('reads the initial chain from localStorage if present', () => {
     window.localStorage.setItem('baraza:chain', 'base');
     renderSelector();
-    expect(screen.getByRole('button', { name: /network: base/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /base selected/i })).toBeInTheDocument();
   });
 });

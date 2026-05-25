@@ -45,7 +45,7 @@ import {
 export default function Profile() {
   useSeo({
     title: "Your Baraza profile",
-    description: "Your community memberships, wallet, and contribution history on Baraza.",
+    description: "Your community memberships, account, and contribution history on Baraza.",
     path: "/profile",
     noIndex: true,
   });
@@ -64,7 +64,7 @@ export default function Profile() {
   const [stellarSettlements, setStellarSettlements] = useState<StellarSettlementRecord[]>([]);
 
   // Address is only needed below the early-return, but `useMemo` MUST be called
-  // unconditionally on every render — so compute it here (defaulting to "")
+  // unconditionally on every render - so compute it here (defaulting to "")
   // and skip the lookup when no wallet is connected.
   const address = publicKey?.toBase58() ?? "";
 
@@ -187,12 +187,12 @@ export default function Profile() {
             <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl">
               <Wallet className="h-7 w-7" />
             </div>
-            <h1 className="font-display text-2xl font-bold">Connect your wallet</h1>
+            <h1 className="font-display text-2xl font-bold">Connect your account</h1>
             <p className="mt-3 text-sm">
-              Your profile shows your memberships, voting history, and credentials across every chama DAO you join.
+              Your profile shows your memberships, voting history, and credentials across every chama you join.
             </p>
             <button onClick={() => setVisible(true)} className="btn-warm mt-6 inline-flex items-center gap-2 text-sm">
-              Connect wallet
+              Connect your account
             </button>
           </div>
         </section>
@@ -216,7 +216,7 @@ export default function Profile() {
                     {truncateAddress(address)}
                   </h1>
                   <p className="mt-1 text-sm">
-                    {wallet ? `Connected via ${wallet.adapter.name}` : "Wallet connected"}
+                    {wallet ? `Connected via ${wallet.adapter.name}` : "Account connected"}
                   </p>
                 </div>
               </div>
@@ -227,7 +227,7 @@ export default function Profile() {
             <aside className="space-y-6">
               <div className="baraza-card p-5">
                 <h2 className="mb-4 font-mono text-xs uppercase tracking-widest">
-                  Linked wallets
+                  Linked accounts
                 </h2>
                 <div className="rounded-lg border p-3">
                   <div className="flex items-center justify-between gap-2">
@@ -241,8 +241,8 @@ export default function Profile() {
                   </div>
                 </div>
                 <p className="mt-3 text-xs">
-                  Linking a second wallet lets you sign from multiple devices.{" "}
-                  <span>Coming soon.</span>
+                  Linking a second account lets you sign from multiple devices.{" "}
+                  <span>Not yet available.</span>
                 </p>
               </div>
 
@@ -401,7 +401,7 @@ export default function Profile() {
                   Active roles
                 </h2>
                 <p className="text-sm">
-                  No DAO roles yet. Join a chama or launch one to receive your first role.
+                  No group roles yet. Join a chama or launch one to receive your first role.
                 </p>
               </div>
             </aside>
@@ -413,7 +413,7 @@ export default function Profile() {
                     Your memberships {myMemberships.length > 0 && `(${myMemberships.length})`}
                   </h2>
                   <Link to="/communities" className="text-sm hover:underline">
-                    Browse DAOs
+                    Browse groups
                   </Link>
                 </div>
 
@@ -462,19 +462,19 @@ export default function Profile() {
                 ) : (
                   <div className="rounded-lg border border-dashed p-8 text-center">
                     <p className="font-display text-base font-semibold">
-                      Not a member of any chama DAO yet
+                      Not a member of any chama yet
                     </p>
                     <p className="mt-2 text-sm">
-                      Join a chama DAO to receive your membership credential and vote on proposals.
+                      Join a chama to receive your membership credential and vote on proposals.
                     </p>
                     <div className="mt-5 flex flex-col items-center justify-center gap-2 sm:flex-row">
                       <Link to="/communities" className="btn-warm inline-flex items-center gap-2 text-sm">
                         <Compass className="h-4 w-4" />
-                        Browse chama DAOs
+                        Browse groups
                       </Link>
                       <Link to="/create" className="btn-ghost inline-flex items-center gap-2 text-sm">
                         <PlusCircle className="h-4 w-4" />
-                        Launch your chama DAO
+                        Launch your chama
                       </Link>
                     </div>
                   </div>
@@ -510,7 +510,7 @@ export default function Profile() {
                               </span>
                             </div>
                             <p className="mt-1 text-xs text-muted-foreground">
-                              {community.name} · {formatKSh(bounty.rewardKes)} · {bounty.submissions} submissions
+                              {community.name} - {formatKSh(bounty.rewardKes)} - {bounty.submissions} submissions
                             </p>
                             <p className="mt-2 text-xs text-muted-foreground">
                               {stats.open} open bounties in this community.
@@ -537,7 +537,7 @@ export default function Profile() {
                     Voting history
                   </h2>
                   <p className="text-sm">
-                    No votes yet. Once you join a DAO and vote on a proposal, your record appears here.
+                    No votes yet. Once you join a group and vote on a proposal, your record appears here.
                   </p>
                 </div>
 
@@ -546,7 +546,7 @@ export default function Profile() {
                     Membership credentials
                   </h2>
                   <p className="text-sm">
-                    Your membership credentials appear here once you join a DAO.
+                    Your membership credentials appear here once you join a group.
                   </p>
                 </div>
               </div>

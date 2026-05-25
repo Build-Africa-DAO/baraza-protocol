@@ -61,7 +61,7 @@ export default function Header({ walletSlot }: HeaderProps) {
   };
 
   const openAiGuide = () => {
-    openAsha("Help me use Baraza as a chama DAO platform");
+    openAsha("Help me use Baraza for my chama");
     setMobileOpen(false);
   };
 

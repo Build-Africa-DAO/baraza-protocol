@@ -13,14 +13,14 @@ import { useSeo } from "@/lib/seo";
 type ChainFilter = "all" | Chain;
 
 const CHAIN_FILTERS: { value: ChainFilter; label: string; dot?: string }[] = [
-  { value: "all", label: "All Networks" },
+  { value: "all", label: "All rails" },
   ...Object.values(CHAINS)
     .filter((chain) => chain.enabled)
     .map((chain) => ({ value: chain.id, label: chain.label, dot: chain.badgeBg })),
 ];
 
 function emptyChainTitle(chainFilter: ChainFilter): string {
-  if (chainFilter === "all") return "No DAOs match that filter yet";
+  if (chainFilter === "all") return "No groups match that filter yet";
   if (chainFilter === "solana") return "No Solana chamas match that filter";
   return `No ${CHAINS[chainFilter].label} chamas yet`;
 }
@@ -32,14 +32,14 @@ function emptyChainDescription(chainFilter: ChainFilter): string {
   if (chainFilter !== "all" && chainFilter !== "solana") {
     return `No chamas have selected ${CHAINS[chainFilter].label} yet. Launch one to track the governance contract rollout for that rail.`;
   }
-  return "Try a different type, or launch your own chama DAO.";
+  return "Try a different type, or launch your own chama.";
 }
 
 export default function Communities() {
   useSeo({
-    title: "Browse chama DAOs",
+    title: "Browse groups",
     description:
-      "Discover chamas, SACCOs, welfare groups, and co-operatives on Baraza. Filter by community type and chain to find a group to join or evaluate.",
+      "Discover chamas, SACCOs, welfare groups, and co-operatives on Baraza. Filter by community type and treasury rail to find a group to join or evaluate.",
     path: "/communities",
   });
   const { communities, isLoading, error } = useCommunities();
@@ -72,7 +72,7 @@ export default function Communities() {
               Discover
             </p>
             <h1 className="font-display text-3xl md:text-4xl font-bold mb-3">
-              Chama DAOs
+              Chamas and SACCOs
             </h1>
             <p>
               Find a chama to join, or explore how groups are governing KES funds with Baraza.
@@ -84,10 +84,10 @@ export default function Communities() {
 
       <section className="pb-16">
         <div className="container mx-auto px-4">
-          {/* Network filter */}
-          <div className="mb-4 flex flex-wrap items-center gap-2" role="group" aria-label="Filter by network">
+          {/* Treasury rail filter */}
+          <div className="mb-4 flex flex-wrap items-center gap-2" role="group" aria-label="Filter by treasury rail">
             <span className="text-xs font-semibold uppercase tracking-wider mr-1">
-              Network
+              Treasury rail
             </span>
             {CHAIN_FILTERS.map((option) => {
               const active = chainFilter === option.value;
@@ -191,20 +191,20 @@ export default function Communities() {
               className="text-sm font-bold px-5 py-3 rounded-xl whitespace-nowrap inline-flex items-center justify-center gap-2 border border-border/70 hover:border-primary/50 transition-colors lg:justify-start"
             >
               <PlusCircle className="w-4 h-4" />
-              Launch your chama DAO
+              Launch your chama
             </Link>
           </div>
 
           {error && (
             <div className="baraza-card p-4 mb-5">
-              <p className="text-sm">We couldn&apos;t load chama DAOs right now.</p>
+              <p className="text-sm">We couldn&apos;t load groups right now.</p>
               <p className="text-xs mt-1">Check your connection and refresh.</p>
             </div>
           )}
 
           {/* Results count */}
           {isLoading ? (
-            <p className="text-xs mb-5">Loading chama DAOs...</p>
+            <p className="text-xs mb-5">Loading groups...</p>
           ) : hasActiveFilter ? (
             <p className="text-xs mb-5">
               {filtered.length} {filtered.length === 1 ? "community" : "communities"} found
@@ -282,7 +282,7 @@ export default function Communities() {
                 {emptyChainDescription(chainFilter)}
               </p>
               <Link to="/create" className="btn-primary inline-flex items-center gap-2 text-sm">
-                <PlusCircle className="w-4 h-4" /> Launch your chama DAO
+                <PlusCircle className="w-4 h-4" /> Launch your chama
               </Link>
             </div>
           )}

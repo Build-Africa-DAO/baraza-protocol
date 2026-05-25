@@ -7,15 +7,15 @@ import CommunityBanner from "@/components/CommunityBanner";
 import { useSeo } from "@/lib/seo";
 
 const attestations = [
-  ["MPESA-XJ9L2B", "PaymentAttestation", "+ KSh 50,000", "Confirmed"],
-  ["MPESA-KL4M8P", "PaymentAttestation", "+ KSh 12,500", "Confirmed"],
+  ["MPESA-XJ9L2B", "PaymentAttestation", "+ KES 50,000", "Confirmed"],
+  ["MPESA-KL4M8P", "PaymentAttestation", "+ KES 12,500", "Confirmed"],
   ["ORD-8841B", "Mint job", "Membership credential", "Queued"],
 ];
 
 const releases = [
-  ["PROP-039", "Q4 welfare payout", "- KSh 150,000", "4xkL...p9Qr"],
-  ["PROP-038", "Audit bounty", "- KSh 62,500", "8mPz...x2Vy"],
-  ["PROP-035", "Training workshop", "- KSh 30,000", "2jRt...k8Mw"],
+  ["PROP-039", "Q4 welfare payout", "- KES 150,000", "4xkL...p9Qr"],
+  ["PROP-038", "Audit bounty", "- KES 62,500", "8mPz...x2Vy"],
+  ["PROP-035", "Training workshop", "- KES 30,000", "2jRt...k8Mw"],
 ];
 
 export default function TreasuryDetail() {
@@ -36,14 +36,14 @@ export default function TreasuryDetail() {
           <CommunityBanner type={community?.type} className="mb-8 p-5 md:p-6">
           <header className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div>
-              <p className="font-mono text-xs uppercase tracking-widest text-primary">DAO Treasury</p>
+              <p className="font-mono text-xs uppercase tracking-widest text-primary">Treasury</p>
               <h1 className="mt-2 font-display text-3xl font-bold text-foreground">{community?.name ?? "Community"} Treasury</h1>
-              <p className="mt-2 text-sm text-muted-foreground">Inflows, releases, payment attestations, and on-chain audit trail.</p>
+              <p className="mt-2 text-sm text-muted-foreground">Inflows, releases, payment attestations, and public audit trail.</p>
             </div>
             <button
               type="button"
               disabled
-              title="Coming soon"
+              title="Not yet available"
               aria-disabled="true"
               className="btn-ghost gap-2 text-sm opacity-50 cursor-not-allowed"
             >
@@ -131,7 +131,7 @@ export default function TreasuryDetail() {
                     <td className="py-4 text-right">
                       <span
                         aria-disabled="true"
-                        title="Explorer link available once on-chain"
+                        title="Explorer link available after launch"
                         className="inline-flex cursor-not-allowed items-center gap-1 font-mono text-network/60"
                       >
                         {tx}
@@ -147,7 +147,7 @@ export default function TreasuryDetail() {
           <div className="mt-6 rounded-lg border border-border bg-surface p-5">
             <h2 className="mb-4 flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
               <ShieldCheck className="h-4 w-4 text-primary" />
-              DAO Audit Trail
+              Audit trail
             </h2>
             <p className="text-sm text-muted-foreground">Payment confirmations, proposal outcomes, and treasury releases are represented here as safe public summaries.</p>
           </div>

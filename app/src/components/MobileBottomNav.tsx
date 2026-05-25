@@ -49,7 +49,7 @@ function NavLink({ item, location }: { item: NavItem; location: ReturnType<typeo
 function WalletAction() {
   const { connected, publicKey } = useWallet();
   const { setVisible } = useWalletModal();
-  const label = connected && publicKey ? 'Wallet' : 'Connect';
+  const label = connected && publicKey ? 'Account' : 'Join';
 
   return (
     <button
@@ -59,7 +59,7 @@ function WalletAction() {
         'col-start-5 flex flex-col items-center gap-1 rounded-md px-2 py-2 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70',
         connected ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
       )}
-      aria-label={connected ? 'Wallet connected. Change wallet' : 'Connect wallet'}
+      aria-label={connected ? 'Account connected. Change account' : 'Connect your account'}
     >
       <Wallet className="h-5 w-5" />
       {label}
@@ -92,7 +92,7 @@ export default function MobileBottomNav() {
             )}
           >
             <PlusCircle className="h-7 w-7" />
-            <span className="sr-only">Launch your chama DAO</span>
+            <span className="sr-only">Launch your chama</span>
           </Link>
         </div>
 

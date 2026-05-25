@@ -21,7 +21,7 @@ const evaluationChecks = [
   {
     icon: Landmark,
     title: "Treasury rules are visible",
-    detail: "A strong DAO explains where money is held, who can prepare releases, what approvals are required, and how members review fund movement.",
+    detail: "A strong group explains where money is held, who can prepare releases, what approvals are required, and how members review fund movement.",
   },
   {
     icon: Vote,
@@ -44,7 +44,7 @@ const scoreRows = [
 
 export default function Evaluate() {
   useSeo({
-    title: "Evaluate a chama DAO before you join",
+    title: "Evaluate a group before you join",
     description:
       "A practical checklist to compare chamas, SACCOs, and co-operatives on membership clarity, treasury rules, voting fairness, and dispute handling before depositing dues.",
     path: "/evaluate",
@@ -60,10 +60,10 @@ export default function Evaluate() {
               Best-practice evaluation
             </div>
             <h1 className="font-display text-4xl font-black leading-tight md:text-5xl">
-              Evaluate a chama DAO before members commit money.
+              Evaluate a group before members commit money.
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-7 md:text-lg md:leading-8">
-              Use this checklist to compare communities, prepare a new DAO, or decide what
+              Use this checklist to compare communities, prepare a new group, or decide what
               needs to be fixed before treasury deposits, votes, and membership activation go live.
             </p>
           </div>
@@ -88,7 +88,7 @@ export default function Evaluate() {
               <h2 className="font-display text-2xl font-bold">How to evaluate</h2>
               <div className="mt-5 space-y-4">
                 {[
-                  "Open the DAO profile and read the membership, treasury, and voting rules.",
+                  "Open the group profile and read the membership, treasury, and voting rules.",
                   "Check that every spending proposal has a purpose, amount, deadline, and approval status.",
                   "Confirm membership activation is separate from payment confirmation.",
                   "Ask for missing records before joining, voting, or moving funds.",

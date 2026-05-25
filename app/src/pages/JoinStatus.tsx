@@ -32,13 +32,13 @@ const SHARED_DISPLAY_STEPS: DisplayStep[] = [
   { code: "mint-queued", label: "Preparing your membership credential", minStatus: "MINT_QUEUED" },
   { code: "mint-submitted", label: "Submitting to Solana", minStatus: "MINT_SUBMITTED" },
   { code: "indexer-confirmed", label: "Membership verified", minStatus: "INDEXER_CONFIRMED" },
-  { code: "reconciled", label: "Active DAO member", minStatus: "RECONCILED" },
+  { code: "reconciled", label: "Active member", minStatus: "RECONCILED" },
 ];
 
 const POLL_INTERVAL_MS = 2_500;
 const MOCK_ADVANCE_INTERVAL_MS = 1_800;
 
-// Local fallback when there's no Supabase order — the simulator's mock chain
+// Local fallback when there's no Supabase order - the simulator's mock chain
 // of statuses we step through to give the demo a sense of motion.
 const MOCK_SEQUENCE: PaymentOrderStatus[] = [
   "PAYMENT_CONFIRMED",
@@ -73,10 +73,10 @@ export default function JoinStatus() {
   const isStellarRail = rail === "stellar";
 
   useSeo({
-    title: community ? `Join status — ${community.name}` : "Join status",
+    title: community ? `Join status - ${community.name}` : "Join status",
     description: isStellarRail
-      ? "Track Stellar payment verification, credential mint, and on-chain membership activation."
-      : "Track M-Pesa payment, credential mint, and on-chain membership activation.",
+      ? "Track Stellar payment verification and membership activation."
+      : "Track M-Pesa payment and membership activation.",
     path: id ? `/join/${id}/status` : undefined,
     noIndex: true,
   });
@@ -211,12 +211,12 @@ export default function JoinStatus() {
                   ? "Membership activation failed"
                   : isComplete
                     ? "You're an active member"
-                    : "Activating your DAO membership"}
+                    : "Activating your membership"}
               </h1>
               <p className="mt-2 text-sm">
                 Order <span className="font-mono">{orderId || "(none)"}</span> for{" "}
-                {community?.name ?? "Chama DAO"} is moving from{" "}
-                {isStellarRail ? "Stellar payment verification" : "M-Pesa confirmation"} to on-chain Membership Credential.
+                {community?.name ?? "Chama"} is moving from{" "}
+                {isStellarRail ? "Stellar payment verification" : "M-Pesa confirmation"} to active membership.
               </p>
             </div>
 
@@ -279,20 +279,20 @@ export default function JoinStatus() {
                 <div className="rounded-lg border p-5">
                   <ShieldCheck className="mb-3 h-5 w-5" />
                   <p className="text-sm leading-6">
-                    Your membership activates only after payment, attestation, mint, and chain confirmation all complete.
+                    Your membership activates only after payment proof and approval are complete.
                   </p>
                 </div>
 
                 {!publicKey && isComplete && (
                   <div className="rounded-lg border p-5">
                     <p className="text-sm leading-6">
-                      Connect your Solana wallet to bind this membership to your account.
+                      Connect your Solana account to bind this membership to your account.
                     </p>
                   </div>
                 )}
 
                 <Link to={`/dashboard/${id ?? "1"}`} className="btn-primary w-full justify-center gap-2 py-3 text-sm">
-                  Open DAO Dashboard
+                  Open group dashboard
                   <ExternalLink className="h-4 w-4" />
                 </Link>
               </aside>

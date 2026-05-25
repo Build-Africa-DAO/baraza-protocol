@@ -13,9 +13,9 @@ const ADMIN_WALLETS = (import.meta.env.VITE_ADMIN_WALLETS ?? "")
   .filter(Boolean);
 
 const paymentOrders = [
-  ["ORD-8942A", "KSh 15,000", "PAYMENT_PENDING", "2026-05-13 08:02 UTC", "Reconcile Chain Proof"],
-  ["ORD-8941B", "KSh 5,000", "PAYMENT_CONFIRMED", "2026-05-13 07:45 UTC", "-"],
-  ["ORD-8939X", "KSh 100,000", "MANUAL_REVIEW", "2026-05-13 06:20 UTC", "Approve Refund"],
+  ["ORD-8942A", "KES 15,000", "PAYMENT_PENDING", "2026-05-13 08:02 UTC", "Reconcile proof"],
+  ["ORD-8941B", "KES 5,000", "PAYMENT_CONFIRMED", "2026-05-13 07:45 UTC", "-"],
+  ["ORD-8939X", "KES 100,000", "MANUAL_REVIEW", "2026-05-13 06:20 UTC", "Approve refund"],
 ];
 
 const mintJobs = [
@@ -71,7 +71,7 @@ export default function AdminReconciliation() {
             </div>
             <h1 className="font-display text-2xl font-bold">Access restricted</h1>
             <p className="mt-3 text-sm">
-              This page is for Baraza operators. Connect with an authorised wallet to continue.
+              This page is for Baraza operators. Connect with an authorised account to continue.
             </p>
             {connected && publicKey ? (
               <p className="mt-4 font-mono text-xs">
@@ -83,7 +83,7 @@ export default function AdminReconciliation() {
                 onClick={() => setVisible(true)}
                 className="btn-warm mt-6 inline-flex items-center gap-2 text-sm"
               >
-                Connect wallet
+                Connect your account
               </button>
             )}
             {!allowlistConfigured && (
@@ -129,7 +129,7 @@ export default function AdminReconciliation() {
 
           <div className="mb-6 grid gap-4 md:grid-cols-3">
             {[
-              ["Pending Value", "KSh 425,000", "12 orders flagged"],
+              ["Pending Value", "KES 425,000", "12 orders flagged"],
               ["Webhook Health", "99.8%", "All endpoints active"],
               ["Mint Queue Depth", "45 jobs", "Est. clearance 4m"],
             ].map(([label, value, note]) => (
@@ -231,7 +231,7 @@ export default function AdminReconciliation() {
                   {[
                     ["payment.success", "/api/webhooks/africas-talking", "200 OK"],
                     ["mint.failed", "/api/mint-jobs/MNT-1028", "503 UNAVAIL"],
-                    ["dao.created", "/api/communities", "201 CREATED"],
+                    ["group.created", "/api/communities", "201 CREATED"],
                   ].map(([event, target, response]) => (
                     <tr key={event} className="border-b last:border-b-0">
                       <td className="py-4 font-mono">{event}</td>

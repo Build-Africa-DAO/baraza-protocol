@@ -154,10 +154,10 @@ const CreateDecision: React.FC = () => {
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center">
                   <Vote className="w-5 h-5" />
                 </div>
-                <h1 className="font-display text-2xl font-bold">Submit a Governance Proposal</h1>
+              <h1 className="font-display text-2xl font-bold">Submit a proposal</h1>
               </div>
               <p className="text-sm mb-8">
-                Submit a proposal for the chama DAO to vote on. Include how much KES funding is needed from the treasury.
+                Submit a proposal for members to vote on. Include how much KES funding is needed from the treasury.
               </p>
             </div>
             </CommunityBanner>
@@ -166,7 +166,7 @@ const CreateDecision: React.FC = () => {
             <div className="baraza-card p-4 mb-4 flex items-center gap-3">
               <Info className="w-5 h-5 flex-shrink-0" />
               <div>
-                <p className="text-xs">Available DAO Treasury</p>
+                <p className="text-xs">Available treasury</p>
                 <p className="text-sm font-bold">{formatKSh(community.fundBalance)}</p>
               </div>
             </div>
@@ -178,7 +178,7 @@ const CreateDecision: React.FC = () => {
                 Governance rules
               </div>
               <p className="mt-2 text-xs leading-5">
-                This DAO requires{" "}
+                This group requires{" "}
                 <strong>{community.quorumPct ?? DEFAULT_GOVERNANCE.quorumPct}% quorum</strong>{" "}
                 and{" "}
                 <strong>
@@ -226,23 +226,23 @@ const CreateDecision: React.FC = () => {
               {/* Funding amount */}
               <div>
                 <label className="block text-xs font-semibold mb-2">
-                  Funding Amount (KSh)
+                  Funding amount (KES)
                 </label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium">KSh</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium">KES</span>
                   <input
                     type="number"
                     name="fundingAmount"
                     value={form.fundingAmount}
                     onChange={handleChange}
-                    placeholder="50000"
+                    placeholder="e.g. 50,000"
                     min="0"
                     className="w-full rounded-xl pl-14 pr-4 py-3 text-sm outline-none border"
                   />
                 </div>
                 {overBudget && (
                   <p className="text-xs mt-1.5">
-                    This exceeds the available DAO treasury of {formatKSh(community.fundBalance)}
+                    This exceeds the available treasury of {formatKSh(community.fundBalance)}
                   </p>
                 )}
               </div>
@@ -269,7 +269,7 @@ const CreateDecision: React.FC = () => {
               {!isReady ? (
                 <div className="baraza-card p-4 text-center">
                   <p className="text-xs">
-                    Connect your wallet to submit a governance proposal
+                    Connect your account to submit a proposal
                   </p>
                 </div>
               ) : (
@@ -284,7 +284,7 @@ const CreateDecision: React.FC = () => {
                       Submitting...
                     </>
                   ) : (
-                    'Submit Proposal for Vote'
+                    'Submit proposal'
                   )}
                 </button>
               )}

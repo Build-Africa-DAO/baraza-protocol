@@ -243,7 +243,7 @@ const SEED_DECISIONS: Decision[] = [
     id: 'd2',
     communityId: '1',
     title: 'Emergency Fund for Members',
-    description: 'Set aside KSh 50,000 from the community fund as an emergency medical fund that members can access interest-free.',
+    description: 'Set aside KES 50,000 from the community fund as an emergency medical fund that members can access interest-free.',
     fundingAmount: 50000,
     proposedBy: 'Wanjiku M.',
     votesFor: 41,
@@ -719,7 +719,7 @@ class BarazaDataStore {
 
       this.addActivity(community.id, {
         type: 'fund_deposit',
-        message: `Monthly contributions received (KSh ${deposit.toLocaleString('en-KE')})`,
+        message: `Monthly contributions received (KES ${deposit.toLocaleString('en-KE')})`,
       });
 
       this.notify();

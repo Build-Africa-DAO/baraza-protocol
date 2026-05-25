@@ -68,7 +68,7 @@ function BountyCard({ bounty, compact = false }: { bounty: Bounty; compact?: boo
         to="/bounties"
         className="btn-ghost mt-4 w-full justify-center gap-2 px-3 py-2 text-xs font-bold"
       >
-        Submit work
+        Send work update
         <ArrowRight className="h-3.5 w-3.5" />
       </Link>
     </article>

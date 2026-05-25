@@ -2,12 +2,12 @@ import { Marquee } from "@/components/ui/marquee";
 import { Banknote, CheckCircle2, Clock3, TrendingUp, Users, Vote } from "lucide-react";
 
 const communities = [
-  { name: "Kilimani Chama", type: "Savings", members: 48, fund: "KSh 2.4M", signal: "+12%" },
-  { name: "Westlands SACCO", type: "Co-op", members: 120, fund: "KSh 8.1M", signal: "+31%" },
-  { name: "Techies Welfare", type: "Welfare", members: 32, fund: "KSh 640K", signal: "+8%" },
-  { name: "Mama Mboga Fund", type: "Investment", members: 65, fund: "KSh 1.8M", signal: "+18%" },
-  { name: "Estate Owners", type: "Housing", members: 90, fund: "KSh 12M", signal: "+24%" },
-  { name: "Green Farms Co-op", type: "Co-op", members: 78, fund: "KSh 3.2M", signal: "+15%" },
+  { name: "Kilimani Chama", type: "Savings", members: 48, fund: "KES 2.4M", signal: "+12%" },
+  { name: "Westlands SACCO", type: "Co-op", members: 120, fund: "KES 8.1M", signal: "+31%" },
+  { name: "Techies Welfare", type: "Welfare", members: 32, fund: "KES 640K", signal: "+8%" },
+  { name: "Mama Mboga Fund", type: "Investment", members: 65, fund: "KES 1.8M", signal: "+18%" },
+  { name: "Estate Owners", type: "Housing", members: 90, fund: "KES 12M", signal: "+24%" },
+  { name: "Green Farms Co-op", type: "Co-op", members: 78, fund: "KES 3.2M", signal: "+15%" },
 ];
 
 const recentActivity = [
@@ -68,7 +68,7 @@ export function CommunityMarquee() {
       <div className="container mx-auto mb-6 px-4">
         <div className="grid gap-3 md:grid-cols-[auto_1fr] md:items-end">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-primary">Sample Network</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary">Sample groups</p>
             <h2 className="mt-2 font-display text-2xl font-bold text-foreground md:text-3xl">
               Community treasuries in motion
             </h2>

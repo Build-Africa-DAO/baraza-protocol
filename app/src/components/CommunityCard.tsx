@@ -57,7 +57,7 @@ export default function CommunityCard({
             />
             <div className="absolute inset-0 bg-gradient-to-t from-card via-card/45 to-transparent" />
             <span
-              aria-label={`Network: ${chainMeta.label}`}
+              aria-label={`Treasury rail: ${chainMeta.label}`}
               className="absolute top-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-background/75 px-2 py-1 text-[10px] font-semibold text-foreground backdrop-blur"
             >
               <span

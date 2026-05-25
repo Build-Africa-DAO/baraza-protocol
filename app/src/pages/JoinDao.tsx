@@ -22,11 +22,11 @@ import { useSeo } from "@/lib/seo";
 
 const joinSteps = [
   { label: "Invite opened", state: "current" },
-  { label: "Payment rail selected", state: "pending" },
+  { label: "Payment method selected", state: "pending" },
   { label: "Payment proof submitted", state: "pending" },
   { label: "Payment confirmed", state: "pending" },
   { label: "Credential minted", state: "pending" },
-  { label: "Active DAO member", state: "pending" },
+  { label: "Active member", state: "pending" },
 ];
 
 function ActivationTracker() {
@@ -35,7 +35,7 @@ function ActivationTracker() {
       <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 className="font-display text-base font-semibold">Membership activation</h2>
-          <p className="mt-1 text-xs">Payment, mint, and on-chain confirmation stay separate.</p>
+          <p className="mt-1 text-xs">Payment proof and membership approval stay separate.</p>
         </div>
         <span className="rounded-full border px-3 py-1 text-[11px] font-semibold">
           Step 1 of {joinSteps.length}
@@ -78,8 +78,8 @@ export default function JoinDao() {
   const { id } = useParams<{ id: string }>();
   const { community } = useCommunity(id);
   useSeo({
-    title: community ? `Join ${community.name}` : "Join a chama DAO",
-    description: "Verify your phone, pay membership dues via M-Pesa, and activate your DAO credential.",
+    title: community ? `Join ${community.name}` : "Join a chama",
+    description: "Verify your phone, pay membership dues via M-Pesa, and activate your membership.",
     path: id ? `/join/${id}` : undefined,
     noIndex: true,
   });
@@ -105,7 +105,7 @@ export default function JoinDao() {
     if (!id || amount <= 0) return;
     const orderId = `ord_wallet_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     toast({
-      title: "Wallet join started",
+      title: "Account payment started",
       description: `Membership dues will be signed from ${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}.`,
     });
     navigate(`/join/${id}/status?orderId=${encodeURIComponent(orderId)}&rail=wallet`);
@@ -143,7 +143,7 @@ export default function JoinDao() {
         activationSecret = data.activationSecret ?? null;
       }
     } catch {
-      // network/CORS/local-dev-no-vercel — fall through to mock
+      // network/CORS/local-dev-no-vercel - fall through to mock
     }
 
     if (!orderId) {
@@ -152,7 +152,7 @@ export default function JoinDao() {
     }
 
     toast({
-      title: usedFallback ? "Simulator unreachable — using local order" : "M-Pesa prompt sent",
+      title: usedFallback ? "Simulator unreachable - using local order" : "M-Pesa prompt sent",
       description: usedFallback
         ? "Run \"vercel dev\" to exercise the real /api/mpesa/simulate endpoint."
         : "Enter your M-Pesa PIN on your phone to confirm the payment.",
@@ -195,7 +195,7 @@ export default function JoinDao() {
       toast({
         title: "Stellar payment verified",
         description: data.persisted
-          ? `Ledger ${data.ledger ?? "confirmed"} · ${data.amountXlm ?? stellarAmountXlm} XLM recorded.`
+          ? `Ledger ${data.ledger ?? "confirmed"} - ${data.amountXlm ?? stellarAmountXlm} XLM recorded.`
           : "Verified through Horizon. Supabase is offline, so this will continue in local demo mode.",
       });
 
@@ -227,12 +227,12 @@ export default function JoinDao() {
               <div className="p-5 md:p-7">
                 <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
                   <div>
-                    <p className="font-mono text-xs uppercase tracking-widest">Join chama DAO</p>
+                    <p className="font-mono text-xs uppercase tracking-widest">Join chama</p>
                     <h1 className="mt-2 font-display text-3xl font-bold">
-                      {community?.name ?? "Chama DAO"}
+                      {community?.name ?? "Chama"}
                     </h1>
                     <p className="mt-2 max-w-xl text-sm leading-6">
-                      Pay dues through M-Pesa or Stellar, then link a Solana wallet to receive your Membership Credential.
+                      Pay dues through M-Pesa or Stellar, then connect a Solana account to receive your membership record.
                     </p>
                   </div>
                   <div className="w-full rounded-lg border px-4 py-3 md:w-auto md:text-right">
@@ -265,7 +265,7 @@ export default function JoinDao() {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       className="min-w-0 flex-1 px-3 py-3 text-sm outline-none"
-                      placeholder="7XX XXX XXX"
+                      placeholder="e.g. 0712 345 678"
                       type="tel"
                       inputMode="numeric"
                       autoComplete="tel-national"
@@ -300,7 +300,7 @@ export default function JoinDao() {
                     </div>
                     <div>
                       <h2 className="font-display text-base font-semibold">Stellar XLM</h2>
-                      <p className="text-xs">Verify on-chain payment</p>
+                      <p className="text-xs">Verify payment proof</p>
                     </div>
                   </div>
                   <p className="text-sm leading-6">
@@ -352,12 +352,12 @@ export default function JoinDao() {
                       <Wallet className="h-5 w-5" />
                     </div>
                     <div>
-                      <h2 className="font-display text-base font-semibold">Solana wallet</h2>
-                      <p className="text-xs">Optional chain-first path</p>
+                      <h2 className="font-display text-base font-semibold">Solana account</h2>
+                      <p className="text-xs">Optional account path</p>
                     </div>
                   </div>
                   <p className="text-sm leading-6">
-                    Connect Phantom, Solflare, or Coinbase Wallet for credentials and governance signing.
+                    Connect a Solana account for credentials and voting.
                   </p>
                   <button
                     type="button"
@@ -373,7 +373,7 @@ export default function JoinDao() {
                     className="btn-ghost mt-5 w-full justify-center gap-2 py-3 text-sm font-bold"
                   >
                     <Wallet className="h-4 w-4" />
-                    {connecting ? "Connecting..." : connected ? "Pay with connected wallet" : "Connect wallet"}
+                    {connecting ? "Connecting..." : connected ? "Pay from connected account" : "Connect your account"}
                   </button>
                   <Link to="/profile" className="mt-3 inline-flex text-xs font-semibold">
                     Manage linked Stellar account
@@ -385,7 +385,7 @@ export default function JoinDao() {
                 <div className="flex gap-3">
                   <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
                   <p className="text-sm leading-6">
-                    <strong>Payment confirmed is not membership activation.</strong> Your membership activates after attestation, mint, and chain confirmation.
+                    <strong>Payment confirmed is not membership activation.</strong> Your membership activates after proof review and approval.
                   </p>
                 </div>
               </div>

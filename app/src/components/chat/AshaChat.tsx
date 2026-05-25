@@ -17,14 +17,14 @@ const INITIAL_MESSAGES: Message[] = [
   {
     id: '1',
     role: 'asha',
-    text: "Habari! I'm Asha, your Baraza AI guide. I can help you understand the website, launch a chama DAO, manage members, or plan a vote.",
+    text: "Habari! I'm Asha, your Baraza guide. I can help you understand the website, launch a chama, manage members, or plan a vote.",
     time: timestamp(),
   },
 ];
 
 const QUICK_REPLIES = [
   'How do I create a group?',
-  'Help me plan my chama DAO',
+  'Help me plan my chama',
   'How does voting work?',
   'How are funds managed?',
 ];
@@ -36,44 +36,44 @@ const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
       'Baraza combines the website, the operating platform, and Asha AI in one flow. Use the website to understand the model, Explore to find chamas, Launch to create one, dashboards to manage KES treasury and votes, and ask me when you need help choosing settings or explaining the next action.',
   },
   {
-    keywords: ['plan', 'setup', 'best dao setup', 'rules', 'quorum', 'threshold'],
+    keywords: ['plan', 'setup', 'best setup', 'rules', 'quorum', 'threshold'],
     reply:
-      'A solid setup starts with your group type, monthly dues in KSh, quorum, approval threshold, and voting period. For most welfare groups, start with 51% quorum, 66% approval, a 7-day vote window, and clear rules for emergency spending. Then invite members to review before joining.',
+      'A solid setup starts with your group type, monthly dues in KES, quorum, approval threshold, and voting period. For most welfare groups, start with 51% quorum, 66% approval, a 7-day vote window, and clear rules for emergency spending. Then invite members to review before joining.',
   },
   {
     keywords: ['create', 'start', 'new group', 'community', 'chama', 'sacco'],
     reply:
-      'To create a chama DAO, tap "Launch" in the menu. Fill in your group name, choose a type (Chama, SACCO, Cooperative, etc.), set monthly dues in KSh, and write a short description. Once created, share the link so members can join instantly.',
+      'To create a chama, tap "Launch" in the menu. Fill in your group name, choose a type (Chama, SACCO, Cooperative, etc.), set monthly dues in KES, and write a short description. Once created, share the link so members can join instantly.',
   },
   {
     keywords: ['vote', 'voting', 'decision', 'propose', 'proposal'],
     reply:
-      "Any member can create a Decision - a proposal to spend chama funds. Give it a title, description, and funding amount in KSh, then set a voting window. All members vote Support or Object. When time's up, the majority wins. Simple, transparent, and fair.",
+      "Any member can create a proposal to spend chama funds. Give it a title, description, and funding amount in KES, then set a voting window. All members vote Support or Object. When time's up, the majority wins. Simple, transparent, and fair.",
   },
   {
-    keywords: ['fund', 'money', 'ksh', 'shilling', 'fee', 'pay', 'balance', 'treasury'],
+    keywords: ['fund', 'money', 'KES', 'shilling', 'fee', 'pay', 'balance', 'treasury'],
     reply:
       'Every chama has a shared KES fund built from monthly membership dues. The balance is always visible to all members on the dashboard. When a Decision is approved, funds are released and every transaction is logged.',
   },
   {
     keywords: ['join', 'member', 'membership', 'card', 'how to join'],
     reply:
-      'To join a chama, find it on Explore and click "Become a member". After paying the monthly dues, your membership credential is issued after payment attestation and chain confirmation.',
+      'To join a chama, find it on Explore and click "Become a member". After paying the monthly dues, your membership is issued after payment proof and approval.',
   },
   {
     keywords: ['dashboard', 'stats', 'overview', 'manage'],
     reply:
-      "The Community Dashboard is your group's control centre. It shows fund balance, total members, active decisions, and past decisions — all updating in real time.",
+      "The Community Dashboard is your group's control centre. It shows fund balance, total members, active decisions, and past decisions - all updating in real time.",
   },
   {
     keywords: ['wallet', 'phantom', 'solflare', 'connect', 'sign in', 'login'],
     reply:
-      'Baraza uses Solana wallets (Phantom or Solflare) for secure sign-in — no passwords needed. Click "Sign In", choose your wallet, and approve the connection. Your wallet address becomes your Baraza identity.',
+      'Baraza uses supported Solana accounts for secure sign-in - no passwords needed. Click "Connect your account" and approve the connection. Your account address becomes your Baraza identity.',
   },
   {
     keywords: ['solana', 'blockchain', 'on-chain', 'web3', 'crypto'],
     reply:
-      "Baraza is built on Solana — a fast, low-cost blockchain. Membership records, fund balances, and vote results are tamper-proof and don't rely on any single company. You own your community data.",
+      "Baraza records membership, fund balances, and vote results in a shared public record so they do not rely on any single organiser. Your community keeps a clear history.",
   },
   {
     keywords: ['mpesa', 'm-pesa', 'mobile money', 'phone', 'pay with phone'],
@@ -83,17 +83,17 @@ const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
   {
     keywords: ['what is chama', 'chama meaning', 'what is a chama'],
     reply:
-      'A Chama is a traditional Kenyan group savings model where members pool money regularly and share it in rotation or use it for group investments. Baraza digitises the Chama — making it transparent, governed by votes, and accessible from any phone.',
+      'A Chama is a traditional Kenyan group savings model where members pool money regularly and share it in rotation or use it for group investments. Baraza digitises the Chama - making it transparent, governed by votes, and accessible from any phone.',
   },
   {
     keywords: ['security', 'safe', 'trust', 'secure', 'hack'],
     reply:
-      "Baraza uses Solana's cryptographic security — your wallet signs every action, so no one can act on your behalf without approval. Fund releases require a vote majority, adding a second layer of protection.",
+      "Baraza requires clear account approval for sensitive actions, so no one can act on your behalf without consent. Fund releases require member voting, adding a second layer of protection.",
   },
   {
     keywords: ['hello', 'hi', 'habari', 'hey', 'hola', 'sasa'],
     reply:
-      'Habari! Great to have you here. Ask me about launching a chama DAO, how voting works, managing KES funds, joining a chama, or anything else. What would you like to know?',
+      'Habari! Great to have you here. Ask me about launching a chama, how voting works, managing KES funds, joining a chama, or anything else. What would you like to know?',
   },
   {
     keywords: ['thank', 'thanks', 'asante', 'awesome', 'great', 'perfect'],
@@ -107,7 +107,7 @@ const getAshaResponse = (input: string): string => {
   for (const { keywords, reply } of RESPONSES) {
     if (keywords.some((kw) => lower.includes(kw))) return reply;
   }
-  return 'Great question! Baraza helps chamas and SACCOs manage KES funds and make decisions together. Try asking me about launching a chama DAO, how voting works, the shared fund, or how to join an existing group.';
+  return 'Great question! Baraza helps chamas and SACCOs manage KES funds and make decisions together. Try asking me about launching a chama, how voting works, the shared fund, or how to join an existing group.';
 };
 
 const TypingDots: React.FC = () => (

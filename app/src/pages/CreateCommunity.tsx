@@ -19,13 +19,13 @@ import { saveCommunityChainMapping } from '@/lib/chainMappings';
 
 const CreateCommunity: React.FC = () => {
   useSeo({
-    title: "Launch your chama DAO",
+    title: "Launch your chama",
     description:
       "Spin up a chama, SACCO, welfare group, or co-operative on Baraza. Set membership rules, dues, quorum, and M-Pesa contribution paths in a single guided flow.",
     path: "/create",
   });
   const navigate = useNavigate();
-  const { requireWallet, isReady } = useWalletGuard({ action: 'launch your chama DAO' });
+  const { requireWallet, isReady } = useWalletGuard({ action: 'launch your chama' });
   const { toast } = useToast();
   const { chain } = useChain();
   const chainClient = useBarazaChain();
@@ -62,10 +62,10 @@ const CreateCommunity: React.FC = () => {
   );
 
   /**
-   * Charge the chama DAO creation fee via the M-Pesa simulator, then create the
+   * Charge the chama setup fee via the M-Pesa simulator, then create the
    * community record. Falls back to direct creation if the simulator endpoint
    * is unreachable (local dev without `vercel dev`) so the form still works
-   * — the fee is then a paper-only acknowledgement, not enforced.
+   * - the fee is then a paper-only acknowledgement, not enforced.
    */
   async function chargeCreationFee(): Promise<{ orderId: string; persisted: boolean }> {
     try {
@@ -86,7 +86,7 @@ const CreateCommunity: React.FC = () => {
         }
       }
     } catch {
-      // network/CORS/local-dev — fall through
+      // network/CORS/local-dev - fall through
     }
     return {
       orderId: `ord_local_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
@@ -102,7 +102,7 @@ const CreateCommunity: React.FC = () => {
     const launchCommunity = async () => {
       setIsPending(true);
       try {
-        // Step 1: charge the DAO creation fee
+        // Step 1: charge the setup fee
         const charge = paymentMethod === 'mpesa'
           ? await chargeCreationFee()
           : { orderId: `ord_wallet_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`, persisted: false };
@@ -150,15 +150,15 @@ const CreateCommunity: React.FC = () => {
         toast({
           title: charge.persisted
             ? `${launchFeeLabel} payment received`
-            : `Chama DAO launched (simulator offline)`,
+            : `Chama launched (simulator offline)`,
           description: charge.persisted
-            ? `Order ${charge.orderId.slice(0, 12)}…  · ${form.name} is live.`
-            : 'Local dev mode — payment skipped, community launched.',
+            ? `Order ${charge.orderId.slice(0, 12)}…  - ${form.name} is live.`
+            : 'Local dev mode - payment skipped, community launched.',
         });
       } catch (err) {
         toast({
-          title: 'Could not launch community',
-          description: err instanceof Error ? err.message : 'Please try again.',
+          title: 'Chama launch failed',
+          description: err instanceof Error ? err.message : 'Check the form and try again.',
           variant: 'destructive',
         });
       } finally {
@@ -188,10 +188,10 @@ const CreateCommunity: React.FC = () => {
                 {form.name} is live
               </h2>
               <p className="text-sm mb-2">
-                Payment of {launchFeeLabel} received. Your chama DAO is ready.
+                Payment of {launchFeeLabel} received. Your chama is ready.
               </p>
               <p className="text-sm mb-8">
-                Share the join link with members, then start your first governance proposal from the dashboard.
+                Share the join link with members, then start your first proposal from the dashboard.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <button
@@ -237,11 +237,11 @@ const CreateCommunity: React.FC = () => {
                   <Users className="w-5 h-5" />
                 </div>
                 <h1 className="font-display text-2xl font-black leading-tight text-foreground drop-shadow md:text-3xl">
-                  Launch your chama DAO
+                  Launch your chama
                 </h1>
               </div>
               <p className="max-w-xl text-sm font-semibold leading-6 text-foreground/92 drop-shadow md:text-base md:leading-7">
-                Launch a chama DAO where members can contribute in KES, submit governance proposals, and manage a shared treasury with explicit rules.
+                Launch a chama where members can contribute in KES, submit proposals, and manage a shared treasury with clear rules.
               </p>
             </div>
             </CommunityBanner>
@@ -261,7 +261,7 @@ const CreateCommunity: React.FC = () => {
                   name="name"
                   value={form.name}
                   onChange={handleChange}
-                  placeholder="e.g., Kibera Youth Collective"
+                  placeholder="e.g. Milele Chama"
                   className="w-full rounded-xl px-4 py-3 text-sm outline-none border"
                 />
               </div>
@@ -287,16 +287,16 @@ const CreateCommunity: React.FC = () => {
               {/* Fee */}
               <div>
                 <label className="block text-xs font-semibold mb-2">
-                  Monthly Membership Fee (KSh)
+                  Monthly dues (KES)
                 </label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium">KSh</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium">KES</span>
                   <input
                     type="number"
                     name="fee"
                     value={form.fee}
                     onChange={handleChange}
-                    placeholder="500"
+                    placeholder="e.g. 500"
                     min="0"
                     className="w-full rounded-xl pl-14 pr-4 py-3 text-sm outline-none border"
                   />
@@ -312,7 +312,7 @@ const CreateCommunity: React.FC = () => {
                   name="description"
                   value={form.description}
                   onChange={handleChange}
-                  placeholder="Tell people what your community is about..."
+                  placeholder="e.g. Monthly welfare contributions for members"
                   rows={4}
                   className="w-full rounded-xl px-4 py-3 text-sm outline-none border resize-none"
                 />
@@ -425,7 +425,7 @@ const CreateCommunity: React.FC = () => {
                     }`}
                   >
                     <Wallet className="h-4 w-4" />
-                    Wallet
+                    Account
                   </button>
                 </div>
 
@@ -449,7 +449,7 @@ const CreateCommunity: React.FC = () => {
                           name="phone"
                           value={form.phone}
                           onChange={handleChange}
-                          placeholder="7XX XXX XXX"
+                          placeholder="e.g. 0712 345 678"
                           type="tel"
                           inputMode="numeric"
                           autoComplete="tel-national"
@@ -473,7 +473,7 @@ const CreateCommunity: React.FC = () => {
                       className="grid gap-3"
                     >
                       <label htmlFor="wallet-chain" className="text-xs font-semibold">
-                        Pay with
+                        Pay from
                       </label>
                       <div className="relative">
                         <span
@@ -486,7 +486,7 @@ const CreateCommunity: React.FC = () => {
                           onChange={(e) => setWalletChain(e.target.value as typeof walletChain)}
                           className="w-full appearance-none rounded-lg border py-3 pl-8 pr-4 text-sm font-semibold outline-none cursor-pointer"
                         >
-                          <option value="solana">Solana — SOL</option>
+                          <option value="solana">Solana - SOL</option>
                           <option value="stellar">Stellar - XLM settlement proof</option>
                           <option value="base">Base - ETH governance review</option>
                           <option value="arbitrum">Arbitrum - ETH governance review</option>
@@ -502,7 +502,7 @@ const CreateCommunity: React.FC = () => {
                           </p>
                         ) : (
                           <p className="text-muted-foreground">
-                            Connect your wallet above to pay in {CHAINS[walletChain].short}.
+                            Connect your account above to pay in {CHAINS[walletChain].short}.
                           </p>
                         )}
                       </div>
@@ -513,7 +513,7 @@ const CreateCommunity: React.FC = () => {
                 {/* Fee summary */}
                 <div className="grid gap-2 border-t pt-4 text-sm sm:grid-cols-[1fr_auto] sm:items-center sm:gap-x-4">
                   <div>
-                    <p className="text-xs font-semibold">DAO creation fee</p>
+                    <p className="text-xs font-semibold">Group setup fee</p>
                     <p className="mt-0.5 text-[11px]">
                       One-time charge for account setup, metadata pinning, and registry setup.
                     </p>
@@ -524,7 +524,7 @@ const CreateCommunity: React.FC = () => {
                 </div>
 
                 <div className="grid gap-2 text-xs sm:grid-cols-[1fr_auto] sm:items-center sm:gap-x-4">
-                  <span>Settled on</span>
+                  <span>Recorded on</span>
                   <span className="inline-flex items-center gap-1.5 font-semibold">
                     <span
                       aria-hidden
@@ -543,7 +543,7 @@ const CreateCommunity: React.FC = () => {
                   onClick={() => requireWallet(async () => undefined)}
                   className="w-full btn-warm text-sm py-3.5 flex items-center justify-center gap-2"
                 >
-                  Connect wallet to continue
+                  Connect your account to continue
                 </button>
               ) : (
                 <button
@@ -559,7 +559,7 @@ const CreateCommunity: React.FC = () => {
                   ) : paymentMethod === 'mpesa' ? (
                     `Pay ${formatKSh(DAO_CREATION_FEE_KES)} via M-Pesa`
                   ) : (
-                    `Pay with ${CHAINS[walletChain].short} & launch chama DAO`
+                    `Pay from ${CHAINS[walletChain].short} & launch group`
                   )}
                 </button>
               )}
@@ -574,7 +574,7 @@ const CreateCommunity: React.FC = () => {
                 <div className="mt-5 space-y-4">
                   {[
                     ['CommunityAccount', 'Ready from form details'],
-                    ['TreasuryAccount', 'Pending on-chain setup'],
+                    ['TreasuryAccount', 'Pending shared record setup'],
                     ['MembershipTier', 'Uses monthly dues'],
                     ['Governance Rules', 'Quorum and approval thresholds'],
                     ['Membership Credential', 'Minted after payment attestation'],
@@ -590,7 +590,7 @@ const CreateCommunity: React.FC = () => {
                 </div>
                 <div className="mt-6 rounded-lg border p-4">
                   <p className="text-xs leading-5">
-                    Treasury setup, membership tiers, and credentials are provisioned automatically once your chama DAO is launched.
+                    Treasury setup, membership tiers, and credentials are provisioned automatically once your chama is launched.
                   </p>
                 </div>
               </div>

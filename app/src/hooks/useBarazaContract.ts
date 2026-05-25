@@ -71,10 +71,10 @@ interface UseBarazaContractResult {
   fetchVoteState: (proposalId: string) => Promise<VoteState | null>;
   // Write
   castVote: (proposalId: string, communityId: string, support: boolean) => Promise<boolean>;
-  /** feeKSh is the membership fee in KSh. KSh→lamports conversion happens on the program/backend side. */
-  joinCommunity: (communityId: string, feeKSh: number) => Promise<boolean>;
-  /** feeKSh is the monthly dues in KSh. KSh→lamports conversion happens on the program/backend side. */
-  createCommunity: (name: string, feeKSh: number) => Promise<string | null>;
+  /** feeKES is the membership fee in KES. KES→lamports conversion happens on the program/backend side. */
+  joinCommunity: (communityId: string, feeKES: number) => Promise<boolean>;
+  /** feeKES is the monthly dues in KES. KES→lamports conversion happens on the program/backend side. */
+  createCommunity: (name: string, feeKES: number) => Promise<string | null>;
   // State
   isPending: boolean;
 }
@@ -189,7 +189,7 @@ export function useBarazaContract(): UseBarazaContractResult {
   );
 
   const joinCommunity = useCallback(
-    async (communityId: string, _feeKSh: number): Promise<boolean> => {
+    async (communityId: string, _feeKES: number): Promise<boolean> => {
       const txId = `join:${communityId}:${publicKey?.toBase58()}`;
       return blockUnwiredWrite(txId, 'Joining a DAO');
     },
@@ -197,7 +197,7 @@ export function useBarazaContract(): UseBarazaContractResult {
   );
 
   const createCommunity = useCallback(
-    async (name: string, _feeKSh: number): Promise<string | null> => {
+    async (name: string, _feeKES: number): Promise<string | null> => {
       const txId = `create:${name}:${publicKey?.toBase58()}`;
       const success = await blockUnwiredWrite(txId, 'Creating a DAO');
       return success ? `community-${Date.now()}` : null;

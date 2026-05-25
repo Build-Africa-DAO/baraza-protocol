@@ -29,7 +29,7 @@ const flows: Record<FlowKey, { label: string; title: string; steps: FlowStep[] }
     steps: [
       {
         title: "Open invite",
-        detail: "A member follows the DAO link and reviews the rules before joining.",
+        detail: "A member follows the join link and reviews the rules before joining.",
         icon: Link2,
         stat: "01",
       },
@@ -58,20 +58,20 @@ const flows: Record<FlowKey, { label: string; title: string; steps: FlowStep[] }
     title: "Launch the group, set rules, admit members, and release funds.",
     steps: [
       {
-        title: "Launch DAO",
+        title: "Launch group",
         detail: "Set the group name, type, dues, quorum, approval, and vote window.",
         icon: ClipboardList,
         stat: "4m",
       },
       {
         title: "Invite group",
-        detail: "Share one joining path for wallet users and phone-first members.",
+        detail: "Share one joining path for connected accounts and phone-first members.",
         icon: Users,
         stat: "Link",
       },
       {
         title: "Confirm money",
-        detail: "M-Pesa confirmations and Stellar settlement checks connect payments to on-chain state.",
+        detail: "M-Pesa confirmations and Stellar settlement checks connect payments to the shared record.",
         icon: Banknote,
         stat: "Verified",
       },

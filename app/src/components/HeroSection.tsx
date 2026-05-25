@@ -10,7 +10,7 @@ const stats = [
   { label: "Member dashboards", value: "Track" },
 ];
 
-const headlineWords = ["chama DAO", "SACCO", "co-operative"];
+const headlineWords = ["chama", "SACCO", "co-operative"];
 
 const walkthroughFrames: Array<{
   label: string;
@@ -21,7 +21,7 @@ const walkthroughFrames: Array<{
 }> = [
   {
     label: "Invite",
-    title: "Share the DAO link",
+    title: "Share the join link",
     detail: "Members open the invite and review the rules before joining.",
     progress: "25%",
     icon: Users,
@@ -202,11 +202,11 @@ export default function HeroSection() {
                 to="/communities"
                 className="btn-warm inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-4 text-base font-extrabold uppercase tracking-wide sm:w-auto min-[860px]:w-full min-[1040px]:w-auto"
               >
-                Browse chama DAOs
+                Browse groups
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link to="/create" className="btn-primary inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-4 text-base font-extrabold uppercase tracking-wide sm:w-auto min-[860px]:w-full min-[1040px]:w-auto">
-                Launch your chama DAO
+                Launch your chama
               </Link>
             </div>
 

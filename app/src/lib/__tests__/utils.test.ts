@@ -2,10 +2,10 @@ import { describe, expect, it, vi } from 'vitest';
 import { cn, daysRemaining, formatKSh, formatUSD, truncateAddress } from '@/lib/utils';
 
 describe('formatKSh', () => {
-  it('formats zero', () => expect(formatKSh(0)).toBe('KSh 0'));
-  it('formats thousands', () => expect(formatKSh(234500)).toBe('KSh 234,500'));
-  it('formats millions', () => expect(formatKSh(1248500)).toBe('KSh 1,248,500'));
-  it('formats small fee', () => expect(formatKSh(500)).toBe('KSh 500'));
+  it('formats zero', () => expect(formatKSh(0)).toBe('KES 0'));
+  it('formats thousands', () => expect(formatKSh(234500)).toBe('KES 234,500'));
+  it('formats millions', () => expect(formatKSh(1248500)).toBe('KES 1,248,500'));
+  it('formats small fee', () => expect(formatKSh(500)).toBe('KES 500'));
 });
 
 describe('formatUSD', () => {

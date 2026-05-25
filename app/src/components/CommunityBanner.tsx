@@ -14,7 +14,7 @@ interface CommunityBannerProps {
 }
 
 function formatKes(value: number) {
-  return `KSh ${value.toLocaleString("en-KE")}`;
+  return `KES ${value.toLocaleString("en-KE")}`;
 }
 
 function formatType(type?: string | null) {

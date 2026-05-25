@@ -120,17 +120,17 @@ export default function BarazaWalletModalProvider({ children }: BarazaWalletModa
             <button
               type="button"
               onClick={close}
-              aria-label="Close wallet selector"
+              aria-label="Close account selector"
               className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full focus-visible:outline-none focus-visible:ring-2"
             >
               <X className="h-5 w-5" />
             </button>
 
             <h2 id="baraza-wallet-modal-title" className="mx-auto mt-8 max-w-xs text-center font-display text-xl font-bold leading-snug">
-              Connect a Solana wallet to continue
+              Connect your Solana account to continue
             </h2>
             <p className="mx-auto mt-3 max-w-xs text-center text-sm leading-6">
-              Choose any available Solana wallet for DAO membership, voting, and treasury actions.
+              Choose any supported Solana account for membership, voting, and treasury actions.
             </p>
 
             <div className="mt-7 max-h-[60vh] space-y-2 overflow-y-auto pr-1">

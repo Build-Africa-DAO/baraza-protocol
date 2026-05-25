@@ -39,16 +39,16 @@ const CommunityDashboard: React.FC = () => {
   const { active: activeDecisions, past: pastDecisions, all: allDecisions } = useDecisions(id ?? '');
 
   useSeo({
-    // Only set a community-specific title once the data has loaded —
+    // Only set a community-specific title once the data has loaded -
     // avoids the generic "Community dashboard" flash on every page visit.
     title: community ? `${community.name} dashboard` : undefined,
-    description: "KES treasury balance, member roster, proposals, and wallet activity for a Baraza chama DAO.",
+    description: "KES treasury balance, member roster, proposals, and account activity for a Baraza group.",
     path: id ? `/dashboard/${id}` : "/dashboard",
     noIndex: true,
   });
 
   // Fetch the connected wallet's SOL balance from the configured Solana cluster.
-  // Real RPC call — the treasury vault PDA balance is shown only after program deploy.
+  // Real RPC call - the treasury vault PDA balance is shown only after program deploy.
   useEffect(() => {
     if (!publicKey) {
       setWalletSol(null);
@@ -193,7 +193,7 @@ const CommunityDashboard: React.FC = () => {
               <div className="min-w-0 flex-1">
                 <div className="mb-2 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-widest">
                   <ShieldCheck className="h-3.5 w-3.5" />
-                  Chama DAO workspace
+                  Group workspace
                 </div>
                 <h1 className="mb-2 font-display text-2xl font-bold md:text-4xl">
                   {community.name}
@@ -201,10 +201,10 @@ const CommunityDashboard: React.FC = () => {
                 <p className="max-w-3xl text-sm leading-6">{community.description}</p>
                 <div className="mt-4 flex flex-wrap items-center gap-3 text-xs">
                   <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-medium capitalize">
-                    {community.type} DAO
+                    {community.type}
                   </span>
                   <span
-                    aria-label={`Network: ${CHAINS[community.chain ?? 'solana'].label}`}
+                    aria-label={`Treasury rail: ${CHAINS[community.chain ?? 'solana'].label}`}
                     className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-medium"
                   >
                     <span
@@ -230,7 +230,7 @@ const CommunityDashboard: React.FC = () => {
                     className="btn-warm justify-center text-sm sm:whitespace-nowrap"
                   >
                     <CreditCard className="mr-2 h-4 w-4" />
-                    Join this DAO
+                    Join group
                   </Link>
                 ) : (
                   <span className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold">
@@ -239,7 +239,7 @@ const CommunityDashboard: React.FC = () => {
                   </span>
                 )}
                 <div className="rounded-lg border px-3 py-2 text-xs">
-                  Membership activates after on-chain confirmation, not just payment.
+                  Membership activates after payment proof and organiser confirmation.
                 </div>
               </div>
             </div>
@@ -250,7 +250,7 @@ const CommunityDashboard: React.FC = () => {
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-8">
             <LiveStatCard
               icon={TrendingUp}
-              label="DAO Treasury"
+              label="Treasury"
               value={community.fundBalance}
               format={(v) => formatKSh(v)}
               color=""
@@ -298,7 +298,7 @@ const CommunityDashboard: React.FC = () => {
               { key: 'bounties', label: 'Bounties', icon: BriefcaseBusiness },
               { key: 'gallery', label: 'Gallery', icon: Images },
               { key: 'activity', label: 'Activity', icon: Activity },
-              { key: 'wallet', label: 'Wallet', icon: WalletIcon },
+              { key: 'wallet', label: 'Account', icon: WalletIcon },
             ] as const).map((tab) => (
               <button
                 key={tab.key}
@@ -342,7 +342,7 @@ const CommunityDashboard: React.FC = () => {
                 <div className="premium-glass rounded-xl p-5">
                   <div className="mb-4 flex items-center justify-between gap-4">
                     <div>
-                      <h3 className="font-display text-lg font-semibold">DAO activity overview</h3>
+                      <h3 className="font-display text-lg font-semibold">Group activity overview</h3>
                       <p className="text-xs">Contributions, proposals, and votes at a glance.</p>
                     </div>
                     <span className="hidden rounded-full border px-3 py-1 text-xs font-semibold sm:inline-flex">
@@ -400,7 +400,7 @@ const CommunityDashboard: React.FC = () => {
                         Join to receive a Solana membership credential and vote on proposals.
                       </p>
                       <Link to={`/join/${community.id}`} className="btn-warm mt-4 w-full justify-center text-sm">
-                        Join DAO
+                        Join group
                       </Link>
                     </>
                   )}
@@ -513,7 +513,7 @@ const CommunityDashboard: React.FC = () => {
                 <div className="grid gap-3 md:grid-cols-3">
                   {[
                     ['Events', 'Event bounties appear in the community activity feed and member profile.'],
-                    ['Integrations', 'Technical bounties connect DAO needs to builders and auditors.'],
+                    ['Integrations', 'Technical bounties connect group needs to builders and auditors.'],
                     ['Member profile', 'Members can see paid opportunities attached to their communities.'],
                   ].map(([label, detail]) => (
                     <div key={label} className="rounded-lg border p-4">
@@ -542,14 +542,14 @@ const CommunityDashboard: React.FC = () => {
 
                 <div className="space-y-3 text-sm">
                   <div className="flex items-center justify-between border-b pb-3">
-                    <span>Network</span>
+                    <span>Treasury rail</span>
                     <span className="inline-flex items-center gap-1.5 font-semibold">
                       <span
                         aria-hidden
                         className="h-1.5 w-1.5 rounded-full"
                         style={{ background: CHAINS[community.chain ?? 'solana'].badgeBg }}
                       />
-                      {CHAINS[community.chain ?? 'solana'].label} · {NETWORK_LABEL}
+                      {CHAINS[community.chain ?? 'solana'].label} - {NETWORK_LABEL}
                     </span>
                   </div>
                   <div className="flex items-center justify-between border-b pb-3">
@@ -557,7 +557,7 @@ const CommunityDashboard: React.FC = () => {
                     <span className="font-display text-lg font-bold">{formatKSh(community.fundBalance)}</span>
                   </div>
                   <div className="flex items-center justify-between border-b pb-3">
-                    <span>On-chain vault</span>
+                    <span>Treasury record</span>
                     <span className="text-xs font-semibold">Pending program deploy</span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -579,7 +579,7 @@ const CommunityDashboard: React.FC = () => {
 
               <div className="premium-glass rounded-xl p-5">
                 <div className="mb-4 flex items-center justify-between">
-                  <h3 className="font-display text-base font-semibold">Your Solana wallet</h3>
+                  <h3 className="font-display text-base font-semibold">Your Solana account</h3>
                   <WalletIcon className="h-4 w-4" />
                 </div>
 
@@ -592,7 +592,7 @@ const CommunityDashboard: React.FC = () => {
                     <div className="flex items-center justify-between border-b pb-3">
                       <span>SOL balance</span>
                       <span className="font-display text-lg font-bold tabular-nums">
-                        {walletSol === null ? '—' : `${walletSol.toFixed(4)} SOL`}
+                        {walletSol === null ? '-' : `${walletSol.toFixed(4)} SOL`}
                       </span>
                     </div>
                     <div className="flex items-center justify-between border-b pb-3">
@@ -600,7 +600,7 @@ const CommunityDashboard: React.FC = () => {
                       <span className="text-xs font-semibold">Solana {NETWORK_LABEL}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span>Membership in this DAO</span>
+                      <span>Membership in this group</span>
                       <span className="text-xs font-semibold">
                         {isMember ? 'Active' : 'None'}
                       </span>
@@ -609,9 +609,9 @@ const CommunityDashboard: React.FC = () => {
                 ) : (
                   <div className="rounded-lg border border-dashed p-6 text-center">
                     <WalletIcon className="mx-auto mb-3 h-8 w-8" />
-                    <p className="text-sm font-semibold">Wallet not connected</p>
+                    <p className="text-sm font-semibold">Account not connected</p>
                     <p className="mt-1 text-xs">
-                      Connect Phantom, Solflare, or Coinbase Wallet to see your SOL balance and membership status.
+                      Connect your Solana account to see your balance and membership status.
                     </p>
                   </div>
                 )}

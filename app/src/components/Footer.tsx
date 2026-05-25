@@ -8,9 +8,9 @@ type FooterLink =
 
 const links: Record<string, FooterLink[]> = {
   Product: [
-    { label: "Browse chama DAOs", to: "/communities" },
+    { label: "Browse groups", to: "/communities" },
     { label: "Evaluate Best Practice", to: "/evaluate" },
-    { label: "Launch your chama DAO", to: "/create" },
+    { label: "Launch your chama", to: "/create" },
     { label: "How it Works", to: "/#features" },
   ],
 };
@@ -41,7 +41,7 @@ function FooterLinkItem({ link }: { link: FooterLink }) {
   return (
     <span
       aria-disabled="true"
-      title="Coming soon"
+      title="Not yet available"
       className="cursor-not-allowed text-sm text-muted-foreground/60"
     >
       {link.label}
@@ -61,7 +61,7 @@ export default function Footer() {
             <BrandLogo size="md" className="mb-4" />
             <p className="mb-5 max-w-xs text-sm leading-relaxed text-muted-foreground">
               A KES treasury layer for chamas and SACCOs that collect dues, vote on proposals,
-              and move funds with shared on-chain visibility.
+              and move funds with shared visibility.
             </p>
             <div className="flex items-center gap-2">
               {[
