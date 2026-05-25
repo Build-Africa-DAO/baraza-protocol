@@ -83,7 +83,7 @@ export default function AdminReconciliation() {
                 onClick={() => setVisible(true)}
                 className="btn-warm mt-6 inline-flex items-center gap-2 text-sm"
               >
-                Connect your account
+                Connect Solana
               </button>
             )}
             {!allowlistConfigured && (

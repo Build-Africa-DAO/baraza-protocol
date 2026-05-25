@@ -187,12 +187,12 @@ export default function Profile() {
             <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl">
               <Wallet className="h-7 w-7" />
             </div>
-            <h1 className="font-display text-2xl font-bold">Connect your account</h1>
+            <h1 className="font-display text-2xl font-bold">Connect your Solana account</h1>
             <p className="mt-3 text-sm">
               Your profile shows your memberships, voting history, and credentials across every chama you join.
             </p>
             <button onClick={() => setVisible(true)} className="btn-warm mt-6 inline-flex items-center gap-2 text-sm">
-              Connect your account
+              Connect Solana
             </button>
           </div>
         </section>

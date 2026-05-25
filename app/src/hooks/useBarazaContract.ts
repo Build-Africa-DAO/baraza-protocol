@@ -4,7 +4,7 @@
  *
  * Architecture:
  *  - Read methods: use withRpcFallback + cached results
- *  - Write methods: require connected wallet + toast feedback
+ *  - Write methods: require connected Solana account + toast feedback
  */
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
@@ -155,7 +155,7 @@ export function useBarazaContract(): UseBarazaContractResult {
   const blockUnwiredWrite = useCallback(
     async (txId: string, action: string): Promise<boolean> => {
       if (!connected || !publicKey) {
-        toast({ title: 'Connect your wallet first', variant: 'destructive' });
+        toast({ title: 'Connect your Solana account first', variant: 'destructive' });
         return false;
       }
       if (pendingTxRef.current.has(txId)) {

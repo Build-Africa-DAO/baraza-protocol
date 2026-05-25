@@ -269,7 +269,7 @@ const CreateDecision: React.FC = () => {
               {!isReady ? (
                 <div className="baraza-card p-4 text-center">
                   <p className="text-xs">
-                    Connect your account to submit a proposal
+                    Connect your Solana account to submit a proposal
                   </p>
                 </div>
               ) : (

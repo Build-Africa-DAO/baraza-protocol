@@ -31,7 +31,7 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-describe('useWalletGuard — isReady', () => {
+describe('useWalletGuard - isReady', () => {
   it('is false when not connected', () => {
     const { result } = renderHook(() => useWalletGuard());
     expect(result.current.isReady).toBe(false);
@@ -52,8 +52,8 @@ describe('useWalletGuard — isReady', () => {
   });
 });
 
-describe('useWalletGuard — address', () => {
-  it('returns null when no wallet', () => {
+describe('useWalletGuard - address', () => {
+  it('returns null when no Solana account', () => {
     const { result } = renderHook(() => useWalletGuard());
     expect(result.current.address).toBeNull();
   });
@@ -66,7 +66,7 @@ describe('useWalletGuard — address', () => {
   });
 });
 
-describe('useWalletGuard — requireWallet', () => {
+describe('useWalletGuard - requireWallet', () => {
   it('shows connecting toast and returns undefined while connecting', async () => {
     walletState.connecting = true;
     const { result } = renderHook(() => useWalletGuard());
@@ -76,11 +76,11 @@ describe('useWalletGuard — requireWallet', () => {
     });
     expect(outcome).toBeUndefined();
     expect(mockToast).toHaveBeenCalledWith(
-      expect.objectContaining({ title: 'Connecting wallet…' }),
+      expect.objectContaining({ title: 'Connecting Solana account...' }),
     );
   });
 
-  it('opens wallet modal without a parallel toast when not connected', async () => {
+  it('opens account modal without a parallel toast when not connected', async () => {
     const { result } = renderHook(() => useWalletGuard({ action: 'vote' }));
     let outcome: unknown;
     await act(async () => {
@@ -92,7 +92,7 @@ describe('useWalletGuard — requireWallet', () => {
     expect(mockToast).not.toHaveBeenCalled();
   });
 
-  it('executes fn and returns result when wallet is ready', async () => {
+  it('executes fn and returns result when Solana account is ready', async () => {
     walletState.connected = true;
     walletState.publicKey = { toBase58: () => 'ABC' };
     const { result } = renderHook(() => useWalletGuard());
@@ -120,7 +120,7 @@ describe('useWalletGuard — requireWallet', () => {
     );
   });
 
-  it('shows signature-cancelled toast (not destructive) for user rejection', async () => {
+  it('shows approval-cancelled toast (not destructive) for user rejection', async () => {
     walletState.connected = true;
     walletState.publicKey = { toBase58: () => 'ABC' };
     const { result } = renderHook(() => useWalletGuard({ action: 'voting' }));
@@ -131,7 +131,7 @@ describe('useWalletGuard — requireWallet', () => {
     });
     expect(mockToast).toHaveBeenCalledWith(
       expect.objectContaining({
-        title: 'Signature cancelled',
+        title: 'Approval cancelled',
         description: expect.stringContaining('voting'),
       }),
     );

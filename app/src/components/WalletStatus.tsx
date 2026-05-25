@@ -7,7 +7,7 @@ import { truncateAddress } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { EXPECTED_GENESIS, NETWORK_LABEL } from '@/lib/network';
 
-/** Branded account button + dropdown with disconnect / copy / change account */
+/** Branded Solana account button + dropdown with disconnect / copy / change account */
 const WalletStatus: React.FC = () => {
   const { connected, publicKey, disconnect, connecting, wallet } = useWallet();
   const { connection } = useConnection();
@@ -63,7 +63,7 @@ const WalletStatus: React.FC = () => {
         className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/20 text-primary text-sm font-semibold opacity-70 cursor-not-allowed"
       >
         <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-        Connecting…
+        Connecting...
       </button>
     );
   }
@@ -74,7 +74,7 @@ const WalletStatus: React.FC = () => {
         onClick={() => setVisible(true)}
         className="rounded-md bg-secondary px-6 py-2.5 text-sm font-bold text-secondary-foreground transition-colors hover:bg-secondary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
       >
-        Connect your account
+        Connect Solana
       </button>
     );
   }
@@ -84,7 +84,7 @@ const WalletStatus: React.FC = () => {
       {wrongChain && (
         <div className="absolute -top-8 right-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1 rounded-full bg-destructive/15 border border-destructive/30 text-destructive text-[11px] font-medium">
           <AlertTriangle className="w-3 h-3" />
-          Wrong account setup - switch to {NETWORK_LABEL}
+          Wrong Solana setup - switch to {NETWORK_LABEL}
         </div>
       )}
 
@@ -121,7 +121,7 @@ const WalletStatus: React.FC = () => {
             className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-surface transition-colors"
           >
             <RefreshCw className="w-3.5 h-3.5 text-muted-foreground" />
-            Change account
+            Change Solana account
           </button>
           <div className="border-t border-border/50 my-1" />
           <button

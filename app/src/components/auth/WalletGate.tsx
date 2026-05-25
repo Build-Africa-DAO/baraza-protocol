@@ -67,11 +67,11 @@ const WalletGate: React.FC<WalletGateProps> = ({
 
             {/* Account button */}
             <div className="flex justify-center">
-              <WalletMultiButton>Connect your account</WalletMultiButton>
+              <WalletMultiButton>Connect your Solana account</WalletMultiButton>
             </div>
 
             <p className="text-[10px] text-muted-foreground text-center mt-4">
-              Supports Phantom and Solflare
+              Supports Phantom, Solflare, and Backpack
             </p>
           </div>
         </div>

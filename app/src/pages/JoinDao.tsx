@@ -373,7 +373,7 @@ export default function JoinDao() {
                     className="btn-ghost mt-5 w-full justify-center gap-2 py-3 text-sm font-bold"
                   >
                     <Wallet className="h-4 w-4" />
-                    {connecting ? "Connecting..." : connected ? "Pay from connected account" : "Connect your account"}
+                    {connecting ? "Connecting..." : connected ? "Pay from connected Solana account" : "Connect your Solana account"}
                   </button>
                   <Link to="/profile" className="mt-3 inline-flex text-xs font-semibold">
                     Manage linked Stellar account

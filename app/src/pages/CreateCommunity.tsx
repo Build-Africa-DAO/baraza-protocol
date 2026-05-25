@@ -53,6 +53,8 @@ const CreateCommunity: React.FC = () => {
   const normalisedPhone = normaliseKenyanPhone(form.phone);
   const selectedCommunityChain = paymentMethod === 'wallet' ? walletChain : chain;
   const selectedCommunityChainMeta = CHAINS[selectedCommunityChain];
+  const selectedAccountMeta = CHAINS[walletChain];
+  const needsSolanaAccount = paymentMethod === 'wallet' && walletChain === 'solana';
   const isValid = !!(
     form.name.trim() &&
     form.type &&
@@ -105,7 +107,7 @@ const CreateCommunity: React.FC = () => {
         // Step 1: charge the setup fee
         const charge = paymentMethod === 'mpesa'
           ? await chargeCreationFee()
-          : { orderId: `ord_wallet_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`, persisted: false };
+          : { orderId: `ord_${walletChain}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`, persisted: false };
 
         // Step 2: create the community record
         let chainResult: { slug: string; communityAddress: string; signature: string } | null = null;
@@ -166,7 +168,7 @@ const CreateCommunity: React.FC = () => {
       }
     };
 
-    if (paymentMethod === 'wallet') {
+    if (needsSolanaAccount) {
       await requireWallet(launchCommunity);
       return;
     }
@@ -425,7 +427,7 @@ const CreateCommunity: React.FC = () => {
                     }`}
                   >
                     <Wallet className="h-4 w-4" />
-                    Account
+                    Account rail
                   </button>
                 </div>
 
@@ -473,7 +475,7 @@ const CreateCommunity: React.FC = () => {
                       className="grid gap-3"
                     >
                       <label htmlFor="wallet-chain" className="text-xs font-semibold">
-                        Pay from
+                        Choose account rail
                       </label>
                       <div className="relative">
                         <span
@@ -486,23 +488,27 @@ const CreateCommunity: React.FC = () => {
                           onChange={(e) => setWalletChain(e.target.value as typeof walletChain)}
                           className="w-full appearance-none rounded-lg border py-3 pl-8 pr-4 text-sm font-semibold outline-none cursor-pointer"
                         >
-                          <option value="solana">Solana - SOL</option>
-                          <option value="stellar">Stellar - XLM settlement proof</option>
-                          <option value="base">Base - ETH governance review</option>
-                          <option value="arbitrum">Arbitrum - ETH governance review</option>
-                          <option value="optimism">Optimism - ETH governance review</option>
-                          <option value="celo">Celo - CELO governance review</option>
+                          <option value="solana">Solana - Phantom / Solflare</option>
+                          <option value="stellar">Stellar - Freighter / Lobstr</option>
+                          <option value="base">Base - MetaMask / Coinbase Wallet</option>
+                          <option value="arbitrum">Arbitrum - MetaMask / Rabby</option>
+                          <option value="optimism">Optimism - MetaMask / Rabby</option>
+                          <option value="celo">Celo - Valora / MetaMask</option>
                         </select>
                       </div>
                       <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm">
-                        {isReady ? (
+                        {needsSolanaAccount && isReady ? (
                           <p>
-                            <span className="font-semibold">{CHAINS[walletChain].short} equivalent</span> of{' '}
+                            <span className="font-semibold">{selectedAccountMeta.short} equivalent</span> of{' '}
                             KES equivalent will be recorded against the launch order.
+                          </p>
+                        ) : needsSolanaAccount ? (
+                          <p className="text-muted-foreground">
+                            {selectedAccountMeta.accountCta} with {selectedAccountMeta.walletExamples}.
                           </p>
                         ) : (
                           <p className="text-muted-foreground">
-                            Connect your account above to pay in {CHAINS[walletChain].short}.
+                            {selectedAccountMeta.label} uses {selectedAccountMeta.walletExamples}. This launch records the selected rail for review; direct connection is next.
                           </p>
                         )}
                       </div>
@@ -537,13 +543,13 @@ const CreateCommunity: React.FC = () => {
               </div>
 
               {/* Submit */}
-              {paymentMethod === 'wallet' && !isReady ? (
+              {needsSolanaAccount && !isReady ? (
                 <button
                   type="button"
                   onClick={() => requireWallet(async () => undefined)}
                   className="w-full btn-warm text-sm py-3.5 flex items-center justify-center gap-2"
                 >
-                  Connect your account to continue
+                  {selectedAccountMeta.accountCta}
                 </button>
               ) : (
                 <button
@@ -559,7 +565,9 @@ const CreateCommunity: React.FC = () => {
                   ) : paymentMethod === 'mpesa' ? (
                     `Pay ${formatKSh(DAO_CREATION_FEE_KES)} via M-Pesa`
                   ) : (
-                    `Pay from ${CHAINS[walletChain].short} & launch group`
+                    needsSolanaAccount
+                      ? `Pay from ${selectedAccountMeta.short} & launch group`
+                      : `Record ${selectedAccountMeta.label} rail & launch group`
                   )}
                 </button>
               )}

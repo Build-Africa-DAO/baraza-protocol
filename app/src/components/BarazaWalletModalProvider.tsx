@@ -130,7 +130,7 @@ export default function BarazaWalletModalProvider({ children }: BarazaWalletModa
               Connect your Solana account to continue
             </h2>
             <p className="mx-auto mt-3 max-w-xs text-center text-sm leading-6">
-              Choose any supported Solana account for membership, voting, and treasury actions.
+              Use Phantom, Solflare, Backpack, Coinbase Wallet, Ledger, or Trezor for Solana actions.
             </p>
 
             <div className="mt-7 max-h-[60vh] space-y-2 overflow-y-auto pr-1">

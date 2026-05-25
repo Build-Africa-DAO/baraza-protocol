@@ -9,17 +9,17 @@ interface WalletGuardOptions {
 }
 
 interface WalletGuardResult {
-  /** Wraps an async action with wallet connection check */
+  /** Wraps an async action with Solana account connection check */
   requireWallet: <T>(fn: () => Promise<T>) => Promise<T | undefined>;
-  /** Whether the wallet is ready (connected + public key present) */
+  /** Whether the Solana account is ready (connected + public key present) */
   isReady: boolean;
-  /** The connected wallet's public key string */
+  /** The connected account's public key string */
   address: string | null;
 }
 
 /**
- * Provides a gated wrapper that requires wallet connection before executing.
- * Automatically opens the wallet modal if not connected, shows helpful toasts.
+ * Provides a gated wrapper that requires Solana account connection before executing.
+ * Automatically opens the account modal if not connected, shows helpful toasts.
  */
 export function useWalletGuard(options: WalletGuardOptions = {}): WalletGuardResult {
   const { connected, publicKey, connecting } = useWallet();
@@ -30,14 +30,14 @@ export function useWalletGuard(options: WalletGuardOptions = {}): WalletGuardRes
     async <T>(fn: () => Promise<T>): Promise<T | undefined> => {
       if (connecting) {
         toast({
-          title: 'Connecting wallet…',
-          description: 'Please wait while your wallet connects.',
+          title: 'Connecting Solana account...',
+          description: 'Please wait while your Solana account connects.',
         });
         return undefined;
       }
 
       if (!connected || !publicKey) {
-        // Opening the wallet modal already tells the user what they need to do —
+        // Opening the account modal already tells the member what to do.
         // a parallel toast just competes with it.
         setVisible(true);
         return undefined;
@@ -51,7 +51,7 @@ export function useWalletGuard(options: WalletGuardOptions = {}): WalletGuardRes
         // Match the rejection vocab across Phantom, Solflare, Backpack, Coinbase, etc.
         if (/user (rejected|denied|cancell?ed)|rejected by user|approval denied/i.test(message)) {
           toast({
-            title: 'Signature cancelled',
+            title: 'Approval cancelled',
             description: `Tap ${options.action ?? 'the action'} when you're ready to sign.`,
           });
           return undefined;

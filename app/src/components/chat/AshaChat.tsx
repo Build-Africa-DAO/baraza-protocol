@@ -68,7 +68,7 @@ const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
   {
     keywords: ['wallet', 'phantom', 'solflare', 'connect', 'sign in', 'login'],
     reply:
-      'Baraza uses supported Solana accounts for secure sign-in - no passwords needed. Click "Connect your account" and approve the connection. Your account address becomes your Baraza identity.',
+      'Different rails use different accounts. Solana actions use Phantom, Solflare, or Backpack. Stellar uses Freighter, Lobstr, or Albedo. Base, Arbitrum, and Optimism use MetaMask, Coinbase Wallet, Rabby, or WalletConnect. Celo can use Valora or MetaMask.',
   },
   {
     keywords: ['solana', 'blockchain', 'on-chain', 'web3', 'crypto'],
