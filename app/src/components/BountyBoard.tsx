@@ -94,7 +94,9 @@ function CompactCard({
         )}
       </div>
 
-      <h4 className="text-sm font-bold leading-snug text-foreground">{bounty.title}</h4>
+      <Link to={`/bounties/${bounty.id}`} className="block text-sm font-bold leading-snug text-foreground transition-colors hover:text-primary">
+        {bounty.title}
+      </Link>
 
       {bounty.assignee && (
         <p className="mt-1 text-[11px] text-muted-foreground">Assigned to {bounty.assignee}</p>
@@ -377,7 +379,7 @@ function FullCard({
             >
               <UserPlus className="h-3 w-3" /> Assign
             </button>
-            <Link to="/bounties" className="flex items-center gap-1 rounded-lg border border-border/60 bg-surface/60 px-3 py-2 text-xs font-bold text-muted-foreground hover:border-primary/50 hover:text-foreground transition-all">
+            <Link to={`/bounties/${bounty.id}`} className="flex items-center gap-1 rounded-lg border border-border/60 bg-surface/60 px-3 py-2 text-xs font-bold text-muted-foreground hover:border-primary/50 hover:text-foreground transition-all">
               Details <ArrowRight className="h-3 w-3" />
             </Link>
           </>

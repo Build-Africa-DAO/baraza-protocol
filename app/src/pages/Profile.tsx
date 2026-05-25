@@ -496,7 +496,7 @@ export default function Profile() {
                       return (
                         <Link
                           key={bounty.id}
-                          to={`/dashboard/${community.id}`}
+                          to={`/bounties/${bounty.id}`}
                           className="group flex items-start gap-4 rounded-lg border p-4 transition-colors hover:border-secondary/40"
                         >
                           <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border bg-secondary/10">

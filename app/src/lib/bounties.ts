@@ -15,7 +15,7 @@ export interface Bounty {
   postedBy: string;
   summary: string;
   skills: string[];
-  /** Wallet address or display name of the assigned contributor, if any. */
+  /** Account address or display name of the assigned contributor, if any. */
   assignee?: string;
   /** Maximum number of applicants allowed (0 = unlimited). */
   maxApplicants?: number;
@@ -351,6 +351,10 @@ export function listBounties(): Bounty[] {
   })));
 }
 
+export function getBounty(bountyId: string): Bounty | null {
+  return listBounties().find((bounty) => bounty.id === bountyId) ?? null;
+}
+
 export async function listBountiesAsync(): Promise<Bounty[]> {
   const client = getSupabaseClient();
   if (!client) return listBounties();
@@ -373,6 +377,10 @@ export async function listBountiesAsync(): Promise<Bounty[]> {
   });
 
   return sortBounties((rows ?? []).map((row) => bountyFromRow(row as BountyRow, counts.get(row.id) ?? 0)));
+}
+
+export async function getBountyAsync(bountyId: string): Promise<Bounty | null> {
+  return (await listBountiesAsync()).find((bounty) => bounty.id === bountyId) ?? null;
 }
 
 export function getBountiesForCommunity(communityId: string): Bounty[] {
@@ -548,7 +556,7 @@ export async function listBountySubmissionsAsync(bountyId: string): Promise<Boun
 
   const { data, error } = await client
     .from('bounty_submissions')
-    .select('id,bounty_id,contributor,work_url,note,submitted_at')
+    .select('id,bounty_id,contributor,work_url,note,submitted_at,status,reviewed_at')
     .eq('bounty_id', bountyId)
     .order('submitted_at', { ascending: false });
 

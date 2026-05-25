@@ -48,7 +48,7 @@ export default function CombinedBoard({ communityId, decisions }: Props) {
           'border-accent/40 bg-accent/10 text-accent',
         deadline: b.deadline,
         reward: formatKSh(b.rewardKes),
-        href: '/bounties',
+        href: `/bounties/${b.id}`,
       })),
 
     // Active proposals

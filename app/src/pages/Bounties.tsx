@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BriefcaseBusiness, CalendarDays, PlusCircle, Search, Send, SlidersHorizontal, Trophy } from 'lucide-react';
+import { ArrowRight, BriefcaseBusiness, CalendarDays, Columns3, LayoutGrid, List, PlusCircle, Search, Send, SlidersHorizontal, Trophy } from 'lucide-react';
 import Layout from '@/components/Layout';
 import CommunityBanner from '@/components/CommunityBanner';
 import {
@@ -41,6 +41,9 @@ const statusClass: Record<BountyStatus, string> = {
   paid: 'border-confirmed/50 bg-confirmed/15 text-confirmed',
 };
 
+const BOARD_COLUMNS: BountyStatus[] = ['open', 'in_progress', 'in_review', 'awarded', 'paid'];
+type ViewMode = 'board' | 'grid' | 'list';
+
 function daysLeft(deadline: string) {
   const end = new Date(`${deadline}T23:59:59`).getTime();
   const days = Math.ceil((end - Date.now()) / 86400000);
@@ -59,6 +62,7 @@ export default function Bounties() {
   const { communities } = useCommunities();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<BountyStatus | 'all'>('open');
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [bounties, setBounties] = useState(() => listBounties());
   const [submissionCounts, setSubmissionCounts] = useState<Record<string, number>>({});
   const [showPostForm, setShowPostForm] = useState(false);
@@ -108,6 +112,13 @@ export default function Bounties() {
     const matchesStatus = status === 'all' || bounty.status === status;
     return matchesSearch && matchesStatus;
   });
+
+  const visibleColumns = BOARD_COLUMNS
+    .map((columnStatus) => ({
+      status: columnStatus,
+      bounties: filtered.filter((bounty) => bounty.status === columnStatus),
+    }))
+    .filter((column) => status === 'all' || column.status === status || column.bounties.length > 0);
 
   const openRewardPool = bounties
     .filter((bounty) => bounty.status === 'open')
@@ -288,7 +299,7 @@ export default function Bounties() {
             </div>
           )}
 
-          <div className="mb-6 grid gap-3 lg:grid-cols-[1fr_auto]">
+          <div className="mb-6 grid gap-3 lg:grid-cols-[1fr_auto_auto]">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2" />
               <input
@@ -313,8 +324,128 @@ export default function Bounties() {
                 ))}
               </select>
             </div>
+
+            <div className="flex rounded-xl border bg-card p-1" aria-label="Bounty board view">
+              {([
+                ['board', Columns3, 'Board'],
+                ['grid', LayoutGrid, 'Grid'],
+                ['list', List, 'List'],
+              ] as const).map(([mode, Icon, label]) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setViewMode(mode)}
+                  className={cn(
+                    'inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold transition-colors',
+                    viewMode === mode
+                      ? 'bg-primary/15 text-primary'
+                      : 'text-muted-foreground hover:text-foreground',
+                  )}
+                  aria-pressed={viewMode === mode}
+                  title={`${label} view`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
 
+          {viewMode === 'board' && filtered.length > 0 && (
+            <div className="overflow-x-auto pb-2">
+              <div className="flex min-w-max gap-4">
+                {visibleColumns.map((column) => (
+                  <section key={column.status} className="w-[min(19rem,82vw)] rounded-xl border bg-card/70 p-3">
+                    <div className="mb-3 flex items-center gap-2">
+                      <span className={cn('rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', statusClass[column.status])}>
+                        {statusLabel[column.status]}
+                      </span>
+                      <span className="ml-auto rounded-full border px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
+                        {column.bounties.length}
+                      </span>
+                    </div>
+                    <div className="space-y-3">
+                      {column.bounties.length === 0 ? (
+                        <div className="rounded-lg border border-dashed p-6 text-center text-xs text-muted-foreground">
+                          No {statusLabel[column.status].toLowerCase()} bounties match this search.
+                        </div>
+                      ) : column.bounties.map((bounty) => {
+                        const community = communityById.get(bounty.communityId);
+                        return (
+                          <article key={bounty.id} className="rounded-lg border bg-background/45 p-3">
+                            <div className="flex items-start justify-between gap-3">
+                              <Link to={`/bounties/${bounty.id}`} className="font-display text-sm font-bold leading-snug hover:text-primary">
+                                {bounty.title}
+                              </Link>
+                              <span className="shrink-0 text-xs font-bold text-accent">{formatKSh(bounty.rewardKes)}</span>
+                            </div>
+                            <p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">{bounty.summary}</p>
+                            <div className="mt-3 flex flex-wrap gap-1.5">
+                              {bounty.skills.slice(0, 3).map((skill) => (
+                                <span key={skill} className="rounded-full border px-2 py-0.5 text-[10px] text-muted-foreground">{skill}</span>
+                              ))}
+                            </div>
+                            <div className="mt-3 flex items-center justify-between gap-2 border-t pt-3 text-[11px] text-muted-foreground">
+                              <span className="truncate">{community?.name ?? bounty.postedBy}</span>
+                              <span>{daysLeft(bounty.deadline)}</span>
+                            </div>
+                            <Link to={`/bounties/${bounty.id}`} className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline">
+                              Open bounty
+                              <ArrowRight className="h-3 w-3" />
+                            </Link>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  </section>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {viewMode === 'list' && filtered.length > 0 && (
+            <div className="overflow-hidden rounded-xl border bg-card">
+              <div className="hidden grid-cols-[1.3fr_0.8fr_0.5fr_0.55fr_0.65fr] gap-4 border-b px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground md:grid">
+                <span>Bounty</span>
+                <span>Group</span>
+                <span>Status</span>
+                <span>Deadline</span>
+                <span className="text-right">Reward</span>
+              </div>
+              <div className="divide-y">
+                {filtered.map((bounty) => {
+                  const community = communityById.get(bounty.communityId);
+                  return (
+                    <article key={bounty.id} className="grid gap-3 px-4 py-4 md:grid-cols-[1.3fr_0.8fr_0.5fr_0.55fr_0.65fr] md:items-center md:gap-4">
+                      <div className="min-w-0">
+                        <Link to={`/bounties/${bounty.id}`} className="font-display text-sm font-bold hover:text-primary">
+                          {bounty.title}
+                        </Link>
+                        <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">{bounty.summary}</p>
+                      </div>
+                      <span className="text-xs text-muted-foreground">{community?.name ?? bounty.postedBy}</span>
+                      <span className={cn('w-fit rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', statusClass[bounty.status])}>
+                        {statusLabel[bounty.status]}
+                      </span>
+                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                        <CalendarDays className="h-3.5 w-3.5" />
+                        {daysLeft(bounty.deadline)}
+                      </span>
+                      <div className="flex items-center justify-between gap-3 md:justify-end">
+                        <span className="font-display text-sm font-bold text-accent">{formatKSh(bounty.rewardKes)}</span>
+                        <Link to={`/bounties/${bounty.id}`} className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline">
+                          Open
+                          <ArrowRight className="h-3 w-3" />
+                        </Link>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {viewMode === 'grid' && (
           <div className="grid gap-4 lg:grid-cols-2">
             {filtered.map((bounty) => {
               const community = communityById.get(bounty.communityId);
@@ -328,7 +459,12 @@ export default function Bounties() {
                         </span>
                         <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{bounty.category}</span>
                       </div>
-                      <h2 className="font-display text-xl font-bold">{bounty.title}</h2>
+                      <Link
+                        to={`/bounties/${bounty.id}`}
+                        className="font-display text-xl font-bold transition-colors hover:text-primary"
+                      >
+                        {bounty.title}
+                      </Link>
                       <p className="mt-2 text-sm leading-6 text-muted-foreground">{bounty.summary}</p>
                     </div>
                     <div className="shrink-0 text-right">
@@ -355,6 +491,10 @@ export default function Bounties() {
                       </span>
                     </div>
                     <div className="flex flex-col gap-2 sm:flex-row">
+                      <Link to={`/bounties/${bounty.id}`} className="btn-ghost justify-center gap-2 px-3 py-2 text-xs font-bold">
+                        Open bounty
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </Link>
                       <Link to={`/dashboard/${bounty.communityId}`} className="btn-ghost justify-center gap-2 px-3 py-2 text-xs font-bold">
                         Open group
                         <ArrowRight className="h-3.5 w-3.5" />
@@ -414,6 +554,7 @@ export default function Bounties() {
               );
             })}
           </div>
+          )}
 
           {filtered.length === 0 && (
             <div className="baraza-card mt-8 p-10 text-center">

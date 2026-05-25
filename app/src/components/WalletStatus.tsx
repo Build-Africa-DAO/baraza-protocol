@@ -2,10 +2,28 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { useConnection } from '@solana/wallet-adapter-react';
-import { Copy, LogOut, RefreshCw, ChevronDown, AlertTriangle } from 'lucide-react';
+import { Copy, LogOut, RefreshCw, ChevronDown, AlertTriangle, ExternalLink } from 'lucide-react';
 import { truncateAddress } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { EXPECTED_GENESIS, NETWORK_LABEL } from '@/lib/network';
+import { useChain } from '@/hooks/useChain';
+import { useEvmChain } from '@/hooks/useEvmChain';
+import type { Chain } from '@/lib/chain';
+
+interface FreighterApi {
+  isConnected?: () => Promise<boolean> | boolean;
+  getPublicKey?: () => Promise<string> | string;
+  requestAccess?: () => Promise<string> | string;
+}
+
+declare global {
+  interface Window {
+    freighterApi?: FreighterApi;
+    freighter?: FreighterApi;
+  }
+}
+
+const EVM_CHAINS = new Set<Chain>(['ethereum', 'base', 'arbitrum', 'optimism', 'polygon', 'celo', 'bnb']);
 
 /** Branded Solana account button + dropdown with disconnect / copy / change account */
 const WalletStatus: React.FC = () => {
@@ -13,15 +31,27 @@ const WalletStatus: React.FC = () => {
   const { connection } = useConnection();
   const { setVisible } = useWalletModal();
   const { toast } = useToast();
+  const { chain, chainMeta } = useChain();
+  const {
+    evmAddress,
+    isConnecting: isConnectingEvm,
+    evmError,
+    connectEvm,
+    disconnectEvm,
+    switchEvmChain,
+  } = useEvmChain();
   const [open, setOpen] = useState(false);
   const [networkState, setNetworkState] = useState<'unknown' | 'right' | 'wrong'>('unknown');
+  const [stellarAddress, setStellarAddress] = useState<string | null>(null);
+  const [isConnectingStellar, setIsConnectingStellar] = useState(false);
+  const [stellarError, setStellarError] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
   // Detect wrong chain by comparing genesis hash. On RPC failure we deliberately
   // stay 'unknown' instead of asserting 'right' — silently treating an unreachable
   // RPC as the correct network is how users end up signing on the wrong chain.
   useEffect(() => {
-    if (!connected) { setNetworkState('unknown'); return; }
+    if (chain !== 'solana' || !connected) { setNetworkState('unknown'); return; }
     let cancelled = false;
     connection.getGenesisHash().then((hash) => {
       if (cancelled) return;
@@ -31,9 +61,29 @@ const WalletStatus: React.FC = () => {
       setNetworkState('unknown');
     });
     return () => { cancelled = true; };
-  }, [connected, connection]);
+  }, [chain, connected, connection]);
 
-  const wrongChain = networkState === 'wrong';
+  useEffect(() => {
+    if (chain !== 'stellar') return;
+    const freighter = window.freighterApi ?? window.freighter;
+    if (!freighter?.getPublicKey) return;
+    let cancelled = false;
+    Promise.resolve(freighter.getPublicKey())
+      .then((address) => {
+        if (!cancelled && address) setStellarAddress(address);
+      })
+      .catch(() => {
+        // Freighter may reject this until the member approves access.
+      });
+    return () => { cancelled = true; };
+  }, [chain]);
+
+  useEffect(() => {
+    if (!EVM_CHAINS.has(chain)) return;
+    void switchEvmChain(chain);
+  }, [chain, switchEvmChain]);
+
+  const wrongChain = chain === 'solana' && networkState === 'wrong';
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -45,18 +95,78 @@ const WalletStatus: React.FC = () => {
   }, []);
 
   const handleCopy = () => {
-    if (!publicKey) return;
-    void navigator.clipboard.writeText(publicKey.toBase58());
+    const address = chain === 'solana'
+      ? publicKey?.toBase58()
+      : chain === 'stellar'
+        ? stellarAddress
+        : evmAddress;
+    if (!address) return;
+    void navigator.clipboard.writeText(address);
     toast({ title: 'Address copied!' });
     setOpen(false);
   };
 
   const handleDisconnect = () => {
-    void disconnect();
+    if (chain === 'solana') {
+      void disconnect();
+    } else if (chain === 'stellar') {
+      setStellarAddress(null);
+      setStellarError(null);
+    } else {
+      disconnectEvm();
+    }
     setOpen(false);
   };
 
-  if (connecting) {
+  const handleConnectStellar = async () => {
+    const freighter = window.freighterApi ?? window.freighter;
+    if (!freighter) {
+      setStellarError('Freighter not detected. Install Freighter or use a Stellar-compatible account app.');
+      return;
+    }
+    setIsConnectingStellar(true);
+    setStellarError(null);
+    try {
+      const address = freighter.requestAccess
+        ? await Promise.resolve(freighter.requestAccess())
+        : await Promise.resolve(freighter.getPublicKey?.());
+      if (!address) {
+        setStellarError('Stellar account connection failed. Unlock Freighter and try again.');
+        return;
+      }
+      setStellarAddress(address);
+    } catch (err) {
+      setStellarError(err instanceof Error ? err.message : 'Stellar account connection was rejected.');
+    } finally {
+      setIsConnectingStellar(false);
+    }
+  };
+
+  const handleConnect = () => {
+    if (chain === 'solana') {
+      setVisible(true);
+      return;
+    }
+    if (chain === 'stellar') {
+      void handleConnectStellar();
+      return;
+    }
+    void connectEvm().then(() => switchEvmChain(chain));
+  };
+
+  const isConnectingSelected = chain === 'solana'
+    ? connecting
+    : chain === 'stellar'
+      ? isConnectingStellar
+      : isConnectingEvm;
+
+  const selectedAddress = chain === 'solana'
+    ? publicKey?.toBase58() ?? null
+    : chain === 'stellar'
+      ? stellarAddress
+      : evmAddress;
+
+  if (isConnectingSelected) {
     return (
       <button
         disabled
@@ -68,14 +178,21 @@ const WalletStatus: React.FC = () => {
     );
   }
 
-  if (!connected || !publicKey) {
+  if (!selectedAddress) {
     return (
-      <button
-        onClick={() => setVisible(true)}
-        className="rounded-md bg-secondary px-6 py-2.5 text-sm font-bold text-secondary-foreground transition-colors hover:bg-secondary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
-      >
-        Connect Solana
-      </button>
+      <div className="relative">
+        <button
+          onClick={handleConnect}
+          className="rounded-md bg-secondary px-6 py-2.5 text-sm font-bold text-secondary-foreground transition-colors hover:bg-secondary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+        >
+          {chainMeta.accountCta}
+        </button>
+        {(stellarError || evmError) && (
+          <div className="absolute right-0 top-full z-50 mt-2 w-72 rounded-lg border border-destructive/30 bg-card p-3 text-xs leading-5 text-destructive shadow-[var(--shadow-deep)]">
+            {stellarError ?? evmError}
+          </div>
+        )}
+      </div>
     );
   }
 
@@ -96,14 +213,21 @@ const WalletStatus: React.FC = () => {
             : 'bg-surface border-border hover:border-primary/50 text-foreground'
         }`}
       >
-        {wallet?.adapter.icon && (
+        {chain === 'solana' && wallet?.adapter.icon && (
           <img
             src={wallet.adapter.icon}
             alt={wallet.adapter.name}
             className="w-4 h-4 rounded-sm"
           />
         )}
-        {truncateAddress(publicKey.toBase58())}
+        {chain !== 'solana' && (
+          <span
+            aria-hidden
+            className="h-2 w-2 rounded-full"
+            style={{ background: chainMeta.badgeBg }}
+          />
+        )}
+        {truncateAddress(selectedAddress)}
         <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
@@ -117,11 +241,15 @@ const WalletStatus: React.FC = () => {
             Copy address
           </button>
           <button
-            onClick={() => { setVisible(true); setOpen(false); }}
+            onClick={() => {
+              if (chain === 'solana') setVisible(true);
+              else handleConnect();
+              setOpen(false);
+            }}
             className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-surface transition-colors"
           >
-            <RefreshCw className="w-3.5 h-3.5 text-muted-foreground" />
-            Change Solana account
+            {chain === 'stellar' ? <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" /> : <RefreshCw className="w-3.5 h-3.5 text-muted-foreground" />}
+            Change {chainMeta.label} account
           </button>
           <div className="border-t border-border/50 my-1" />
           <button
