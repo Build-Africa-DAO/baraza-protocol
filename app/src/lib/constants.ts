@@ -37,6 +37,7 @@ export const DEFAULT_GOVERNANCE = {
  * Community DAO. Covers account setup, metadata pinning, and the operational
  * cost of the off-chain registry.
  */
+export const DAO_CREATION_FEE_KES = 6500;
 export const DAO_CREATION_FEE_USD = 50;
 
 /**

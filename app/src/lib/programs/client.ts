@@ -1,5 +1,5 @@
 import { AnchorProvider, BN, Program, type Provider } from '@coral-xyz/anchor';
-import { Connection, PublicKey, SystemProgram } from '@solana/web3.js';
+import { Connection, Keypair, PublicKey, SystemProgram } from '@solana/web3.js';
 import type { AnchorWallet } from '@solana/wallet-adapter-react';
 
 import { IDL as COMMUNITY_REGISTRY_IDL, type CommunityRegistry } from './idl/community_registry';
@@ -218,6 +218,18 @@ export function createBarazaClient(
 }
 
 export function createBarazaReadClient(connection: Connection): BarazaChainClient {
-  const readProvider: Provider = { connection };
-  return new BarazaChainClient(readProvider);
+  // A real `AnchorProvider` is required — Anchor's Program constructor calls
+  // internal Set/Map operations on the wallet that crash when the provider is a
+  // bare `{ connection }` object with no wallet attached.
+  const dummyKeypair = Keypair.generate();
+  const dummyWallet: AnchorWallet = {
+    publicKey: dummyKeypair.publicKey,
+    signTransaction: async (tx) => tx,
+    signAllTransactions: async (txs) => txs,
+  };
+  const provider = new AnchorProvider(connection, dummyWallet, {
+    commitment: 'confirmed',
+    preflightCommitment: 'confirmed',
+  });
+  return new BarazaChainClient(provider);
 }

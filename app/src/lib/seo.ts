@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 
 type SeoOptions = {
-  title: string;
+  /** Pass `undefined` while data is loading to avoid a stale-title flash. */
+  title?: string;
   description?: string;
   path?: string;
   image?: string;
@@ -9,10 +10,12 @@ type SeoOptions = {
 };
 
 const SITE_NAME = "Baraza Protocol";
-const FALLBACK_ORIGIN = "https://baraza.protocol";
+const FALLBACK_ORIGIN = "https://baraza-protocol.vercel.app";
 const DEFAULT_IMAGE_PATH = "/og-image.svg";
 
 function getOrigin(): string {
+  const configured = import.meta.env.VITE_SITE_URL?.trim().replace(/\/$/, "");
+  if (configured) return configured;
   if (typeof window === "undefined") return FALLBACK_ORIGIN;
   return window.location.origin || FALLBACK_ORIGIN;
 }
@@ -38,6 +41,9 @@ function setMeta(selector: string, attr: "content" | "href", value: string) {
 
 export function useSeo({ title, description, path, image, noIndex }: SeoOptions) {
   useEffect(() => {
+    // Skip title update while data is still loading (title === undefined).
+    if (title === undefined) return;
+
     const origin = getOrigin();
     const fullTitle = title.includes(SITE_NAME) ? title : `${title} — ${SITE_NAME}`;
     const url = `${origin}${path ?? ""}`;

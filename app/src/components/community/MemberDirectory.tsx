@@ -46,6 +46,9 @@ type SortField = 'name' | 'joined' | 'contributed' | 'activity';
 
 interface MemberDirectoryProps {
   communityId: string;
+  /** Authoritative member count from the community record (may exceed the
+   * number of locally-seeded member profiles). Shown as "Total Members". */
+  totalCount?: number;
 }
 
 // ---------- Contribution row ----------
@@ -216,7 +219,7 @@ const MemberCard: React.FC<{ member: Member; isExpanded: boolean; onToggle: () =
 
 // ---------- Main directory ----------
 
-const MemberDirectory: React.FC<MemberDirectoryProps> = ({ communityId }) => {
+const MemberDirectory: React.FC<MemberDirectoryProps> = ({ communityId, totalCount }) => {
   const members = useMembers(communityId);
   const [search, setSearch] = useState('');
   const [sortField, setSortField] = useState<SortField>('contributed');
@@ -274,7 +277,7 @@ const MemberDirectory: React.FC<MemberDirectoryProps> = ({ communityId }) => {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="baraza-card p-3 text-center">
           <Users className="w-4 h-4 text-primary mx-auto mb-1" />
-          <p className="font-display text-lg font-bold text-foreground tabular-nums">{members.length}</p>
+          <p className="font-display text-lg font-bold text-foreground tabular-nums">{totalCount ?? members.length}</p>
           <p className="text-[9px] text-muted-foreground">Total Members</p>
         </div>
         <div className="baraza-card p-3 text-center">

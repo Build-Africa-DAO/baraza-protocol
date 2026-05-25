@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Navigate, Routes, Route } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import WalletProviders from '@/components/WalletProviders';
 import ChainProvider from '@/components/ChainProvider';
@@ -36,6 +36,11 @@ const App: React.FC = () => {
               <Route path="/bounties" element={<Bounties />} />
               <Route path="/evaluate" element={<Evaluate />} />
               <Route path="/create" element={<CreateCommunity />} />
+              <Route path="/dao/:id" element={<CommunityDashboard />} />
+              <Route path="/dao/:id/proposals" element={<CommunityDashboard />} />
+              <Route path="/dao/:id/vote" element={<CommunityDashboard />} />
+              <Route path="/proposals" element={<Navigate to="/communities" replace />} />
+              <Route path="/vote" element={<Navigate to="/communities" replace />} />
               <Route path="/dashboard/:id" element={<CommunityDashboard />} />
               <Route path="/dashboard/:id/decisions/create" element={<CreateDecision />} />
               <Route path="/join/:id" element={<JoinDao />} />

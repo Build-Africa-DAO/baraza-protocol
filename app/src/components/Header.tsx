@@ -8,7 +8,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
-  { path: "/", label: "About" },
+  { path: "/", label: "Home" },
   { path: "/communities", label: "Explore" },
   { path: "/bounties", label: "Bounties" },
   { path: "/evaluate", label: "Evaluate" },

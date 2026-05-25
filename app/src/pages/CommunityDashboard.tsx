@@ -39,7 +39,9 @@ const CommunityDashboard: React.FC = () => {
   const { active: activeDecisions, past: pastDecisions, all: allDecisions } = useDecisions(id ?? '');
 
   useSeo({
-    title: community ? `${community.name} dashboard` : "Community dashboard",
+    // Only set a community-specific title once the data has loaded —
+    // avoids the generic "Community dashboard" flash on every page visit.
+    title: community ? `${community.name} dashboard` : undefined,
     description: "Treasury balance, member roster, proposals, and wallet activity for a Baraza community DAO.",
     path: id ? `/dashboard/${id}` : "/dashboard",
     noIndex: true,
@@ -434,7 +436,7 @@ const CommunityDashboard: React.FC = () => {
           {/* Members tab */}
           {activeTab === 'members' && (
             <div>
-              <MemberDirectory communityId={id ?? '1'} />
+              <MemberDirectory communityId={id ?? '1'} totalCount={community?.memberCount} />
             </div>
           )}
 

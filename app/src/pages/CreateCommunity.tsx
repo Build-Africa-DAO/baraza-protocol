@@ -3,8 +3,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Users, ArrowLeft, CheckCircle2, Loader2, Phone, ShieldCheck, Wallet } from 'lucide-react';
 import Layout from '@/components/Layout';
-import { COMMUNITY_TYPES, DAO_CREATION_FEE_USD } from '@/lib/constants';
-import { formatUSD } from '@/lib/utils';
+import { COMMUNITY_TYPES, DAO_CREATION_FEE_KES, DAO_CREATION_FEE_USD } from '@/lib/constants';
+import { formatKSh, formatUSD } from '@/lib/utils';
 import { normaliseKenyanPhone } from '@/lib/phone';
 import { useWalletGuard } from '@/hooks/useWalletGuard';
 import { useToast } from '@/hooks/use-toast';
@@ -27,7 +27,7 @@ const CreateCommunity: React.FC = () => {
   const navigate = useNavigate();
   const { requireWallet, isReady } = useWalletGuard({ action: 'launch a community DAO' });
   const { toast } = useToast();
-  const { chain, chainMeta } = useChain();
+  const { chain } = useChain();
   const chainClient = useBarazaChain();
   const [isPending, setIsPending] = useState(false);
   const [isCreated, setIsCreated] = useState(false);
@@ -51,6 +51,8 @@ const CreateCommunity: React.FC = () => {
   };
 
   const normalisedPhone = normaliseKenyanPhone(form.phone);
+  const selectedCommunityChain = paymentMethod === 'wallet' ? walletChain : chain;
+  const selectedCommunityChainMeta = CHAINS[selectedCommunityChain];
   const isValid = !!(
     form.name.trim() &&
     form.type &&
@@ -73,8 +75,8 @@ const CreateCommunity: React.FC = () => {
         body: JSON.stringify({
           phone: `+254${normalisedPhone}`,
           communityId: 'dao-creation-pending',
-          amount: DAO_CREATION_FEE_USD,
-          currency: 'USD',
+          amount: DAO_CREATION_FEE_KES,
+          currency: 'KES',
         }),
       });
       if (res.ok) {
@@ -96,7 +98,8 @@ const CreateCommunity: React.FC = () => {
     e.preventDefault();
     if (!isValid) return;
     if (paymentMethod === 'mpesa' && !normalisedPhone) return;
-    await requireWallet(async () => {
+
+    const launchCommunity = async () => {
       setIsPending(true);
       try {
         // Step 1: charge the DAO creation fee
@@ -106,7 +109,7 @@ const CreateCommunity: React.FC = () => {
 
         // Step 2: create the community record
         let chainResult: { slug: string; communityAddress: string; signature: string } | null = null;
-        if (chain === 'solana' && chainClient) {
+        if (selectedCommunityChain === 'solana' && chainClient) {
           const slug = toSlug(form.name);
           try {
             const signature = await chainClient.createCommunity(slug, form.name, '');
@@ -126,7 +129,7 @@ const CreateCommunity: React.FC = () => {
           type: form.type,
           description: form.description,
           membershipFee: Number(form.fee),
-          chain,
+          chain: selectedCommunityChain,
           quorumPct: Number(form.quorum),
           approvalThresholdPct: Number(form.approvalThreshold),
           votingPeriodDays: Number(form.votingPeriod),
@@ -135,7 +138,7 @@ const CreateCommunity: React.FC = () => {
         if (chainResult) {
           saveCommunityChainMapping({
             localId: community.id,
-            chain: 'solana',
+            chain: selectedCommunityChain,
             slug: chainResult.slug,
             communityAddress: chainResult.communityAddress,
             createTxSignature: chainResult.signature,
@@ -143,9 +146,12 @@ const CreateCommunity: React.FC = () => {
         }
         setCreatedCommunityId(community.id);
         setIsCreated(true);
+        const launchFeeLabel = paymentMethod === 'mpesa'
+          ? formatKSh(DAO_CREATION_FEE_KES)
+          : formatUSD(DAO_CREATION_FEE_USD);
         toast({
           title: charge.persisted
-            ? `${formatUSD(DAO_CREATION_FEE_USD)} payment received`
+            ? `${launchFeeLabel} payment received`
             : `Community DAO launched (simulator offline)`,
           description: charge.persisted
             ? `Order ${charge.orderId.slice(0, 12)}…  · ${form.name} is live.`
@@ -160,10 +166,20 @@ const CreateCommunity: React.FC = () => {
       } finally {
         setIsPending(false);
       }
-    });
+    };
+
+    if (paymentMethod === 'wallet') {
+      await requireWallet(launchCommunity);
+      return;
+    }
+
+    await launchCommunity();
   };
 
   if (isCreated) {
+    const launchFeeLabel = paymentMethod === 'mpesa'
+      ? formatKSh(DAO_CREATION_FEE_KES)
+      : formatUSD(DAO_CREATION_FEE_USD);
     return (
       <Layout>
         <section className="py-20">
@@ -176,7 +192,7 @@ const CreateCommunity: React.FC = () => {
                 {form.name} is live
               </h2>
               <p className="text-sm mb-2">
-                Payment of {formatUSD(DAO_CREATION_FEE_USD)} received. Your Community DAO is ready.
+                Payment of {launchFeeLabel} received. Your Community DAO is ready.
               </p>
               <p className="text-sm mb-8">
                 Share the join link with members, then start your first governance proposal from the dashboard.
@@ -428,7 +444,7 @@ const CreateCommunity: React.FC = () => {
                     >
                       <label htmlFor="create-phone" className="mb-2 flex items-center gap-1.5 text-xs font-semibold">
                         <Phone className="h-3.5 w-3.5" />
-                        M-Pesa number for the {formatUSD(DAO_CREATION_FEE_USD)} launch charge
+                        M-Pesa number for the {formatKSh(DAO_CREATION_FEE_KES)} launch charge
                       </label>
                       <div className="flex rounded-lg border focus-within:border-current">
                         <span className="border-r px-3 py-2.5 text-sm">+254</span>
@@ -507,7 +523,7 @@ const CreateCommunity: React.FC = () => {
                     </p>
                   </div>
                   <span className="font-display text-lg font-bold tabular-nums">
-                    {formatUSD(DAO_CREATION_FEE_USD)}
+                    {paymentMethod === 'mpesa' ? formatKSh(DAO_CREATION_FEE_KES) : formatUSD(DAO_CREATION_FEE_USD)}
                   </span>
                 </div>
 
@@ -517,15 +533,15 @@ const CreateCommunity: React.FC = () => {
                     <span
                       aria-hidden
                       className="h-1.5 w-1.5 rounded-full"
-                      style={{ background: chainMeta.badgeBg }}
+                      style={{ background: selectedCommunityChainMeta.badgeBg }}
                     />
-                    {chainMeta.label}
+                    {selectedCommunityChainMeta.label}
                   </span>
                 </div>
               </div>
 
               {/* Submit */}
-              {!isReady ? (
+              {paymentMethod === 'wallet' && !isReady ? (
                 <button
                   type="button"
                   onClick={() => requireWallet(async () => undefined)}
@@ -545,7 +561,7 @@ const CreateCommunity: React.FC = () => {
                       Processing payment…
                     </>
                   ) : paymentMethod === 'mpesa' ? (
-                    `Pay ${formatUSD(DAO_CREATION_FEE_USD)} via M-Pesa & Launch DAO`
+                    `Pay ${formatKSh(DAO_CREATION_FEE_KES)} via M-Pesa`
                   ) : (
                     `Pay with ${CHAINS[walletChain].short} & Launch DAO`
                   )}
