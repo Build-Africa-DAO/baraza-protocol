@@ -157,7 +157,7 @@ const CreateDecision: React.FC = () => {
                 <h1 className="font-display text-2xl font-bold">Submit a Governance Proposal</h1>
               </div>
               <p className="text-sm mb-8">
-                Submit a proposal for the community DAO to vote on. Include how much funding is needed from the treasury.
+                Submit a proposal for the chama DAO to vote on. Include how much KES funding is needed from the treasury.
               </p>
             </div>
             </CommunityBanner>

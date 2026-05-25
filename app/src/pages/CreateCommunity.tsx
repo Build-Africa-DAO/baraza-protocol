@@ -3,8 +3,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Users, ArrowLeft, CheckCircle2, Loader2, Phone, ShieldCheck, Wallet } from 'lucide-react';
 import Layout from '@/components/Layout';
-import { COMMUNITY_TYPES, DAO_CREATION_FEE_KES, DAO_CREATION_FEE_USD } from '@/lib/constants';
-import { formatKSh, formatUSD } from '@/lib/utils';
+import { COMMUNITY_TYPES, DAO_CREATION_FEE_KES } from '@/lib/constants';
+import { formatKSh } from '@/lib/utils';
 import { normaliseKenyanPhone } from '@/lib/phone';
 import { useWalletGuard } from '@/hooks/useWalletGuard';
 import { useToast } from '@/hooks/use-toast';
@@ -19,13 +19,13 @@ import { saveCommunityChainMapping } from '@/lib/chainMappings';
 
 const CreateCommunity: React.FC = () => {
   useSeo({
-    title: "Launch a community DAO",
+    title: "Launch your chama DAO",
     description:
       "Spin up a chama, SACCO, welfare group, or co-operative on Baraza. Set membership rules, dues, quorum, and M-Pesa contribution paths in a single guided flow.",
     path: "/create",
   });
   const navigate = useNavigate();
-  const { requireWallet, isReady } = useWalletGuard({ action: 'launch a community DAO' });
+  const { requireWallet, isReady } = useWalletGuard({ action: 'launch your chama DAO' });
   const { toast } = useToast();
   const { chain } = useChain();
   const chainClient = useBarazaChain();
@@ -62,7 +62,7 @@ const CreateCommunity: React.FC = () => {
   );
 
   /**
-   * Charge the DAO creation fee via the M-Pesa simulator, then create the
+   * Charge the chama DAO creation fee via the M-Pesa simulator, then create the
    * community record. Falls back to direct creation if the simulator endpoint
    * is unreachable (local dev without `vercel dev`) so the form still works
    * — the fee is then a paper-only acknowledgement, not enforced.
@@ -146,13 +146,11 @@ const CreateCommunity: React.FC = () => {
         }
         setCreatedCommunityId(community.id);
         setIsCreated(true);
-        const launchFeeLabel = paymentMethod === 'mpesa'
-          ? formatKSh(DAO_CREATION_FEE_KES)
-          : formatUSD(DAO_CREATION_FEE_USD);
+        const launchFeeLabel = formatKSh(DAO_CREATION_FEE_KES);
         toast({
           title: charge.persisted
             ? `${launchFeeLabel} payment received`
-            : `Community DAO launched (simulator offline)`,
+            : `Chama DAO launched (simulator offline)`,
           description: charge.persisted
             ? `Order ${charge.orderId.slice(0, 12)}…  · ${form.name} is live.`
             : 'Local dev mode — payment skipped, community launched.',
@@ -177,9 +175,7 @@ const CreateCommunity: React.FC = () => {
   };
 
   if (isCreated) {
-    const launchFeeLabel = paymentMethod === 'mpesa'
-      ? formatKSh(DAO_CREATION_FEE_KES)
-      : formatUSD(DAO_CREATION_FEE_USD);
+    const launchFeeLabel = formatKSh(DAO_CREATION_FEE_KES);
     return (
       <Layout>
         <section className="py-20">
@@ -192,7 +188,7 @@ const CreateCommunity: React.FC = () => {
                 {form.name} is live
               </h2>
               <p className="text-sm mb-2">
-                Payment of {launchFeeLabel} received. Your Community DAO is ready.
+                Payment of {launchFeeLabel} received. Your chama DAO is ready.
               </p>
               <p className="text-sm mb-8">
                 Share the join link with members, then start your first governance proposal from the dashboard.
@@ -241,11 +237,11 @@ const CreateCommunity: React.FC = () => {
                   <Users className="w-5 h-5" />
                 </div>
                 <h1 className="font-display text-2xl font-black leading-tight text-foreground drop-shadow md:text-3xl">
-                  Launch a Community DAO
+                  Launch your chama DAO
                 </h1>
               </div>
               <p className="max-w-xl text-sm font-semibold leading-6 text-foreground/92 drop-shadow md:text-base md:leading-7">
-                Launch a DAO where members can contribute, submit governance proposals, and manage a shared treasury with explicit governance rules.
+                Launch a chama DAO where members can contribute in KES, submit governance proposals, and manage a shared treasury with explicit rules.
               </p>
             </div>
             </CommunityBanner>
@@ -258,7 +254,7 @@ const CreateCommunity: React.FC = () => {
               {/* Name */}
               <div>
                 <label className="block text-xs font-semibold mb-2">
-                  Community Name
+                  Chama or SACCO Name
                 </label>
                 <input
                   type="text"
@@ -273,7 +269,7 @@ const CreateCommunity: React.FC = () => {
               {/* Type */}
               <div>
                 <label className="block text-xs font-semibold mb-2">
-                  Community Type
+                  Group Type
                 </label>
                 <select
                   name="type"
@@ -502,7 +498,7 @@ const CreateCommunity: React.FC = () => {
                         {isReady ? (
                           <p>
                             <span className="font-semibold">{CHAINS[walletChain].short} equivalent</span> of{' '}
-                            {formatUSD(DAO_CREATION_FEE_USD)} will be recorded against the launch order.
+                            KES equivalent will be recorded against the launch order.
                           </p>
                         ) : (
                           <p className="text-muted-foreground">
@@ -523,7 +519,7 @@ const CreateCommunity: React.FC = () => {
                     </p>
                   </div>
                   <span className="font-display text-lg font-bold tabular-nums">
-                    {paymentMethod === 'mpesa' ? formatKSh(DAO_CREATION_FEE_KES) : formatUSD(DAO_CREATION_FEE_USD)}
+                    {paymentMethod === 'mpesa' ? formatKSh(DAO_CREATION_FEE_KES) : `${formatKSh(DAO_CREATION_FEE_KES)} equivalent`}
                   </span>
                 </div>
 
@@ -563,7 +559,7 @@ const CreateCommunity: React.FC = () => {
                   ) : paymentMethod === 'mpesa' ? (
                     `Pay ${formatKSh(DAO_CREATION_FEE_KES)} via M-Pesa`
                   ) : (
-                    `Pay with ${CHAINS[walletChain].short} & Launch DAO`
+                    `Pay with ${CHAINS[walletChain].short} & launch chama DAO`
                   )}
                 </button>
               )}
@@ -594,7 +590,7 @@ const CreateCommunity: React.FC = () => {
                 </div>
                 <div className="mt-6 rounded-lg border p-4">
                   <p className="text-xs leading-5">
-                    Treasury setup, membership tiers, and credentials are provisioned automatically once your DAO is launched.
+                    Treasury setup, membership tiers, and credentials are provisioned automatically once your chama DAO is launched.
                   </p>
                 </div>
               </div>

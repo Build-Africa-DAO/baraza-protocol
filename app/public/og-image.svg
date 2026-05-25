@@ -30,13 +30,13 @@
   <g transform="translate(72 220)">
     <text font-family="'Hanken Grotesk', 'Inter', sans-serif" font-weight="800" font-size="92" fill="#f5f1e6" letter-spacing="-2">
       <tspan x="0" y="0">Launch your</tspan>
-      <tspan x="0" y="108" fill="url(#warm)">community DAO</tspan>
+      <tspan x="0" y="108" fill="url(#warm)">chama DAO</tspan>
     </text>
   </g>
 
   <g transform="translate(72 470)">
     <text font-family="'Hanken Grotesk', 'Inter', sans-serif" font-size="30" font-weight="500" fill="#bfb9a8">
-      <tspan x="0" y="0">Phone-first treasury and governance for chamas,</tspan>
+      <tspan x="0" y="0">Phone-first KES treasury and governance for chamas,</tspan>
       <tspan x="0" y="42">SACCOs, welfare groups, and co-operatives.</tspan>
     </text>
   </g>

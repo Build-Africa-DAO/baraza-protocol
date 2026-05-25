@@ -42,7 +42,7 @@ const CommunityDashboard: React.FC = () => {
     // Only set a community-specific title once the data has loaded —
     // avoids the generic "Community dashboard" flash on every page visit.
     title: community ? `${community.name} dashboard` : undefined,
-    description: "Treasury balance, member roster, proposals, and wallet activity for a Baraza community DAO.",
+    description: "KES treasury balance, member roster, proposals, and wallet activity for a Baraza chama DAO.",
     path: id ? `/dashboard/${id}` : "/dashboard",
     noIndex: true,
   });
@@ -193,7 +193,7 @@ const CommunityDashboard: React.FC = () => {
               <div className="min-w-0 flex-1">
                 <div className="mb-2 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-widest">
                   <ShieldCheck className="h-3.5 w-3.5" />
-                  Community DAO workspace
+                  Chama DAO workspace
                 </div>
                 <h1 className="mb-2 font-display text-2xl font-bold md:text-4xl">
                   {community.name}

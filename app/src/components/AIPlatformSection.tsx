@@ -6,14 +6,14 @@ const platformLinks = [
   {
     icon: Compass,
     label: "Discover",
-    title: "Find active communities",
+    title: "Find active chamas",
     detail: "Browse chamas, SACCOs, co-ops, and welfare groups with live filters.",
     to: "/communities",
   },
   {
     icon: WalletCards,
     label: "Launch",
-    title: "Create the DAO rules",
+    title: "Set chama DAO rules",
     detail: "Set dues, quorum, voting windows, and payment paths in one guided flow.",
     to: "/create",
   },
@@ -42,14 +42,14 @@ export default function AIPlatformSection() {
               Website, operating platform, and AI guide in one clean flow.
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground md:text-base md:leading-7">
-              Visitors can understand the model, organizers can launch a DAO, members can
+              Visitors can understand the model, organisers can launch a chama DAO, members can
               vote and track funds, and Asha is available when someone needs a next step.
             </p>
 
             <div className="mt-5 flex flex-col gap-2 sm:flex-row">
               <button
                 type="button"
-                onClick={() => open("Help me set up a community DAO on Baraza")}
+                onClick={() => open("Help me set up a chama DAO on Baraza")}
                 className="btn-warm inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-extrabold"
               >
                 Ask Asha AI

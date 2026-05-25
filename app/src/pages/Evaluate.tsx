@@ -44,7 +44,7 @@ const scoreRows = [
 
 export default function Evaluate() {
   useSeo({
-    title: "Evaluate a community DAO before you join",
+    title: "Evaluate a chama DAO before you join",
     description:
       "A practical checklist to compare chamas, SACCOs, and co-operatives on membership clarity, treasury rules, voting fairness, and dispute handling before depositing dues.",
     path: "/evaluate",
@@ -60,7 +60,7 @@ export default function Evaluate() {
               Best-practice evaluation
             </div>
             <h1 className="font-display text-4xl font-black leading-tight md:text-5xl">
-              Evaluate a Community DAO before members commit money.
+              Evaluate a chama DAO before members commit money.
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-7 md:text-lg md:leading-8">
               Use this checklist to compare communities, prepare a new DAO, or decide what

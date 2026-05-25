@@ -17,14 +17,14 @@ const INITIAL_MESSAGES: Message[] = [
   {
     id: '1',
     role: 'asha',
-    text: "Habari! I'm Asha, your Baraza AI guide. I can help you understand the website, launch a community DAO, manage members, or plan a vote.",
+    text: "Habari! I'm Asha, your Baraza AI guide. I can help you understand the website, launch a chama DAO, manage members, or plan a vote.",
     time: timestamp(),
   },
 ];
 
 const QUICK_REPLIES = [
   'How do I create a group?',
-  'Help me plan my DAO',
+  'Help me plan my chama DAO',
   'How does voting work?',
   'How are funds managed?',
 ];
@@ -33,32 +33,32 @@ const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
   {
     keywords: ['ai', 'asha', 'guide', 'copilot', 'assistant', 'platform', 'use baraza'],
     reply:
-      'Baraza combines the website, the operating platform, and Asha AI in one flow. Use the website to understand the model, Explore to find communities, Launch to create one, dashboards to manage treasury and votes, and ask me when you need help choosing settings or explaining the next action.',
+      'Baraza combines the website, the operating platform, and Asha AI in one flow. Use the website to understand the model, Explore to find chamas, Launch to create one, dashboards to manage KES treasury and votes, and ask me when you need help choosing settings or explaining the next action.',
   },
   {
     keywords: ['plan', 'setup', 'best dao setup', 'rules', 'quorum', 'threshold'],
     reply:
-      'A solid setup starts with your group type, monthly dues, quorum, approval threshold, and voting period. For most welfare groups, start with 51% quorum, 66% approval, a 7-day vote window, and clear rules for emergency spending. Then invite members to review before joining.',
+      'A solid setup starts with your group type, monthly dues in KSh, quorum, approval threshold, and voting period. For most welfare groups, start with 51% quorum, 66% approval, a 7-day vote window, and clear rules for emergency spending. Then invite members to review before joining.',
   },
   {
     keywords: ['create', 'start', 'new group', 'community', 'chama', 'sacco'],
     reply:
-      'To create a group, tap "Start a Group" in the menu. Fill in your group name, choose a type (Chama, Sacco, Cooperative, etc.), set a monthly fee in KSh, and write a short description. Once created, share the link so members can join instantly!',
+      'To create a chama DAO, tap "Launch" in the menu. Fill in your group name, choose a type (Chama, SACCO, Cooperative, etc.), set monthly dues in KSh, and write a short description. Once created, share the link so members can join instantly.',
   },
   {
     keywords: ['vote', 'voting', 'decision', 'propose', 'proposal'],
     reply:
-      "Any member can create a Decision — a proposal to spend community funds. Give it a title, description, and funding amount, then set a voting window. All members vote Support or Object. When time's up, the majority wins. Simple, transparent, and fair.",
+      "Any member can create a Decision - a proposal to spend chama funds. Give it a title, description, and funding amount in KSh, then set a voting window. All members vote Support or Object. When time's up, the majority wins. Simple, transparent, and fair.",
   },
   {
     keywords: ['fund', 'money', 'ksh', 'shilling', 'fee', 'pay', 'balance', 'treasury'],
     reply:
-      'Every group has a shared Community Fund built from monthly membership fees. The balance is always visible to all members on the dashboard. When a Decision is approved, funds are released — and every transaction is logged.',
+      'Every chama has a shared KES fund built from monthly membership dues. The balance is always visible to all members on the dashboard. When a Decision is approved, funds are released and every transaction is logged.',
   },
   {
     keywords: ['join', 'member', 'membership', 'card', 'how to join'],
     reply:
-      'To join a community, find it on the Communities page and click "Join Group". After paying the monthly fee, your digital membership card is issued immediately — showing your name, member ID, and join date.',
+      'To join a chama, find it on Explore and click "Become a member". After paying the monthly dues, your membership credential is issued after payment attestation and chain confirmation.',
   },
   {
     keywords: ['dashboard', 'stats', 'overview', 'manage'],
@@ -78,7 +78,7 @@ const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
   {
     keywords: ['mpesa', 'm-pesa', 'mobile money', 'phone', 'pay with phone'],
     reply:
-      "Baraza includes a phone-first M-Pesa flow for membership dues. In local preview it simulates the payment order, and in production it connects to payment confirmation and membership activation.",
+      "Baraza includes a phone-first M-Pesa flow for KES membership dues. In local preview it simulates the payment order, and in production it connects to payment confirmation and membership activation.",
   },
   {
     keywords: ['what is chama', 'chama meaning', 'what is a chama'],
@@ -93,12 +93,12 @@ const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
   {
     keywords: ['hello', 'hi', 'habari', 'hey', 'hola', 'sasa'],
     reply:
-      'Habari! Great to have you here. Ask me about creating a group, how voting works, managing funds, joining a community, or anything else. What would you like to know?',
+      'Habari! Great to have you here. Ask me about launching a chama DAO, how voting works, managing KES funds, joining a chama, or anything else. What would you like to know?',
   },
   {
     keywords: ['thank', 'thanks', 'asante', 'awesome', 'great', 'perfect'],
     reply:
-      'Karibu sana! Happy to help anytime. If you get stuck anywhere in Baraza, just ask. Good luck with your community!',
+      'Karibu sana! Happy to help anytime. If you get stuck anywhere in Baraza, just ask. Good luck with your chama!',
   },
 ];
 
@@ -107,7 +107,7 @@ const getAshaResponse = (input: string): string => {
   for (const { keywords, reply } of RESPONSES) {
     if (keywords.some((kw) => lower.includes(kw))) return reply;
   }
-  return 'Great question! Baraza helps communities manage funds and make decisions together. Try asking me about creating a group, how voting works, the community fund, or how to join an existing group.';
+  return 'Great question! Baraza helps chamas and SACCOs manage KES funds and make decisions together. Try asking me about launching a chama DAO, how voting works, the shared fund, or how to join an existing group.';
 };
 
 const TypingDots: React.FC = () => (

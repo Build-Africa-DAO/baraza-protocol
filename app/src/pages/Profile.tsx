@@ -189,7 +189,7 @@ export default function Profile() {
             </div>
             <h1 className="font-display text-2xl font-bold">Connect your wallet</h1>
             <p className="mt-3 text-sm">
-              Your profile shows your memberships, voting history, and credentials across every Community DAO you join.
+              Your profile shows your memberships, voting history, and credentials across every chama DAO you join.
             </p>
             <button onClick={() => setVisible(true)} className="btn-warm mt-6 inline-flex items-center gap-2 text-sm">
               Connect wallet
@@ -401,7 +401,7 @@ export default function Profile() {
                   Active roles
                 </h2>
                 <p className="text-sm">
-                  No DAO roles yet. Join a DAO or launch one to receive your first role.
+                  No DAO roles yet. Join a chama or launch one to receive your first role.
                 </p>
               </div>
             </aside>
@@ -462,19 +462,19 @@ export default function Profile() {
                 ) : (
                   <div className="rounded-lg border border-dashed p-8 text-center">
                     <p className="font-display text-base font-semibold">
-                      Not a member of any DAO yet
+                      Not a member of any chama DAO yet
                     </p>
                     <p className="mt-2 text-sm">
-                      Join a Community DAO to receive your membership credential and vote on proposals.
+                      Join a chama DAO to receive your membership credential and vote on proposals.
                     </p>
                     <div className="mt-5 flex flex-col items-center justify-center gap-2 sm:flex-row">
                       <Link to="/communities" className="btn-warm inline-flex items-center gap-2 text-sm">
                         <Compass className="h-4 w-4" />
-                        Browse Community DAOs
+                        Browse chama DAOs
                       </Link>
                       <Link to="/create" className="btn-ghost inline-flex items-center gap-2 text-sm">
                         <PlusCircle className="h-4 w-4" />
-                        Launch a Community DAO
+                        Launch your chama DAO
                       </Link>
                     </div>
                   </div>

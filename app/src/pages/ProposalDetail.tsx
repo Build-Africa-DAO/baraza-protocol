@@ -24,7 +24,7 @@ export default function ProposalDetail() {
     title: proposal && community
       ? `${proposal.title} — ${community.name}`
       : proposal?.title ?? "Proposal",
-    description: proposal?.description ?? "View proposal details, vote, and track quorum on a Baraza community DAO.",
+    description: proposal?.description ?? "View proposal details, vote, and track quorum on a Baraza chama DAO.",
     path: id && decisionId ? `/dashboard/${id}/decisions/${decisionId}` : undefined,
     noIndex: true,
   });

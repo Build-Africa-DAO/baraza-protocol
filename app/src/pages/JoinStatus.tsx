@@ -215,7 +215,7 @@ export default function JoinStatus() {
               </h1>
               <p className="mt-2 text-sm">
                 Order <span className="font-mono">{orderId || "(none)"}</span> for{" "}
-                {community?.name ?? "Community DAO"} is moving from{" "}
+                {community?.name ?? "Chama DAO"} is moving from{" "}
                 {isStellarRail ? "Stellar payment verification" : "M-Pesa confirmation"} to on-chain Membership Credential.
               </p>
             </div>

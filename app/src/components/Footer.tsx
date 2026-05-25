@@ -8,9 +8,9 @@ type FooterLink =
 
 const links: Record<string, FooterLink[]> = {
   Product: [
-    { label: "Browse Community DAOs", to: "/communities" },
+    { label: "Browse chama DAOs", to: "/communities" },
     { label: "Evaluate Best Practice", to: "/evaluate" },
-    { label: "Launch a DAO", to: "/create" },
+    { label: "Launch your chama DAO", to: "/create" },
     { label: "How it Works", to: "/#features" },
   ],
 };
@@ -60,7 +60,7 @@ export default function Footer() {
           <div>
             <BrandLogo size="md" className="mb-4" />
             <p className="mb-5 max-w-xs text-sm leading-relaxed text-muted-foreground">
-              A treasury layer for groups that collect dues, vote on proposals,
+              A KES treasury layer for chamas and SACCOs that collect dues, vote on proposals,
               and move funds with shared on-chain visibility.
             </p>
             <div className="flex items-center gap-2">
@@ -104,7 +104,7 @@ export default function Footer() {
             <div className="hidden h-3 w-px bg-border sm:block" />
             <p className="text-xs text-muted-foreground">Built on Solana</p>
           </div>
-          <p className="text-xs text-muted-foreground">Built for communities in Africa</p>
+            <p className="text-xs text-muted-foreground">Built for Kenyan chamas and SACCOs</p>
         </div>
       </div>
     </footer>

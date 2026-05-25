@@ -5,7 +5,7 @@ import { ShimmerButton } from "@/components/ui/shimmer-button";
 
 const steps = [
   { icon: Link2, title: "Connect a wallet", desc: "Sign in with Phantom, Solflare, or Coinbase Wallet. Your wallet becomes the founding admin signer." },
-  { icon: ShieldCheck, title: "Set basics & rules", desc: "Name your DAO, pick a type, set monthly dues, and define quorum, approval, and voting period." },
+  { icon: ShieldCheck, title: "Set basics & rules", desc: "Name your chama DAO, pick a type, set monthly dues in KES, and define quorum, approval, and voting period." },
   { icon: Users, title: "Invite members", desc: "Share the join link. Members can join via M-Pesa or directly with a wallet." },
   { icon: Coins, title: "Govern transparently", desc: "Members propose, vote, and release funds. Every action lands on a shared on-chain trail." },
 ];
@@ -30,7 +30,7 @@ export default function CTASection() {
           <div className="border-b border-border/70 p-5 sm:p-8 md:p-10 lg:border-b-0 lg:border-r">
             <p className="text-xs font-semibold uppercase tracking-widest text-accent">Launch a treasury</p>
             <h2 className="mt-3 max-w-xl font-display text-3xl font-bold leading-tight text-foreground md:text-4xl">
-              Launch a community DAO with rules everyone can inspect
+              Launch your chama DAO with rules everyone can inspect
             </h2>
             <p className="mt-4 max-w-lg text-base leading-relaxed text-muted-foreground">
               Start with a working treasury, not a blank workspace. Baraza gives members a shared
@@ -44,12 +44,12 @@ export default function CTASection() {
                   shimmerColor="rgba(255,255,255,0.5)"
                   className="w-full justify-center rounded-lg px-7 py-3.5 text-sm font-bold sm:w-auto"
                 >
-                  Launch a DAO
+                  Launch your chama DAO
                   <ArrowRight className="h-4 w-4" />
                 </ShimmerButton>
               </Link>
               <Link to="/communities" className="btn-ghost justify-center rounded-lg px-7 py-3.5 text-sm">
-                Explore Community DAOs
+                Explore chama DAOs
               </Link>
             </div>
 
