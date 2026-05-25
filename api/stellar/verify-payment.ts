@@ -20,6 +20,12 @@ interface HorizonOperation {
   to?: string;
 }
 
+type PersistOrderResult =
+  | { status: 'persisted' }
+  | { status: 'not_configured' }
+  | { status: 'duplicate'; detail: string }
+  | { status: 'failed'; detail: string };
+
 const DEFAULT_TESTNET_HORIZON = 'https://horizon-testnet.stellar.org';
 const DEFAULT_MAINNET_HORIZON = 'https://horizon.stellar.org';
 
@@ -107,10 +113,10 @@ async function persistOrder(input: {
   communityId: string;
   txHash: string;
   amountXlm: number;
-}): Promise<boolean> {
+}): Promise<PersistOrderResult> {
   const url = process.env.SUPABASE_URL?.replace(/\/$/, '');
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceKey) return false;
+  if (!url || !serviceKey) return { status: 'not_configured' };
 
   const res = await fetch(`${url}/rest/v1/payment_orders`, {
     method: 'POST',
@@ -138,9 +144,12 @@ async function persistOrder(input: {
   if (!res.ok) {
     const detail = await res.text().catch(() => '');
     console.warn('[stellar-verify-payment] Supabase insert failed:', res.status, detail);
-    return false;
+    if (res.status === 409 || /duplicate key|23505|payment_orders_provider_reference_unique/i.test(detail)) {
+      return { status: 'duplicate', detail };
+    }
+    return { status: 'failed', detail };
   }
-  return true;
+  return { status: 'persisted' };
 }
 
 export default async function handler(req: Request): Promise<Response> {
@@ -171,13 +180,29 @@ export default async function handler(req: Request): Promise<Response> {
     const proof = await verifyNativePayment(txHash, body.amountXlm);
     const orderId = generateOrderId();
     const activationSecret = generateActivationSecret();
-    const persisted = await persistOrder({
+    const persistResult = await persistOrder({
       orderId,
       activationSecret,
       communityId: body.communityId,
       txHash,
       amountXlm: proof.amount,
     });
+
+    if (persistResult.status === 'duplicate') {
+      return json({
+        error: 'stellar_payment_reused',
+        message: 'This Stellar transaction hash is already attached to a Baraza payment order.',
+      }, { status: 409 });
+    }
+
+    if (persistResult.status === 'failed') {
+      return json({
+        error: 'stellar_order_persist_failed',
+        message: 'Stellar payment was verified, but the payment order could not be recorded.',
+      }, { status: 502 });
+    }
+
+    const persisted = persistResult.status === 'persisted';
 
     return json({
       orderId: persisted ? orderId : `ord_local_stellar_${Date.now().toString(36)}`,

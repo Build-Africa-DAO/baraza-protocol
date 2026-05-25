@@ -28,9 +28,7 @@ interface DisplayStep {
   minStatus: PaymentOrderStatus;
 }
 
-const DISPLAY_STEPS: DisplayStep[] = [
-  { code: "payment-requested", label: "Check your phone for the M-Pesa prompt", minStatus: "PAYMENT_REQUESTED" },
-  { code: "payment-confirmed", label: "Payment received — activating membership", minStatus: "PAYMENT_CONFIRMED" },
+const SHARED_DISPLAY_STEPS: DisplayStep[] = [
   { code: "mint-queued", label: "Preparing your membership credential", minStatus: "MINT_QUEUED" },
   { code: "mint-submitted", label: "Submitting to Solana", minStatus: "MINT_SUBMITTED" },
   { code: "indexer-confirmed", label: "Membership verified", minStatus: "INDEXER_CONFIRMED" },
@@ -71,10 +69,14 @@ export default function JoinStatus() {
   const { publicKey } = useWallet();
   const orderId = params.get("orderId") ?? "";
   const activationSecret = params.get("activationSecret") ?? "";
+  const rail = params.get("rail") ?? (orderId.startsWith("ord_stellar_") || orderId.startsWith("ord_local_stellar_") ? "stellar" : "mpesa");
+  const isStellarRail = rail === "stellar";
 
   useSeo({
     title: community ? `Join status — ${community.name}` : "Join status",
-    description: "Track M-Pesa payment, credential mint, and on-chain membership activation.",
+    description: isStellarRail
+      ? "Track Stellar payment verification, credential mint, and on-chain membership activation."
+      : "Track M-Pesa payment, credential mint, and on-chain membership activation.",
     path: id ? `/join/${id}/status` : undefined,
     noIndex: true,
   });
@@ -175,8 +177,23 @@ export default function JoinStatus() {
   }, [status, publicKey, id, orderId, activationSecret]);
 
   const stepStates = useMemo(
-    () => DISPLAY_STEPS.map((step) => ({ ...step, state: deriveStepState(step.minStatus, status) })),
-    [status],
+    () => {
+      const paymentSteps: DisplayStep[] = isStellarRail
+        ? [
+            { code: "payment-requested", label: "Submit Stellar transaction hash", minStatus: "PAYMENT_REQUESTED" },
+            { code: "payment-confirmed", label: "Stellar payment verified", minStatus: "PAYMENT_CONFIRMED" },
+          ]
+        : [
+            { code: "payment-requested", label: "Check your phone for the M-Pesa prompt", minStatus: "PAYMENT_REQUESTED" },
+            { code: "payment-confirmed", label: "Payment received - activating membership", minStatus: "PAYMENT_CONFIRMED" },
+          ];
+
+      return [...paymentSteps, ...SHARED_DISPLAY_STEPS].map((step) => ({
+        ...step,
+        state: deriveStepState(step.minStatus, status),
+      }));
+    },
+    [isStellarRail, status],
   );
 
   const isFailed = isFailureStatus(status);
@@ -198,7 +215,8 @@ export default function JoinStatus() {
               </h1>
               <p className="mt-2 text-sm">
                 Order <span className="font-mono">{orderId || "(none)"}</span> for{" "}
-                {community?.name ?? "Community DAO"} is moving from M-Pesa confirmation to on-chain Membership Credential.
+                {community?.name ?? "Community DAO"} is moving from{" "}
+                {isStellarRail ? "Stellar payment verification" : "M-Pesa confirmation"} to on-chain Membership Credential.
               </p>
             </div>
 
