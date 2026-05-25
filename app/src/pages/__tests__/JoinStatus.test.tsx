@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import JoinStatus from '@/pages/JoinStatus';
+import ChainProvider from '@/components/ChainProvider';
 
 vi.mock('@solana/wallet-adapter-react', () => ({
   useWallet: () => ({ publicKey: null }),
@@ -31,11 +32,13 @@ vi.mock('@/lib/seo', () => ({
 
 function renderStatus(path: string) {
   return render(
-    <MemoryRouter initialEntries={[path]}>
-      <Routes>
-        <Route path="/join/:id/status" element={<JoinStatus />} />
-      </Routes>
-    </MemoryRouter>,
+    <ChainProvider>
+      <MemoryRouter initialEntries={[path]}>
+        <Routes>
+          <Route path="/join/:id/status" element={<JoinStatus />} />
+        </Routes>
+      </MemoryRouter>
+    </ChainProvider>,
   );
 }
 

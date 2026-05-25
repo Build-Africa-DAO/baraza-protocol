@@ -3,7 +3,7 @@ import { ExternalLink, Info, Lock, Settings, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Community } from '@/lib/constants';
 import { formatKSh } from '@/lib/utils';
-import { CHAINS } from '@/lib/chain';
+import { useChain } from '@/hooks/useChain';
 
 interface Props {
   community: Community;
@@ -12,6 +12,7 @@ interface Props {
 
 export default function CommunitySettings({ community, isMember }: Props) {
   const [copied, setCopied] = useState(false);
+  const { chainMeta } = useChain();
 
   const copyId = () => {
     navigator.clipboard.writeText(community.id).then(() => {
@@ -32,7 +33,7 @@ export default function CommunitySettings({ community, isMember }: Props) {
           {[
             ['Name', community.name],
             ['Type', community.type],
-            ['Treasury rail', CHAINS[community.chain ?? 'solana'].label],
+            ['Treasury rail', chainMeta.label],
             ['Founded', new Date(community.createdAt).toLocaleDateString('en-KE', { month: 'long', year: 'numeric' })],
           ].map(([label, value]) => (
             <div key={label} className="rounded-lg border border-border/50 p-3">

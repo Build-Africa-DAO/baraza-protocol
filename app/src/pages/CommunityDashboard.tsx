@@ -27,13 +27,13 @@ import { getActiveMembership } from '@/lib/memberships';
 import CommunityBanner from '@/components/CommunityBanner';
 import CommunityGallery from '@/components/CommunityGallery';
 import BountyBoard from '@/components/BountyBoard';
-import { CHAINS } from '@/lib/chain';
 import { NETWORK_LABEL } from '@/lib/network';
 import { useSeo } from '@/lib/seo';
 import { getBountyStatsForCommunity } from '@/lib/bounties';
 import { isAdminWallet } from '@/lib/access';
 import AshaSecurityReview from '@/components/security/AshaSecurityReview';
 import { reviewCommunity } from '@/lib/securityReview';
+import { useChain } from '@/hooks/useChain';
 
 // ─── Tab definition ───────────────────────────────────────────────────────────
 
@@ -165,6 +165,7 @@ const CommunityDashboard: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { publicKey } = useWallet();
   const { connection } = useConnection();
+  const { chain, chainMeta } = useChain();
   const [activeTab, setActiveTab] = useState<DashboardTab>(() => getTabFromSearch(searchParams));
   const [isMember, setIsMember] = useState(false);
   const [walletSol, setWalletSol] = useState<number | null>(null);
@@ -267,6 +268,7 @@ const CommunityDashboard: React.FC = () => {
   const currentTab = TABS.find((t) => t.key === activeTab);
   const canPostBounties = isMember || isAdminWallet(publicKey?.toBase58());
   const securityReview = reviewCommunity(community);
+  const activeRailLabel = `${chainMeta.label} ${chain === 'solana' ? NETWORK_LABEL : chain === 'stellar' ? 'Testnet' : 'testnet'}`;
 
   return (
     <Layout>
@@ -298,15 +300,15 @@ const CommunityDashboard: React.FC = () => {
                       {community.type}
                     </span>
                     <span
-                      aria-label={`Treasury rail: ${CHAINS[community.chain ?? 'solana'].label}`}
+                      aria-label={`Treasury rail: ${chainMeta.label}`}
                       className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-medium"
                     >
                       <span
                         aria-hidden
                         className="h-1.5 w-1.5 rounded-full"
-                        style={{ background: CHAINS[community.chain ?? 'solana'].badgeBg }}
+                        style={{ background: chainMeta.badgeBg }}
                       />
-                      {CHAINS[community.chain ?? 'solana'].label}
+                      {chainMeta.label}
                     </span>
                     <span className="inline-flex items-center gap-1">
                       <Calendar className="h-3.5 w-3.5" />
@@ -394,7 +396,7 @@ const CommunityDashboard: React.FC = () => {
                         </div>
                         <span className="hidden rounded-full border px-3 py-1 text-xs font-semibold sm:inline-flex">
                           <Activity className="mr-1 h-3 w-3" />
-                          Solana {NETWORK_LABEL}
+                          {activeRailLabel}
                         </span>
                       </div>
                       <div className="grid gap-3 sm:grid-cols-3">
@@ -434,7 +436,7 @@ const CommunityDashboard: React.FC = () => {
                         </div>
                       ) : (
                         <>
-                          <p className="text-xs">Join to receive a Solana membership credential and vote on proposals.</p>
+                          <p className="text-xs">Join to receive a {chainMeta.label} membership record and vote on proposals.</p>
                           <Link to={`/join/${community.id}`} className="btn-warm mt-4 w-full justify-center text-sm">Join group</Link>
                         </>
                       )}
@@ -608,8 +610,8 @@ const CommunityDashboard: React.FC = () => {
                       <div className="flex items-center justify-between border-b pb-3">
                         <span>Treasury rail</span>
                         <span className="inline-flex items-center gap-1.5 font-semibold">
-                          <span aria-hidden className="h-1.5 w-1.5 rounded-full" style={{ background: CHAINS[community.chain ?? 'solana'].badgeBg }} />
-                          {CHAINS[community.chain ?? 'solana'].label} - {NETWORK_LABEL}
+                          <span aria-hidden className="h-1.5 w-1.5 rounded-full" style={{ background: chainMeta.badgeBg }} />
+                          {activeRailLabel}
                         </span>
                       </div>
                       <div className="flex items-center justify-between border-b pb-3">
@@ -635,10 +637,10 @@ const CommunityDashboard: React.FC = () => {
 
                   <div className="premium-glass rounded-xl p-5">
                     <div className="mb-4 flex items-center justify-between">
-                      <h3 className="font-display text-base font-semibold">Your Solana account</h3>
+                      <h3 className="font-display text-base font-semibold">Your {chainMeta.label} account</h3>
                       <WalletIcon className="h-4 w-4" />
                     </div>
-                    {publicKey ? (
+                    {chain === 'solana' && publicKey ? (
                       <div className="space-y-3 text-sm">
                         <div className="rounded-lg border p-3">
                           <p className="text-[10px] uppercase tracking-widest">Address</p>
@@ -652,7 +654,7 @@ const CommunityDashboard: React.FC = () => {
                         </div>
                         <div className="flex items-center justify-between border-b pb-3">
                           <span>Cluster</span>
-                          <span className="text-xs font-semibold">Solana {NETWORK_LABEL}</span>
+                          <span className="text-xs font-semibold">{activeRailLabel}</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span>Membership</span>
@@ -663,7 +665,9 @@ const CommunityDashboard: React.FC = () => {
                       <div className="rounded-lg border border-dashed p-6 text-center">
                         <WalletIcon className="mx-auto mb-3 h-8 w-8" />
                         <p className="text-sm font-semibold">Account not connected</p>
-                        <p className="mt-1 text-xs">Connect your Solana account to see your balance and membership status.</p>
+                        <p className="mt-1 text-xs">
+                          {chainMeta.accountCta} from the header to see account status for this rail.
+                        </p>
                       </div>
                     )}
                   </div>

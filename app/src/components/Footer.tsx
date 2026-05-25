@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Github, Globe } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
+import { useChain } from "@/hooks/useChain";
 
 type FooterLink =
   | { label: string; to: string }
@@ -53,6 +54,8 @@ function FooterLinkItem({ link }: { link: FooterLink }) {
 }
 
 export default function Footer() {
+  const { chainMeta } = useChain();
+
   return (
     <footer className="border-t border-border/60 bg-card/50 backdrop-blur-sm">
       <div className="container mx-auto px-4 py-14">
@@ -102,7 +105,7 @@ export default function Footer() {
               &copy; {new Date().getFullYear()} Baraza Protocol. All rights reserved.
             </p>
             <div className="hidden h-3 w-px bg-border sm:block" />
-            <p className="text-xs text-muted-foreground">Built on Solana</p>
+            <p className="text-xs text-muted-foreground">Built for {chainMeta.label}</p>
           </div>
             <p className="text-xs text-muted-foreground">Built for Kenyan chamas and SACCOs</p>
         </div>

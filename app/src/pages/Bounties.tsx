@@ -18,6 +18,7 @@ import { useCommunities } from '@/hooks/useCommunities';
 import { formatKSh, cn } from '@/lib/utils';
 import { useSeo } from '@/lib/seo';
 import { bountyCreateAccessMessage, getBountyCreateAccess } from '@/lib/access';
+import { useChain } from '@/hooks/useChain';
 
 const STATUS_OPTIONS: { value: BountyStatus | 'all'; label: string }[] = [
   { value: 'all', label: 'All bounties' },
@@ -85,6 +86,7 @@ export default function Bounties() {
   });
 
   const { communities } = useCommunities();
+  const { chain, chainMeta } = useChain();
   const { publicKey, connected } = useWallet();
   const { setVisible } = useWalletModal();
   const [search, setSearch] = useState('');
@@ -142,7 +144,13 @@ export default function Bounties() {
     const haystack = `${bounty.title} ${bounty.category} ${bounty.summary} ${bounty.skills.join(' ')} ${community?.name ?? ''}`.toLowerCase();
     const matchesSearch = haystack.includes(search.toLowerCase());
     const matchesStatus = status === 'all' || bounty.status === status;
-    return matchesSearch && matchesStatus;
+    const matchesChain = (community?.chain ?? 'solana') === chain;
+    return matchesSearch && matchesStatus && matchesChain;
+  });
+
+  const activeChainBounties = bounties.filter((bounty) => {
+    const community = communityById.get(bounty.communityId);
+    return (community?.chain ?? 'solana') === chain;
   });
 
   const visibleColumns = BOARD_COLUMNS
@@ -159,7 +167,7 @@ export default function Bounties() {
     }))
     .filter((section) => section.bounties.length > 0);
 
-  const openRewardPool = bounties
+  const openRewardPool = activeChainBounties
     .filter((bounty) => bounty.status === 'open')
     .reduce((sum, bounty) => sum + bounty.rewardKes, 0);
 
@@ -227,7 +235,7 @@ export default function Bounties() {
               <p className="mb-2 font-mono text-xs uppercase tracking-widest">Baraza marketplace</p>
               <h1 className="font-display text-3xl font-bold md:text-5xl">Bounty board</h1>
               <p className="mt-3 max-w-xl text-sm leading-6">
-                Paid community work across events, integrations, creative tasks, research, and operations.
+                Paid community work on {chainMeta.label} across events, integrations, creative tasks, research, and operations.
               </p>
               <button
                 type="button"
@@ -246,7 +254,7 @@ export default function Bounties() {
               </button>
               <div className="mt-5 grid max-w-md grid-cols-2 gap-3">
                 <div className="rounded-lg border bg-background/40 p-3">
-                  <p className="font-display text-2xl font-bold">{bounties.filter((b) => b.status === 'open').length}</p>
+                  <p className="font-display text-2xl font-bold">{activeChainBounties.filter((b) => b.status === 'open').length}</p>
                   <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Open bounties</p>
                 </div>
                 <div className="rounded-lg border bg-background/40 p-3">

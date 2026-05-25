@@ -23,6 +23,7 @@ import { listMembershipsForWallet } from "@/lib/memberships";
 import { useCommunities } from "@/hooks/useCommunities";
 import { CHAINS } from "@/lib/chain";
 import { useSeo } from "@/lib/seo";
+import { useChain } from "@/hooks/useChain";
 import { getBountyStatsForCommunity, getOpenBountiesForCommunity } from "@/lib/bounties";
 import {
   confirmStellarTransaction,
@@ -43,6 +44,7 @@ import {
 } from "@/lib/stellarSettlements";
 
 export default function Profile() {
+  const { chainMeta } = useChain();
   useSeo({
     title: "Your Baraza profile",
     description: "Your community memberships, account, and contribution history on Baraza.",
@@ -187,12 +189,12 @@ export default function Profile() {
             <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl">
               <Wallet className="h-7 w-7" />
             </div>
-            <h1 className="font-display text-2xl font-bold">Connect your Solana account</h1>
+            <h1 className="font-display text-2xl font-bold">{chainMeta.accountCta}</h1>
             <p className="mt-3 text-sm">
               Your profile shows your memberships, voting history, and credentials across every chama you join.
             </p>
             <button onClick={() => setVisible(true)} className="btn-warm mt-6 inline-flex items-center gap-2 text-sm">
-              Connect Solana
+              Connect {chainMeta.label}
             </button>
           </div>
         </section>
@@ -419,9 +421,7 @@ export default function Profile() {
 
                 {myMemberships.length > 0 ? (
                   <div className="space-y-3">
-                    {myMemberships.map(({ record, community }) => {
-                      const chainMeta = CHAINS[community.chain ?? 'solana'];
-                      return (
+                    {myMemberships.map(({ record, community }) => (
                         <Link
                           key={community.id}
                           to={`/dashboard/${community.id}`}
@@ -456,8 +456,7 @@ export default function Profile() {
                           </div>
                           <ArrowRight className="h-4 w-4 shrink-0" />
                         </Link>
-                      );
-                    })}
+                    ))}
                   </div>
                 ) : (
                   <div className="rounded-lg border border-dashed p-8 text-center">

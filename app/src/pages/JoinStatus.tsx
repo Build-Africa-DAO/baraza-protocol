@@ -21,6 +21,7 @@ import {
   type PaymentOrderStatus,
 } from "@/lib/payments";
 import { recordActiveMembership } from "@/lib/memberships";
+import { useChain } from "@/hooks/useChain";
 
 interface DisplayStep {
   code: string;
@@ -28,12 +29,14 @@ interface DisplayStep {
   minStatus: PaymentOrderStatus;
 }
 
-const SHARED_DISPLAY_STEPS: DisplayStep[] = [
-  { code: "mint-queued", label: "Preparing your membership credential", minStatus: "MINT_QUEUED" },
-  { code: "mint-submitted", label: "Submitting to Solana", minStatus: "MINT_SUBMITTED" },
-  { code: "indexer-confirmed", label: "Membership verified", minStatus: "INDEXER_CONFIRMED" },
-  { code: "reconciled", label: "Active member", minStatus: "RECONCILED" },
-];
+function getDisplaySteps(railLabel: string): DisplayStep[] {
+  return [
+    { code: "mint-queued", label: "Preparing your membership credential", minStatus: "MINT_QUEUED" },
+    { code: "mint-submitted", label: `Submitting to ${railLabel}`, minStatus: "MINT_SUBMITTED" },
+    { code: "indexer-confirmed", label: "Membership verified", minStatus: "INDEXER_CONFIRMED" },
+    { code: "reconciled", label: "Active member", minStatus: "RECONCILED" },
+  ];
+}
 
 const POLL_INTERVAL_MS = 2_500;
 const MOCK_ADVANCE_INTERVAL_MS = 1_800;
@@ -67,6 +70,7 @@ export default function JoinStatus() {
   const [params] = useSearchParams();
   const { community } = useCommunity(id);
   const { publicKey } = useWallet();
+  const { chainMeta } = useChain();
   const orderId = params.get("orderId") ?? "";
   const activationSecret = params.get("activationSecret") ?? "";
   const rail = params.get("rail") ?? (orderId.startsWith("ord_stellar_") || orderId.startsWith("ord_local_stellar_") ? "stellar" : "mpesa");
@@ -188,12 +192,12 @@ export default function JoinStatus() {
             { code: "payment-confirmed", label: "Payment received - activating membership", minStatus: "PAYMENT_CONFIRMED" },
           ];
 
-      return [...paymentSteps, ...SHARED_DISPLAY_STEPS].map((step) => ({
+      return [...paymentSteps, ...getDisplaySteps(chainMeta.label)].map((step) => ({
         ...step,
         state: deriveStepState(step.minStatus, status),
       }));
     },
-    [isStellarRail, status],
+    [chainMeta.label, isStellarRail, status],
   );
 
   const isFailed = isFailureStatus(status);
@@ -286,7 +290,7 @@ export default function JoinStatus() {
                 {!publicKey && isComplete && (
                   <div className="rounded-lg border p-5">
                     <p className="text-sm leading-6">
-                      Connect your Solana account to bind this membership to your account.
+                      {chainMeta.accountCta} to bind this membership to your account.
                     </p>
                   </div>
                 )}

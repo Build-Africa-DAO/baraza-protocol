@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Grid2X2, List, Search, PlusCircle, SlidersHorizontal } from "lucide-react";
 import Layout from "@/components/Layout";
@@ -9,6 +9,7 @@ import { useCommunities } from "@/hooks/useCommunities";
 import CommunityBanner from "@/components/CommunityBanner";
 import { CHAINS, type Chain } from "@/lib/chain";
 import { useSeo } from "@/lib/seo";
+import { useChain } from "@/hooks/useChain";
 
 type ChainFilter = "all" | Chain;
 
@@ -43,11 +44,28 @@ export default function Communities() {
     path: "/communities",
   });
   const { communities, isLoading, error } = useCommunities();
+  const { chain } = useChain();
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState(() => searchParams.get("q") ?? "");
   const [typeFilter, setTypeFilter] = useState("all");
-  const [chainFilter, setChainFilter] = useState<ChainFilter>("all");
+  const [chainFilter, setChainFilter] = useState<ChainFilter>(() => {
+    const rail = searchParams.get("rail");
+    if (rail === "all") return "all";
+    return rail && rail in CHAINS ? (rail as Chain) : chain;
+  });
   const [layout, setLayout] = useState<"grid" | "list">("grid");
+
+  useEffect(() => {
+    const rail = searchParams.get("rail");
+    if (!rail) setChainFilter(chain);
+  }, [chain, searchParams]);
+
+  const updateChainFilter = (next: ChainFilter) => {
+    setChainFilter(next);
+    const params = new URLSearchParams(searchParams);
+    params.set("rail", next);
+    setSearchParams(params, { replace: true });
+  };
 
   const filtered = communities.filter((c) => {
     const matchesSearch =
@@ -95,7 +113,7 @@ export default function Communities() {
                 <button
                   key={option.value}
                   type="button"
-                  onClick={() => setChainFilter(option.value)}
+                  onClick={() => updateChainFilter(option.value)}
                   aria-pressed={active}
                   className={cn(
                     "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2",

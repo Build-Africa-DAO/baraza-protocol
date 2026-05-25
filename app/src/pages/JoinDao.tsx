@@ -19,6 +19,7 @@ import { formatKSh } from "@/lib/utils";
 import { normaliseKenyanPhone } from "@/lib/phone";
 import CommunityBanner from "@/components/CommunityBanner";
 import { useSeo } from "@/lib/seo";
+import { useChain } from "@/hooks/useChain";
 
 const joinSteps = [
   { label: "Invite opened", state: "current" },
@@ -77,6 +78,7 @@ function generateLocalOrderId(): string {
 export default function JoinDao() {
   const { id } = useParams<{ id: string }>();
   const { community } = useCommunity(id);
+  const { chainMeta } = useChain();
   useSeo({
     title: community ? `Join ${community.name}` : "Join a chama",
     description: "Verify your phone, pay membership dues via M-Pesa, and activate your membership.",
@@ -232,7 +234,7 @@ export default function JoinDao() {
                       {community?.name ?? "Chama"}
                     </h1>
                     <p className="mt-2 max-w-xl text-sm leading-6">
-                      Pay dues through M-Pesa or Stellar, then connect a Solana account to receive your membership record.
+                      Pay dues through M-Pesa or Stellar, then connect your {chainMeta.label} account to receive your membership record.
                     </p>
                   </div>
                   <div className="w-full rounded-lg border px-4 py-3 md:w-auto md:text-right">
@@ -352,12 +354,12 @@ export default function JoinDao() {
                       <Wallet className="h-5 w-5" />
                     </div>
                     <div>
-                      <h2 className="font-display text-base font-semibold">Solana account</h2>
+                      <h2 className="font-display text-base font-semibold">{chainMeta.label} account</h2>
                       <p className="text-xs">Optional account path</p>
                     </div>
                   </div>
                   <p className="text-sm leading-6">
-                    Connect a Solana account for credentials and voting.
+                    Connect your {chainMeta.label} account for credentials and voting.
                   </p>
                   <button
                     type="button"
@@ -373,7 +375,7 @@ export default function JoinDao() {
                     className="btn-ghost mt-5 w-full justify-center gap-2 py-3 text-sm font-bold"
                   >
                     <Wallet className="h-4 w-4" />
-                    {connecting ? "Connecting..." : connected ? "Pay from connected Solana account" : "Connect your Solana account"}
+                    {connecting ? "Connecting..." : connected ? `Pay from connected ${chainMeta.label} account` : chainMeta.accountCta}
                   </button>
                   <Link to="/profile" className="mt-3 inline-flex text-xs font-semibold">
                     Manage linked Stellar account

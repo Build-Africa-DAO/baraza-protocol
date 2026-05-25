@@ -11,6 +11,7 @@ import { DEFAULT_GOVERNANCE } from '@/lib/constants';
 import { useSeo } from '@/lib/seo';
 import { useCreateDecision } from '@/hooks/useBarazaData';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useChain } from '@/hooks/useChain';
 
 const CreateDecision: React.FC = () => {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ const CreateDecision: React.FC = () => {
   const { requireWallet, isReady } = useWalletGuard({ action: 'submit governance proposals' });
   const { toast } = useToast();
   const { publicKey } = useWallet();
+  const { chainMeta } = useChain();
   const { create: createDecision } = useCreateDecision();
   const [form, setForm] = useState({
     title: '',
@@ -269,7 +271,7 @@ const CreateDecision: React.FC = () => {
               {!isReady ? (
                 <div className="baraza-card p-4 text-center">
                   <p className="text-xs">
-                    Connect your Solana account to submit a proposal
+                    {chainMeta.accountCta} to submit a proposal
                   </p>
                 </div>
               ) : (

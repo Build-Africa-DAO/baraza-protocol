@@ -33,7 +33,11 @@ const CreateCommunity: React.FC = () => {
   const [isCreated, setIsCreated] = useState(false);
   const [createdCommunityId, setCreatedCommunityId] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'mpesa' | 'wallet'>('mpesa');
-  const [walletChain, setWalletChain] = useState<Extract<Chain, 'solana' | 'stellar' | 'base' | 'arbitrum' | 'optimism' | 'celo'>>('solana');
+  const [walletChain, setWalletChain] = useState<Extract<Chain, 'solana' | 'stellar' | 'base' | 'arbitrum' | 'optimism' | 'celo'>>(
+    chain === 'solana' || chain === 'stellar' || chain === 'base' || chain === 'arbitrum' || chain === 'optimism' || chain === 'celo'
+      ? chain
+      : 'solana',
+  );
   const [form, setForm] = useState({
     name: '',
     type: '',
@@ -62,6 +66,12 @@ const CreateCommunity: React.FC = () => {
     form.description.trim() &&
     (paymentMethod === 'wallet' || normalisedPhone !== null)
   );
+
+  React.useEffect(() => {
+    if (chain === 'solana' || chain === 'stellar' || chain === 'base' || chain === 'arbitrum' || chain === 'optimism' || chain === 'celo') {
+      setWalletChain(chain);
+    }
+  }, [chain]);
 
   /**
    * Charge the chama setup fee via the M-Pesa simulator, then create the
