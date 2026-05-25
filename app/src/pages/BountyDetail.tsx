@@ -26,6 +26,8 @@ import {
 import { useCommunities } from '@/hooks/useCommunities';
 import { cn, formatKSh } from '@/lib/utils';
 import { useSeo } from '@/lib/seo';
+import AshaSecurityReview from '@/components/security/AshaSecurityReview';
+import { reviewBounty } from '@/lib/securityReview';
 
 const statusLabel: Record<BountyStatus, string> = {
   open: 'Open',
@@ -144,6 +146,7 @@ export default function BountyDetail() {
 
   if (!isLoading && !bounty) return <BountyNotFound />;
   const canSendWorkUpdate = bounty?.status === 'open' || bounty?.status === 'in_progress';
+  const securityReview = bounty ? reviewBounty(bounty) : null;
 
   return (
     <Layout>
@@ -304,6 +307,8 @@ export default function BountyDetail() {
               </main>
 
               <aside className="space-y-6">
+                {securityReview && <AshaSecurityReview review={securityReview} />}
+
                 <section className="baraza-card p-5">
                   <h2 className="font-display text-lg font-semibold">Bounty details</h2>
                   <div className="mt-4 space-y-3 text-sm">

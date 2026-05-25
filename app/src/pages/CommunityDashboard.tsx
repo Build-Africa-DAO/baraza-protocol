@@ -32,6 +32,8 @@ import { NETWORK_LABEL } from '@/lib/network';
 import { useSeo } from '@/lib/seo';
 import { getBountyStatsForCommunity } from '@/lib/bounties';
 import { isAdminWallet } from '@/lib/access';
+import AshaSecurityReview from '@/components/security/AshaSecurityReview';
+import { reviewCommunity } from '@/lib/securityReview';
 
 // ─── Tab definition ───────────────────────────────────────────────────────────
 
@@ -242,6 +244,7 @@ const CommunityDashboard: React.FC = () => {
   const bountyStats = getBountyStatsForCommunity(community.id);
   const currentTab = TABS.find((t) => t.key === activeTab);
   const canPostBounties = isMember || isAdminWallet(publicKey?.toBase58());
+  const securityReview = reviewCommunity(community);
 
   return (
     <Layout>
@@ -415,6 +418,8 @@ const CommunityDashboard: React.FC = () => {
                       )}
                     </div>
                   </div>
+
+                  <AshaSecurityReview review={securityReview} compact />
 
                   <BountyBoard communityId={community.id} communityName={community.name} compact />
 

@@ -11,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { STAGE_META, inferStage } from "@/lib/proposalStatus";
 import CommunityBanner from "@/components/CommunityBanner";
 import { useSeo } from "@/lib/seo";
+import AshaSecurityReview from "@/components/security/AshaSecurityReview";
+import { reviewProposal } from "@/lib/securityReview";
 
 export default function ProposalDetail() {
   const { id, decisionId } = useParams<{ id: string; decisionId: string }>();
@@ -70,6 +72,7 @@ export default function ProposalDetail() {
     ? Math.round((proposal.fundingAmount / community.fundBalance) * 1000) / 10
     : null;
   const quorumRequiredPct = community?.quorumPct ?? DEFAULT_GOVERNANCE.quorumPct;
+  const securityReview = reviewProposal(proposal, community);
 
   const handleVote = (vote: boolean) => async () => {
     await requireWallet(async () => {
@@ -176,6 +179,8 @@ export default function ProposalDetail() {
             </main>
 
             <aside className="space-y-6">
+              <AshaSecurityReview review={securityReview} />
+
               <div className="baraza-card p-5">
                 <h3 className="font-mono text-xs uppercase tracking-widest">Proposal activity</h3>
                 <div className="mt-5 space-y-4 border-l pl-5">

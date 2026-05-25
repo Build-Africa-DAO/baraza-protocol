@@ -25,6 +25,7 @@ const INITIAL_MESSAGES: Message[] = [
 const QUICK_REPLIES = [
   'How do I create a group?',
   'Help me plan my chama',
+  'Run a security review',
   'How does voting work?',
   'How are funds managed?',
 ];
@@ -86,9 +87,9 @@ const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
       'A Chama is a traditional Kenyan group savings model where members pool money regularly and share it in rotation or use it for group investments. Baraza digitises the Chama - making it transparent, governed by votes, and accessible from any phone.',
   },
   {
-    keywords: ['security', 'safe', 'trust', 'secure', 'hack'],
+    keywords: ['security', 'safe', 'trust', 'secure', 'hack', 'vet', 'review', 'risk'],
     reply:
-      "Baraza requires clear account approval for sensitive actions, so no one can act on your behalf without consent. Fund releases require member voting, adding a second layer of protection.",
+      'Asha runs an AI-assisted security review on group rules, bounties, proposals, and treasury releases. It checks for unclear dues, weak voting rules, expired tasks, large fund requests, and missing member records. Asha can flag risk, but members and admins still make the final decision.',
   },
   {
     keywords: ['hello', 'hi', 'habari', 'hey', 'hola', 'sasa'],

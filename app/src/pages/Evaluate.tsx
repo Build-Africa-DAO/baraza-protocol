@@ -6,6 +6,7 @@ import {
   ClipboardCheck,
   Landmark,
   ShieldCheck,
+  Sparkles,
   Users,
   Vote,
 } from "lucide-react";
@@ -42,6 +43,13 @@ const scoreRows = [
   ["High risk", "0-1 checks passed", "Do not collect dues or activate membership yet."],
 ];
 
+const aiReviewRows = [
+  ["Community rules", "Checks dues, quorum, approval threshold, voting period, and visible treasury records."],
+  ["Bounties", "Flags unclear briefs, expired deadlines, missing KES reward, and closed tasks."],
+  ["Proposals", "Reviews funding amount, treasury impact, voting window, quorum, and member participation."],
+  ["Treasury releases", "Keeps approved votes and payment records together for member review."],
+];
+
 export default function Evaluate() {
   useSeo({
     title: "Evaluate a group before you join",
@@ -65,6 +73,7 @@ export default function Evaluate() {
             <p className="mt-5 max-w-2xl text-base leading-7 md:text-lg md:leading-8">
               Use this checklist to compare communities, prepare a new group, or decide what
               needs to be fixed before treasury deposits, votes, and membership activation go live.
+              Asha adds an AI-assisted security review on top of the same rules inside the app.
             </p>
           </div>
 
@@ -114,6 +123,29 @@ export default function Evaluate() {
               </div>
             </section>
           </div>
+
+          <section className="mt-8 baraza-card p-6">
+            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="mb-2 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wider">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Asha AI security layer
+                </div>
+                <h2 className="font-display text-2xl font-bold">Vetting before members trust a decision</h2>
+              </div>
+              <span className="rounded-lg border px-3 py-2 text-xs font-semibold text-muted-foreground">
+                Review aid, not final approval
+              </span>
+            </div>
+            <div className="grid gap-3 md:grid-cols-4">
+              {aiReviewRows.map(([label, detail]) => (
+                <article key={label} className="rounded-lg border p-4">
+                  <p className="font-display text-sm font-bold">{label}</p>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{detail}</p>
+                </article>
+              ))}
+            </div>
+          </section>
 
           <div className="mt-8 rounded-lg border p-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
