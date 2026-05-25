@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import {
   Users, TrendingUp, Vote, History, PlusCircle, CreditCard,
   ArrowLeft, Calendar, ShieldCheck, ReceiptText,
@@ -65,6 +65,13 @@ const TABS: TabDef[] = [
   { key: 'settings',     label: 'Settings',             icon: Settings },
 ];
 
+const DASHBOARD_TAB_KEYS = new Set<DashboardTab>(TABS.map((tab) => tab.key));
+
+function getTabFromSearch(searchParams: URLSearchParams): DashboardTab {
+  const tab = searchParams.get('tab') as DashboardTab | null;
+  return tab && DASHBOARD_TAB_KEYS.has(tab) ? tab : 'overview';
+}
+
 // ─── Sidebar nav ─────────────────────────────────────────────────────────────
 
 function SidebarNav({
@@ -102,10 +109,13 @@ function SidebarNav({
             {items.map((tab) => {
               const Icon = tab.icon;
               const isActive = active === tab.key;
+              const to = tab.key === 'overview'
+                ? `/dashboard/${communityId}`
+                : `/dashboard/${communityId}?tab=${tab.key}`;
               return (
-                <button
+                <Link
                   key={tab.key}
-                  type="button"
+                  to={to}
                   onClick={() => onChange(tab.key)}
                   className={cn(
                     'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-all',
@@ -117,7 +127,7 @@ function SidebarNav({
                   <Icon className="h-4 w-4 flex-shrink-0" />
                   <span className="truncate">{tab.label}</span>
                   {isActive && <ChevronRight className="ml-auto h-3.5 w-3.5 opacity-50" />}
-                </button>
+                </Link>
               );
             })}
           </div>
@@ -152,9 +162,10 @@ function SidebarNav({
 
 const CommunityDashboard: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { publicKey } = useWallet();
   const { connection } = useConnection();
-  const [activeTab, setActiveTab] = useState<DashboardTab>('overview');
+  const [activeTab, setActiveTab] = useState<DashboardTab>(() => getTabFromSearch(searchParams));
   const [isMember, setIsMember] = useState(false);
   const [walletSol, setWalletSol] = useState<number | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -183,10 +194,21 @@ const CommunityDashboard: React.FC = () => {
     setIsMember(!!getActiveMembership(community.id, publicKey.toBase58()));
   }, [community, publicKey]);
 
-  // Close sidebar when tab changes (mobile)
+  useEffect(() => {
+    setActiveTab(getTabFromSearch(searchParams));
+  }, [searchParams]);
+
+  // Keep dashboard sections linkable while closing the mobile menu after selection.
   const handleTabChange = (tab: DashboardTab) => {
     setActiveTab(tab);
     setSidebarOpen(false);
+    const nextParams = new URLSearchParams(searchParams);
+    if (tab === 'overview') {
+      nextParams.delete('tab');
+    } else {
+      nextParams.set('tab', tab);
+    }
+    setSearchParams(nextParams);
   };
 
   if (isLoading) {
