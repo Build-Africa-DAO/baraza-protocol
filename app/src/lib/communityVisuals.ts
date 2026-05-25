@@ -2,7 +2,7 @@ export const COMMUNITY_BANNER_IMAGES: Record<string, string> = {
   savings:     "https://images.unsplash.com/photo-1531206715517-5c0ba140b2b8?auto=format&fit=crop&w=1400&q=80",
   cooperative: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=1400&q=80",
   professional:"https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=1400&q=80",
-  housing:     "https://images.unsplash.com/photo-1599413987323-b2b8b88de99e?auto=format&fit=crop&w=1400&q=80",
+  housing:     "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1400&q=80",
   welfare:     "https://images.unsplash.com/photo-1504450874802-0ba2bcd9b5ae?auto=format&fit=crop&w=1400&q=80",
   investment:  "https://images.unsplash.com/photo-1552799446-159ba9523315?auto=format&fit=crop&w=1400&q=80",
   other:       "https://images.unsplash.com/photo-1528360983277-13d401cdc186?auto=format&fit=crop&w=1400&q=80",
@@ -71,7 +71,7 @@ const COMMUNITY_GALLERIES: Record<string, CommunityGalleryItem[]> = {
   ],
   housing: [
     {
-      src: "https://images.unsplash.com/photo-1599413987323-b2b8b88de99e?auto=format&fit=crop&w=1200&q=80",
+      src: "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80",
       title: "African architecture",
       caption: "From the stone houses of Lamu to modern Nairobi — housing is a communal milestone.",
     },

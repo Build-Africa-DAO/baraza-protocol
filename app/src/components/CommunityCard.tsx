@@ -48,12 +48,13 @@ export default function CommunityCard({
           "transition-all duration-300",
           "hover:border-primary/30 hover:shadow-[0_0_24px_hsl(22_100%_52%/0.18)]",
         )}>
-          <div className={cn("relative h-28 overflow-hidden", isList && "sm:h-full sm:min-h-56 sm:w-64 sm:shrink-0")}>
+          <div className={cn("relative h-28 overflow-hidden bg-gradient-to-br from-primary/30 to-accent/20", isList && "sm:h-full sm:min-h-56 sm:w-64 sm:shrink-0")}>
             <img
               src={getCommunityBannerImage(type)}
               alt=""
               className="h-full w-full object-cover"
               loading="lazy"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-card via-card/45 to-transparent" />
             <span
