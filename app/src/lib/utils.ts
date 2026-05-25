@@ -9,6 +9,14 @@ export function formatKSh(amount: number): string {
   return `KSh ${amount.toLocaleString('en-KE')}`;
 }
 
+export function formatUSD(amount: number): string {
+  return amount.toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+  });
+}
+
 export function truncateAddress(address: string, chars = 4): string {
   return `${address.slice(0, chars)}...${address.slice(-chars)}`;
 }
