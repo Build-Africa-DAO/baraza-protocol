@@ -31,6 +31,7 @@ import { CHAINS } from '@/lib/chain';
 import { NETWORK_LABEL } from '@/lib/network';
 import { useSeo } from '@/lib/seo';
 import { getBountyStatsForCommunity } from '@/lib/bounties';
+import { isAdminWallet } from '@/lib/access';
 
 // ─── Tab definition ───────────────────────────────────────────────────────────
 
@@ -240,6 +241,7 @@ const CommunityDashboard: React.FC = () => {
 
   const bountyStats = getBountyStatsForCommunity(community.id);
   const currentTab = TABS.find((t) => t.key === activeTab);
+  const canPostBounties = isMember || isAdminWallet(publicKey?.toBase58());
 
   return (
     <Layout>
@@ -513,10 +515,16 @@ const CommunityDashboard: React.FC = () => {
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <h3 className="font-display text-base font-semibold">Bounty board</h3>
-                    <Link to="/bounties" className="btn-primary text-xs flex items-center gap-1.5 px-3 py-2">
-                      <PlusCircle className="w-3.5 h-3.5" />
-                      Post bounty
-                    </Link>
+                    {canPostBounties ? (
+                      <Link to="/bounties" className="btn-primary text-xs flex items-center gap-1.5 px-3 py-2">
+                        <PlusCircle className="w-3.5 h-3.5" />
+                        Post bounty
+                      </Link>
+                    ) : (
+                      <span className="rounded-lg border px-3 py-2 text-xs font-semibold text-muted-foreground">
+                        Members only
+                      </span>
+                    )}
                   </div>
                   <BountyBoard communityId={community.id} communityName={community.name} />
                   <div className="premium-glass rounded-xl p-5">

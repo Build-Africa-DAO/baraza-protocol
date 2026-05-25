@@ -6,11 +6,9 @@ import Layout from "@/components/Layout";
 import { truncateAddress } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useSeo } from "@/lib/seo";
+import { getAdminWallets, isAdminWallet } from "@/lib/access";
 
-const ADMIN_WALLETS = (import.meta.env.VITE_ADMIN_WALLETS ?? "")
-  .split(",")
-  .map((s: string) => s.trim())
-  .filter(Boolean);
+const ADMIN_WALLETS = getAdminWallets();
 
 const paymentOrders = [
   ["ORD-8942A", "KES 15,000", "PAYMENT_PENDING", "2026-05-13 08:02 UTC", "Reconcile proof"],
@@ -45,11 +43,7 @@ export default function AdminReconciliation() {
   const [searchTerm, setSearchTerm] = useState("");
 
   const allowlistConfigured = ADMIN_WALLETS.length > 0;
-  const isAdmin =
-    connected &&
-    !!publicKey &&
-    allowlistConfigured &&
-    ADMIN_WALLETS.includes(publicKey.toBase58());
+  const isAdmin = connected && isAdminWallet(publicKey?.toBase58(), ADMIN_WALLETS);
 
   const notifyNotWired = (action: string) =>
     toast({

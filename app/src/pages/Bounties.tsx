@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, BriefcaseBusiness, CalendarDays, Columns3, LayoutGrid, List, PlusCircle, Search, Send, SlidersHorizontal, Trophy } from 'lucide-react';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import Layout from '@/components/Layout';
 import CommunityBanner from '@/components/CommunityBanner';
 import {
@@ -15,6 +17,7 @@ import {
 import { useCommunities } from '@/hooks/useCommunities';
 import { formatKSh, cn } from '@/lib/utils';
 import { useSeo } from '@/lib/seo';
+import { bountyCreateAccessMessage, getBountyCreateAccess } from '@/lib/access';
 
 const STATUS_OPTIONS: { value: BountyStatus | 'all'; label: string }[] = [
   { value: 'all', label: 'All bounties' },
@@ -59,6 +62,8 @@ export default function Bounties() {
   });
 
   const { communities } = useCommunities();
+  const { publicKey, connected } = useWallet();
+  const { setVisible } = useWalletModal();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<BountyStatus | 'all'>('open');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -103,6 +108,11 @@ export default function Bounties() {
     () => new Map(communities.map((community) => [community.id, community])),
     [communities],
   );
+  const walletAddress = publicKey?.toBase58() ?? null;
+  const selectedBountyAccess = useMemo(
+    () => getBountyCreateAccess(newBounty.communityId || null, walletAddress),
+    [newBounty.communityId, walletAddress],
+  );
 
   const filtered = bounties.filter((bounty) => {
     const community = communityById.get(bounty.communityId);
@@ -125,6 +135,11 @@ export default function Bounties() {
 
   const handleCreateBounty = async () => {
     const community = communityById.get(newBounty.communityId);
+    const access = getBountyCreateAccess(newBounty.communityId, walletAddress);
+    if (!access.allowed) {
+      setFormMessage(bountyCreateAccessMessage(access.reason));
+      return;
+    }
     try {
       await createBountyRecordAsync({
         communityId: newBounty.communityId,
@@ -187,6 +202,10 @@ export default function Bounties() {
               <button
                 type="button"
                 onClick={() => {
+                  if (!connected || !publicKey) {
+                    setVisible(true);
+                    return;
+                  }
                   setShowPostForm((value) => !value);
                   setFormMessage(null);
                 }}
@@ -215,7 +234,10 @@ export default function Bounties() {
                   <label className="mb-2 block text-xs font-semibold">Community</label>
                   <select
                     value={newBounty.communityId}
-                    onChange={(event) => setNewBounty((current) => ({ ...current, communityId: event.target.value }))}
+                    onChange={(event) => {
+                      setNewBounty((current) => ({ ...current, communityId: event.target.value }));
+                      setFormMessage(null);
+                    }}
                     className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none"
                   >
                     <option value="">Select community</option>
@@ -281,10 +303,22 @@ export default function Bounties() {
                   />
                 </div>
               </div>
+              <div className="mt-4 rounded-lg border px-4 py-3 text-sm">
+                {selectedBountyAccess.allowed ? (
+                  <span>
+                    {selectedBountyAccess.isAdmin
+                      ? 'Admin account verified. You can post bounties for this community.'
+                      : 'Active member verified. You can post bounties for this community.'}
+                  </span>
+                ) : (
+                  <span>{bountyCreateAccessMessage(selectedBountyAccess.reason)}</span>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={() => void handleCreateBounty()}
-                className="btn-primary mt-4 gap-2 px-4 py-2 text-sm"
+                disabled={!selectedBountyAccess.allowed}
+                className="btn-primary mt-4 gap-2 px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <PlusCircle className="h-4 w-4" />
                 Publish bounty
