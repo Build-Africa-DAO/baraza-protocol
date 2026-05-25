@@ -194,8 +194,7 @@ export default function HeroSection() {
             </h1>
 
             <p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
-              A clean operating platform for DAOs, chamas, and SACCOs:
-              collect dues, vote on proposals, and keep the treasury visible.
+              Run your DAO or chama on-chain — collect dues in KES, vote on proposals, and keep the treasury visible to every member.
             </p>
 
             <div className="mt-6 flex flex-col gap-2 sm:mt-8 sm:flex-row sm:gap-3 min-[860px]:flex-col min-[1040px]:flex-row">

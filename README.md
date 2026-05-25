@@ -69,10 +69,22 @@ Roadmap features must not block the MVP loop or be treated as acceptance criteri
 
 ```text
 app/
-  src/           React UI, routes, hooks, and Solana client logic
+  src/           React UI, routes, hooks, and Solana/EVM client logic
   api/           Vercel serverless API routes deployed with the app root
   docs/          product, architecture, deployment, and contract notes
   package.json   app scripts and dependencies
+programs/
+  community_registry/src/lib.rs   community identity PDA + admin handoff
+  governance/src/lib.rs           proposals, votes, timelock, veto
+  membership/src/lib.rs           tiers, member records, payment activation
+  payment_attestation/src/lib.rs  off-chain payment bridge, attester key
+  treasury_vault/src/lib.rs       per-community SOL vault, deposit/release
+contracts/
+  evm/           Solidity DAO contracts (Token, Auction, Governor, Treasury)
+                 deployed on Ethereum, Base, Optimism, Sepolia, and more
+  solana/        .gitkeep — canonical chain is programs/ above
+  stellar/       .gitkeep — Stellar rails handled by app/api/ routes
+Anchor.toml      workspace build config for the five Solana programs
 vercel.json      root deploy config for Vercel
 push-baraza.bat  simple git push helper
 ```
@@ -106,10 +118,12 @@ Working today:
 
 Current prototype guardrails:
 
-- Proposal creation and vote actions still need real Solana program instructions before they are production-grade.
+- All five Anchor programs are implemented and pass `anchor build`. CPI wiring between programs (membership → registry member count, governance → treasury release, governance → membership action) is still TODO and gated by program deployment.
+- Proposal creation and vote actions are wired to the on-chain program interface but show a "preview mode" toast until the programs are deployed to devnet/mainnet.
 - Unknown community IDs render a not-found state instead of falling back to the first mock community.
 - The dashboard "New Decision" link now targets the registered route `/dashboard/:id/decisions/create`.
 - New community success is ready to navigate by created community ID once persistence returns a real record.
+- EVM chains (Ethereum, Base, Optimism, Arbitrum, Celo) are selectable in the chain picker. Read operations use the deployed contract addresses in `contracts/evm/addresses/`. Full wallet signing requires wagmi to be added to `app/package.json`.
 
 Before production readiness, the app still needs real provider webhooks, deployed Solana program instructions, production Supabase migrations, and reviewer-verified Vercel environment variables.
 
@@ -146,15 +160,21 @@ Common variables:
 
 | Variable | Required | Description |
 | --- | --- | --- |
-| `VITE_RPC_ENDPOINT` | No | Custom Solana RPC URL |
-| `VITE_PROGRAM_ID` | No | Baraza on-chain program ID |
+| `VITE_SOLANA_NETWORK` | No | `devnet` or `mainnet` (default: `devnet`) |
+| `VITE_RPC_ENDPOINT` | No | Custom Solana RPC URL (Helius/QuickNode) |
+| `VITE_PROGRAM_ID` | No | Override Baraza program ID |
 | `VITE_SUPABASE_URL` | No | Supabase URL for off-chain metadata/state |
-| `VITE_SUPABASE_ANON_KEY` | No | Supabase anon key |
+| `VITE_SUPABASE_ANON_KEY` | No | Supabase anon public key |
 | `SUPABASE_URL` | Yes for server persistence | Supabase project URL for API routes |
 | `SUPABASE_SERVICE_ROLE_KEY` | Yes for server persistence | Server-only Supabase service role key |
+| `CRON_SECRET` | Yes for cron | Secret for `/api/cron/promote-orders` auth header |
+| `VITE_STELLAR_NETWORK` | No | `testnet` or `mainnet` |
+| `VITE_STELLAR_HORIZON_URL` | No | Horizon URL for client-side verification |
+| `VITE_STELLAR_NETWORK_PASSPHRASE` | No | Stellar network passphrase |
 | `STELLAR_NETWORK` | No | Server-side Stellar network, usually `testnet` for review |
 | `STELLAR_HORIZON_URL` | No | Server-side Horizon URL |
 | `STELLAR_TREASURY_ACCOUNT` | Recommended | Stellar account that verified XLM payments must reach |
+| `VITE_ADMIN_WALLETS` | No | Comma-separated Solana pubkeys allowed to view `/admin` |
 
 Never expose payment provider secrets, webhook secrets, private keys, or admin credentials in frontend code.
 
@@ -180,8 +200,12 @@ and serves `app/dist`.
 
 - Older duplicate app trees and export artifacts were removed so this repo reflects the actual deployment target.
 - The repository has one README: this root file is canonical for setup and scope.
-- The app is React 18, TypeScript, Vite, Tailwind, Radix UI, and Solana wallet adapter.
-- The app currently uses mock community/proposal/member data.
-- Smart contract integration is still scaffolded around mock data in `app/src/hooks/useBarazaContract.ts`.
-- Anchor program integration still needs real instructions, IDL, PDAs, and tests.
+- The app is React 18, TypeScript, Vite, Tailwind, Radix UI, Solana wallet adapter, and Stellar SDK.
+- The app renders from Supabase when env vars are configured; falls back to local seed data for dev/review.
+- All five Anchor programs are fully implemented with real instructions, typed IDLs, and PDA derivation.
+  See `programs/` and the generated TypeScript types in `app/src/lib/programs/idl/`.
+- `useBarazaContract.ts` blocks write actions with a "preview mode" toast until programs are deployed;
+  read paths (`fetchTreasuryBalance`, `fetchVoteState`) use a real RPC connection.
+- EVM contracts in `contracts/evm/` are deployed on Ethereum, Base, Optimism, Arbitrum, Sepolia, and more.
+  Address files live in `contracts/evm/addresses/<chainId>.json`.
 - Roadmap items like AI bounties, auctions, cross-chain bridging, Stellar disbursements, and advanced treasury execution should not block the MVP loop.

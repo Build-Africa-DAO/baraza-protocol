@@ -1,4 +1,8 @@
 export { BarazaChainClient, createBarazaClient, createBarazaReadClient } from './client';
+export { BarazaEvmClient, createBarazaEvmReadClient, getPublicRpc } from './evmClient';
+export type { EvmCommunityInfo } from './evmClient';
+export { getEvmAddresses, SUPPORTED_EVM_CHAIN_IDS, CHAIN_NAME_TO_ID } from './evmAddresses';
+export type { EvmAddresses } from './evmAddresses';
 export type { VoteSupportArg } from './client';
 export { IDL as COMMUNITY_REGISTRY_IDL } from './idl/community_registry';
 export { IDL as GOVERNANCE_IDL } from './idl/governance';

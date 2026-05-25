@@ -64,7 +64,7 @@ describe('ChainSelector — open state', () => {
     renderSelector();
     fireEvent.click(screen.getByRole('button', { name: /solana selected/i }));
 
-    for (const name of ['base', 'arbitrum', 'optimism', 'celo']) {
+    for (const name of ['ethereum', 'base', 'arbitrum', 'optimism', 'polygon', 'celo']) {
       const option = screen.getByRole('option', { name: new RegExp(`^${name}$`, 'i') });
       expect(option).not.toBeDisabled();
     }
@@ -73,12 +73,10 @@ describe('ChainSelector — open state', () => {
     expect(screen.getByRole('button', { name: /base selected/i })).toBeInTheDocument();
   });
 
-  it('disables unsupported EVM chains with integration-pending labels', () => {
+  it('disables unsupported rails with integration-pending labels', () => {
     renderSelector();
     fireEvent.click(screen.getByRole('button', { name: /solana selected/i }));
-    for (const name of ['ethereum', 'polygon', 'bnb chain']) {
-      expect(screen.getByRole('option', { name: new RegExp(`${name}.*integration pending`, 'i') })).toBeDisabled();
-    }
+    expect(screen.getByRole('option', { name: /bnb chain.*integration pending/i })).toBeDisabled();
   });
 
   it('closes on Escape', () => {

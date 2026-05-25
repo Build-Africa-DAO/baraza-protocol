@@ -20,7 +20,7 @@ const CHAIN_FILTERS: { value: ChainFilter; label: string; dot?: string }[] = [
 ];
 
 function emptyChainTitle(chainFilter: ChainFilter): string {
-  if (chainFilter === "all") return "No groups match that filter yet";
+  if (chainFilter === "all") return "No DAOs or chamas match that filter yet";
   if (chainFilter === "solana") return "No Solana DAOs or chamas match that filter";
   return `No ${CHAINS[chainFilter].label} DAOs or chamas yet`;
 }
@@ -39,7 +39,7 @@ export default function Communities() {
   useSeo({
     title: "Browse DAOs",
     description:
-      "Discover chamas, SACCOs, welfare groups, and co-operatives on Baraza. Filter by community type and treasury rail to find a group to join or evaluate.",
+      "Discover DAOs, chamas, SACCOs, and co-operatives on Baraza. Filter by community type and treasury rail to find a group to join or evaluate.",
     path: "/communities",
   });
   const { communities, isLoading, error } = useCommunities();

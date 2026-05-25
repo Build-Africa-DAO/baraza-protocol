@@ -29,6 +29,7 @@ pub mod treasury_vault {
         let vault = &mut ctx.accounts.vault;
         vault.community = ctx.accounts.community.key();
         vault.admin_authority = ctx.accounts.admin.key();
+        vault.pending_admin = None;
         vault.status = VaultStatus::Active;
         vault.withdrawals_enabled = false;
         vault.total_sol_deposited = 0;
@@ -210,18 +211,50 @@ pub mod treasury_vault {
         Ok(())
     }
 
-    pub fn transfer_admin(ctx: Context<MutateVault>, new_admin: Pubkey) -> Result<()> {
+    /// Step 1 of a safe two-step admin transfer. Nominates a successor without
+    /// immediately relinquishing control. The nominee must call `accept_admin`
+    /// to complete the handoff. Use `cancel_admin_nomination` to abort.
+    pub fn nominate_admin(ctx: Context<MutateVault>, new_admin: Pubkey) -> Result<()> {
         let vault = &mut ctx.accounts.vault;
         require!(
             ctx.accounts.admin.key() == vault.admin_authority,
             TreasuryError::Unauthorized
         );
+        vault.pending_admin = Some(new_admin);
+        emit!(AdminNominated {
+            vault: vault.key(),
+            nominee: new_admin,
+        });
+        Ok(())
+    }
+
+    /// Clears a pending admin nomination. Callable only by the current admin.
+    pub fn cancel_admin_nomination(ctx: Context<MutateVault>) -> Result<()> {
+        let vault = &mut ctx.accounts.vault;
+        require!(
+            ctx.accounts.admin.key() == vault.admin_authority,
+            TreasuryError::Unauthorized
+        );
+        vault.pending_admin = None;
+        Ok(())
+    }
+
+    /// Step 2 of a safe admin transfer. Signed by the nominee; completes the
+    /// handoff atomically. Prevents key-loss from a typo in `nominate_admin`.
+    pub fn accept_admin(ctx: Context<AcceptAdmin>) -> Result<()> {
+        let vault = &mut ctx.accounts.vault;
+        let pending = vault.pending_admin.ok_or(TreasuryError::NoPendingAdmin)?;
+        require!(
+            ctx.accounts.nominee.key() == pending,
+            TreasuryError::Unauthorized
+        );
         let previous = vault.admin_authority;
-        vault.admin_authority = new_admin;
+        vault.admin_authority = ctx.accounts.nominee.key();
+        vault.pending_admin = None;
         emit!(AdminTransferred {
             vault: vault.key(),
             previous,
-            current: new_admin,
+            current: ctx.accounts.nominee.key(),
         });
         Ok(())
     }
@@ -233,6 +266,9 @@ pub mod treasury_vault {
 pub struct TreasuryVaultAccount {
     pub community: Pubkey,
     pub admin_authority: Pubkey,
+    /// Pending two-step admin transfer. Set by `nominate_admin`, cleared on
+    /// `accept_admin` or `cancel_admin_nomination`.
+    pub pending_admin: Option<Pubkey>,
     pub status: VaultStatus,
     pub withdrawals_enabled: bool,
     pub total_sol_deposited: u64,
@@ -246,6 +282,7 @@ pub struct TreasuryVaultAccount {
 impl TreasuryVaultAccount {
     pub const SIZE: usize = 32   // community
         + 32                      // admin_authority
+        + (1 + 32)                // pending_admin Option<Pubkey>
         + 1                       // status
         + 1                       // withdrawals_enabled
         + 8 * 4                   // four u64 counters
@@ -328,6 +365,14 @@ pub struct MutateVault<'info> {
     pub admin: Signer<'info>,
 }
 
+#[derive(Accounts)]
+pub struct AcceptAdmin<'info> {
+    #[account(mut)]
+    pub vault: Account<'info, TreasuryVaultAccount>,
+
+    pub nominee: Signer<'info>,
+}
+
 // ─────────────────────── Events ───────────────────────
 
 #[event]
@@ -374,6 +419,12 @@ pub struct VaultStatusChanged {
 }
 
 #[event]
+pub struct AdminNominated {
+    pub vault: Pubkey,
+    pub nominee: Pubkey,
+}
+
+#[event]
 pub struct AdminTransferred {
     pub vault: Pubkey,
     pub previous: Pubkey,
@@ -396,4 +447,6 @@ pub enum TreasuryError {
     WithdrawalsDisabled,
     #[msg("Vault balance is insufficient (would breach rent minimum)")]
     InsufficientBalance,
+    #[msg("No pending admin nomination to accept")]
+    NoPendingAdmin,
 }

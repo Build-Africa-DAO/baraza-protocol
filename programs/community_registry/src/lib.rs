@@ -140,6 +140,9 @@ pub mod community_registry {
             CommunityError::Unauthorized
         );
         community.pending_admin = None;
+        emit!(AdminNominationCanceled {
+            community: community.key(),
+        });
         Ok(())
     }
 
@@ -150,8 +153,10 @@ pub mod community_registry {
             signer == community.admin_authority,
             CommunityError::Unauthorized
         );
+        // Once Closed the community is terminal — no status change is allowed,
+        // including attempts to re-open it.
         require!(
-            status != CommunityStatus::Closed || community.status != CommunityStatus::Closed,
+            community.status != CommunityStatus::Closed,
             CommunityError::CommunityClosed
         );
         community.status = status;
@@ -286,6 +291,11 @@ pub struct AdminTransferred {
 }
 
 #[event]
+pub struct AdminNominationCanceled {
+    pub community: Pubkey,
+}
+
+#[event]
 pub struct CommunityStatusChanged {
     pub community: Pubkey,
     pub status: CommunityStatus,
@@ -316,6 +326,9 @@ pub enum CommunityError {
 // ─────────────────────── Helpers ───────────────────────
 
 fn slug_is_valid(slug: &str) -> bool {
-    slug.bytes()
-        .all(|b| matches!(b, b'a'..=b'z' | b'0'..=b'9' | b'-'))
+    // No leading/trailing hyphen, no consecutive hyphens, only a-z 0-9 -
+    !slug.starts_with('-')
+        && !slug.ends_with('-')
+        && !slug.contains("--")
+        && slug.bytes().all(|b| matches!(b, b'a'..=b'z' | b'0'..=b'9' | b'-'))
 }

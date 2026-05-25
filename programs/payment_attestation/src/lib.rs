@@ -18,6 +18,7 @@ pub mod payment_attestation {
     ) -> Result<()> {
         let config = &mut ctx.accounts.config;
         config.authority = ctx.accounts.authority.key();
+        config.pending_authority = None;
         config.trusted_attester = trusted_attester;
         config.bump = ctx.bumps.config;
         Ok(())
@@ -33,6 +34,48 @@ pub mod payment_attestation {
             PaymentAttestationError::Unauthorized
         );
         config.trusted_attester = trusted_attester;
+        Ok(())
+    }
+
+    /// Step 1: nominate a new authority. The nominee must call `accept_authority`
+    /// to complete the transfer — prevents permanent lock-out from a bad address.
+    pub fn nominate_authority(
+        ctx: Context<MutateConfig>,
+        new_authority: Pubkey,
+    ) -> Result<()> {
+        let config = &mut ctx.accounts.config;
+        require!(
+            config.authority == ctx.accounts.authority.key(),
+            PaymentAttestationError::Unauthorized
+        );
+        config.pending_authority = Some(new_authority);
+        Ok(())
+    }
+
+    /// Cancel a pending authority nomination. Callable only by current authority.
+    pub fn cancel_authority_nomination(ctx: Context<MutateConfig>) -> Result<()> {
+        let config = &mut ctx.accounts.config;
+        require!(
+            config.authority == ctx.accounts.authority.key(),
+            PaymentAttestationError::Unauthorized
+        );
+        config.pending_authority = None;
+        Ok(())
+    }
+
+    /// Step 2: nominee accepts the authority transfer. Signed by the incoming
+    /// authority, not the outgoing one.
+    pub fn accept_authority(ctx: Context<AcceptAuthority>) -> Result<()> {
+        let config = &mut ctx.accounts.config;
+        let pending = config
+            .pending_authority
+            .ok_or(PaymentAttestationError::NoPendingAuthority)?;
+        require!(
+            ctx.accounts.nominee.key() == pending,
+            PaymentAttestationError::Unauthorized
+        );
+        config.authority = ctx.accounts.nominee.key();
+        config.pending_authority = None;
         Ok(())
     }
 
@@ -137,12 +180,17 @@ pub const PROVIDER_ENVIRONMENT_MAX_LEN: usize = 16;
 #[account]
 pub struct PaymentConfigAccount {
     pub authority: Pubkey,
+    /// Pending two-step authority transfer. Cleared on accept or cancel.
+    pub pending_authority: Option<Pubkey>,
     pub trusted_attester: Pubkey,
     pub bump: u8,
 }
 
 impl PaymentConfigAccount {
-    pub const SIZE: usize = 32 + 32 + 1;
+    pub const SIZE: usize = 32        // authority
+        + (1 + 32)                    // pending_authority Option<Pubkey>
+        + 32                          // trusted_attester
+        + 1; // bump
 }
 
 #[account]
@@ -298,6 +346,18 @@ pub struct VoidPaymentAttestation<'info> {
     pub attester: Signer<'info>,
 }
 
+#[derive(Accounts)]
+pub struct AcceptAuthority<'info> {
+    #[account(
+        mut,
+        seeds = [b"payment_config"],
+        bump = config.bump,
+    )]
+    pub config: Account<'info, PaymentConfigAccount>,
+
+    pub nominee: Signer<'info>,
+}
+
 #[event]
 pub struct PaymentAttested {
     pub attestation: Pubkey,
@@ -333,4 +393,6 @@ pub enum PaymentAttestationError {
     InvalidAmount,
     #[msg("Provider environment is invalid")]
     InvalidProviderEnvironment,
+    #[msg("No pending authority nomination to accept")]
+    NoPendingAuthority,
 }

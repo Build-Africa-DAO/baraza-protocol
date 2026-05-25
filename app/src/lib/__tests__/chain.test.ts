@@ -9,23 +9,19 @@ describe('CHAINS metadata', () => {
   });
 
   it('marks supported review rails as enabled', () => {
-    for (const id of ['solana', 'stellar', 'base', 'arbitrum', 'optimism', 'celo'] as const) {
+    for (const id of ['solana', 'stellar', 'ethereum', 'base', 'arbitrum', 'optimism', 'polygon', 'celo'] as const) {
       expect(CHAINS[id].enabled).toBe(true);
     }
-    for (const id of ['ethereum', 'polygon', 'bnb'] as const) {
-      expect(CHAINS[id].enabled).toBe(false);
-      expect(CHAINS[id].comingSoon).toBeTruthy();
-    }
+    expect(CHAINS.bnb.enabled).toBe(false);
+    expect(CHAINS.bnb.comingSoon).toBeTruthy();
   });
 
   it('uses integration-pending labels for disabled chains', () => {
-    for (const id of ['ethereum', 'polygon', 'bnb'] as const) {
-      expect(CHAINS[id].comingSoon).toBe('Integration pending');
-    }
+    expect(CHAINS.bnb.comingSoon).toBe('Integration pending');
   });
 
   it('marks enabled EVM rails as governance-review gated', () => {
-    for (const id of ['base', 'arbitrum', 'optimism', 'celo'] as const) {
+    for (const id of ['ethereum', 'base', 'arbitrum', 'optimism', 'polygon', 'celo'] as const) {
       expect(CHAINS[id].comingSoon).toBe('Governance review');
     }
   });
@@ -73,14 +69,14 @@ describe('readStoredChain', () => {
   });
 
   it('returns stored enabled EVM rails when set', () => {
-    for (const chain of ['base', 'arbitrum', 'optimism', 'celo'] as const) {
+    for (const chain of ['ethereum', 'base', 'arbitrum', 'optimism', 'polygon', 'celo'] as const) {
       writeStoredChain(chain);
       expect(readStoredChain()).toBe(chain);
     }
   });
 
   it('falls back to solana when localStorage holds a garbage value', () => {
-    window.localStorage.setItem('baraza:chain', 'ethereum');
+    window.localStorage.setItem('baraza:chain', 'garbage');
     expect(readStoredChain()).toBe('solana');
   });
 

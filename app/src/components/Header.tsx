@@ -16,7 +16,7 @@ const navLinks = [
   { path: "/profile", label: "Profile" },
 ];
 
-const quickSearches = ["DAO", "SACCO", "chama", "welfare group", "governance"];
+const quickSearches = ["DAO", "chama", "SACCO", "co-operative", "governance"];
 
 interface HeaderProps {
   walletSlot?: ReactNode;

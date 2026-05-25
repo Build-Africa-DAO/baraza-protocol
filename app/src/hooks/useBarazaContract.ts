@@ -191,7 +191,7 @@ export function useBarazaContract(): UseBarazaContractResult {
   const joinCommunity = useCallback(
     async (communityId: string, _feeKES: number): Promise<boolean> => {
       const txId = `join:${communityId}:${publicKey?.toBase58()}`;
-      return blockUnwiredWrite(txId, 'Joining a DAO');
+      return blockUnwiredWrite(txId, 'Joining a group');
     },
     [blockUnwiredWrite, publicKey]
   );
@@ -199,7 +199,7 @@ export function useBarazaContract(): UseBarazaContractResult {
   const createCommunity = useCallback(
     async (name: string, _feeKES: number): Promise<string | null> => {
       const txId = `create:${name}:${publicKey?.toBase58()}`;
-      const success = await blockUnwiredWrite(txId, 'Creating a DAO');
+      const success = await blockUnwiredWrite(txId, 'Creating a group');
       return success ? `community-${Date.now()}` : null;
     },
     [blockUnwiredWrite, publicKey]

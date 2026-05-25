@@ -154,7 +154,7 @@ const CreateCommunity: React.FC = () => {
             ? `${launchFeeLabel} payment received`
             : `Chama launched (simulator offline)`,
           description: charge.persisted
-            ? `Order ${charge.orderId.slice(0, 12)}…  - ${form.name} is live.`
+            ? `Order ${charge.orderId.slice(0, 12)}... ${form.name} is live.`
             : 'Local dev mode - payment skipped, community launched.',
         });
       } catch (err) {
@@ -560,7 +560,7 @@ const CreateCommunity: React.FC = () => {
                   {isPending ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Processing payment…
+                      Processing payment...
                     </>
                   ) : paymentMethod === 'mpesa' ? (
                     `Pay ${formatKSh(DAO_CREATION_FEE_KES)} via M-Pesa`

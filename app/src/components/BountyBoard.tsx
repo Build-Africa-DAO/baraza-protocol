@@ -54,7 +54,11 @@ function readInterest(): Set<string> {
 
 function toggleInterest(bountyId: string): boolean {
   const set = readInterest();
-  set.has(bountyId) ? set.delete(bountyId) : set.add(bountyId);
+  if (set.has(bountyId)) {
+    set.delete(bountyId);
+  } else {
+    set.add(bountyId);
+  }
   localStorage.setItem(INTEREST_KEY, JSON.stringify([...set]));
   return set.has(bountyId);
 }
@@ -93,7 +97,7 @@ function CompactCard({
       <h4 className="text-sm font-bold leading-snug text-foreground">{bounty.title}</h4>
 
       {bounty.assignee && (
-        <p className="mt-1 text-[11px] text-muted-foreground">→ {bounty.assignee}</p>
+        <p className="mt-1 text-[11px] text-muted-foreground">Assigned to {bounty.assignee}</p>
       )}
 
       <div className="mt-2.5 flex items-center justify-between gap-2">
@@ -116,7 +120,7 @@ function CompactCard({
                 : 'border-border/60 bg-surface/60 text-muted-foreground hover:border-primary/50 hover:text-foreground',
             )}
           >
-            {interested ? '✓ Interested' : "I'm interested"}
+            {interested ? 'Interested' : "I'm interested"}
           </button>
         )}
 
@@ -364,7 +368,7 @@ function FullCard({
                 interested ? 'border-primary bg-primary/10 text-primary' : 'border-border/60 bg-surface/60 text-muted-foreground hover:border-primary/50 hover:text-foreground',
               )}
             >
-              {interested ? '✓ Interested' : "I'm interested"}
+              {interested ? 'Interested' : "I'm interested"}
             </button>
             <button
               type="button"

@@ -71,8 +71,8 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     accountCta: 'Connect your Ethereum account',
     badgeBg: '#627EEA',
     badgeText: '#FFFFFF',
-    enabled: false,
-    comingSoon: INTEGRATION_PENDING,
+    enabled: true,
+    comingSoon: GOVERNANCE_REVIEW,
   },
   base: {
     id: 'base',
@@ -119,8 +119,8 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     accountCta: 'Connect your Polygon account',
     badgeBg: '#8247E5',
     badgeText: '#FFFFFF',
-    enabled: false,
-    comingSoon: INTEGRATION_PENDING,
+    enabled: true,
+    comingSoon: GOVERNANCE_REVIEW,
   },
   bnb: {
     id: 'bnb',
@@ -172,9 +172,11 @@ export function readStoredChain(): Chain {
     if (
       raw === 'solana' ||
       raw === 'stellar' ||
+      raw === 'ethereum' ||
       raw === 'base' ||
       raw === 'arbitrum' ||
       raw === 'optimism' ||
+      raw === 'polygon' ||
       raw === 'celo'
     ) return raw;
   } catch {
