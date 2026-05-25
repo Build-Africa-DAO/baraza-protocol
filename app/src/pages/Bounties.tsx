@@ -20,17 +20,17 @@ const STATUS_OPTIONS: { value: BountyStatus | 'all'; label: string }[] = [
   { value: 'all', label: 'All bounties' },
   { value: 'open', label: 'Open' },
   { value: 'in_progress', label: 'In progress' },
-  { value: 'in_review', label: 'In review' },
+  { value: 'in_review', label: 'Under review' },
   { value: 'awarded', label: 'Awarded' },
-  { value: 'paid', label: 'Paid' },
+  { value: 'paid', label: 'Approved' },
 ];
 
 const statusLabel: Record<BountyStatus, string> = {
   open: 'Open',
   in_progress: 'In progress',
-  in_review: 'In review',
+  in_review: 'Under review',
   awarded: 'Awarded',
-  paid: 'Paid',
+  paid: 'Approved',
 };
 
 const statusClass: Record<BountyStatus, string> = {
@@ -449,6 +449,7 @@ export default function Bounties() {
           <div className="grid gap-4 lg:grid-cols-2">
             {filtered.map((bounty) => {
               const community = communityById.get(bounty.communityId);
+              const canSendWorkUpdate = bounty.status === 'open' || bounty.status === 'in_progress';
               return (
                 <article key={bounty.id} className="baraza-card p-5">
                   <div className="mb-4 flex items-start justify-between gap-4">
@@ -499,21 +500,27 @@ export default function Bounties() {
                         Open group
                         <ArrowRight className="h-3.5 w-3.5" />
                       </Link>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSubmitFor(submitFor === bounty.id ? null : bounty.id);
-                          setFormMessage(null);
-                        }}
-                        className="btn-primary justify-center gap-2 px-3 py-2 text-xs font-bold"
-                      >
-                        Send work update
-                        <Send className="h-3.5 w-3.5" />
-                      </button>
+                      {canSendWorkUpdate ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSubmitFor(submitFor === bounty.id ? null : bounty.id);
+                            setFormMessage(null);
+                          }}
+                          className="btn-primary justify-center gap-2 px-3 py-2 text-xs font-bold"
+                        >
+                          Send work update
+                          <Send className="h-3.5 w-3.5" />
+                        </button>
+                      ) : (
+                        <span className="inline-flex items-center justify-center rounded-lg border border-confirmed/30 bg-confirmed/5 px-3 py-2 text-xs font-bold text-confirmed">
+                          {bounty.status === 'paid' ? 'Approved' : statusLabel[bounty.status]}
+                        </span>
+                      )}
                     </div>
                   </div>
 
-                  {submitFor === bounty.id && (
+                  {canSendWorkUpdate && submitFor === bounty.id && (
                     <div className="mt-4 grid gap-3 border-t pt-4">
                       <div className="grid gap-3 sm:grid-cols-2">
                         <input

@@ -41,7 +41,7 @@ export default function CombinedBoard({ communityId, decisions }: Props) {
         kind: 'bounty',
         title: b.title,
         meta: `${b.category} - ${b.submissions} applicants`,
-        badge: b.status === 'open' ? 'Open' : b.status === 'in_progress' ? 'In Progress' : 'In Review',
+        badge: b.status === 'open' ? 'Open' : b.status === 'in_progress' ? 'In Progress' : 'Under Review',
         badgeClass:
           b.status === 'open' ? 'border-confirmed/40 bg-confirmed/10 text-confirmed' :
           b.status === 'in_progress' ? 'border-primary/40 bg-primary/10 text-primary' :

@@ -29,9 +29,9 @@ const STATUS_CONFIG: Record<BountyStatus, {
 }> = {
   open:        { label: 'Open',        columnLabel: 'To Do',       emptyText: 'No open tasks yet',                icon: CircleDot,    badgeClass: 'border-confirmed/40 bg-confirmed/10 text-confirmed' },
   in_progress: { label: 'In progress', columnLabel: 'In Progress', emptyText: 'Work in progress appears here',    icon: Zap,          badgeClass: 'border-primary/40 bg-primary/10 text-primary' },
-  in_review:   { label: 'In review',   columnLabel: 'In Review',   emptyText: 'Submissions awaiting review',      icon: Clock,        badgeClass: 'border-accent/40 bg-accent/10 text-accent' },
+  in_review:   { label: 'Under review', columnLabel: 'Under Review', emptyText: 'Submissions awaiting review',      icon: Clock,        badgeClass: 'border-accent/40 bg-accent/10 text-accent' },
   awarded:     { label: 'Awarded',     columnLabel: 'Done',        emptyText: 'Approved work lands here',         icon: CheckCircle2, badgeClass: 'border-secondary/40 bg-secondary/10 text-secondary' },
-  paid:        { label: 'Paid',        columnLabel: 'Paid',        emptyText: 'Paid out tasks',                   icon: CheckCircle2, badgeClass: 'border-confirmed/50 bg-confirmed/15 text-confirmed' },
+  paid:        { label: 'Approved',    columnLabel: 'Approved',    emptyText: 'Approved bounties land here',      icon: CheckCircle2, badgeClass: 'border-confirmed/50 bg-confirmed/15 text-confirmed' },
 };
 
 const KANBAN_COLUMNS: BountyStatus[] = ['open', 'in_progress', 'in_review', 'awarded', 'paid'];
@@ -146,14 +146,18 @@ function CompactCard({
             onClick={() => onAdvanceStatus(bounty.id, 'paid')}
             className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-secondary/40 bg-secondary/10 px-2 py-1.5 text-xs font-bold text-secondary hover:bg-secondary/20 transition-all"
           >
-            <Wallet className="h-3 w-3" /> Mark paid
+            <Wallet className="h-3 w-3" /> Approve
           </button>
         )}
 
         {bounty.status === 'paid' && (
-          <span className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-confirmed/30 bg-confirmed/5 px-2 py-1.5 text-[11px] font-semibold text-confirmed">
-            <CheckCircle2 className="h-3 w-3" /> Paid
-          </span>
+          <button
+            type="button"
+            onClick={() => onAdvanceStatus(bounty.id, 'in_review')}
+            className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-confirmed/30 bg-confirmed/5 px-2 py-1.5 text-[11px] font-semibold text-confirmed hover:border-accent/50 hover:text-accent transition-all"
+          >
+            <CheckCircle2 className="h-3 w-3" /> Reopen review
+          </button>
         )}
       </div>
     </article>
@@ -408,14 +412,23 @@ function FullCard({
             onClick={() => onAdvanceStatus(bounty.id, 'paid')}
             className="flex items-center gap-1.5 rounded-lg border border-secondary/40 bg-secondary/10 px-3 py-2 text-xs font-bold text-secondary hover:bg-secondary/20 transition-all"
           >
-            <Wallet className="h-3 w-3" /> Mark as paid
+            <Wallet className="h-3 w-3" /> Mark approved
           </button>
         )}
 
         {bounty.status === 'paid' && (
-          <span className="flex items-center gap-1.5 rounded-lg border border-confirmed/30 bg-confirmed/5 px-3 py-2 text-[11px] font-semibold text-confirmed">
-            <CheckCircle2 className="h-3 w-3" /> Payment processed
-          </span>
+          <>
+            <span className="flex items-center gap-1.5 rounded-lg border border-confirmed/30 bg-confirmed/5 px-3 py-2 text-[11px] font-semibold text-confirmed">
+              <CheckCircle2 className="h-3 w-3" /> Approved
+            </span>
+            <button
+              type="button"
+              onClick={() => onAdvanceStatus(bounty.id, 'in_review')}
+              className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-surface/60 px-3 py-2 text-xs font-bold text-muted-foreground hover:border-accent/50 hover:text-accent transition-all"
+            >
+              <Clock className="h-3 w-3" /> Reopen for review
+            </button>
+          </>
         )}
       </div>
 

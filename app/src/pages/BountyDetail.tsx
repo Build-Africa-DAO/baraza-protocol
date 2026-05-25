@@ -30,9 +30,9 @@ import { useSeo } from '@/lib/seo';
 const statusLabel: Record<BountyStatus, string> = {
   open: 'Open',
   in_progress: 'In progress',
-  in_review: 'In review',
+  in_review: 'Under review',
   awarded: 'Awarded',
-  paid: 'Paid',
+  paid: 'Approved',
 };
 
 const statusClass: Record<BountyStatus, string> = {
@@ -143,6 +143,7 @@ export default function BountyDetail() {
   };
 
   if (!isLoading && !bounty) return <BountyNotFound />;
+  const canSendWorkUpdate = bounty?.status === 'open' || bounty?.status === 'in_progress';
 
   return (
     <Layout>
@@ -172,10 +173,16 @@ export default function BountyDetail() {
                     Open group
                     <ArrowRight className="h-4 w-4" />
                   </Link>
-                  <a href="#work-update" className="btn-warm inline-flex items-center gap-2 text-sm">
-                    Send work update
-                    <Send className="h-4 w-4" />
-                  </a>
+                  {canSendWorkUpdate ? (
+                    <a href="#work-update" className="btn-warm inline-flex items-center gap-2 text-sm">
+                      Send work update
+                      <Send className="h-4 w-4" />
+                    </a>
+                  ) : (
+                    <span className="inline-flex items-center rounded-lg border border-confirmed/30 bg-confirmed/5 px-4 py-2 text-sm font-semibold text-confirmed">
+                      {bounty.status === 'paid' ? 'Approved by owner' : statusLabel[bounty.status]}
+                    </span>
+                  )}
                 </div>
               </div>
             ) : (
@@ -204,42 +211,53 @@ export default function BountyDetail() {
                   </div>
                 </section>
 
-                <section id="work-update" className="baraza-card p-5">
-                  <h2 className="font-display text-lg font-semibold">Send work update</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Share your delivery link and a short note so the group can review the work.
-                  </p>
-                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                    <input
-                      value={submission.contributor}
-                      onChange={(event) => setSubmission((current) => ({ ...current, contributor: event.target.value }))}
-                      className="rounded-lg border px-3 py-2.5 text-sm outline-none"
-                      placeholder="e.g. Wanjiru M."
-                    />
-                    <input
-                      value={submission.workUrl}
-                      onChange={(event) => setSubmission((current) => ({ ...current, workUrl: event.target.value }))}
-                      className="rounded-lg border px-3 py-2.5 text-sm outline-none"
-                      placeholder="https://..."
-                    />
-                    <textarea
-                      value={submission.note}
-                      onChange={(event) => setSubmission((current) => ({ ...current, note: event.target.value }))}
-                      className="min-h-24 rounded-lg border px-3 py-2.5 text-sm outline-none sm:col-span-2"
-                      placeholder="e.g. First draft is ready for member review."
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => void handleSubmitWork()}
-                    disabled={isSending}
-                    className="btn-primary mt-4 inline-flex items-center gap-2 px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                    Record work update
-                  </button>
-                  {message && <p className="mt-3 text-sm text-muted-foreground">{message}</p>}
-                </section>
+                {canSendWorkUpdate ? (
+                  <section id="work-update" className="baraza-card p-5">
+                    <h2 className="font-display text-lg font-semibold">Send work update</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Share your delivery link and a short note so the group can review the work.
+                    </p>
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                      <input
+                        value={submission.contributor}
+                        onChange={(event) => setSubmission((current) => ({ ...current, contributor: event.target.value }))}
+                        className="rounded-lg border px-3 py-2.5 text-sm outline-none"
+                        placeholder="e.g. Wanjiru M."
+                      />
+                      <input
+                        value={submission.workUrl}
+                        onChange={(event) => setSubmission((current) => ({ ...current, workUrl: event.target.value }))}
+                        className="rounded-lg border px-3 py-2.5 text-sm outline-none"
+                        placeholder="https://..."
+                      />
+                      <textarea
+                        value={submission.note}
+                        onChange={(event) => setSubmission((current) => ({ ...current, note: event.target.value }))}
+                        className="min-h-24 rounded-lg border px-3 py-2.5 text-sm outline-none sm:col-span-2"
+                        placeholder="e.g. First draft is ready for member review."
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void handleSubmitWork()}
+                      disabled={isSending}
+                      className="btn-primary mt-4 inline-flex items-center gap-2 px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                      Record work update
+                    </button>
+                    {message && <p className="mt-3 text-sm text-muted-foreground">{message}</p>}
+                  </section>
+                ) : (
+                  <section className="baraza-card p-5">
+                    <h2 className="font-display text-lg font-semibold">{statusLabel[bounty.status]}</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {bounty.status === 'paid'
+                        ? 'This bounty has been approved. New work updates stay closed unless the owner reopens it for review.'
+                        : 'This bounty is not accepting new work updates right now.'}
+                    </p>
+                  </section>
+                )}
 
                 <section className="baraza-card p-5">
                   <div className="mb-4 flex items-center justify-between gap-3">
