@@ -547,7 +547,7 @@ const CommunityDashboard: React.FC = () => {
                     <div>
                       <h4 className="font-display text-sm font-semibold mb-4 text-muted-foreground uppercase tracking-wider text-[11px]">Active</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {activeDecisions.map((d) => <DecisionCard key={d.id} {...d} />)}
+                        {activeDecisions.map((d) => <DecisionCard key={d.id} {...d} chainMeta={chainMeta} />)}
                       </div>
                     </div>
                   )}
@@ -556,7 +556,7 @@ const CommunityDashboard: React.FC = () => {
                     <div>
                       <h4 className="font-display text-sm font-semibold mb-4 text-muted-foreground uppercase tracking-wider text-[11px]">Past</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {pastDecisions.map((d) => <DecisionCard key={d.id} {...d} />)}
+                        {pastDecisions.map((d) => <DecisionCard key={d.id} {...d} chainMeta={chainMeta} />)}
                       </div>
                     </div>
                   )}

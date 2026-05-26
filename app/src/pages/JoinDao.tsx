@@ -15,7 +15,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import Layout from "@/components/Layout";
 import { useCommunity } from "@/hooks/useCommunities";
 import { useToast } from "@/hooks/use-toast";
-import { formatKSh } from "@/lib/utils";
+import { formatRailAmountWithKes } from "@/lib/utils";
 import { normaliseKenyanPhone } from "@/lib/phone";
 import CommunityBanner from "@/components/CommunityBanner";
 import { useSeo } from "@/lib/seo";
@@ -240,7 +240,7 @@ export default function JoinDao() {
                   <div className="w-full rounded-lg border px-4 py-3 md:w-auto md:text-right">
                     <p className="text-xs">Monthly Dues</p>
                     <p className="font-display text-lg font-bold">
-                      {formatKSh(community?.membershipFee ?? 5000)}
+                      {formatRailAmountWithKes(community?.membershipFee ?? 5000, chainMeta)}
                     </p>
                   </div>
                 </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ChevronUp, Lightbulb, PlusCircle, Tag } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatRailDate } from '@/lib/utils';
+import { useChain } from '@/hooks/useChain';
 
 interface Suggestion {
   id: string;
@@ -99,6 +100,7 @@ interface Props {
 }
 
 export default function CommunitySuggestions({ communityId }: Props) {
+  const { chainMeta } = useChain();
   const [suggestions, setSuggestions] = useState<Suggestion[]>(() => {
     const local = readSuggestions(communityId);
     // Merge seed suggestions (tagged with __seed__ but re-tagged to this community for display)
@@ -285,7 +287,7 @@ export default function CommunitySuggestions({ communityId }: Props) {
                     <span className="text-[11px] text-muted-foreground">{s.author}</span>
                     <span className="text-[11px] text-muted-foreground/60">·</span>
                     <span className="text-[11px] text-muted-foreground/60">
-                      {new Date(s.createdAt).toLocaleDateString('en-KE', { month: 'short', day: 'numeric' })}
+                      {formatRailDate(s.createdAt, chainMeta, { month: 'short', day: 'numeric' })}
                     </span>
                   </div>
                   <h4 className="font-display text-sm font-semibold text-foreground">{s.title}</h4>

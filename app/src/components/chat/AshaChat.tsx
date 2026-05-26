@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X, Send, Sparkles } from 'lucide-react';
 import { useAshaChat } from '@/hooks/useAshaChat';
+import { useChain } from '@/hooks/useChain';
+import type { ChainMeta } from '@/lib/chain';
 
 interface Message {
   id: string;
@@ -10,17 +12,19 @@ interface Message {
   time: string;
 }
 
-const timestamp = () =>
-  new Date().toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' });
+const timestamp = (chainMeta: ChainMeta) =>
+  new Date().toLocaleTimeString(chainMeta.currency.locale, {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: chainMeta.timeZone,
+  });
 
-const INITIAL_MESSAGES: Message[] = [
-  {
+const initialMessage = (chainMeta: ChainMeta): Message => ({
     id: '1',
     role: 'asha',
     text: "Habari! I'm Asha, your Baraza guide. I can help you understand the website, launch a DAO or chama, manage members, or plan a vote.",
-    time: timestamp(),
-  },
-];
+    time: timestamp(chainMeta),
+});
 
 const QUICK_REPLIES = [
   'How do I create a group?',
@@ -126,7 +130,8 @@ const TypingDots: React.FC = () => (
 
 const AshaChat: React.FC = () => {
   const { isOpen, open, close, pendingMessage, clearPending } = useAshaChat();
-  const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
+  const { chainMeta } = useChain();
+  const [messages, setMessages] = useState<Message[]>(() => [initialMessage(chainMeta)]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -171,7 +176,7 @@ const AshaChat: React.FC = () => {
       id: Date.now().toString(),
       role: 'user',
       text: text.trim(),
-      time: timestamp(),
+      time: timestamp(chainMeta),
     };
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
@@ -184,11 +189,11 @@ const AshaChat: React.FC = () => {
         id: (Date.now() + 1).toString(),
         role: 'asha',
         text: getAshaResponse(text),
-        time: timestamp(),
+        time: timestamp(chainMeta),
       };
       setMessages((prev) => [...prev, ashaMsg]);
     }, 900 + Math.random() * 400);
-  }, []);
+  }, [chainMeta]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

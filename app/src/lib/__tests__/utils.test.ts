@@ -34,7 +34,7 @@ describe('rail formatting', () => {
   });
 
   it('formats dates in the selected rail timezone', () => {
-    expect(formatRailDate('2026-05-26T00:30:00.000Z', 'solana', { day: '2-digit', month: 'short', year: 'numeric' })).toBe('25 May 2026');
+    expect(formatRailDate('2026-05-26T00:30:00.000Z', 'solana', { day: '2-digit', month: 'short', year: 'numeric' })).toBe('May 25, 2026');
     expect(formatRailDate('2026-05-26T00:30:00.000Z', 'celo', { day: '2-digit', month: 'short', year: 'numeric' })).toBe('26 May 2026');
   });
 });

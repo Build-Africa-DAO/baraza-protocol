@@ -17,7 +17,7 @@ import {
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import Layout from "@/components/Layout";
-import { formatKSh, truncateAddress } from "@/lib/utils";
+import { formatRailAmountFromKes, formatRailDate, truncateAddress } from "@/lib/utils";
 import CommunityBanner from "@/components/CommunityBanner";
 import { listMembershipsForWallet } from "@/lib/memberships";
 import { useCommunities } from "@/hooks/useCommunities";
@@ -450,8 +450,8 @@ export default function Profile() {
                                 />
                                 {chainMeta.label}
                               </span>
-                              <span>Joined {new Date(record.joinedAt).toLocaleDateString('en-KE', { month: 'short', year: 'numeric' })}</span>
-                              <span>{formatKSh(community.membershipFee)}/mo</span>
+                              <span>Joined {formatRailDate(record.joinedAt, chainMeta, { month: 'short', year: 'numeric' })}</span>
+                              <span>{formatRailAmountFromKes(community.membershipFee, chainMeta)}/mo</span>
                             </div>
                           </div>
                           <ArrowRight className="h-4 w-4 shrink-0" />
@@ -509,7 +509,7 @@ export default function Profile() {
                               </span>
                             </div>
                             <p className="mt-1 text-xs text-muted-foreground">
-                              {community.name} - {formatKSh(bounty.rewardKes)} - {bounty.submissions} submissions
+                              {community.name} - {formatRailAmountFromKes(bounty.rewardKes, chainMeta)} - {bounty.submissions} submissions
                             </p>
                             <p className="mt-2 text-xs text-muted-foreground">
                               {stats.open} open bounties in this community.

@@ -17,7 +17,7 @@ import {
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import Layout from "@/components/Layout";
-import { cn, formatKSh, truncateAddress } from "@/lib/utils";
+import { cn, formatRailAmountFromKes, truncateAddress } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useSeo } from "@/lib/seo";
 import { getAdminWallets, isAdminWallet } from "@/lib/access";
@@ -188,7 +188,7 @@ export default function AdminReconciliation() {
 
           <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <MetricCard icon={Users} label="Communities" value={isLoading ? "..." : communities.length.toString()} note="Groups visible to the registry" />
-            <MetricCard icon={BriefcaseBusiness} label="Open bounty pool" value={formatKSh(rewardPool)} note={`${openBounties.length} open tasks`} />
+            <MetricCard icon={BriefcaseBusiness} label="Open bounty pool" value={formatRailAmountFromKes(rewardPool, chainMeta)} note={`${openBounties.length} open tasks`} />
             <MetricCard icon={FileWarning} label="Needs review" value={(flaggedReviews.length + reviewBounties.length).toString()} note="Security flags and submitted bounty work" />
             <MetricCard icon={ShieldCheck} label="Admin rail" value={chainMeta.label} note="Selected account and review rail" />
           </div>
@@ -214,7 +214,7 @@ export default function AdminReconciliation() {
                           {community.name}
                         </Link>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          {community.memberCount} members · {formatKSh(community.fundBalance)} treasury · {community.type}
+                          {community.memberCount} members · {formatRailAmountFromKes(community.fundBalance, chainMeta)} treasury · {community.type}
                         </p>
                       </div>
                       <span className={cn("w-fit rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider", riskClass[review.level])}>
@@ -289,7 +289,7 @@ export default function AdminReconciliation() {
                         <Link to={`/bounties/${bounty.id}`} className="font-display text-sm font-bold hover:text-primary">
                           {bounty.title}
                         </Link>
-                        <p className="mt-1 text-xs text-muted-foreground">{bounty.postedBy} · {formatKSh(bounty.rewardKes)}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">{bounty.postedBy} · {formatRailAmountFromKes(bounty.rewardKes, chainMeta)}</p>
                       </div>
                       <span className={cn("w-fit rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider", statusClass[bounty.status])}>
                         {bounty.status === "paid" || bounty.status === "awarded" ? "Approved" : bounty.status.replace("_", " ")}

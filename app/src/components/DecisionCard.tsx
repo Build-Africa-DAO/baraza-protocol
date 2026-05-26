@@ -1,11 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Loader2, ThumbsDown, ThumbsUp, User } from 'lucide-react';
-import { formatKSh, daysRemaining } from '@/lib/utils';
+import { formatRailAmountFromKes, daysRemaining } from '@/lib/utils';
 import { useWalletGuard } from '@/hooks/useWalletGuard';
 import { useBarazaContract } from '@/hooks/useBarazaContract';
 import type { ProposalLifecycleStage } from '@/lib/constants';
 import { STAGE_META, inferStage } from '@/lib/proposalStatus';
+import { CHAINS, type ChainMeta } from '@/lib/chain';
 
 interface DecisionCardProps {
   id: string;
@@ -21,6 +22,7 @@ interface DecisionCardProps {
   lifecycleStage?: ProposalLifecycleStage;
   createdAt: string;
   endsAt: string;
+  chainMeta?: ChainMeta;
 }
 
 const DecisionCard: React.FC<DecisionCardProps> = ({
@@ -36,6 +38,7 @@ const DecisionCard: React.FC<DecisionCardProps> = ({
   status,
   lifecycleStage,
   endsAt,
+  chainMeta = CHAINS.solana,
 }) => {
   const { requireWallet, isReady } = useWalletGuard({ action: 'vote on decisions' });
   const { castVote } = useBarazaContract();
@@ -106,7 +109,7 @@ const DecisionCard: React.FC<DecisionCardProps> = ({
             </span>
           )}
         </div>
-        <span className="text-xs font-semibold text-accent">{formatKSh(fundingAmount)}</span>
+        <span className="text-xs font-semibold text-accent">{formatRailAmountFromKes(fundingAmount, chainMeta)}</span>
       </div>
 
       {/* Title & Description */}

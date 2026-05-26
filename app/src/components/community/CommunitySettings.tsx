@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ExternalLink, Info, Lock, Settings, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Community } from '@/lib/constants';
-import { formatKSh } from '@/lib/utils';
+import { formatRailAmountFromKes, formatRailDate } from '@/lib/utils';
 import { useChain } from '@/hooks/useChain';
 
 interface Props {
@@ -34,7 +34,7 @@ export default function CommunitySettings({ community, isMember }: Props) {
             ['Name', community.name],
             ['Type', community.type],
             ['Treasury rail', chainMeta.label],
-            ['Founded', new Date(community.createdAt).toLocaleDateString('en-KE', { month: 'long', year: 'numeric' })],
+            ['Founded', formatRailDate(community.createdAt, chainMeta, { month: 'long', year: 'numeric' })],
           ].map(([label, value]) => (
             <div key={label} className="rounded-lg border border-border/50 p-3">
               <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</p>
@@ -94,7 +94,7 @@ export default function CommunitySettings({ community, isMember }: Props) {
         </div>
         <div className="grid gap-3 sm:grid-cols-3">
           {[
-            ['Monthly dues', formatKSh(community.membershipFee), 'Per active member'],
+            ['Monthly dues', formatRailAmountFromKes(community.membershipFee, chainMeta), 'Per active member'],
             ['Total members', community.memberCount.toString(), 'Active membership records'],
             ['Your status', isMember ? 'Active member' : 'Not a member', isMember ? 'Account verified' : 'Join to activate'],
           ].map(([label, value, note]) => (

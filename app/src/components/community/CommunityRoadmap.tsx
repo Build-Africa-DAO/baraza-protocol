@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { CalendarDays, CheckCircle2, Circle, CircleDot, Map, PlusCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatRailDate } from '@/lib/utils';
+import { useChain } from '@/hooks/useChain';
 
 type MilestoneStatus = 'planned' | 'in_progress' | 'completed';
 
@@ -121,6 +122,7 @@ interface Props {
 }
 
 export default function CommunityRoadmap({ communityId }: Props) {
+  const { chainMeta } = useChain();
   const [milestones, setMilestones] = useState<Milestone[]>(() => {
     const local = readMilestones(communityId);
     const seeds = SEED_MILESTONES.map((m) => ({ ...m, communityId }));
@@ -280,7 +282,7 @@ export default function CommunityRoadmap({ communityId }: Props) {
                           </span>
                           <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
                             <CalendarDays className="h-2.5 w-2.5" />
-                            {new Date(m.targetDate).toLocaleDateString('en-KE', { month: 'short', year: 'numeric' })}
+                            {formatRailDate(m.targetDate, chainMeta, { month: 'short', year: 'numeric' })}
                           </span>
                         </div>
                         <p className="font-display text-xs font-bold leading-snug">{m.title}</p>

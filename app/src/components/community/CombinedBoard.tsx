@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, BriefcaseBusiness, CalendarDays, CircleDot, Clock, Layers, Vote } from 'lucide-react';
 import { getBountiesForCommunity } from '@/lib/bounties';
-import { formatKSh, cn } from '@/lib/utils';
+import { formatRailAmountFromKes, cn } from '@/lib/utils';
 import type { Decision } from '@/lib/dataStore';
+import { useChain } from '@/hooks/useChain';
 
 interface FeedItem {
   id: string;
@@ -30,6 +31,7 @@ interface Props {
 }
 
 export default function CombinedBoard({ communityId, decisions }: Props) {
+  const { chainMeta } = useChain();
   const bounties = getBountiesForCommunity(communityId);
 
   const items: FeedItem[] = [
@@ -47,7 +49,7 @@ export default function CombinedBoard({ communityId, decisions }: Props) {
           b.status === 'in_progress' ? 'border-primary/40 bg-primary/10 text-primary' :
           'border-accent/40 bg-accent/10 text-accent',
         deadline: b.deadline,
-        reward: formatKSh(b.rewardKes),
+        reward: formatRailAmountFromKes(b.rewardKes, chainMeta),
         href: `/bounties/${b.id}`,
       })),
 
