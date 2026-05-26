@@ -129,7 +129,7 @@ const TypingDots: React.FC = () => (
 );
 
 const AshaChat: React.FC = () => {
-  const { isOpen, open, close, pendingMessage, clearPending } = useAshaChat();
+  const { isOpen, close, pendingMessage, clearPending } = useAshaChat();
   const { chainMeta } = useChain();
   const [messages, setMessages] = useState<Message[]>(() => [initialMessage(chainMeta)]);
   const [input, setInput] = useState('');
@@ -211,12 +211,14 @@ const AshaChat: React.FC = () => {
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            onClick={() => open()}
-            aria-label="Open Asha chat"
-            className="fixed bottom-5 right-5 z-50 hidden w-14 h-14 rounded-full md:flex items-center justify-center shadow-lg animate-pulse-glow transition-transform hover:scale-110 active:scale-95"
+            disabled
+            aria-label="Asha chat coming soon"
+            title="Asha AI guide is coming soon"
+            className="fixed bottom-5 right-5 z-50 hidden h-14 w-14 cursor-not-allowed rounded-full opacity-70 md:flex items-center justify-center shadow-lg"
             style={{ background: 'var(--gradient-warm)' }}
           >
             <MessageCircle className="w-6 h-6 text-warm-foreground" />
+            <span className="sr-only">Coming soon</span>
           </motion.button>
         )}
       </AnimatePresence>

@@ -4,9 +4,10 @@
  * Distinct from `lib/network.ts`, which selects the Solana cluster
  * (mainnet/devnet/testnet). This module is about which blockchain the
  * user is browsing. Solana handles membership credentials and governance.
- * Stellar is enabled as the payment/settlement rail. Base, Arbitrum,
- * Optimism, and Celo are enabled as EVM target rails for community setup, but
- * contract execution still remains gated by the governance-contract roadmap.
+ * Solana stays the active testnet rail for governance and membership.
+ * Stellar is shown as the next payment/settlement rail, and Celo is visible for
+ * G$ bounty rewards. EVM execution remains gated by the governance-contract
+ * roadmap until deployed contracts are configured.
  */
 
 export type Chain =
@@ -18,7 +19,8 @@ export type Chain =
   | 'optimism'
   | 'polygon'
   | 'bnb'
-  | 'celo';
+  | 'celo'
+  | 'xdc';
 
 export interface ChainMeta {
   id: Chain;
@@ -103,7 +105,8 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     timeZone: 'UTC',
     badgeBg: '#0066FF',
     badgeText: '#FFFFFF',
-    enabled: true,
+    enabled: false,
+    comingSoon: 'Coming soon',
   },
   ethereum: {
     id: 'ethereum',
@@ -296,6 +299,33 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     enabled: true,
     comingSoon: GOVERNANCE_REVIEW,
   },
+  xdc: {
+    id: 'xdc',
+    label: 'XDC',
+    short: 'XDC',
+    accountLabel: 'XDC account',
+    suggestedWallet: 'MetaMask',
+    walletExamples: 'MetaMask, XDC Pay, or WalletConnect',
+    accountCta: 'Connect XDC account',
+    testnet: {
+      label: 'XDC Apothem',
+      chainId: 51,
+      nativeSymbol: 'TXDC',
+      explorerUrl: 'https://apothem.xinfinscan.com',
+    },
+    currency: {
+      code: 'TXDC',
+      symbol: 'TXDC',
+      locale: 'en-US',
+      decimals: 2,
+      kesPerUnit: 8,
+    },
+    timeZone: 'UTC',
+    badgeBg: '#2A6DF4',
+    badgeText: '#FFFFFF',
+    enabled: false,
+    comingSoon: 'G$ ecosystem review',
+  },
 };
 
 export const CHAIN_LIST: ChainMeta[] = [
@@ -308,6 +338,7 @@ export const CHAIN_LIST: ChainMeta[] = [
   CHAINS.polygon,
   CHAINS.bnb,
   CHAINS.celo,
+  CHAINS.xdc,
 ];
 
 const STORAGE_KEY = 'baraza:chain';
@@ -325,7 +356,8 @@ export function readStoredChain(): Chain {
       raw === 'arbitrum' ||
       raw === 'optimism' ||
       raw === 'polygon' ||
-      raw === 'celo'
+      raw === 'celo' ||
+      raw === 'xdc'
     ) return raw;
   } catch {
     /* ignore */

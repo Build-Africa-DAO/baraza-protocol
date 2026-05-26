@@ -18,7 +18,8 @@ export interface Community {
     | 'optimism'
     | 'polygon'
     | 'bnb'
-    | 'celo';
+    | 'celo'
+    | 'xdc';
   quorumPct?: number;
   approvalThresholdPct?: number;
   votingPeriodDays?: number;

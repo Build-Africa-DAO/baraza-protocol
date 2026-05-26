@@ -233,7 +233,7 @@ const WalletStatus: React.FC = () => {
               className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-surface"
             >
               <RefreshCw className="h-3.5 w-3.5 text-muted-foreground" />
-              Also connect wallet
+              Also connect account
             </button>
             <div className="my-1 border-t border-border/50" />
             <button
@@ -288,7 +288,7 @@ const WalletStatus: React.FC = () => {
               </button>
             </div>
             <p className="mb-3 text-[11px] leading-4 text-muted-foreground">
-              Use your phone number (for M-Pesa) or email to identify yourself without a crypto wallet.
+              Use your phone number for M-Pesa or email to identify yourself before account setup.
             </p>
 
             {/* Tab switcher */}
@@ -334,7 +334,7 @@ const WalletStatus: React.FC = () => {
               onClick={handleSavePhone}
               className="mt-2.5 w-full rounded-lg bg-primary px-3 py-2 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              Continue
+              Save contact
             </button>
           </div>
         )}
@@ -403,7 +403,7 @@ const WalletStatus: React.FC = () => {
             className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors"
           >
             <LogOut className="w-3.5 h-3.5" />
-            Disconnect wallet
+            Disconnect account
           </button>
         </div>
       )}

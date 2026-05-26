@@ -27,6 +27,8 @@ import { listBounties, type BountyStatus } from "@/lib/bounties";
 import { reviewCommunity, type SecurityReviewLevel } from "@/lib/securityReview";
 
 const ADMIN_WALLETS = getAdminWallets();
+const ADMIN_NFT_THRESHOLD = Number(import.meta.env.VITE_ADMIN_NFT_THRESHOLD ?? 0);
+const ADMIN_NFT_COUNT = Number(import.meta.env.VITE_ADMIN_NFT_COUNT ?? 0);
 
 const paymentOrders = [
   ["ORD-8942A", "Kibera Youth Collective", "KES 15,000", "PAYMENT_PENDING", "2026-05-13 08:02 UTC", "Reconcile proof"],
@@ -102,7 +104,9 @@ export default function AdminReconciliation() {
   const [statusFilter, setStatusFilter] = useState<"all" | BountyStatus>("all");
 
   const allowlistConfigured = ADMIN_WALLETS.length > 0;
-  const isAdmin = connected && isAdminWallet(publicKey?.toBase58(), ADMIN_WALLETS);
+  const nftGateConfigured = ADMIN_NFT_THRESHOLD > 0;
+  const nftGatePassed = !nftGateConfigured || ADMIN_NFT_COUNT >= ADMIN_NFT_THRESHOLD;
+  const isAdmin = connected && isAdminWallet(publicKey?.toBase58(), ADMIN_WALLETS) && nftGatePassed;
 
   const bounties = useMemo(() => listBounties(), []);
   const reviews = useMemo(
@@ -158,6 +162,12 @@ export default function AdminReconciliation() {
                 Operators: set <code className="font-mono">VITE_ADMIN_WALLETS</code> to enable this dashboard.
               </p>
             )}
+            {allowlistConfigured && nftGateConfigured && !nftGatePassed && (
+              <p className="mt-4 text-[11px] text-muted-foreground">
+                Admin NFT gate requires {ADMIN_NFT_THRESHOLD} credential{ADMIN_NFT_THRESHOLD === 1 ? "" : "s"}.
+                Current configured count: {ADMIN_NFT_COUNT}.
+              </p>
+            )}
           </div>
         </section>
       </Layout>
@@ -191,6 +201,9 @@ export default function AdminReconciliation() {
             <MetricCard icon={BriefcaseBusiness} label="Open bounty pool" value={formatRailAmountFromKes(rewardPool, chainMeta)} note={`${openBounties.length} open tasks`} />
             <MetricCard icon={FileWarning} label="Needs review" value={(flaggedReviews.length + reviewBounties.length).toString()} note="Security flags and submitted bounty work" />
             <MetricCard icon={ShieldCheck} label="Admin rail" value={chainMeta.label} note="Selected account and review rail" />
+            {nftGateConfigured && (
+              <MetricCard icon={ShieldCheck} label="NFT admin gate" value={`${ADMIN_NFT_COUNT}/${ADMIN_NFT_THRESHOLD}`} note="Credential threshold for operator access" />
+            )}
           </div>
 
           <div className="grid gap-6 xl:grid-cols-[0.58fr_0.42fr]">
