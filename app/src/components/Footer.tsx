@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Github, Globe } from "lucide-react";
+import { Code2, Globe } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { useChain } from "@/hooks/useChain";
 
@@ -69,7 +69,7 @@ export default function Footer() {
             </p>
             <div className="flex items-center gap-2">
               {[
-                { icon: Github, label: "GitHub", href: "https://github.com/Azizudinly/baraza-protocol" },
+                { icon: Code2, label: "GitHub", href: "https://github.com/Azizudinly/baraza-protocol" },
                 { icon: Globe, label: "Website", href: "/" },
               ].map(({ icon: Icon, label, href }) => (
                 <a

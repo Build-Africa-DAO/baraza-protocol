@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Users, ArrowLeft, CheckCircle2, Loader2, Phone, ShieldCheck, Wallet } from 'lucide-react';
+import { Users, ArrowLeft, CheckCircle2, Loader2, Phone, ShieldCheck, Wallet, Hash, Smartphone } from 'lucide-react';
 import Layout from '@/components/Layout';
-import { COMMUNITY_TYPES, DAO_CREATION_FEE_KES } from '@/lib/constants';
+import { COMMUNITY_TYPES, DAO_CREATION_FEE_KES, PAYBILL_ADDON_FEE_KES, USSD_ADDON_FEE_KES } from '@/lib/constants';
 import { formatKSh, formatRailAmountFromKes, formatRailAmountWithKes } from '@/lib/utils';
 import { normaliseKenyanPhone } from '@/lib/phone';
 import { useWalletGuard } from '@/hooks/useWalletGuard';
@@ -33,6 +33,10 @@ const CreateCommunity: React.FC = () => {
   const [isCreated, setIsCreated] = useState(false);
   const [createdCommunityId, setCreatedCommunityId] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'mpesa' | 'wallet'>('mpesa');
+  const [addPaybill, setAddPaybill] = useState(false);
+  const [addUssd, setAddUssd] = useState(false);
+  const [paybillNumber, setPaybillNumber] = useState('');
+  const [ussdShortcode, setUssdShortcode] = useState('');
   const [walletChain, setWalletChain] = useState<Extract<Chain, 'solana' | 'stellar' | 'base' | 'arbitrum' | 'optimism' | 'celo'>>(
     chain === 'solana' || chain === 'stellar' || chain === 'base' || chain === 'arbitrum' || chain === 'optimism' || chain === 'celo'
       ? chain
@@ -55,6 +59,10 @@ const CreateCommunity: React.FC = () => {
   };
 
   const normalisedPhone = normaliseKenyanPhone(form.phone);
+  const totalFeeKes =
+    DAO_CREATION_FEE_KES +
+    (addPaybill ? PAYBILL_ADDON_FEE_KES : 0) +
+    (addUssd ? USSD_ADDON_FEE_KES : 0);
   const selectedCommunityChain = paymentMethod === 'wallet' ? walletChain : chain;
   const selectedCommunityChainMeta = CHAINS[selectedCommunityChain];
   const selectedAccountMeta = CHAINS[walletChain];
@@ -87,7 +95,7 @@ const CreateCommunity: React.FC = () => {
         body: JSON.stringify({
           phone: `+254${normalisedPhone}`,
           communityId: 'dao-creation-pending',
-          amount: DAO_CREATION_FEE_KES,
+          amount: totalFeeKes,
           currency: 'KES',
         }),
       });
@@ -146,6 +154,8 @@ const CreateCommunity: React.FC = () => {
           approvalThresholdPct: Number(form.approvalThreshold),
           votingPeriodDays: Number(form.votingPeriod),
           treasuryPolicy: form.treasuryPolicy as 'multisig-ready' | 'proposal-only' | 'manual-review',
+          paybillNumber: addPaybill && paybillNumber.trim() ? paybillNumber.trim() : undefined,
+          ussdShortcode: addUssd && ussdShortcode.trim() ? ussdShortcode.trim() : undefined,
         });
         if (chainResult) {
           saveCommunityChainMapping({
@@ -159,8 +169,8 @@ const CreateCommunity: React.FC = () => {
         setCreatedCommunityId(community.id);
         setIsCreated(true);
         const launchFeeLabel = paymentMethod === 'mpesa'
-          ? formatKSh(DAO_CREATION_FEE_KES)
-          : formatRailAmountWithKes(DAO_CREATION_FEE_KES, selectedAccountMeta);
+          ? formatKSh(totalFeeKes)
+          : formatRailAmountWithKes(totalFeeKes, selectedAccountMeta);
         toast({
           title: charge.persisted
             ? `${launchFeeLabel} payment received`
@@ -190,8 +200,8 @@ const CreateCommunity: React.FC = () => {
 
   if (isCreated) {
     const launchFeeLabel = paymentMethod === 'mpesa'
-      ? formatKSh(DAO_CREATION_FEE_KES)
-      : formatRailAmountWithKes(DAO_CREATION_FEE_KES, selectedAccountMeta);
+      ? formatKSh(totalFeeKes)
+      : formatRailAmountWithKes(totalFeeKes, selectedAccountMeta);
     return (
       <Layout>
         <section className="py-20">
@@ -416,6 +426,105 @@ const CreateCommunity: React.FC = () => {
                 </div>
               </div>
 
+              {/* Premium Add-ons */}
+              <div className="grid gap-4 rounded-lg border p-5">
+                <div>
+                  <h2 className="font-mono text-xs font-semibold uppercase tracking-widest">
+                    Premium Add-ons
+                  </h2>
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Optional payment channels added to your DAO setup fee.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setAddPaybill((v) => !v)}
+                  className={`flex items-start gap-4 rounded-lg border p-4 text-left transition-colors ${
+                    addPaybill
+                      ? 'border-primary bg-primary/8'
+                      : 'border-border hover:border-primary/40'
+                  }`}
+                >
+                  <div className={`mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-lg ${addPaybill ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                    <Phone className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold">M-Pesa Paybill number</p>
+                      <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${addPaybill ? 'border-primary/40 bg-primary/10 text-primary' : 'border-border text-muted-foreground'}`}>
+                        + {formatKSh(PAYBILL_ADDON_FEE_KES)}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-muted-foreground leading-5">
+                      Register a dedicated Paybill so members can pay dues directly without sharing personal numbers.
+                    </p>
+                  </div>
+                </button>
+
+                {addPaybill && (
+                  <div>
+                    <label htmlFor="paybill-number" className="mb-2 block text-xs font-semibold">
+                      Paybill number
+                    </label>
+                    <div className="relative">
+                      <Hash className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                      <input
+                        id="paybill-number"
+                        value={paybillNumber}
+                        onChange={(e) => setPaybillNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                        className="w-full rounded-lg border pl-10 pr-4 py-2.5 text-sm outline-none font-mono"
+                        placeholder="e.g. 400200"
+                        inputMode="numeric"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setAddUssd((v) => !v)}
+                  className={`flex items-start gap-4 rounded-lg border p-4 text-left transition-colors ${
+                    addUssd
+                      ? 'border-primary bg-primary/8'
+                      : 'border-border hover:border-primary/40'
+                  }`}
+                >
+                  <div className={`mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-lg ${addUssd ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                    <Smartphone className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold">USSD shortcode</p>
+                      <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${addUssd ? 'border-primary/40 bg-primary/10 text-primary' : 'border-border text-muted-foreground'}`}>
+                        + {formatKSh(USSD_ADDON_FEE_KES)}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-muted-foreground leading-5">
+                      Give feature-phone members a *XXX# shortcode to check balance, vote, and pay dues without a smartphone.
+                    </p>
+                  </div>
+                </button>
+
+                {addUssd && (
+                  <div>
+                    <label htmlFor="ussd-shortcode" className="mb-2 block text-xs font-semibold">
+                      USSD shortcode
+                    </label>
+                    <div className="relative">
+                      <Hash className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                      <input
+                        id="ussd-shortcode"
+                        value={ussdShortcode}
+                        onChange={(e) => setUssdShortcode(e.target.value.replace(/[^0-9*#]/g, '').slice(0, 12))}
+                        className="w-full rounded-lg border pl-10 pr-4 py-2.5 text-sm outline-none font-mono"
+                        placeholder="e.g. *483*123#"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Payment */}
               <div className="grid gap-4 rounded-lg border p-5">
                 <h2 className="font-mono text-xs font-semibold uppercase tracking-widest">
@@ -461,7 +570,7 @@ const CreateCommunity: React.FC = () => {
                     >
                       <label htmlFor="create-phone" className="mb-2 flex items-center gap-1.5 text-xs font-semibold">
                         <Phone className="h-3.5 w-3.5" />
-                        M-Pesa number for the {formatKSh(DAO_CREATION_FEE_KES)} launch charge
+                        M-Pesa number for the {formatKSh(totalFeeKes)} launch charge
                       </label>
                       <div className="flex rounded-lg border focus-within:border-current">
                         <span className="border-r px-3 py-2.5 text-sm">+254</span>
@@ -536,16 +645,29 @@ const CreateCommunity: React.FC = () => {
                 </AnimatePresence>
 
                 {/* Fee summary */}
-                <div className="grid gap-2 border-t pt-4 text-sm sm:grid-cols-[1fr_auto] sm:items-center sm:gap-x-4">
-                  <div>
-                    <p className="text-xs font-semibold">Group setup fee</p>
-                    <p className="mt-0.5 text-[11px]">
-                      One-time charge for account setup, metadata pinning, and registry setup.
-                    </p>
+                <div className="grid gap-2 border-t pt-4 text-sm">
+                  <div className="flex items-center justify-between gap-4">
+                    <p className="text-xs text-muted-foreground">DAO setup fee</p>
+                    <span className="text-xs font-semibold tabular-nums">{formatKSh(DAO_CREATION_FEE_KES)}</span>
                   </div>
-                  <span className="font-display text-lg font-bold tabular-nums">
-                    {paymentMethod === 'mpesa' ? formatKSh(DAO_CREATION_FEE_KES) : formatRailAmountWithKes(DAO_CREATION_FEE_KES, selectedAccountMeta)}
-                  </span>
+                  {addPaybill && (
+                    <div className="flex items-center justify-between gap-4">
+                      <p className="text-xs text-muted-foreground">Paybill add-on</p>
+                      <span className="text-xs font-semibold tabular-nums">+ {formatKSh(PAYBILL_ADDON_FEE_KES)}</span>
+                    </div>
+                  )}
+                  {addUssd && (
+                    <div className="flex items-center justify-between gap-4">
+                      <p className="text-xs text-muted-foreground">USSD add-on</p>
+                      <span className="text-xs font-semibold tabular-nums">+ {formatKSh(USSD_ADDON_FEE_KES)}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between gap-4 border-t pt-2">
+                    <p className="text-xs font-semibold">Total charge</p>
+                    <span className="font-display text-lg font-bold tabular-nums">
+                      {paymentMethod === 'mpesa' ? formatKSh(totalFeeKes) : formatRailAmountWithKes(totalFeeKes, selectedAccountMeta)}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="grid gap-2 text-xs sm:grid-cols-[1fr_auto] sm:items-center sm:gap-x-4">
@@ -582,7 +704,7 @@ const CreateCommunity: React.FC = () => {
                       Processing payment...
                     </>
                   ) : paymentMethod === 'mpesa' ? (
-                    `Pay ${formatKSh(DAO_CREATION_FEE_KES)} via M-Pesa`
+                    `Pay ${formatKSh(totalFeeKes)} via M-Pesa`
                   ) : (
                     needsSolanaAccount
                       ? `Pay from ${selectedAccountMeta.short} & launch group`
