@@ -97,6 +97,7 @@ push-baraza.bat  simple git push helper
 - Governance contract roadmap: `app/docs/GOVERNANCE_CONTRACT_ROADMAP.md`
 - Deployment notes: `app/docs/DEPLOYMENT.md`
 - Contract integration notes: `app/docs/CONTRACT_INTEGRATION.md`
+- Testnet contract/API review: `docs/TESTNET_CONTRACT_API_REVIEW.md`
 - Supabase schema starter: `app/docs/SUPABASE_SCHEMA.sql`
 
 Treat `MVP_ARCHITECTURE.md` as the source of truth for implementation scope. `DAO_LOGIC_REFERENCE.md` is roadmap/reference material, not an MVP requirement.
