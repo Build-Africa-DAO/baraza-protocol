@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Loader2, ThumbsDown, ThumbsUp, User } from 'lucide-react';
+import { CircleMinus, Loader2, ThumbsDown, ThumbsUp, User } from 'lucide-react';
 import { formatRailAmountFromKes, daysRemaining } from '@/lib/utils';
 import { useWalletGuard } from '@/hooks/useWalletGuard';
 import { useBarazaContract } from '@/hooks/useBarazaContract';
@@ -46,7 +46,7 @@ const DecisionCard: React.FC<DecisionCardProps> = ({
   // Optimistic vote state
   const [votesFor, setVotesFor] = useState(initialVotesFor);
   const [votesAgainst, setVotesAgainst] = useState(initialVotesAgainst);
-  const [userVote, setUserVote] = useState<'for' | 'against' | null>(null);
+  const [userVote, setUserVote] = useState<'for' | 'against' | 'abstain' | null>(null);
   const [isVoting, setIsVoting] = useState(false);
   const hasVotedRef = useRef(false);
 
@@ -61,7 +61,7 @@ const DecisionCard: React.FC<DecisionCardProps> = ({
   const isActive = stageMeta.votable;
   const days = daysRemaining(endsAt);
 
-  const handleVote = async (vote: 'for' | 'against') => {
+  const handleVote = async (vote: 'for' | 'against' | 'abstain') => {
     if (!isActive || hasVotedRef.current || isVoting) return;
 
     await requireWallet(async () => {
@@ -72,15 +72,15 @@ const DecisionCard: React.FC<DecisionCardProps> = ({
       // Optimistic update
       setUserVote(vote);
       if (vote === 'for') setVotesFor((v) => v + 1);
-      else setVotesAgainst((v) => v + 1);
+      else if (vote === 'against') setVotesAgainst((v) => v + 1);
 
       try {
-        const success = await castVote(id, communityId, vote === 'for');
+        const success = await castVote(id, communityId, vote === 'for' ? 'yes' : vote === 'against' ? 'no' : 'abstain');
         if (!success) {
           // Rollback on failure
           setUserVote(null);
           if (vote === 'for') setVotesFor((v) => v - 1);
-          else setVotesAgainst((v) => v - 1);
+          else if (vote === 'against') setVotesAgainst((v) => v - 1);
           hasVotedRef.current = false;
         }
       } finally {
@@ -158,19 +158,23 @@ const DecisionCard: React.FC<DecisionCardProps> = ({
       {/* Vote buttons */}
       {isActive && (
         <div className="flex gap-3">
-          {(['for', 'against'] as const).map((side) => {
+          {(['for', 'against', 'abstain'] as const).map((side) => {
             const isThisSide = userVote === side;
             const isOtherSide = userVote !== null && userVote !== side;
-            const label = side === 'for' ? 'Support' : 'Object';
-            const Icon = side === 'for' ? ThumbsUp : ThumbsDown;
+            const label = side === 'for' ? 'Support' : side === 'against' ? 'Object' : 'Abstain';
+            const Icon = side === 'for' ? ThumbsUp : side === 'against' ? ThumbsDown : CircleMinus;
             const activeClass =
               side === 'for'
                 ? 'bg-primary/20 text-primary border border-primary/30'
-                : 'bg-destructive/20 text-destructive border border-destructive/30';
+                : side === 'against'
+                  ? 'bg-destructive/20 text-destructive border border-destructive/30'
+                  : 'bg-accent/20 text-accent border border-accent/30';
             const idleClass =
               side === 'for'
                 ? 'bg-primary/10 text-primary hover:bg-primary/20 border border-transparent hover:border-primary/30'
-                : 'bg-destructive/10 text-destructive hover:bg-destructive/20 border border-transparent hover:border-destructive/30';
+                : side === 'against'
+                  ? 'bg-destructive/10 text-destructive hover:bg-destructive/20 border border-transparent hover:border-destructive/30'
+                  : 'bg-accent/10 text-accent hover:bg-accent/20 border border-transparent hover:border-accent/30';
 
             return (
               <button

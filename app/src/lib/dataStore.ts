@@ -32,11 +32,12 @@ export interface Decision {
   proposedBy: string;
   votesFor: number;
   votesAgainst: number;
+  votesAbstain?: number;
   totalMembers: number;
   status: 'active' | 'completed';
   createdAt: string;
   endsAt: string;
-  voters: Record<string, 'for' | 'against'>; // walletKey -> vote
+  voters: Record<string, 'for' | 'against' | 'abstain'>; // walletKey -> vote
 }
 
 export interface Member {
@@ -446,7 +447,7 @@ class BarazaDataStore {
     return community ? community.members.includes(walletKey) : false;
   }
 
-  hasVoted(decisionId: string, walletKey: string): 'for' | 'against' | null {
+  hasVoted(decisionId: string, walletKey: string): 'for' | 'against' | 'abstain' | null {
     const decision = this.decisions.get(decisionId);
     return decision?.voters[walletKey] || null;
   }
@@ -585,7 +586,7 @@ class BarazaDataStore {
     return decision;
   }
 
-  async castVote(decisionId: string, walletKey: string, vote: 'for' | 'against'): Promise<boolean> {
+  async castVote(decisionId: string, walletKey: string, vote: 'for' | 'against' | 'abstain'): Promise<boolean> {
     await this.simulateDelay(800);
 
     const decision = this.decisions.get(decisionId);
@@ -594,13 +595,15 @@ class BarazaDataStore {
     decision.voters[walletKey] = vote;
     if (vote === 'for') {
       decision.votesFor += 1;
-    } else {
+    } else if (vote === 'against') {
       decision.votesAgainst += 1;
+    } else {
+      decision.votesAbstain = (decision.votesAbstain ?? 0) + 1;
     }
 
     this.addActivity(decision.communityId, {
       type: 'vote_cast',
-      message: `A member ${vote === 'for' ? 'supported' : 'objected to'} "${decision.title}"`,
+      message: `A member ${vote === 'for' ? 'supported' : vote === 'against' ? 'objected to' : 'abstained on'} "${decision.title}"`,
     });
 
     this.notify();

@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { dataStore } from '@/lib/dataStore';
 import { communityPda, createBarazaReadClient, toSlug } from '@/lib/programs';
 import { getCommunityChainMapping, getDecisionChainMapping } from '@/lib/chainMappings';
+import type { VoteOption } from '@/types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -70,7 +71,7 @@ interface UseBarazaContractResult {
   fetchTreasuryBalance: (communityId: string) => Promise<number>;
   fetchVoteState: (proposalId: string) => Promise<VoteState | null>;
   // Write
-  castVote: (proposalId: string, communityId: string, support: boolean) => Promise<boolean>;
+  castVote: (proposalId: string, communityId: string, support: boolean | VoteOption) => Promise<boolean>;
   /** feeKES is the membership fee in KES. KES→lamports conversion happens on the program/backend side. */
   joinCommunity: (communityId: string, feeKES: number) => Promise<boolean>;
   /** feeKES is the monthly dues in KES. KES→lamports conversion happens on the program/backend side. */
@@ -181,8 +182,9 @@ export function useBarazaContract(): UseBarazaContractResult {
   );
 
   const castVote = useCallback(
-    async (proposalId: string, _communityId: string, _support: boolean): Promise<boolean> => {
-      const txId = `vote:${proposalId}:${publicKey?.toBase58()}`;
+    async (proposalId: string, _communityId: string, support: boolean | VoteOption): Promise<boolean> => {
+      const vote = typeof support === 'boolean' ? (support ? 'yes' : 'no') : support;
+      const txId = `vote:${proposalId}:${vote}:${publicKey?.toBase58()}`;
       return blockUnwiredWrite(txId, 'Vote casting');
     },
     [blockUnwiredWrite, publicKey]
