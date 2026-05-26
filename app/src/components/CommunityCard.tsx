@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, BriefcaseBusiness, UserPlus, Users, TrendingUp, MessageSquare } from "lucide-react";
 import { MagicCard } from "@/components/ui/magic-card";
-import { formatKSh, cn } from "@/lib/utils";
+import { formatRailAmountFromKes, cn } from "@/lib/utils";
 import { getCommunityBannerImage } from "@/lib/communityVisuals";
 import { CHAINS, type Chain } from "@/lib/chain";
 import { getBountyStatsForCommunity } from "@/lib/bounties";
@@ -93,7 +93,7 @@ export default function CommunityCard({
               <div className={cn("mt-4 flex items-center justify-between gap-3 sm:mt-0", !isList && "hidden")}>
                 <div>
                   <p className="text-[10px] text-muted-foreground">Monthly fee</p>
-                  <p className="text-sm font-bold text-accent tabular-nums">{formatKSh(membershipFee)}</p>
+                  <p className="text-sm font-bold text-accent tabular-nums">{formatRailAmountFromKes(membershipFee, chainMeta)}</p>
                 </div>
               </div>
             </div>
@@ -105,7 +105,7 @@ export default function CommunityCard({
                   <BriefcaseBusiness className="h-3.5 w-3.5" />
                   {bountyStats.open} open {bountyStats.open === 1 ? "bounty" : "bounties"}
                 </span>
-                <span className="text-[10px] font-bold text-accent">{formatKSh(bountyStats.totalRewardKes)}</span>
+                <span className="text-[10px] font-bold text-accent">{formatRailAmountFromKes(bountyStats.totalRewardKes, chainMeta)}</span>
               </div>
               <p className="truncate text-xs font-semibold text-foreground">{bountyStats.featured.title}</p>
             </div>
@@ -120,7 +120,7 @@ export default function CommunityCard({
             <div className="flex flex-col items-center text-center gap-0.5">
               <TrendingUp className="w-3.5 h-3.5 text-accent" />
               <span className="text-[11px] font-semibold text-foreground tabular-nums truncate w-full text-center">
-                {formatKSh(fundBalance)}
+                {formatRailAmountFromKes(fundBalance, chainMeta)}
               </span>
               <span className="text-[9px] text-muted-foreground">Treasury</span>
             </div>
@@ -133,7 +133,7 @@ export default function CommunityCard({
 
           <div className={cn("mt-3.5 flex items-center justify-between", isList && "sm:hidden")}>
             <span className="text-[10px] text-muted-foreground">Monthly fee</span>
-            <span className="text-xs font-bold text-accent tabular-nums">{formatKSh(membershipFee)}</span>
+            <span className="text-xs font-bold text-accent tabular-nums">{formatRailAmountFromKes(membershipFee, chainMeta)}</span>
           </div>
 
             <div className="mt-5 grid gap-2 sm:grid-cols-2">

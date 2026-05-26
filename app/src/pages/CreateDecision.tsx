@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Vote, ArrowLeft, Info, Loader2, ShieldCheck } from 'lucide-react';
 import Layout from '@/components/Layout';
-import { formatKSh } from '@/lib/utils';
+import { formatRailAmountFromKes } from '@/lib/utils';
 import { useWalletGuard } from '@/hooks/useWalletGuard';
 import { useToast } from '@/hooks/use-toast';
 import { useCommunity } from '@/hooks/useCommunities';
@@ -161,7 +161,7 @@ const CreateDecision: React.FC = () => {
               <h1 className="font-display text-2xl font-bold">Submit a proposal</h1>
               </div>
               <p className="text-sm mb-8">
-                Submit a proposal for members to vote on. Include how much KES funding is needed from the treasury.
+                Submit a proposal for members to vote on. Include how much funding is needed from the treasury.
               </p>
             </div>
             </CommunityBanner>
@@ -171,7 +171,7 @@ const CreateDecision: React.FC = () => {
               <Info className="w-5 h-5 flex-shrink-0" />
               <div>
                 <p className="text-xs">Available treasury</p>
-                <p className="text-sm font-bold">{formatKSh(community.fundBalance)}</p>
+                <p className="text-sm font-bold">{formatRailAmountFromKes(community.fundBalance, chainMeta)}</p>
               </div>
             </div>
 
@@ -230,7 +230,7 @@ const CreateDecision: React.FC = () => {
               {/* Funding amount */}
               <div>
                 <label className="block text-xs font-semibold mb-2">
-                  Funding amount (KES)
+                  Funding amount source (KES)
                 </label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium">KES</span>
@@ -246,7 +246,7 @@ const CreateDecision: React.FC = () => {
                 </div>
                 {overBudget && (
                   <p className="text-xs mt-1.5">
-                    This exceeds the available treasury of {formatKSh(community.fundBalance)}
+                    This exceeds the available treasury of {formatRailAmountFromKes(community.fundBalance, chainMeta)}
                   </p>
                 )}
               </div>

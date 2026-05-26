@@ -18,7 +18,7 @@ import CombinedBoard from '@/components/community/CombinedBoard';
 import CommunitySettings from '@/components/community/CommunitySettings';
 import Layout from '@/components/Layout';
 import DecisionCard from '@/components/DecisionCard';
-import { formatKSh, cn } from '@/lib/utils';
+import { formatRailAmountFromKes, formatRailDate, cn } from '@/lib/utils';
 import { useDecisions } from '@/hooks/useBarazaData';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
@@ -176,7 +176,7 @@ const CommunityDashboard: React.FC = () => {
 
   useSeo({
     title: community ? `${community.name} dashboard` : undefined,
-    description: 'KES treasury balance, member roster, proposals, and account activity for a Baraza group.',
+    description: 'Treasury balance, member roster, proposals, and account activity for a Baraza group.',
     path: id ? `/dashboard/${id}` : '/dashboard',
     noIndex: true,
   });
@@ -313,9 +313,9 @@ const CommunityDashboard: React.FC = () => {
                     </span>
                     <span className="inline-flex items-center gap-1">
                       <Calendar className="h-3.5 w-3.5" />
-                      Since {new Date(community.createdAt).toLocaleDateString('en-KE', { month: 'short', year: 'numeric' })}
+                      Since {formatRailDate(community.createdAt, chainMeta, { month: 'short', year: 'numeric' })}
                     </span>
-                    <span className="font-medium">{formatKSh(community.membershipFee)}/month</span>
+                    <span className="font-medium">{formatRailAmountFromKes(community.membershipFee, chainMeta)}/month</span>
                   </div>
                 </div>
                 <div className="flex w-full flex-col gap-3 sm:w-auto sm:items-end">
@@ -337,7 +337,7 @@ const CommunityDashboard: React.FC = () => {
 
           {/* Live stats */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
-            <LiveStatCard icon={TrendingUp} label="Treasury" value={community.fundBalance} format={(v) => formatKSh(v)} color="" bg="" />
+            <LiveStatCard icon={TrendingUp} label="Treasury" value={community.fundBalance} format={(v) => formatRailAmountFromKes(v, chainMeta)} color="" bg="" />
             <LiveStatCard icon={Users} label="Members" value={community.memberCount} color="" bg="" />
             <LiveStatCard icon={Vote} label="Active Proposals" value={activeDecisions.length} color="" bg="" showDelta={false} />
             <LiveStatCard icon={History} label="Past Proposals" value={pastDecisions.length} color="" bg="" showDelta={false} />
@@ -433,7 +433,7 @@ const CommunityDashboard: React.FC = () => {
                         <div className="space-y-3 text-sm">
                           <div className="flex justify-between border-b pb-2"><span>Role</span><span className="font-semibold">Member</span></div>
                           <div className="flex justify-between border-b pb-2"><span>Voting power</span><span className="font-semibold">1 vote</span></div>
-                          <div className="flex justify-between"><span>Monthly dues</span><span className="font-semibold">{formatKSh(community.membershipFee)}</span></div>
+                          <div className="flex justify-between"><span>Monthly dues</span><span className="font-semibold">{formatRailAmountFromKes(community.membershipFee, chainMeta)}</span></div>
                         </div>
                       ) : (
                         <>
@@ -647,7 +647,7 @@ const CommunityDashboard: React.FC = () => {
                       </div>
                       <div className="flex items-center justify-between border-b pb-3">
                         <span>Recorded balance</span>
-                        <span className="font-display text-lg font-bold">{formatKSh(community.fundBalance)}</span>
+                        <span className="font-display text-lg font-bold">{formatRailAmountFromKes(community.fundBalance, chainMeta)}</span>
                       </div>
                       <div className="flex items-center justify-between border-b pb-3">
                         <span>Treasury record</span>

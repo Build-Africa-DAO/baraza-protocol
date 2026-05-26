@@ -34,6 +34,14 @@ export interface ChainMeta {
     nativeSymbol: string;
     explorerUrl: string;
   };
+  currency: {
+    code: string;
+    symbol: string;
+    locale: string;
+    decimals: number;
+    kesPerUnit: number;
+  };
+  timeZone: string;
   badgeBg: string;
   badgeText: string;
   enabled: boolean;
@@ -60,6 +68,14 @@ export const CHAINS: Record<Chain, ChainMeta> = {
       nativeSymbol: 'SOL',
       explorerUrl: 'https://explorer.solana.com/?cluster=devnet',
     },
+    currency: {
+      code: 'SOL',
+      symbol: 'SOL',
+      locale: 'en-US',
+      decimals: 4,
+      kesPerUnit: 22000,
+    },
+    timeZone: 'America/Los_Angeles',
     badgeBg: '#14F195',
     badgeText: '#0B132B',
     enabled: true,
@@ -77,6 +93,14 @@ export const CHAINS: Record<Chain, ChainMeta> = {
       nativeSymbol: 'XLM',
       explorerUrl: 'https://stellar.expert/explorer/testnet',
     },
+    currency: {
+      code: 'XLM',
+      symbol: 'XLM',
+      locale: 'en-US',
+      decimals: 2,
+      kesPerUnit: 16,
+    },
+    timeZone: 'UTC',
     badgeBg: '#0066FF',
     badgeText: '#FFFFFF',
     enabled: true,
@@ -95,6 +119,14 @@ export const CHAINS: Record<Chain, ChainMeta> = {
       nativeSymbol: 'ETH',
       explorerUrl: 'https://sepolia.etherscan.io',
     },
+    currency: {
+      code: 'ETH',
+      symbol: 'ETH',
+      locale: 'en-US',
+      decimals: 5,
+      kesPerUnit: 450000,
+    },
+    timeZone: 'UTC',
     badgeBg: '#627EEA',
     badgeText: '#FFFFFF',
     enabled: true,
@@ -114,6 +146,14 @@ export const CHAINS: Record<Chain, ChainMeta> = {
       nativeSymbol: 'ETH',
       explorerUrl: 'https://sepolia.basescan.org',
     },
+    currency: {
+      code: 'ETH',
+      symbol: 'ETH',
+      locale: 'en-US',
+      decimals: 5,
+      kesPerUnit: 450000,
+    },
+    timeZone: 'America/Los_Angeles',
     badgeBg: '#0052FF',
     badgeText: '#FFFFFF',
     enabled: true,
@@ -133,6 +173,14 @@ export const CHAINS: Record<Chain, ChainMeta> = {
       nativeSymbol: 'ETH',
       explorerUrl: 'https://sepolia.arbiscan.io',
     },
+    currency: {
+      code: 'ETH',
+      symbol: 'ETH',
+      locale: 'en-US',
+      decimals: 5,
+      kesPerUnit: 450000,
+    },
+    timeZone: 'UTC',
     badgeBg: '#28A0F0',
     badgeText: '#FFFFFF',
     enabled: true,
@@ -152,6 +200,14 @@ export const CHAINS: Record<Chain, ChainMeta> = {
       nativeSymbol: 'ETH',
       explorerUrl: 'https://sepolia-optimism.etherscan.io',
     },
+    currency: {
+      code: 'ETH',
+      symbol: 'ETH',
+      locale: 'en-US',
+      decimals: 5,
+      kesPerUnit: 450000,
+    },
+    timeZone: 'UTC',
     badgeBg: '#FF0420',
     badgeText: '#FFFFFF',
     enabled: true,
@@ -171,6 +227,14 @@ export const CHAINS: Record<Chain, ChainMeta> = {
       nativeSymbol: 'POL',
       explorerUrl: 'https://amoy.polygonscan.com',
     },
+    currency: {
+      code: 'POL',
+      symbol: 'POL',
+      locale: 'en-US',
+      decimals: 2,
+      kesPerUnit: 30,
+    },
+    timeZone: 'Asia/Kolkata',
     badgeBg: '#8247E5',
     badgeText: '#FFFFFF',
     enabled: true,
@@ -190,6 +254,14 @@ export const CHAINS: Record<Chain, ChainMeta> = {
       nativeSymbol: 'tBNB',
       explorerUrl: 'https://testnet.bscscan.com',
     },
+    currency: {
+      code: 'tBNB',
+      symbol: 'tBNB',
+      locale: 'en-US',
+      decimals: 5,
+      kesPerUnit: 85000,
+    },
+    timeZone: 'Asia/Singapore',
     badgeBg: '#F3BA2F',
     badgeText: '#0B132B',
     enabled: false,
@@ -211,6 +283,14 @@ export const CHAINS: Record<Chain, ChainMeta> = {
       nativeSymbol: 'CELO',
       explorerUrl: 'https://alfajores.celoscan.io',
     },
+    currency: {
+      code: 'CELO',
+      symbol: 'CELO',
+      locale: 'en-KE',
+      decimals: 2,
+      kesPerUnit: 90,
+    },
+    timeZone: 'Africa/Nairobi',
     badgeBg: '#35D07F',
     badgeText: '#0B132B',
     enabled: true,

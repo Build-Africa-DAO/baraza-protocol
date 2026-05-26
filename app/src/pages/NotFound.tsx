@@ -22,7 +22,7 @@ const NotFound: React.FC = () => {
           </h1>
           <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed">
             The page you&apos;re looking for may have moved or never existed.
-            Head back to explore groups or launch your own chama.
+            Head back to explore DAOs or launch your own.
           </p>
 
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">

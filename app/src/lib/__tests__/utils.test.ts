@@ -1,5 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
-import { cn, daysRemaining, formatKSh, formatUSD, truncateAddress } from '@/lib/utils';
+import {
+  cn,
+  daysRemaining,
+  formatKSh,
+  formatRailAmountFromKes,
+  formatRailAmountWithKes,
+  formatRailDate,
+  formatUSD,
+  truncateAddress,
+} from '@/lib/utils';
 
 describe('formatKSh', () => {
   it('formats zero', () => expect(formatKSh(0)).toBe('KES 0'));
@@ -11,6 +20,23 @@ describe('formatKSh', () => {
 describe('formatUSD', () => {
   it('formats whole-dollar amounts', () => expect(formatUSD(50)).toBe('$50'));
   it('formats cents when needed', () => expect(formatUSD(50.25)).toBe('$50.25'));
+});
+
+describe('rail formatting', () => {
+  it('formats KES source amounts in selected rail currency', () => {
+    expect(formatRailAmountFromKes(22000, 'solana')).toBe('SOL 1.00');
+    expect(formatRailAmountFromKes(1600, 'stellar')).toBe('XLM 100');
+    expect(formatRailAmountFromKes(450000, 'base')).toBe('ETH 1.00');
+  });
+
+  it('keeps KES equivalent visible for reconciled amounts', () => {
+    expect(formatRailAmountWithKes(6500, 'base')).toContain('KES 6,500');
+  });
+
+  it('formats dates in the selected rail timezone', () => {
+    expect(formatRailDate('2026-05-26T00:30:00.000Z', 'solana', { day: '2-digit', month: 'short', year: 'numeric' })).toBe('25 May 2026');
+    expect(formatRailDate('2026-05-26T00:30:00.000Z', 'celo', { day: '2-digit', month: 'short', year: 'numeric' })).toBe('26 May 2026');
+  });
 });
 
 describe('truncateAddress', () => {

@@ -12,7 +12,9 @@ import {
   updateBountyStatus, updateSubmissionStatus,
   type Bounty, type BountyStatus, type BountySubmission,
 } from '@/lib/bounties';
-import { formatKSh, cn } from '@/lib/utils';
+import { formatRailAmountFromKes, cn } from '@/lib/utils';
+import { useChain } from '@/hooks/useChain';
+import type { ChainMeta } from '@/lib/chain';
 
 interface BountyBoardProps {
   communityId: string;
@@ -70,11 +72,13 @@ function CompactCard({
   interested,
   onToggleInterest,
   onAdvanceStatus,
+  chainMeta,
 }: {
   bounty: Bounty;
   interested: boolean;
   onToggleInterest: (id: string) => void;
   onAdvanceStatus: (id: string, status: BountyStatus, assignee?: string) => void;
+  chainMeta: ChainMeta;
 }) {
   const cfg = STATUS_CONFIG[bounty.status];
   const StatusIcon = cfg.icon;
@@ -107,7 +111,7 @@ function CompactCard({
           <CalendarDays className="h-3 w-3" />
           {daysLeft(bounty.deadline)}
         </span>
-        <span className="font-bold text-sm text-accent">{formatKSh(bounty.rewardKes)}</span>
+        <span className="font-bold text-sm text-accent">{formatRailAmountFromKes(bounty.rewardKes, chainMeta)}</span>
       </div>
 
       <div className="mt-2.5 flex gap-2">
@@ -277,11 +281,13 @@ function FullCard({
   interested,
   onToggleInterest,
   onAdvanceStatus,
+  chainMeta,
 }: {
   bounty: Bounty;
   interested: boolean;
   onToggleInterest: (id: string) => void;
   onAdvanceStatus: (id: string, status: BountyStatus, assignee?: string) => void;
+  chainMeta: ChainMeta;
 }) {
   const cfg = STATUS_CONFIG[bounty.status];
   const StatusIcon = cfg.icon;
@@ -330,7 +336,7 @@ function FullCard({
           <p className="mt-1.5 text-xs leading-5 text-muted-foreground">{bounty.summary}</p>
         </div>
         <div className="shrink-0 text-right">
-          <p className="font-display text-base font-bold text-accent">{formatKSh(bounty.rewardKes)}</p>
+          <p className="font-display text-base font-bold text-accent">{formatRailAmountFromKes(bounty.rewardKes, chainMeta)}</p>
           <p className="mt-0.5 text-[10px] text-muted-foreground">
             {bounty.submissions} {bounty.submissions === 1 ? 'applicant' : 'applicants'}
           </p>
@@ -448,13 +454,14 @@ function FullCard({
 // ─── Kanban column ─────────────────────────────────────────────────────────────
 
 function KanbanColumn({
-  status, bounties, interested, onToggleInterest, onAdvanceStatus,
+  status, bounties, interested, onToggleInterest, onAdvanceStatus, chainMeta,
 }: {
   status: BountyStatus;
   bounties: Bounty[];
   interested: Set<string>;
   onToggleInterest: (id: string) => void;
   onAdvanceStatus: (id: string, status: BountyStatus, assignee?: string) => void;
+  chainMeta: ChainMeta;
 }) {
   const cfg = STATUS_CONFIG[status];
   const ColIcon = cfg.icon;
@@ -482,6 +489,7 @@ function KanbanColumn({
             interested={interested.has(bounty.id)}
             onToggleInterest={onToggleInterest}
             onAdvanceStatus={onAdvanceStatus}
+            chainMeta={chainMeta}
           />
         ))}
       </div>
@@ -494,6 +502,7 @@ function KanbanColumn({
 type ViewMode = 'list' | 'board';
 
 export default function BountyBoard({ communityId, communityName = 'this community', compact = false }: BountyBoardProps) {
+  const { chainMeta } = useChain();
   const [bounties, setBounties] = useState(() => getBountiesForCommunity(communityId));
   const [view, setView] = useState<ViewMode>('board');
   const [interested, setInterested] = useState<Set<string>>(readInterest);
@@ -557,7 +566,7 @@ export default function BountyBoard({ communityId, communityName = 'this communi
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Open</p>
             </div>
             <div className="rounded-lg border p-3">
-              <p className="font-display text-xl font-bold text-accent">{formatKSh(rewardPool)}</p>
+              <p className="font-display text-xl font-bold text-accent">{formatRailAmountFromKes(rewardPool, chainMeta)}</p>
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Rewards</p>
             </div>
           </div>
@@ -595,6 +604,7 @@ export default function BountyBoard({ communityId, communityName = 'this communi
                 interested={interested}
                 onToggleInterest={handleToggleInterest}
                 onAdvanceStatus={handleAdvanceStatus}
+                chainMeta={chainMeta}
               />
             ))}
           </div>
@@ -611,6 +621,7 @@ export default function BountyBoard({ communityId, communityName = 'this communi
               interested={interested.has(bounty.id)}
               onToggleInterest={handleToggleInterest}
               onAdvanceStatus={handleAdvanceStatus}
+              chainMeta={chainMeta}
             />
           ))}
         </div>

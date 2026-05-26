@@ -108,7 +108,7 @@ export default function Footer() {
             <div className="hidden h-3 w-px bg-border sm:block" />
             <p className="text-xs text-muted-foreground">Built for {chainMeta.label}</p>
           </div>
-            <p className="text-xs text-muted-foreground">Built for Kenyan chamas and SACCOs</p>
+            <p className="text-xs text-muted-foreground">Built for Kenyan DAOs, chamas &amp; SACCOs</p>
         </div>
       </div>
     </footer>

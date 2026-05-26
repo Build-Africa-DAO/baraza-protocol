@@ -191,7 +191,7 @@ export default function Profile() {
             </div>
             <h1 className="font-display text-2xl font-bold">{chainMeta.accountCta}</h1>
             <p className="mt-3 text-sm">
-              Your profile shows your memberships, voting history, and credentials across every chama you join.
+              Your profile shows your memberships, voting history, and credentials across every DAO or chama you join.
             </p>
             <button onClick={() => setVisible(true)} className="btn-warm mt-6 inline-flex items-center gap-2 text-sm">
               Connect {chainMeta.label}
@@ -461,10 +461,10 @@ export default function Profile() {
                 ) : (
                   <div className="rounded-lg border border-dashed p-8 text-center">
                     <p className="font-display text-base font-semibold">
-                      Not a member of any chama yet
+                      Not a member of any DAO yet
                     </p>
                     <p className="mt-2 text-sm">
-                      Join a chama to receive your membership credential and vote on proposals.
+                      Join a DAO or chama to receive your membership credential and vote on proposals.
                     </p>
                     <div className="mt-5 flex flex-col items-center justify-center gap-2 sm:flex-row">
                       <Link to="/communities" className="btn-warm inline-flex items-center gap-2 text-sm">

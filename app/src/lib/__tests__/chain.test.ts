@@ -52,6 +52,9 @@ describe('CHAINS metadata', () => {
       expect(chain.testnet.label.length).toBeGreaterThan(0);
       expect(chain.testnet.nativeSymbol.length).toBeGreaterThan(0);
       expect(chain.testnet.explorerUrl).toMatch(/^https:\/\//);
+      expect(chain.currency.code.length).toBeGreaterThan(0);
+      expect(chain.currency.kesPerUnit).toBeGreaterThan(0);
+      expect(chain.timeZone.length).toBeGreaterThan(0);
     }
 
     expect(CHAINS.ethereum.testnet.chainId).toBe(11155111);

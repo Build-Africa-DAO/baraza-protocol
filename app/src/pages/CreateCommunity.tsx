@@ -21,7 +21,7 @@ const CreateCommunity: React.FC = () => {
   useSeo({
     title: "Launch a DAO",
     description:
-      "Spin up a chama, SACCO, welfare group, or co-operative on Baraza. Set membership rules, dues, quorum, and M-Pesa contribution paths in a single guided flow.",
+      "Launch a DAO, chama, SACCO, or co-operative on Baraza. Set membership rules, dues, quorum, and M-Pesa contribution paths in a single guided flow.",
     path: "/create",
   });
   const navigate = useNavigate();
@@ -74,7 +74,7 @@ const CreateCommunity: React.FC = () => {
   }, [chain]);
 
   /**
-   * Charge the chama setup fee via the M-Pesa simulator, then create the
+   * Charge the DAO setup fee via the M-Pesa simulator, then create the
    * community record. Falls back to direct creation if the simulator endpoint
    * is unreachable (local dev without `vercel dev`) so the form still works
    * - the fee is then a paper-only acknowledgement, not enforced.
@@ -200,7 +200,7 @@ const CreateCommunity: React.FC = () => {
                 {form.name} is live
               </h2>
               <p className="text-sm mb-2">
-                Payment of {launchFeeLabel} received. Your chama is ready.
+                Payment of {launchFeeLabel} received. Your DAO is ready.
               </p>
               <p className="text-sm mb-8">
                 Share the join link with members, then start your first proposal from the dashboard.
@@ -253,7 +253,7 @@ const CreateCommunity: React.FC = () => {
                 </h1>
               </div>
               <p className="max-w-xl text-sm font-semibold leading-6 text-foreground/92 drop-shadow md:text-base md:leading-7">
-                Launch a chama where members can contribute in KES, submit proposals, and manage a shared treasury with clear rules.
+                Launch a DAO or chama where members can contribute in KES, submit proposals, and manage a shared treasury with clear rules.
               </p>
             </div>
             </CommunityBanner>
@@ -266,7 +266,7 @@ const CreateCommunity: React.FC = () => {
               {/* Name */}
               <div>
                 <label className="block text-xs font-semibold mb-2">
-                  Chama or SACCO Name
+                  DAO / Chama Name
                 </label>
                 <input
                   type="text"
@@ -608,7 +608,7 @@ const CreateCommunity: React.FC = () => {
                 </div>
                 <div className="mt-6 rounded-lg border p-4">
                   <p className="text-xs leading-5">
-                    Treasury setup, membership tiers, and credentials are provisioned automatically once your chama is launched.
+                    Treasury setup, membership tiers, and credentials are provisioned automatically once your DAO is launched.
                   </p>
                 </div>
               </div>
