@@ -1,4 +1,6 @@
 import { getSupabaseClient } from '@/lib/communities';
+import { getChainAdapter } from '@/lib/adapters';
+import type { BountyAccess, RewardToken } from '@/types';
 
 /** Full task lifecycle: open → in_progress → in_review → awarded → paid */
 export type BountyStatus = 'open' | 'in_progress' | 'in_review' | 'awarded' | 'paid';
@@ -21,6 +23,11 @@ export interface Bounty {
   maxApplicants?: number;
   /** If true, only verified community members may apply. */
   roleGated?: boolean;
+  /** Public bounties are visible to anyone; restricted bounties require group membership. */
+  access?: BountyAccess;
+  /** Reward settlement token. KES remains the reconciliation display source. */
+  rewardToken?: RewardToken;
+  payoutTxHash?: string;
 }
 
 export interface BountySubmission {
@@ -46,6 +53,8 @@ export interface CreateBountyInput {
   skills: string[];
   maxApplicants?: number;
   roleGated?: boolean;
+  access?: BountyAccess;
+  rewardToken?: RewardToken;
 }
 
 const LOCAL_BOUNTIES_KEY = 'baraza.bounties.v1';
@@ -62,6 +71,9 @@ interface BountyRow {
   posted_by: string;
   summary: string;
   skills: string[] | null;
+  access?: string | null;
+  reward_token?: string | null;
+  payout_tx_hash?: string | null;
 }
 
 interface BountySubmissionRow {
@@ -88,6 +100,8 @@ const SEED_BOUNTIES: Bounty[] = [
     postedBy: 'Kibera Youth Collective',
     summary: 'Create reusable poster and WhatsApp story templates for member businesses.',
     skills: ['Canva', 'Branding', 'Social media'],
+    access: 'community-restricted',
+    rewardToken: 'SOL',
   },
   {
     id: 'b-ky-training',
@@ -101,6 +115,8 @@ const SEED_BOUNTIES: Bounty[] = [
     postedBy: 'Kibera Youth Collective',
     summary: 'Run a Saturday workshop on savings, pricing, and mobile-money records.',
     skills: ['Training', 'Events', 'Finance'],
+    access: 'public',
+    rewardToken: 'G$',
   },
   {
     id: 'b-mm-supplier',
@@ -116,6 +132,8 @@ const SEED_BOUNTIES: Bounty[] = [
     skills: ['Research', 'Sheets', 'Procurement'],
     assignee: 'Wanjiru M.',
     roleGated: true,
+    access: 'community-restricted',
+    rewardToken: 'G$',
   },
   {
     id: 'b-mm-photo',
@@ -129,6 +147,8 @@ const SEED_BOUNTIES: Bounty[] = [
     postedBy: 'Mama Mboga Association',
     summary: 'Photograph 25 vendor stalls for online catalogues and delivery menus.',
     skills: ['Photography', 'Events', 'Content'],
+    access: 'public',
+    rewardToken: 'G$',
   },
   {
     id: 'b-tb-audit',
@@ -142,6 +162,8 @@ const SEED_BOUNTIES: Bounty[] = [
     postedBy: 'TechBridge Nairobi',
     summary: 'Review governance contract assumptions and produce issue-ranked audit notes.',
     skills: ['Solana', 'Rust', 'Security'],
+    access: 'community-restricted',
+    rewardToken: 'SOL',
   },
   {
     id: 'b-tb-mentor',
@@ -156,6 +178,8 @@ const SEED_BOUNTIES: Bounty[] = [
     summary: 'Host a practical pair-programming session for junior DAO members.',
     skills: ['Mentoring', 'React', 'Community'],
     assignee: 'David K.',
+    access: 'community-restricted',
+    rewardToken: 'SOL',
   },
   {
     id: 'b-tb-onchain',
@@ -171,6 +195,8 @@ const SEED_BOUNTIES: Bounty[] = [
     skills: ['Solana', 'Anchor', 'Technical writing'],
     assignee: 'Amara T.',
     roleGated: true,
+    access: 'community-restricted',
+    rewardToken: 'SOL',
   },
   {
     id: 'b-mh-site',
@@ -184,6 +210,8 @@ const SEED_BOUNTIES: Bounty[] = [
     postedBy: 'Mwanzo Housing Sacco',
     summary: 'Document Plot 3 access roads, utilities, and boundary markers for members.',
     skills: ['Photography', 'Reporting', 'Mapping'],
+    access: 'public',
+    rewardToken: 'XLM',
   },
   {
     id: 'b-mh-legal',
@@ -197,6 +225,8 @@ const SEED_BOUNTIES: Bounty[] = [
     postedBy: 'Mwanzo Housing Sacco',
     summary: 'Prepare a member-readable title due-diligence checklist before purchase votes.',
     skills: ['Legal ops', 'Research', 'Real estate'],
+    access: 'community-restricted',
+    rewardToken: 'XLM',
   },
   {
     id: 'b-kf-soil',
@@ -210,6 +240,8 @@ const SEED_BOUNTIES: Bounty[] = [
     postedBy: 'Kakamega Farmers DAO',
     summary: 'Collect and summarise soil test results from 10 member plots to inform collective input purchases.',
     skills: ['Agronomy', 'Research', 'Reporting'],
+    access: 'public',
+    rewardToken: 'G$',
   },
   {
     id: 'b-kf-stellar',
@@ -223,6 +255,8 @@ const SEED_BOUNTIES: Bounty[] = [
     postedBy: 'Kakamega Farmers DAO',
     summary: 'Document the SEP-24 flow for depositing KES via M-Pesa into the DAO treasury on Stellar testnet.',
     skills: ['Stellar', 'SEP-24', 'M-Pesa', 'Technical writing'],
+    access: 'community-restricted',
+    rewardToken: 'XLM',
   },
   {
     id: 'b-wt-swahili',
@@ -236,6 +270,8 @@ const SEED_BOUNTIES: Bounty[] = [
     postedBy: 'Westlands Traders Circle',
     summary: 'Translate the DAO constitution and voting rules into Swahili for non-English-speaking members.',
     skills: ['Swahili', 'Translation', 'Legal ops'],
+    access: 'public',
+    rewardToken: 'G$',
   },
   {
     id: 'b-wt-newsletter',
@@ -250,6 +286,8 @@ const SEED_BOUNTIES: Bounty[] = [
     summary: 'Write a concise member newsletter covering import prices, exchange rates, and DAO treasury update.',
     skills: ['Writing', 'Finance', 'Editing'],
     assignee: 'Halima O.',
+    access: 'community-restricted',
+    rewardToken: 'G$',
   },
   {
     id: 'b-ky-stellar-onboard',
@@ -263,6 +301,8 @@ const SEED_BOUNTIES: Bounty[] = [
     postedBy: 'Kibera Youth Collective',
     summary: 'Run a hands-on workshop teaching members how to set up a Stellar wallet and receive KES payouts.',
     skills: ['Stellar', 'Training', 'Community'],
+    access: 'public',
+    rewardToken: 'XLM',
   },
 ];
 
@@ -315,6 +355,9 @@ function bountyFromRow(row: BountyRow, submissions = 0): Bounty {
     postedBy: row.posted_by,
     summary: row.summary,
     skills: row.skills ?? [],
+    access: row.access === 'public' ? 'public' : 'community-restricted',
+    rewardToken: parseRewardToken(row.reward_token),
+    payoutTxHash: row.payout_tx_hash ?? undefined,
   };
 }
 
@@ -362,7 +405,7 @@ export async function listBountiesAsync(): Promise<Bounty[]> {
   const [{ data: rows, error: bountyError }, { data: submissionRows, error: submissionError }] = await Promise.all([
     client
       .from('bounties')
-      .select('id,community_id,title,category,reward_kes,deadline,status,posted_by,summary,skills'),
+      .select('id,community_id,title,category,reward_kes,deadline,status,posted_by,summary,skills,access,reward_token,payout_tx_hash'),
     client
       .from('bounty_submissions')
       .select('bounty_id'),
@@ -441,8 +484,10 @@ export async function createBountyRecordAsync(input: CreateBountyInput): Promise
       posted_by: bounty.postedBy,
       summary: bounty.summary,
       skills: bounty.skills,
+      access: bounty.access,
+      reward_token: bounty.rewardToken,
     })
-    .select('id,community_id,title,category,reward_kes,deadline,status,posted_by,summary,skills')
+    .select('id,community_id,title,category,reward_kes,deadline,status,posted_by,summary,skills,access,reward_token,payout_tx_hash')
     .single();
 
   if (error) throw error;
@@ -468,7 +513,60 @@ function validateAndBuildBounty(input: CreateBountyInput): Bounty {
     postedBy: input.postedBy,
     summary: input.summary.trim(),
     skills: splitSkills(input.skills),
+    access: input.access ?? (input.roleGated ? 'community-restricted' : 'public'),
+    rewardToken: input.rewardToken ?? 'SOL',
   };
+}
+
+function parseRewardToken(raw: string | null | undefined): RewardToken {
+  return raw === 'G$' || raw === 'XLM' || raw === 'COMMUNITY_TOKEN' || raw === 'SOL'
+    ? raw
+    : 'SOL';
+}
+
+export function listWorkerProfileBounties(accountOrName: string): Bounty[] {
+  const needle = accountOrName.toLowerCase();
+  return listBounties().filter((bounty) => {
+    return (
+      bounty.assignee?.toLowerCase().includes(needle) ||
+      bounty.postedBy.toLowerCase().includes(needle)
+    );
+  });
+}
+
+export async function triggerBountyPayout(input: {
+  bountyId: string;
+  recipient: string;
+  chain: 'solana' | 'celo' | 'stellar';
+}): Promise<{ ok: boolean; message: string; txHash?: string }> {
+  const bounty = getBounty(input.bountyId);
+  if (!bounty) return { ok: false, message: 'Bounty not found.' };
+  if (bounty.status !== 'paid' && bounty.status !== 'awarded') {
+    return { ok: false, message: 'Bounty must be approved before payout.' };
+  }
+
+  const adapter = getChainAdapter(input.chain);
+  const result = await adapter.bounty?.reward({
+    bounty: {
+      id: bounty.id,
+      communityId: bounty.communityId,
+      title: bounty.title,
+      brief: bounty.summary,
+      access: bounty.access ?? 'community-restricted',
+      status: bounty.status === 'paid' || bounty.status === 'awarded' ? 'completed' : 'open',
+      rewardToken: bounty.rewardToken ?? 'SOL',
+      rewardAmount: String(bounty.rewardKes),
+      rewardKesEstimate: bounty.rewardKes,
+      postedByMemberId: bounty.postedBy,
+      dueAt: bounty.deadline,
+      createdAt: new Date().toISOString(),
+    },
+    recipient: input.recipient,
+    token: bounty.rewardToken ?? 'SOL',
+  });
+
+  if (!result?.ok) return { ok: false, message: result?.error ?? 'Bounty payout is not available yet.' };
+  return { ok: true, message: 'Bounty payout submitted.', txHash: result.txHash };
 }
 
 export function submitBountyWork(input: {
