@@ -33,6 +33,7 @@ const App: React.FC = () => {
             <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/home" element={<Navigate to="/" replace />} />
               <Route path="/communities" element={<Communities />} />
               <Route path="/bounties" element={<Bounties />} />
               <Route path="/bounties/:bountyId" element={<BountyDetail />} />

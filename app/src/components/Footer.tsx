@@ -9,6 +9,7 @@ type FooterLink =
 
 const links: Record<string, FooterLink[]> = {
   Product: [
+    { label: "Home", to: "/" },
     { label: "Browse DAOs", to: "/communities" },
     { label: "Evaluate Best Practice", to: "/evaluate" },
     { label: "Launch a DAO", to: "/create" },
