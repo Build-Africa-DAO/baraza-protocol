@@ -64,7 +64,7 @@ export default function Footer() {
           <div>
             <BrandLogo size="md" className="mb-4" />
             <p className="mb-5 max-w-xs text-sm leading-relaxed text-muted-foreground">
-              A KES treasury layer for chamas and SACCOs that collect dues, vote on proposals,
+              A KES treasury layer for DAOs and communities that collect dues, vote on proposals,
               and move funds with shared visibility.
             </p>
             <div className="flex items-center gap-2">
@@ -108,7 +108,7 @@ export default function Footer() {
             <div className="hidden h-3 w-px bg-border sm:block" />
             <p className="text-xs text-muted-foreground">Built for {chainMeta.label}</p>
           </div>
-            <p className="text-xs text-muted-foreground">Built for Kenyan DAOs, chamas &amp; SACCOs</p>
+            <p className="text-xs text-muted-foreground">Built for Kenyan DAOs &amp; communities</p>
         </div>
       </div>
     </footer>

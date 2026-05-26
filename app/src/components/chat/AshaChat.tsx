@@ -22,7 +22,7 @@ const timestamp = (chainMeta: ChainMeta) =>
 const initialMessage = (chainMeta: ChainMeta): Message => ({
     id: '1',
     role: 'asha',
-    text: "Habari! I'm Asha, your Baraza guide. I can help you understand the website, launch a DAO or chama, manage members, or plan a vote.",
+    text: "Habari! I'm Asha, your Baraza guide. I can help you understand the website, launch a DAO, manage members, or plan a vote.",
     time: timestamp(chainMeta),
 });
 
@@ -38,7 +38,7 @@ const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
   {
     keywords: ['ai', 'asha', 'guide', 'copilot', 'assistant', 'platform', 'use baraza'],
     reply:
-      'Baraza combines the website, the operating platform, and Asha AI in one flow. Use the website to understand the model, Explore to find DAOs and chamas, Launch to create one, dashboards to manage KES treasury and votes, and ask me when you need help choosing settings or explaining the next action.',
+      'Baraza combines the website, the operating platform, and Asha AI in one flow. Use the website to understand the model, Explore to find DAOs, Launch to create one, dashboards to manage KES treasury and votes, and ask me when you need help choosing settings or explaining the next action.',
   },
   {
     keywords: ['plan', 'setup', 'best setup', 'rules', 'quorum', 'threshold'],
@@ -48,22 +48,22 @@ const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
   {
     keywords: ['create', 'start', 'new group', 'community', 'chama', 'sacco'],
     reply:
-      'To create a DAO or chama, tap "Launch" in the menu. Fill in your group name, choose a type (DAO, Chama, SACCO, Cooperative, etc.), set monthly dues in KES, and write a short description. Once created, share the link so members can join instantly.',
+      'To create a DAO, tap "Launch" in the menu. Fill in your group name, choose a community type (Savings Group, SACCO, Cooperative, etc.), set monthly dues in KES, and write a short description. Once created, share the link so members can join instantly.',
   },
   {
     keywords: ['vote', 'voting', 'decision', 'propose', 'proposal'],
     reply:
-      "Any member can create a proposal to spend DAO or chama funds. Give it a title, description, and funding amount in KES, then set a voting window. All members vote Support or Object. When time's up, the majority wins. Simple, transparent, and fair.",
+      "Any member can create a proposal to spend DAO funds. Give it a title, description, and funding amount in KES, then set a voting window. All members vote Support or Object. When time's up, the majority wins. Simple, transparent, and fair.",
   },
   {
     keywords: ['fund', 'money', 'KES', 'shilling', 'fee', 'pay', 'balance', 'treasury'],
     reply:
-      'Every DAO or chama has a shared KES fund built from monthly membership dues. The balance is always visible to all members on the dashboard. When a Decision is approved, funds are released and every transaction is logged.',
+      'Every DAO has a shared KES fund built from monthly membership dues. The balance is always visible to all members on the dashboard. When a Decision is approved, funds are released and every transaction is logged.',
   },
   {
     keywords: ['join', 'member', 'membership', 'card', 'how to join'],
     reply:
-      'To join a DAO or chama, find it on Explore and click "Become a member". After paying the monthly dues, your membership is issued after payment proof and approval.',
+      'To join a DAO, find it on Explore and click "Become a member". After paying the monthly dues, your membership is issued after payment proof and approval.',
   },
   {
     keywords: ['dashboard', 'stats', 'overview', 'manage'],
@@ -98,12 +98,12 @@ const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
   {
     keywords: ['hello', 'hi', 'habari', 'hey', 'hola', 'sasa'],
     reply:
-      'Habari! Great to have you here. Ask me about launching a DAO or chama, how voting works, managing KES funds, joining a group, or anything else. What would you like to know?',
+      'Habari! Great to have you here. Ask me about launching a DAO, how voting works, managing KES funds, joining a group, or anything else. What would you like to know?',
   },
   {
     keywords: ['thank', 'thanks', 'asante', 'awesome', 'great', 'perfect'],
     reply:
-      'Karibu sana! Happy to help anytime. If you get stuck anywhere in Baraza, just ask. Good luck with your DAO or chama!',
+      'Karibu sana! Happy to help anytime. If you get stuck anywhere in Baraza, just ask. Good luck with your DAO!',
   },
 ];
 
@@ -112,7 +112,7 @@ const getAshaResponse = (input: string): string => {
   for (const { keywords, reply } of RESPONSES) {
     if (keywords.some((kw) => lower.includes(kw))) return reply;
   }
-  return 'Great question! Baraza helps DAOs, chamas and SACCOs manage KES funds and make decisions together. Try asking me about launching a DAO or chama, how voting works, the shared fund, or how to join an existing group.';
+  return 'Great question! Baraza helps DAOs and communities manage KES funds and make decisions together. Try asking me about launching a DAO, how voting works, the shared fund, or how to join an existing group.';
 };
 
 const TypingDots: React.FC = () => (

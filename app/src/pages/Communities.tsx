@@ -27,28 +27,28 @@ function emptyChainTitle(chainFilter: ChainFilter, search: string): string {
     const label = chainFilter === "solana" ? "Solana" : CHAINS[chainFilter].label;
     return `No ${label} communities match "${q}"`;
   }
-  if (chainFilter === "all") return "No DAOs or chamas yet";
-  if (chainFilter === "solana") return "No Solana DAOs or chamas yet";
-  return `No ${CHAINS[chainFilter].label} DAOs or chamas yet`;
+  if (chainFilter === "all") return "No DAOs yet";
+  if (chainFilter === "solana") return "No Solana DAOs yet";
+  return `No ${CHAINS[chainFilter].label} DAOs yet`;
 }
 
 function emptyChainDescription(chainFilter: ChainFilter, search: string): string {
   const q = search.trim();
-  if (q) return "Try a different search term or clear the filters, or launch your own DAO or chama.";
+  if (q) return "Try a different search term or clear the filters, or launch your own DAO.";
   if (chainFilter === "stellar") {
-    return "No DAOs or chamas have selected Stellar as their settlement rail yet. Launch one and use XLM payment verification for member dues.";
+    return "No DAOs have selected Stellar as their settlement rail yet. Launch one and use XLM payment verification for member dues.";
   }
   if (chainFilter !== "all" && chainFilter !== "solana") {
-    return `No DAOs or chamas have selected ${CHAINS[chainFilter].label} yet. Launch one to track the governance contract rollout for that rail.`;
+    return `No DAOs have selected ${CHAINS[chainFilter].label} yet. Launch one to track the governance contract rollout for that rail.`;
   }
-  return "Be the first — launch your own DAO or chama and start governing funds with Baraza.";
+  return "Be the first — launch your own DAO and start governing funds with Baraza.";
 }
 
 export default function Communities() {
   useSeo({
     title: "Browse DAOs",
     description:
-      "Discover DAOs, chamas, SACCOs, and co-operatives on Baraza. Filter by community type and treasury rail to find a group to join or evaluate.",
+      "Discover DAOs and communities on Baraza. Filter by community type and treasury rail to find a group to join or evaluate.",
     path: "/communities",
   });
   const { communities, isLoading, error } = useCommunities();
@@ -98,10 +98,10 @@ export default function Communities() {
               Discover
             </p>
             <h1 className="font-display text-3xl md:text-4xl font-bold mb-3">
-              DAOs &amp; Chamas
+              DAOs &amp; Communities
             </h1>
             <p>
-              Find a DAO or chama to join, or explore how groups are governing KES funds with Baraza.
+              Find a DAO to join, or explore how communities are governing KES funds with Baraza.
             </p>
           </div>
           </CommunityBanner>
