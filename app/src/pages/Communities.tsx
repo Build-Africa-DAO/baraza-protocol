@@ -20,20 +20,28 @@ const CHAIN_FILTERS: { value: ChainFilter; label: string; dot?: string }[] = [
     .map((chain) => ({ value: chain.id, label: chain.label, dot: chain.badgeBg })),
 ];
 
-function emptyChainTitle(chainFilter: ChainFilter): string {
-  if (chainFilter === "all") return "No DAOs or chamas match that filter yet";
-  if (chainFilter === "solana") return "No Solana DAOs or chamas match that filter";
+function emptyChainTitle(chainFilter: ChainFilter, search: string): string {
+  const q = search.trim();
+  if (q) {
+    if (chainFilter === "all") return `No communities match "${q}"`;
+    const label = chainFilter === "solana" ? "Solana" : CHAINS[chainFilter].label;
+    return `No ${label} communities match "${q}"`;
+  }
+  if (chainFilter === "all") return "No DAOs or chamas yet";
+  if (chainFilter === "solana") return "No Solana DAOs or chamas yet";
   return `No ${CHAINS[chainFilter].label} DAOs or chamas yet`;
 }
 
-function emptyChainDescription(chainFilter: ChainFilter): string {
+function emptyChainDescription(chainFilter: ChainFilter, search: string): string {
+  const q = search.trim();
+  if (q) return "Try a different search term or clear the filters, or launch your own DAO or chama.";
   if (chainFilter === "stellar") {
     return "No DAOs or chamas have selected Stellar as their settlement rail yet. Launch one and use XLM payment verification for member dues.";
   }
   if (chainFilter !== "all" && chainFilter !== "solana") {
     return `No DAOs or chamas have selected ${CHAINS[chainFilter].label} yet. Launch one to track the governance contract rollout for that rail.`;
   }
-  return "Try a different type, or launch your own DAO or chama.";
+  return "Be the first — launch your own DAO or chama and start governing funds with Baraza.";
 }
 
 export default function Communities() {
@@ -223,7 +231,7 @@ export default function Communities() {
           {/* Results count */}
           {isLoading ? (
             <p className="text-xs mb-5">Loading groups...</p>
-          ) : hasActiveFilter ? (
+          ) : hasActiveFilter && filtered.length > 0 ? (
             <p className="text-xs mb-5">
               {filtered.length} {filtered.length === 1 ? "community" : "communities"} found
             </p>
@@ -294,10 +302,10 @@ export default function Communities() {
                 <Search className="w-6 h-6" />
               </div>
               <p className="font-display text-base font-semibold mb-1">
-                {emptyChainTitle(chainFilter)}
+                {emptyChainTitle(chainFilter, search)}
               </p>
               <p className="text-sm mb-6">
-                {emptyChainDescription(chainFilter)}
+                {emptyChainDescription(chainFilter, search)}
               </p>
               <Link to="/create" className="btn-primary inline-flex items-center gap-2 text-sm">
                 <PlusCircle className="w-4 h-4" /> Launch a DAO
