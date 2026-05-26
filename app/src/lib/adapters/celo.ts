@@ -1,5 +1,6 @@
 import type { ChainActionResult } from '@/types';
 import type { ChainAdapter } from '@/lib/adapters';
+import { checkGoodDollarIdentity } from '@/lib/gooddollar/identity';
 
 export const celoAdapter: ChainAdapter = {
   chain: 'celo',
@@ -13,8 +14,8 @@ export const celoAdapter: ChainAdapter = {
     },
   },
   identity: {
-    async check() {
-      return false;
+    async check({ accountAddress }) {
+      return checkGoodDollarIdentity(accountAddress);
     },
   },
 };
