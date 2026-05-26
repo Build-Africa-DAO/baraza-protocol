@@ -27,6 +27,7 @@ import { getActiveMembership } from '@/lib/memberships';
 import CommunityBanner from '@/components/CommunityBanner';
 import CommunityGallery from '@/components/CommunityGallery';
 import BountyBoard from '@/components/BountyBoard';
+import { CHAINS } from '@/lib/chain';
 import { useSeo } from '@/lib/seo';
 import { getBountyStatsForCommunity } from '@/lib/bounties';
 import AshaSecurityReview from '@/components/security/AshaSecurityReview';
@@ -164,7 +165,7 @@ const CommunityDashboard: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { publicKey } = useWallet();
   const { connection } = useConnection();
-  const { chain, chainMeta } = useChain();
+  const { chain } = useChain();
   const [activeTab, setActiveTab] = useState<DashboardTab>(() => getTabFromSearch(searchParams));
   const [isMember, setIsMember] = useState(false);
   const [walletSol, setWalletSol] = useState<number | null>(null);
@@ -267,7 +268,9 @@ const CommunityDashboard: React.FC = () => {
   const currentTab = TABS.find((t) => t.key === activeTab);
   const canPostBounties = isMember;
   const securityReview = reviewCommunity(community);
-  const activeRailLabel = chainMeta.testnet.label;
+  const communityChain = community.chain ?? chain;
+  const communityChainMeta = CHAINS[communityChain];
+  const activeRailLabel = communityChainMeta.testnet.label;
   const tokenGateStatus = getTokenGateStatus(community.id, publicKey?.toBase58(), 'proposal');
 
   return (
@@ -300,21 +303,21 @@ const CommunityDashboard: React.FC = () => {
                       {community.type}
                     </span>
                     <span
-                      aria-label={`Treasury rail: ${chainMeta.label}`}
+                      aria-label={`Treasury rail: ${communityChainMeta.label}`}
                       className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-medium"
                     >
                       <span
                         aria-hidden
                         className="h-1.5 w-1.5 rounded-full"
-                        style={{ background: chainMeta.badgeBg }}
+                        style={{ background: communityChainMeta.badgeBg }}
                       />
-                      {chainMeta.label}
+                      {communityChainMeta.label}
                     </span>
                     <span className="inline-flex items-center gap-1">
                       <Calendar className="h-3.5 w-3.5" />
-                      Since {formatRailDate(community.createdAt, chainMeta, { month: 'short', year: 'numeric' })}
+                      Since {formatRailDate(community.createdAt, communityChainMeta, { month: 'short', year: 'numeric' })}
                     </span>
-                    <span className="font-medium">{formatRailAmountFromKes(community.membershipFee, chainMeta)}/month</span>
+                    <span className="font-medium">{formatRailAmountFromKes(community.membershipFee, communityChainMeta)}/month</span>
                   </div>
                 </div>
                 <div className="flex w-full flex-col gap-3 sm:w-auto sm:items-end">
@@ -336,7 +339,7 @@ const CommunityDashboard: React.FC = () => {
 
           {/* Live stats */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
-            <LiveStatCard icon={TrendingUp} label="Treasury" value={community.fundBalance} format={(v) => formatRailAmountFromKes(v, chainMeta)} color="" bg="" />
+            <LiveStatCard icon={TrendingUp} label="Treasury" value={community.fundBalance} format={(v) => formatRailAmountFromKes(v, communityChainMeta)} color="" bg="" />
             <LiveStatCard icon={Users} label="Members" value={community.memberCount} color="" bg="" />
             <LiveStatCard icon={Vote} label="Active Proposals" value={activeDecisions.length} color="" bg="" showDelta={false} />
             <LiveStatCard icon={History} label="Past Proposals" value={pastDecisions.length} color="" bg="" showDelta={false} />
@@ -432,11 +435,11 @@ const CommunityDashboard: React.FC = () => {
                         <div className="space-y-3 text-sm">
                           <div className="flex justify-between border-b pb-2"><span>Role</span><span className="font-semibold">Member</span></div>
                           <div className="flex justify-between border-b pb-2"><span>Voting power</span><span className="font-semibold">1 vote</span></div>
-                          <div className="flex justify-between"><span>Monthly dues</span><span className="font-semibold">{formatRailAmountFromKes(community.membershipFee, chainMeta)}</span></div>
+                          <div className="flex justify-between"><span>Monthly dues</span><span className="font-semibold">{formatRailAmountFromKes(community.membershipFee, communityChainMeta)}</span></div>
                         </div>
                       ) : (
                         <>
-                          <p className="text-xs">Join to receive a {chainMeta.label} membership record and vote on proposals.</p>
+                          <p className="text-xs">Join to receive a {communityChainMeta.label} membership record and vote on proposals.</p>
                           <Link to={`/join/${community.id}`} className="btn-warm mt-4 w-full justify-center text-sm">Join group</Link>
                         </>
                       )}
@@ -546,7 +549,7 @@ const CommunityDashboard: React.FC = () => {
                     <div>
                       <h4 className="font-display text-sm font-semibold mb-4 text-muted-foreground uppercase tracking-wider text-[11px]">Active</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {activeDecisions.map((d) => <DecisionCard key={d.id} {...d} chainMeta={chainMeta} />)}
+                        {activeDecisions.map((d) => <DecisionCard key={d.id} {...d} chainMeta={communityChainMeta} />)}
                       </div>
                     </div>
                   )}
@@ -555,7 +558,7 @@ const CommunityDashboard: React.FC = () => {
                     <div>
                       <h4 className="font-display text-sm font-semibold mb-4 text-muted-foreground uppercase tracking-wider text-[11px]">Past</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {pastDecisions.map((d) => <DecisionCard key={d.id} {...d} chainMeta={chainMeta} />)}
+                        {pastDecisions.map((d) => <DecisionCard key={d.id} {...d} chainMeta={communityChainMeta} />)}
                       </div>
                     </div>
                   )}
@@ -640,13 +643,13 @@ const CommunityDashboard: React.FC = () => {
                       <div className="flex items-center justify-between border-b pb-3">
                         <span>Treasury rail</span>
                         <span className="inline-flex items-center gap-1.5 font-semibold">
-                          <span aria-hidden className="h-1.5 w-1.5 rounded-full" style={{ background: chainMeta.badgeBg }} />
+                          <span aria-hidden className="h-1.5 w-1.5 rounded-full" style={{ background: communityChainMeta.badgeBg }} />
                           {activeRailLabel}
                         </span>
                       </div>
                       <div className="flex items-center justify-between border-b pb-3">
                         <span>Recorded balance</span>
-                        <span className="font-display text-lg font-bold">{formatRailAmountFromKes(community.fundBalance, chainMeta)}</span>
+                        <span className="font-display text-lg font-bold">{formatRailAmountFromKes(community.fundBalance, communityChainMeta)}</span>
                       </div>
                       <div className="flex items-center justify-between border-b pb-3">
                         <span>Treasury record</span>
@@ -667,10 +670,10 @@ const CommunityDashboard: React.FC = () => {
 
                   <div className="premium-glass rounded-xl p-5">
                     <div className="mb-4 flex items-center justify-between">
-                      <h3 className="font-display text-base font-semibold">Your {chainMeta.label} account</h3>
+                      <h3 className="font-display text-base font-semibold">Your {communityChainMeta.label} account</h3>
                       <WalletIcon className="h-4 w-4" />
                     </div>
-                    {chain === 'solana' && publicKey ? (
+                    {communityChain === 'solana' && publicKey ? (
                       <div className="space-y-3 text-sm">
                         <div className="rounded-lg border p-3">
                           <p className="text-[10px] uppercase tracking-widest">Address</p>
@@ -696,7 +699,7 @@ const CommunityDashboard: React.FC = () => {
                         <WalletIcon className="mx-auto mb-3 h-8 w-8" />
                         <p className="text-sm font-semibold">Account not connected</p>
                         <p className="mt-1 text-xs">
-                          {chainMeta.accountCta} from the header to see account status for this rail.
+                          {communityChainMeta.accountCta} from the header to see account status for this rail.
                         </p>
                       </div>
                     )}

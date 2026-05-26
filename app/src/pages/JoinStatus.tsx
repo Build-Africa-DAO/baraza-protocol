@@ -21,6 +21,7 @@ import {
   type PaymentOrderStatus,
 } from "@/lib/payments";
 import { recordActiveMembership } from "@/lib/memberships";
+import { CHAINS } from "@/lib/chain";
 import { useChain } from "@/hooks/useChain";
 
 interface DisplayStep {
@@ -70,11 +71,12 @@ export default function JoinStatus() {
   const [params] = useSearchParams();
   const { community } = useCommunity(id);
   const { publicKey } = useWallet();
-  const { chainMeta } = useChain();
+  const { chain } = useChain();
   const orderId = params.get("orderId") ?? "";
   const activationSecret = params.get("activationSecret") ?? "";
   const rail = params.get("rail") ?? (orderId.startsWith("ord_stellar_") || orderId.startsWith("ord_local_stellar_") ? "stellar" : "mpesa");
   const isStellarRail = rail === "stellar";
+  const membershipChainMeta = CHAINS[community?.chain ?? chain];
 
   useSeo({
     title: community ? `Join status - ${community.name}` : "Join status",
@@ -192,12 +194,12 @@ export default function JoinStatus() {
             { code: "payment-confirmed", label: "Payment received - activating membership", minStatus: "PAYMENT_CONFIRMED" },
           ];
 
-      return [...paymentSteps, ...getDisplaySteps(chainMeta.label)].map((step) => ({
+      return [...paymentSteps, ...getDisplaySteps(membershipChainMeta.label)].map((step) => ({
         ...step,
         state: deriveStepState(step.minStatus, status),
       }));
     },
-    [chainMeta.label, isStellarRail, status],
+    [isStellarRail, membershipChainMeta.label, status],
   );
 
   const isFailed = isFailureStatus(status);
@@ -290,7 +292,7 @@ export default function JoinStatus() {
                 {!publicKey && isComplete && (
                   <div className="rounded-lg border p-5">
                     <p className="text-sm leading-6">
-                      {chainMeta.accountCta} to bind this membership to your account.
+                      {membershipChainMeta.accountCta} to bind this membership to your account.
                     </p>
                   </div>
                 )}
