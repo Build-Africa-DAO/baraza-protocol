@@ -43,6 +43,7 @@ describe('CHAINS metadata', () => {
     for (const chain of CHAIN_LIST) {
       expect(chain.suggestedWallet.length).toBeGreaterThan(0);
       expect(chain.walletExamples).toContain(chain.suggestedWallet);
+      expect(chain.accountCta).toContain(chain.suggestedWallet);
     }
   });
 

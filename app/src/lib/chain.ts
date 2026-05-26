@@ -54,7 +54,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     accountLabel: 'Solana account',
     suggestedWallet: 'Phantom',
     walletExamples: 'Phantom, Solflare, or Backpack',
-    accountCta: 'Connect your Solana account',
+    accountCta: 'Connect Phantom',
     testnet: {
       label: 'Solana Devnet',
       nativeSymbol: 'SOL',
@@ -71,7 +71,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     accountLabel: 'Stellar account',
     suggestedWallet: 'Freighter',
     walletExamples: 'Freighter, Lobstr, or Albedo',
-    accountCta: 'Connect your Stellar account',
+    accountCta: 'Connect Freighter',
     testnet: {
       label: 'Stellar Testnet',
       nativeSymbol: 'XLM',
@@ -88,7 +88,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     accountLabel: 'Ethereum account',
     suggestedWallet: 'MetaMask',
     walletExamples: 'MetaMask, Coinbase Wallet, Rabby, or WalletConnect',
-    accountCta: 'Connect your Ethereum account',
+    accountCta: 'Connect MetaMask or EVM account',
     testnet: {
       label: 'Sepolia',
       chainId: 11155111,
@@ -107,7 +107,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     accountLabel: 'Base account',
     suggestedWallet: 'Coinbase Wallet',
     walletExamples: 'MetaMask, Coinbase Wallet, Rabby, or WalletConnect',
-    accountCta: 'Connect your Base account',
+    accountCta: 'Connect Coinbase Wallet or EVM account',
     testnet: {
       label: 'Base Sepolia',
       chainId: 84532,
@@ -126,7 +126,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     accountLabel: 'Arbitrum account',
     suggestedWallet: 'Rabby',
     walletExamples: 'MetaMask, Coinbase Wallet, Rabby, or WalletConnect',
-    accountCta: 'Connect your Arbitrum account',
+    accountCta: 'Connect Rabby or EVM account',
     testnet: {
       label: 'Arbitrum Sepolia',
       chainId: 421614,
@@ -145,7 +145,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     accountLabel: 'Optimism account',
     suggestedWallet: 'MetaMask',
     walletExamples: 'MetaMask, Coinbase Wallet, Rabby, or WalletConnect',
-    accountCta: 'Connect your Optimism account',
+    accountCta: 'Connect MetaMask or EVM account',
     testnet: {
       label: 'OP Sepolia',
       chainId: 11155420,
@@ -164,7 +164,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     accountLabel: 'Polygon account',
     suggestedWallet: 'MetaMask',
     walletExamples: 'MetaMask, Coinbase Wallet, Rabby, or WalletConnect',
-    accountCta: 'Connect your Polygon account',
+    accountCta: 'Connect MetaMask or EVM account',
     testnet: {
       label: 'Polygon Amoy',
       chainId: 80002,
@@ -183,7 +183,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     accountLabel: 'BNB Chain account',
     suggestedWallet: 'Trust Wallet',
     walletExamples: 'MetaMask, Trust Wallet, Binance Wallet, or WalletConnect',
-    accountCta: 'Connect your BNB Chain account',
+    accountCta: 'Connect Trust Wallet or EVM account',
     testnet: {
       label: 'BNB Smart Chain Testnet',
       chainId: 97,
@@ -204,7 +204,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     accountLabel: 'Celo account',
     suggestedWallet: 'Valora',
     walletExamples: 'Valora, MetaMask, Coinbase Wallet, or WalletConnect',
-    accountCta: 'Connect your Celo account',
+    accountCta: 'Connect Valora or EVM account',
     testnet: {
       label: 'Celo Alfajores',
       chainId: 44787,
