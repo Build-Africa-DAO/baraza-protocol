@@ -100,7 +100,7 @@ export default function ChainSelector({ variant = 'desktop', className }: ChainS
           aria-label="Select treasury rail"
           className={cn(
             'absolute z-50 overflow-hidden rounded-xl border border-border/60 bg-card/95 shadow-[0_24px_60px_hsl(84_17%_2%/0.6)] backdrop-blur',
-            isMobile ? 'left-0 right-0 top-full mt-2' : 'right-0 top-full mt-2 w-44',
+            isMobile ? 'left-0 right-0 top-full mt-2' : 'right-0 top-full mt-2 w-72',
           )}
         >
           {CHAIN_LIST.map((meta, index) => {
@@ -111,6 +111,7 @@ export default function ChainSelector({ variant = 'desktop', className }: ChainS
                 <button
                   type="button"
                   role="option"
+                  aria-label={disabled && meta.comingSoon ? `${meta.label} ${meta.comingSoon}` : meta.label}
                   ref={(el) => { optionRefs.current[index] = el; }}
                   aria-selected={active}
                   disabled={disabled}
@@ -129,13 +130,18 @@ export default function ChainSelector({ variant = 'desktop', className }: ChainS
                   )}
                   title={disabled ? meta.comingSoon : undefined}
                 >
-                  <span className="inline-flex items-center gap-2">
+                  <span className="flex min-w-0 items-center gap-2">
                     <span
                       aria-hidden
                       className="h-2 w-2 rounded-full"
                       style={{ background: meta.badgeBg }}
                     />
-                    {meta.label}
+                    <span className="min-w-0">
+                      <span className="block truncate font-semibold">{meta.label}</span>
+                      <span className="block truncate text-[11px] text-muted-foreground">
+                        Suggested: {meta.suggestedWallet}
+                      </span>
+                    </span>
                   </span>
                   {disabled ? (
                     <span className="text-[10px] uppercase tracking-wider text-muted-foreground/70">

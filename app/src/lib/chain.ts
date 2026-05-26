@@ -25,6 +25,7 @@ export interface ChainMeta {
   label: string;
   short: string;
   accountLabel: string;
+  suggestedWallet: string;
   walletExamples: string;
   accountCta: string;
   badgeBg: string;
@@ -45,6 +46,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     label: 'Solana',
     short: 'SOL',
     accountLabel: 'Solana account',
+    suggestedWallet: 'Phantom',
     walletExamples: 'Phantom, Solflare, or Backpack',
     accountCta: 'Connect your Solana account',
     badgeBg: '#14F195',
@@ -56,6 +58,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     label: 'Stellar',
     short: 'XLM',
     accountLabel: 'Stellar account',
+    suggestedWallet: 'Freighter',
     walletExamples: 'Freighter, Lobstr, or Albedo',
     accountCta: 'Connect your Stellar account',
     badgeBg: '#0066FF',
@@ -67,6 +70,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     label: 'Ethereum',
     short: 'ETH',
     accountLabel: 'Ethereum account',
+    suggestedWallet: 'MetaMask',
     walletExamples: 'MetaMask, Coinbase Wallet, Rabby, or WalletConnect',
     accountCta: 'Connect your Ethereum account',
     badgeBg: '#627EEA',
@@ -79,6 +83,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     label: 'Base',
     short: 'BASE',
     accountLabel: 'Base account',
+    suggestedWallet: 'Coinbase Wallet',
     walletExamples: 'MetaMask, Coinbase Wallet, Rabby, or WalletConnect',
     accountCta: 'Connect your Base account',
     badgeBg: '#0052FF',
@@ -91,6 +96,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     label: 'Arbitrum',
     short: 'ARB',
     accountLabel: 'Arbitrum account',
+    suggestedWallet: 'Rabby',
     walletExamples: 'MetaMask, Coinbase Wallet, Rabby, or WalletConnect',
     accountCta: 'Connect your Arbitrum account',
     badgeBg: '#28A0F0',
@@ -103,6 +109,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     label: 'Optimism',
     short: 'OP',
     accountLabel: 'Optimism account',
+    suggestedWallet: 'MetaMask',
     walletExamples: 'MetaMask, Coinbase Wallet, Rabby, or WalletConnect',
     accountCta: 'Connect your Optimism account',
     badgeBg: '#FF0420',
@@ -115,6 +122,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     label: 'Polygon',
     short: 'POL',
     accountLabel: 'Polygon account',
+    suggestedWallet: 'MetaMask',
     walletExamples: 'MetaMask, Coinbase Wallet, Rabby, or WalletConnect',
     accountCta: 'Connect your Polygon account',
     badgeBg: '#8247E5',
@@ -127,6 +135,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     label: 'BNB Chain',
     short: 'BNB',
     accountLabel: 'BNB Chain account',
+    suggestedWallet: 'Trust Wallet',
     walletExamples: 'MetaMask, Trust Wallet, Binance Wallet, or WalletConnect',
     accountCta: 'Connect your BNB Chain account',
     badgeBg: '#F3BA2F',
@@ -141,6 +150,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     label: 'Celo',
     short: 'CELO',
     accountLabel: 'Celo account',
+    suggestedWallet: 'Valora',
     walletExamples: 'Valora, MetaMask, Coinbase Wallet, or WalletConnect',
     accountCta: 'Connect your Celo account',
     badgeBg: '#35D07F',

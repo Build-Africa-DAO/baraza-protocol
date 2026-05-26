@@ -187,6 +187,9 @@ const WalletStatus: React.FC = () => {
         >
           {chainMeta.accountCta}
         </button>
+        <p className="mt-1 hidden text-[10px] font-semibold text-muted-foreground lg:block">
+          Suggested: {chainMeta.suggestedWallet}
+        </p>
         {(stellarError || evmError) && (
           <div className="absolute right-0 top-full z-50 mt-2 w-72 rounded-lg border border-destructive/30 bg-card p-3 text-xs leading-5 text-destructive shadow-[var(--shadow-deep)]">
             {stellarError ?? evmError}

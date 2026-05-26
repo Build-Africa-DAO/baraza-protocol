@@ -38,6 +38,13 @@ describe('CHAINS metadata', () => {
     expect(CHAINS.celo.badgeBg.toUpperCase()).toBe('#35D07F');
   });
 
+  it('defines a suggested wallet for every chain', () => {
+    for (const chain of CHAIN_LIST) {
+      expect(chain.suggestedWallet.length).toBeGreaterThan(0);
+      expect(chain.walletExamples).toContain(chain.suggestedWallet);
+    }
+  });
+
   it('CHAIN_LIST has all chains in expected order', () => {
     expect(CHAIN_LIST.map((c) => c.id)).toEqual([
       'solana',
