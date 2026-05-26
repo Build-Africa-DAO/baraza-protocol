@@ -141,6 +141,9 @@ export default function ChainSelector({ variant = 'desktop', className }: ChainS
                       <span className="block truncate text-[11px] text-muted-foreground">
                         Suggested: {meta.suggestedWallet}
                       </span>
+                      <span className="block truncate text-[10px] text-muted-foreground/80">
+                        Testnet: {meta.testnet.label}
+                      </span>
                     </span>
                   </span>
                   {disabled ? (

@@ -45,6 +45,22 @@ describe('CHAINS metadata', () => {
     }
   });
 
+  it('defines testnet metadata for every chain', () => {
+    for (const chain of CHAIN_LIST) {
+      expect(chain.testnet.label.length).toBeGreaterThan(0);
+      expect(chain.testnet.nativeSymbol.length).toBeGreaterThan(0);
+      expect(chain.testnet.explorerUrl).toMatch(/^https:\/\//);
+    }
+
+    expect(CHAINS.ethereum.testnet.chainId).toBe(11155111);
+    expect(CHAINS.base.testnet.chainId).toBe(84532);
+    expect(CHAINS.arbitrum.testnet.chainId).toBe(421614);
+    expect(CHAINS.optimism.testnet.chainId).toBe(11155420);
+    expect(CHAINS.polygon.testnet.chainId).toBe(80002);
+    expect(CHAINS.bnb.testnet.chainId).toBe(97);
+    expect(CHAINS.celo.testnet.chainId).toBe(44787);
+  });
+
   it('CHAIN_LIST has all chains in expected order', () => {
     expect(CHAIN_LIST.map((c) => c.id)).toEqual([
       'solana',

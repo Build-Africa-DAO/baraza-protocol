@@ -11,8 +11,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { createBarazaEvmReadClient, type EvmCommunityInfo } from '@/lib/programs/evmClient';
-import { CHAIN_NAME_TO_ID } from '@/lib/programs/evmAddresses';
-import type { Chain } from '@/lib/chain';
+import { CHAINS, type Chain } from '@/lib/chain';
 
 interface EthereumProvider {
   request(args: { method: string; params?: unknown[] }): Promise<unknown>;
@@ -144,7 +143,8 @@ export function useEvmChain(): UseEvmChainResult {
   const switchEvmChain = useCallback(
     async (barazaChain: Chain) => {
       if (!isEvmAvailable) return;
-      const targetId = CHAIN_NAME_TO_ID[barazaChain];
+      const meta = CHAINS[barazaChain];
+      const targetId = meta.testnet.chainId;
       if (!targetId) return;
       const hexId = `0x${targetId.toString(16)}`;
       setEvmError(null);
@@ -156,11 +156,25 @@ export function useEvmChain(): UseEvmChainResult {
       } catch (err: unknown) {
         const code = (err as { code?: number })?.code;
         if (code === 4902) {
-          setEvmError(
-            `This account app does not have chain ID ${targetId}. Add it manually and try again.`,
-          );
+          try {
+            await window.ethereum!.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: hexId,
+                chainName: meta.testnet.label,
+                nativeCurrency: {
+                  name: meta.testnet.nativeSymbol,
+                  symbol: meta.testnet.nativeSymbol,
+                  decimals: 18,
+                },
+                blockExplorerUrls: [meta.testnet.explorerUrl],
+              }],
+            });
+          } catch {
+            setEvmError(`${meta.testnet.label} could not be added. Add it in ${meta.suggestedWallet} and try again.`);
+          }
         } else {
-          setEvmError(err instanceof Error ? err.message : 'Rail switch rejected');
+          setEvmError(err instanceof Error ? err.message : `${meta.testnet.label} switch was rejected.`);
         }
       }
     },

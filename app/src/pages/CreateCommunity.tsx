@@ -514,11 +514,11 @@ const CreateCommunity: React.FC = () => {
                           </p>
                         ) : needsSolanaAccount ? (
                           <p className="text-muted-foreground">
-                            {selectedAccountMeta.accountCta} with {selectedAccountMeta.suggestedWallet}. Other options: {selectedAccountMeta.walletExamples}.
+                            {selectedAccountMeta.accountCta} with {selectedAccountMeta.suggestedWallet} on {selectedAccountMeta.testnet.label}. Other options: {selectedAccountMeta.walletExamples}.
                           </p>
                         ) : (
                           <p className="text-muted-foreground">
-                            Suggested for {selectedAccountMeta.label}: {selectedAccountMeta.suggestedWallet}. Other options: {selectedAccountMeta.walletExamples}. This launch records the selected rail for review; direct connection is next.
+                            Suggested for {selectedAccountMeta.label}: {selectedAccountMeta.suggestedWallet} on {selectedAccountMeta.testnet.label}. Other options: {selectedAccountMeta.walletExamples}. This launch records the selected rail for review; direct connection is next.
                           </p>
                         )}
                       </div>

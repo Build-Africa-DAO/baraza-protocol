@@ -28,6 +28,12 @@ export interface ChainMeta {
   suggestedWallet: string;
   walletExamples: string;
   accountCta: string;
+  testnet: {
+    label: string;
+    chainId?: number;
+    nativeSymbol: string;
+    explorerUrl: string;
+  };
   badgeBg: string;
   badgeText: string;
   enabled: boolean;
@@ -49,6 +55,11 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     suggestedWallet: 'Phantom',
     walletExamples: 'Phantom, Solflare, or Backpack',
     accountCta: 'Connect your Solana account',
+    testnet: {
+      label: 'Solana Devnet',
+      nativeSymbol: 'SOL',
+      explorerUrl: 'https://explorer.solana.com/?cluster=devnet',
+    },
     badgeBg: '#14F195',
     badgeText: '#0B132B',
     enabled: true,
@@ -61,6 +72,11 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     suggestedWallet: 'Freighter',
     walletExamples: 'Freighter, Lobstr, or Albedo',
     accountCta: 'Connect your Stellar account',
+    testnet: {
+      label: 'Stellar Testnet',
+      nativeSymbol: 'XLM',
+      explorerUrl: 'https://stellar.expert/explorer/testnet',
+    },
     badgeBg: '#0066FF',
     badgeText: '#FFFFFF',
     enabled: true,
@@ -73,6 +89,12 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     suggestedWallet: 'MetaMask',
     walletExamples: 'MetaMask, Coinbase Wallet, Rabby, or WalletConnect',
     accountCta: 'Connect your Ethereum account',
+    testnet: {
+      label: 'Sepolia',
+      chainId: 11155111,
+      nativeSymbol: 'ETH',
+      explorerUrl: 'https://sepolia.etherscan.io',
+    },
     badgeBg: '#627EEA',
     badgeText: '#FFFFFF',
     enabled: true,
@@ -86,6 +108,12 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     suggestedWallet: 'Coinbase Wallet',
     walletExamples: 'MetaMask, Coinbase Wallet, Rabby, or WalletConnect',
     accountCta: 'Connect your Base account',
+    testnet: {
+      label: 'Base Sepolia',
+      chainId: 84532,
+      nativeSymbol: 'ETH',
+      explorerUrl: 'https://sepolia.basescan.org',
+    },
     badgeBg: '#0052FF',
     badgeText: '#FFFFFF',
     enabled: true,
@@ -99,6 +127,12 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     suggestedWallet: 'Rabby',
     walletExamples: 'MetaMask, Coinbase Wallet, Rabby, or WalletConnect',
     accountCta: 'Connect your Arbitrum account',
+    testnet: {
+      label: 'Arbitrum Sepolia',
+      chainId: 421614,
+      nativeSymbol: 'ETH',
+      explorerUrl: 'https://sepolia.arbiscan.io',
+    },
     badgeBg: '#28A0F0',
     badgeText: '#FFFFFF',
     enabled: true,
@@ -112,6 +146,12 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     suggestedWallet: 'MetaMask',
     walletExamples: 'MetaMask, Coinbase Wallet, Rabby, or WalletConnect',
     accountCta: 'Connect your Optimism account',
+    testnet: {
+      label: 'OP Sepolia',
+      chainId: 11155420,
+      nativeSymbol: 'ETH',
+      explorerUrl: 'https://sepolia-optimism.etherscan.io',
+    },
     badgeBg: '#FF0420',
     badgeText: '#FFFFFF',
     enabled: true,
@@ -125,6 +165,12 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     suggestedWallet: 'MetaMask',
     walletExamples: 'MetaMask, Coinbase Wallet, Rabby, or WalletConnect',
     accountCta: 'Connect your Polygon account',
+    testnet: {
+      label: 'Polygon Amoy',
+      chainId: 80002,
+      nativeSymbol: 'POL',
+      explorerUrl: 'https://amoy.polygonscan.com',
+    },
     badgeBg: '#8247E5',
     badgeText: '#FFFFFF',
     enabled: true,
@@ -138,6 +184,12 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     suggestedWallet: 'Trust Wallet',
     walletExamples: 'MetaMask, Trust Wallet, Binance Wallet, or WalletConnect',
     accountCta: 'Connect your BNB Chain account',
+    testnet: {
+      label: 'BNB Smart Chain Testnet',
+      chainId: 97,
+      nativeSymbol: 'tBNB',
+      explorerUrl: 'https://testnet.bscscan.com',
+    },
     badgeBg: '#F3BA2F',
     badgeText: '#0B132B',
     enabled: false,
@@ -153,6 +205,12 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     suggestedWallet: 'Valora',
     walletExamples: 'Valora, MetaMask, Coinbase Wallet, or WalletConnect',
     accountCta: 'Connect your Celo account',
+    testnet: {
+      label: 'Celo Alfajores',
+      chainId: 44787,
+      nativeSymbol: 'CELO',
+      explorerUrl: 'https://alfajores.celoscan.io',
+    },
     badgeBg: '#35D07F',
     badgeText: '#0B132B',
     enabled: true,

@@ -27,13 +27,13 @@ import { getActiveMembership } from '@/lib/memberships';
 import CommunityBanner from '@/components/CommunityBanner';
 import CommunityGallery from '@/components/CommunityGallery';
 import BountyBoard from '@/components/BountyBoard';
-import { NETWORK_LABEL } from '@/lib/network';
 import { useSeo } from '@/lib/seo';
 import { getBountyStatsForCommunity } from '@/lib/bounties';
 import { isAdminWallet } from '@/lib/access';
 import AshaSecurityReview from '@/components/security/AshaSecurityReview';
 import { reviewCommunity } from '@/lib/securityReview';
 import { useChain } from '@/hooks/useChain';
+import { getTokenGateStatus } from '@/lib/tokenGate';
 
 // ─── Tab definition ───────────────────────────────────────────────────────────
 
@@ -268,7 +268,8 @@ const CommunityDashboard: React.FC = () => {
   const currentTab = TABS.find((t) => t.key === activeTab);
   const canPostBounties = isMember || isAdminWallet(publicKey?.toBase58());
   const securityReview = reviewCommunity(community);
-  const activeRailLabel = `${chainMeta.label} ${chain === 'solana' ? NETWORK_LABEL : chain === 'stellar' ? 'Testnet' : 'testnet'}`;
+  const activeRailLabel = chainMeta.testnet.label;
+  const tokenGateStatus = getTokenGateStatus(community.id, publicKey?.toBase58(), 'proposal');
 
   return (
     <Layout>
@@ -444,6 +445,36 @@ const CommunityDashboard: React.FC = () => {
                   </div>
 
                   <AshaSecurityReview review={securityReview} compact />
+
+                  <div className="premium-glass rounded-xl p-5">
+                    <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-primary">Membership credential gate</p>
+                        <h3 className="mt-1 font-display text-base font-semibold">Member-only actions are protected</h3>
+                      </div>
+                      <span className={cn(
+                        'rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wider',
+                        tokenGateStatus.allowed ? 'border-confirmed/40 bg-confirmed/10 text-confirmed' : 'border-secondary/40 bg-secondary/10 text-secondary',
+                      )}>
+                        {tokenGateStatus.label}
+                      </span>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      {[
+                        ['Proposals', 'Active member credential required'],
+                        ['Bounties', 'Admin or active member credential required'],
+                        ['Treasury releases', 'Admin credential and approved proposal required'],
+                      ].map(([label, detail]) => (
+                        <div key={label} className="rounded-lg border p-3">
+                          <p className="text-[10px] font-bold uppercase tracking-widest">{label}</p>
+                          <p className="mt-2 text-xs leading-5 text-muted-foreground">{detail}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="mt-4 text-xs leading-5 text-muted-foreground">
+                      The gate checks the member record linked to this group before sensitive actions open.
+                    </p>
+                  </div>
 
                   <BountyBoard communityId={community.id} communityName={community.name} compact />
 

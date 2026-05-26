@@ -12,6 +12,7 @@ import { useSeo } from '@/lib/seo';
 import { useCreateDecision } from '@/hooks/useBarazaData';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useChain } from '@/hooks/useChain';
+import { getTokenGateStatus } from '@/lib/tokenGate';
 
 const CreateDecision: React.FC = () => {
   const navigate = useNavigate();
@@ -111,10 +112,11 @@ const CreateDecision: React.FC = () => {
   }
 
   const overBudget = Number(form.fundingAmount) > community.fundBalance;
+  const tokenGateStatus = getTokenGateStatus(community.id, publicKey?.toBase58(), 'proposal');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isValid || overBudget) return;
+    if (!isValid || overBudget || !tokenGateStatus.allowed) return;
     await requireWallet(async () => {
       setIsPending(true);
       try {
@@ -273,6 +275,14 @@ const CreateDecision: React.FC = () => {
                   <p className="text-xs">
                     {chainMeta.accountCta} to submit a proposal
                   </p>
+                </div>
+              ) : !tokenGateStatus.allowed ? (
+                <div className="baraza-card p-4 text-center">
+                  <p className="text-sm font-semibold">{tokenGateStatus.label}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{tokenGateStatus.detail}</p>
+                  <Link to={`/join/${community.id}`} className="btn-warm mt-4 inline-flex justify-center text-sm">
+                    Join group
+                  </Link>
                 </div>
               ) : (
                 <button
