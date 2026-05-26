@@ -3,7 +3,7 @@ import { ArrowLeft, Loader2, ThumbsDown, ThumbsUp } from "lucide-react";
 import Layout from "@/components/Layout";
 import { DEFAULT_GOVERNANCE } from "@/lib/constants";
 import { useDecision } from "@/hooks/useBarazaData";
-import { daysRemaining, formatKSh } from "@/lib/utils";
+import { daysRemaining, formatRailAmountFromKes, formatRailDate } from "@/lib/utils";
 import { useWalletGuard } from "@/hooks/useWalletGuard";
 import { useBarazaContract } from "@/hooks/useBarazaContract";
 import { useCommunity } from "@/hooks/useCommunities";
@@ -13,6 +13,7 @@ import CommunityBanner from "@/components/CommunityBanner";
 import { useSeo } from "@/lib/seo";
 import AshaSecurityReview from "@/components/security/AshaSecurityReview";
 import { reviewProposal } from "@/lib/securityReview";
+import { useChain } from "@/hooks/useChain";
 
 export default function ProposalDetail() {
   const { id, decisionId } = useParams<{ id: string; decisionId: string }>();
@@ -21,6 +22,7 @@ export default function ProposalDetail() {
   const { requireWallet } = useWalletGuard({ action: "vote on this proposal" });
   const { castVote, isPending } = useBarazaContract();
   const { toast } = useToast();
+  const { chainMeta } = useChain();
 
   useSeo({
     title: proposal && community
@@ -120,7 +122,7 @@ export default function ProposalDetail() {
 
               <div className="grid gap-4 md:grid-cols-4">
                 {[
-                  ["Requested funding", formatKSh(proposal.fundingAmount)],
+                  ["Requested funding", formatRailAmountFromKes(proposal.fundingAmount, chainMeta)],
                   ["Treasury impact", treasuryImpactPct !== null ? `-${treasuryImpactPct}%` : "—"],
                   ["Quorum required", `${quorumRequiredPct}%`],
                   ["Current approval", totalVotes > 0 ? `${support}%` : "—"],
@@ -188,7 +190,7 @@ export default function ProposalDetail() {
                     <span className="absolute -left-[1.6rem] top-1 h-3 w-3 rounded-full bg-primary" />
                     <p className="text-sm">Proposal opened for voting</p>
                     <p className="text-xs">
-                      {new Date(proposal.createdAt).toLocaleDateString("en-KE", { day: "2-digit", month: "short", year: "numeric" })}
+                      {formatRailDate(proposal.createdAt, chainMeta, { day: "2-digit", month: "short", year: "numeric" })}
                     </p>
                   </div>
                   <div className="relative">
@@ -197,7 +199,7 @@ export default function ProposalDetail() {
                       {isVotable ? "Voting closes" : "Voting closed"}
                     </p>
                     <p className="text-xs">
-                      {new Date(proposal.endsAt).toLocaleDateString("en-KE", { day: "2-digit", month: "short", year: "numeric" })}
+                      {formatRailDate(proposal.endsAt, chainMeta, { day: "2-digit", month: "short", year: "numeric" })}
                     </p>
                   </div>
                 </div>

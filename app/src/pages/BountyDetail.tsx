@@ -24,10 +24,11 @@ import {
   type BountySubmission,
 } from '@/lib/bounties';
 import { useCommunities } from '@/hooks/useCommunities';
-import { cn, formatKSh } from '@/lib/utils';
+import { cn, formatRailAmountFromKes, formatRailDate } from '@/lib/utils';
 import { useSeo } from '@/lib/seo';
 import AshaSecurityReview from '@/components/security/AshaSecurityReview';
 import { reviewBounty } from '@/lib/securityReview';
+import { useChain } from '@/hooks/useChain';
 
 const statusLabel: Record<BountyStatus, string> = {
   open: 'Open',
@@ -77,6 +78,7 @@ function BountyNotFound() {
 
 export default function BountyDetail() {
   const { bountyId = '' } = useParams();
+  const { chainMeta } = useChain();
   const { communities } = useCommunities();
   const [bounty, setBounty] = useState<Bounty | null>(() => getBounty(bountyId));
   const [submissions, setSubmissions] = useState<BountySubmission[]>([]);
@@ -202,7 +204,7 @@ export default function BountyDetail() {
                 <section className="baraza-card p-5">
                   <div className="mb-4 flex items-center justify-between gap-3">
                     <h2 className="font-display text-lg font-semibold">Bounty brief</h2>
-                    <span className="font-display text-xl font-bold text-accent">{formatKSh(bounty.rewardKes)}</span>
+                    <span className="font-display text-xl font-bold text-accent">{formatRailAmountFromKes(bounty.rewardKes, chainMeta)}</span>
                   </div>
                   <p className="text-sm leading-6 text-muted-foreground">{bounty.summary}</p>
                   <div className="mt-5 flex flex-wrap gap-2">
@@ -285,7 +287,7 @@ export default function BountyDetail() {
                             <div>
                               <p className="font-display text-sm font-semibold">{item.contributor}</p>
                               <p className="mt-1 text-xs text-muted-foreground">
-                                {new Date(item.submittedAt).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                {formatRailDate(item.submittedAt, chainMeta, { day: 'numeric', month: 'short', year: 'numeric' })}
                               </p>
                             </div>
                             <a

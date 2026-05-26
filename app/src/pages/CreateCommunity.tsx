@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Users, ArrowLeft, CheckCircle2, Loader2, Phone, ShieldCheck, Wallet } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { COMMUNITY_TYPES, DAO_CREATION_FEE_KES } from '@/lib/constants';
-import { formatKSh } from '@/lib/utils';
+import { formatKSh, formatRailAmountFromKes, formatRailAmountWithKes } from '@/lib/utils';
 import { normaliseKenyanPhone } from '@/lib/phone';
 import { useWalletGuard } from '@/hooks/useWalletGuard';
 import { useToast } from '@/hooks/use-toast';
@@ -158,7 +158,9 @@ const CreateCommunity: React.FC = () => {
         }
         setCreatedCommunityId(community.id);
         setIsCreated(true);
-        const launchFeeLabel = formatKSh(DAO_CREATION_FEE_KES);
+        const launchFeeLabel = paymentMethod === 'mpesa'
+          ? formatKSh(DAO_CREATION_FEE_KES)
+          : formatRailAmountWithKes(DAO_CREATION_FEE_KES, selectedAccountMeta);
         toast({
           title: charge.persisted
             ? `${launchFeeLabel} payment received`
@@ -187,7 +189,9 @@ const CreateCommunity: React.FC = () => {
   };
 
   if (isCreated) {
-    const launchFeeLabel = formatKSh(DAO_CREATION_FEE_KES);
+    const launchFeeLabel = paymentMethod === 'mpesa'
+      ? formatKSh(DAO_CREATION_FEE_KES)
+      : formatRailAmountWithKes(DAO_CREATION_FEE_KES, selectedAccountMeta);
     return (
       <Layout>
         <section className="py-20">
@@ -253,7 +257,7 @@ const CreateCommunity: React.FC = () => {
                 </h1>
               </div>
               <p className="max-w-xl text-sm font-semibold leading-6 text-foreground/92 drop-shadow md:text-base md:leading-7">
-                Launch a DAO or chama where members can contribute in KES, submit proposals, and manage a shared treasury with clear rules.
+                Launch a DAO or chama where members can contribute, submit proposals, and manage a shared treasury with clear rules.
               </p>
             </div>
             </CommunityBanner>
@@ -313,6 +317,11 @@ const CreateCommunity: React.FC = () => {
                     className="w-full rounded-xl pl-14 pr-4 py-3 text-sm outline-none border"
                   />
                 </div>
+                {Number(form.fee) > 0 && (
+                  <p className="mt-1.5 text-xs text-muted-foreground">
+                    Shows as {formatRailAmountFromKes(Number(form.fee), selectedCommunityChainMeta)} on {selectedCommunityChainMeta.label}.
+                  </p>
+                )}
               </div>
 
               {/* Description */}
@@ -509,8 +518,8 @@ const CreateCommunity: React.FC = () => {
                       <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm">
                         {needsSolanaAccount && isReady ? (
                           <p>
-                            <span className="font-semibold">{selectedAccountMeta.short} equivalent</span> of{' '}
-                            KES equivalent will be recorded against the launch order.
+                            <span className="font-semibold">{selectedAccountMeta.currency.code} estimate:</span>{' '}
+                            {formatRailAmountWithKes(DAO_CREATION_FEE_KES, selectedAccountMeta)} will be recorded against the launch order.
                           </p>
                         ) : needsSolanaAccount ? (
                           <p className="text-muted-foreground">
@@ -535,7 +544,7 @@ const CreateCommunity: React.FC = () => {
                     </p>
                   </div>
                   <span className="font-display text-lg font-bold tabular-nums">
-                    {paymentMethod === 'mpesa' ? formatKSh(DAO_CREATION_FEE_KES) : `${formatKSh(DAO_CREATION_FEE_KES)} equivalent`}
+                    {paymentMethod === 'mpesa' ? formatKSh(DAO_CREATION_FEE_KES) : formatRailAmountWithKes(DAO_CREATION_FEE_KES, selectedAccountMeta)}
                   </span>
                 </div>
 

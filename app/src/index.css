@@ -4,140 +4,140 @@
 
 @layer base {
   :root {
-    /* Baraza Design System v6: Clean Ledger + Warm Gold + Trust Green */
+    /* Baraza Design System v7: Black + Dark Orange + White */
 
-    --background: 150 14% 98%;
-    --foreground: 154 18% 9%;
+    --background: 0 0% 98%;
+    --foreground: 0 0% 7%;
 
     --card: 0 0% 100%;
-    --card-foreground: 154 18% 9%;
+    --card-foreground: 0 0% 7%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 154 18% 9%;
+    --popover-foreground: 0 0% 7%;
 
-    /* Brand: organizer gold */
-    --primary: 42 88% 45%;
-    --primary-foreground: 154 18% 9%;
+    /* Brand: dark orange */
+    --primary: 22 90% 42%;
+    --primary-foreground: 0 0% 98%;
 
-    /* Secondary: charcoal action */
-    --secondary: 154 18% 13%;
-    --secondary-foreground: 150 14% 98%;
+    /* Secondary: near-black */
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 150 16% 93%;
-    --muted-foreground: 156 8% 36%;
+    --muted: 22 12% 93%;
+    --muted-foreground: 0 0% 38%;
 
-    /* Accent: trusted action green */
-    --accent: 151 52% 34%;
-    --accent-foreground: 150 14% 98%;
+    /* Accent: burnt orange */
+    --accent: 22 90% 42%;
+    --accent-foreground: 0 0% 98%;
 
-    /* Destructive: muted red */
+    /* Destructive */
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 96%;
 
-    --border: 152 14% 82%;
-    --input: 150 16% 93%;
-    --ring: 42 88% 45%;
+    --border: 22 18% 84%;
+    --input: 22 12% 93%;
+    --ring: 22 90% 42%;
 
     --radius: 0.5rem;
 
     /* Extended semantic tokens */
-    --warm: 42 88% 45%;
-    --warm-foreground: 154 18% 9%;
-    --orange: 23 86% 49%;
+    --warm: 22 90% 42%;
+    --warm-foreground: 0 0% 98%;
+    --orange: 22 90% 42%;
 
-    /* DAO / governance: Blue Violet */
-    --dao: 258 72% 54%;
-    --dao-foreground: 0 0% 96%;
+    /* DAO / governance: keep distinct */
+    --dao: 22 90% 35%;
+    --dao-foreground: 0 0% 98%;
 
-    /* Network / chain: Azure Blue */
-    --network: 211 90% 44%;
-    --network-foreground: 0 0% 96%;
+    /* Network: dark orange tint */
+    --network: 30 80% 40%;
+    --network-foreground: 0 0% 98%;
 
-    /* Confirmed / trusted financial state: muted green */
-    --confirmed: 151 52% 34%;
-    --confirmed-foreground: 0 0% 96%;
+    /* Confirmed / trusted: deep amber-green */
+    --confirmed: 38 75% 38%;
+    --confirmed-foreground: 0 0% 98%;
 
-    --surface: 150 18% 95%;
-    --surface-hover: 150 16% 90%;
+    --surface: 22 10% 95%;
+    --surface-hover: 22 10% 90%;
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(42 88% 42%) 0%, hsl(43 88% 55%) 52%, hsl(151 52% 34%) 100%);
-    --gradient-warm: linear-gradient(135deg, hsl(42 88% 44%) 0%, hsl(23 86% 49%) 100%);
-    --gradient-dao: linear-gradient(135deg, hsl(258 72% 54%) 0%, hsl(211 90% 44%) 100%);
-    --gradient-surface: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(150 14% 98%) 100%);
-    --gradient-hero: radial-gradient(ellipse 48% 38% at 78% 8%, hsl(42 88% 45% / 0.18) 0%, transparent 62%),
-                     radial-gradient(ellipse 42% 34% at 18% 18%, hsl(151 52% 34% / 0.1) 0%, transparent 64%),
-                     radial-gradient(ellipse 30% 24% at 55% 0%, hsl(211 90% 44% / 0.08) 0%, transparent 70%),
-                     linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(150 14% 98%) 55%, hsl(150 20% 94%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(22 90% 36%) 0%, hsl(22 90% 48%) 52%, hsl(18 88% 36%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(22 90% 42%) 0%, hsl(18 88% 35%) 100%);
+    --gradient-dao: linear-gradient(135deg, hsl(22 90% 35%) 0%, hsl(30 80% 40%) 100%);
+    --gradient-surface: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(0 0% 98%) 100%);
+    --gradient-hero: radial-gradient(ellipse 48% 38% at 78% 8%, hsl(22 90% 42% / 0.16) 0%, transparent 62%),
+                     radial-gradient(ellipse 42% 34% at 18% 18%, hsl(18 88% 36% / 0.08) 0%, transparent 64%),
+                     radial-gradient(ellipse 30% 24% at 55% 0%, hsl(30 80% 40% / 0.07) 0%, transparent 70%),
+                     linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(0 0% 98%) 55%, hsl(22 10% 95%) 100%);
 
     /* Shadows */
-    --shadow-card:  0 16px 42px -28px hsl(154 18% 9% / 0.3);
-    --shadow-glow:  0 0 34px hsl(42 88% 45% / 0.18);
-    --shadow-warm:  0 8px 28px hsl(42 88% 45% / 0.2);
-    --shadow-dao:   0 0 34px hsl(258 72% 54% / 0.14);
-    --shadow-deep:  0 28px 80px -30px hsl(154 18% 9% / 0.42);
+    --shadow-card:  0 16px 42px -28px hsl(0 0% 0% / 0.24);
+    --shadow-glow:  0 0 34px hsl(22 90% 42% / 0.22);
+    --shadow-warm:  0 8px 28px hsl(22 90% 42% / 0.24);
+    --shadow-dao:   0 0 34px hsl(22 90% 35% / 0.16);
+    --shadow-deep:  0 28px 80px -30px hsl(0 0% 0% / 0.38);
   }
 
   .dark {
-    /* Baraza Design System v6: Charcoal + Warm Gold + Trust Green */
+    /* Baraza Design System v7 dark: Pure Black + Dark Orange + White */
 
-    --background: 150 16% 4%;
-    --foreground: 150 14% 96%;
+    --background: 0 0% 5%;
+    --foreground: 0 0% 96%;
 
-    --card: 150 12% 7%;
-    --card-foreground: 150 14% 96%;
+    --card: 0 0% 9%;
+    --card-foreground: 0 0% 96%;
 
-    --popover: 150 12% 6%;
-    --popover-foreground: 150 14% 96%;
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 96%;
 
-    --primary: 43 82% 56%;
-    --primary-foreground: 0 0% 4%;
+    --primary: 22 90% 52%;
+    --primary-foreground: 0 0% 5%;
 
-    --secondary: 0 0% 94%;
-    --secondary-foreground: 0 0% 4%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 5%;
 
-    --muted: 150 10% 13%;
-    --muted-foreground: 150 7% 62%;
+    --muted: 0 0% 13%;
+    --muted-foreground: 0 0% 58%;
 
-    --accent: 142 47% 44%;
-    --accent-foreground: 0 0% 4%;
+    --accent: 22 90% 52%;
+    --accent-foreground: 0 0% 5%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 96%;
 
-    --border: 43 42% 20%;
-    --input: 150 10% 13%;
-    --ring: 43 82% 56%;
+    --border: 22 28% 18%;
+    --input: 0 0% 13%;
+    --ring: 22 90% 52%;
 
-    --warm: 43 82% 56%;
-    --warm-foreground: 0 0% 4%;
-    --orange: 28 88% 54%;
+    --warm: 22 90% 52%;
+    --warm-foreground: 0 0% 5%;
+    --orange: 22 90% 52%;
 
-    --dao: 270 85% 50%;
+    --dao: 22 85% 45%;
     --dao-foreground: 0 0% 96%;
 
-    --network: 217 100% 50%;
-    --network-foreground: 0 0% 96%;
+    --network: 30 80% 48%;
+    --network-foreground: 0 0% 5%;
 
-    --confirmed: 142 60% 40%;
-    --confirmed-foreground: 0 0% 96%;
+    --confirmed: 38 72% 46%;
+    --confirmed-foreground: 0 0% 5%;
 
-    --surface: 150 11% 9%;
-    --surface-hover: 150 10% 13%;
+    --surface: 0 0% 11%;
+    --surface-hover: 0 0% 15%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(43,82%,46%) 0%, hsl(43,82%,58%) 58%, hsl(142,47%,44%) 100%);
-    --gradient-warm: linear-gradient(135deg, hsl(43,82%,50%) 0%, hsl(36,82%,58%) 100%);
-    --gradient-dao: linear-gradient(135deg, hsl(270,85%,50%) 0%, hsl(217,100%,50%) 100%);
-    --gradient-surface: linear-gradient(180deg, hsl(150 12% 7%) 0%, hsl(150 16% 4%) 100%);
-    --gradient-hero: radial-gradient(ellipse 55% 42% at 72% 10%, hsl(43 82% 56% / 0.14) 0%, transparent 58%),
-                     radial-gradient(ellipse 44% 36% at 55% 20%, hsl(217 100% 50% / 0.08) 0%, transparent 65%),
-                     linear-gradient(135deg, hsl(150 16% 4%) 0%, hsl(150 12% 6%) 50%, hsl(142 30% 7%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(22 90% 40%) 0%, hsl(22 90% 56%) 55%, hsl(18 88% 42%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(22 90% 50%) 0%, hsl(18 88% 42%) 100%);
+    --gradient-dao: linear-gradient(135deg, hsl(22 85% 42%) 0%, hsl(30 80% 48%) 100%);
+    --gradient-surface: linear-gradient(180deg, hsl(0 0% 9%) 0%, hsl(0 0% 5%) 100%);
+    --gradient-hero: radial-gradient(ellipse 55% 42% at 72% 10%, hsl(22 90% 52% / 0.18) 0%, transparent 58%),
+                     radial-gradient(ellipse 44% 36% at 22% 20%, hsl(18 88% 42% / 0.10) 0%, transparent 65%),
+                     linear-gradient(135deg, hsl(0 0% 5%) 0%, hsl(0 0% 7%) 50%, hsl(22 8% 7%) 100%);
 
-    --shadow-card:  0 4px 24px -4px hsl(0 0% 0% / 0.75);
-    --shadow-glow:  0 0 40px hsl(43 82% 56% / 0.22);
-    --shadow-warm:  0 4px 24px hsl(43 82% 56% / 0.24);
-    --shadow-dao:   0 0 40px hsl(270 85% 50% / 0.18);
-    --shadow-deep:  0 20px 60px -10px hsl(0 0% 0% / 0.90);
+    --shadow-card:  0 4px 24px -4px hsl(0 0% 0% / 0.80);
+    --shadow-glow:  0 0 40px hsl(22 90% 52% / 0.28);
+    --shadow-warm:  0 4px 24px hsl(22 90% 52% / 0.28);
+    --shadow-dao:   0 0 40px hsl(22 85% 45% / 0.20);
+    --shadow-deep:  0 20px 60px -10px hsl(0 0% 0% / 0.92);
   }
 }
 
@@ -243,7 +243,7 @@
     transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
   }
   .baraza-card:hover {
-    border-color: hsl(var(--primary) / 0.35);
+    border-color: hsl(var(--primary) / 0.40);
     box-shadow: var(--shadow-glow);
   }
 
@@ -259,7 +259,7 @@
     background: hsl(var(--card) / 0.72);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
-    border: 1px solid hsl(var(--primary) / 0.14);
+    border: 1px solid hsl(var(--primary) / 0.16);
     box-shadow: 0 24px 80px hsl(var(--background) / 0.72);
   }
 
@@ -267,7 +267,7 @@
     background-image:
       radial-gradient(circle at 74% 34%, hsl(var(--primary) / 0.2), transparent 25rem),
       radial-gradient(circle at 82% 58%, hsl(var(--confirmed) / 0.12), transparent 20rem),
-      radial-gradient(circle at 50% 12%, hsl(var(--dao) / 0.1), transparent 22rem);
+      radial-gradient(circle at 50% 12%, hsl(var(--dao) / 0.10), transparent 22rem);
   }
 
   /* Text Gradients */
@@ -344,7 +344,7 @@
     background: hsl(var(--surface)) !important;
   }
   .wallet-adapter-modal-overlay {
-    background: hsl(0, 0%, 2%, 0.88) !important;
+    background: hsl(0, 0%, 2%, 0.92) !important;
   }
   .wallet-adapter-dropdown-list {
     background: hsl(var(--card)) !important;
@@ -377,8 +377,8 @@
   50%       { transform: translateY(-10px); }
 }
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px hsl(var(--primary) / 0.20); }
-  50%       { box-shadow: 0 0 50px hsl(var(--primary) / 0.45); }
+  0%, 100% { box-shadow: 0 0 20px hsl(var(--primary) / 0.22); }
+  50%       { box-shadow: 0 0 50px hsl(var(--primary) / 0.50); }
 }
 @keyframes shimmer {
   0%   { background-position: -200% 0; }

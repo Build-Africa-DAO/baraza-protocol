@@ -2,25 +2,27 @@ import { useParams } from "react-router-dom";
 import { Download, ExternalLink, ReceiptText, ShieldCheck } from "lucide-react";
 import Layout from "@/components/Layout";
 import { useCommunity } from "@/hooks/useCommunities";
-import { formatKSh } from "@/lib/utils";
+import { formatRailAmountFromKes } from "@/lib/utils";
 import CommunityBanner from "@/components/CommunityBanner";
 import { useSeo } from "@/lib/seo";
+import { useChain } from "@/hooks/useChain";
 
 const attestations = [
-  ["MPESA-XJ9L2B", "PaymentAttestation", "+ KES 50,000", "Confirmed"],
-  ["MPESA-KL4M8P", "PaymentAttestation", "+ KES 12,500", "Confirmed"],
+  ["MPESA-XJ9L2B", "PaymentAttestation", 50000, "Confirmed"],
+  ["MPESA-KL4M8P", "PaymentAttestation", 12500, "Confirmed"],
   ["ORD-8841B", "Mint job", "Membership credential", "Queued"],
 ];
 
 const releases = [
-  ["PROP-039", "Q4 welfare payout", "- KES 150,000", "4xkL...p9Qr"],
-  ["PROP-038", "Audit bounty", "- KES 62,500", "8mPz...x2Vy"],
-  ["PROP-035", "Training workshop", "- KES 30,000", "2jRt...k8Mw"],
+  ["PROP-039", "Q4 welfare payout", 150000, "4xkL...p9Qr"],
+  ["PROP-038", "Audit bounty", 62500, "8mPz...x2Vy"],
+  ["PROP-035", "Training workshop", 30000, "2jRt...k8Mw"],
 ];
 
 export default function TreasuryDetail() {
   const { id } = useParams<{ id: string }>();
   const { community } = useCommunity(id);
+  const { chainMeta } = useChain();
 
   useSeo({
     title: community ? `${community.name} treasury` : "Treasury",
@@ -58,7 +60,7 @@ export default function TreasuryDetail() {
               <div>
                 <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Treasury balance</p>
                 <p className="mt-2 font-display text-4xl font-bold text-primary">
-                  {formatKSh(community?.fundBalance ?? 1248500)}
+                  {formatRailAmountFromKes(community?.fundBalance ?? 1248500, chainMeta)}
                 </p>
               </div>
               <div className="grid gap-3 sm:grid-cols-2 md:min-w-[22rem]">
@@ -90,7 +92,9 @@ export default function TreasuryDetail() {
                       </div>
                     </div>
                     <div className="text-left sm:text-right">
-                      <p className="text-sm font-semibold text-foreground">{amount}</p>
+                      <p className="text-sm font-semibold text-foreground">
+                        {typeof amount === 'number' ? `+ ${formatRailAmountFromKes(amount, chainMeta)}` : amount}
+                      </p>
                       <p className={status === "Confirmed" ? "text-xs text-confirmed" : "text-xs text-primary"}>{status}</p>
                     </div>
                   </div>
@@ -127,7 +131,7 @@ export default function TreasuryDetail() {
                   <tr key={ref} className="border-b border-border/70 last:border-b-0">
                     <td className="py-4 font-mono text-foreground">{ref}</td>
                     <td className="py-4 text-muted-foreground">{purpose}</td>
-                    <td className="py-4 text-destructive">{amount}</td>
+                    <td className="py-4 text-destructive">- {formatRailAmountFromKes(Number(amount), chainMeta)}</td>
                     <td className="py-4 text-right">
                       <span
                         aria-disabled="true"

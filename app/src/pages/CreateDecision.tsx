@@ -249,6 +249,11 @@ const CreateDecision: React.FC = () => {
                     This exceeds the available treasury of {formatRailAmountFromKes(community.fundBalance, chainMeta)}
                   </p>
                 )}
+                {Number(form.fundingAmount) > 0 && !overBudget && (
+                  <p className="text-xs mt-1.5 text-muted-foreground">
+                    Shows as {formatRailAmountFromKes(Number(form.fundingAmount), chainMeta)} on {chainMeta.label}.
+                  </p>
+                )}
               </div>
 
               {/* Voting period */}
