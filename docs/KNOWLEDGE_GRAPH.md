@@ -8,7 +8,12 @@ The current graph is generated in:
 
 - `app/src/lib/knowledgeGraph.ts`
 
-It is intentionally local and version-controlled. It can later be backed by The Graph, Supabase, Neo4j, or another graph database without changing the product language.
+It is version-controlled and can run in two modes:
+
+- `local`: mock/localStorage-derived graph for development and demos
+- `supabase`: persisted communities, bounties, memberships, and payment orders when Supabase env vars are configured
+
+It can later be backed by The Graph, Neo4j, or another graph database without changing the product language.
 
 ## Current node types
 
@@ -16,6 +21,8 @@ It is intentionally local and version-controlled. It can later be backed by The 
 - `chain`
 - `proposal`
 - `bounty`
+- `membership`
+- `payment-order`
 - `security-review`
 - `readiness-task`
 - `capability`
@@ -25,6 +32,8 @@ It is intentionally local and version-controlled. It can later be backed by The 
 - `uses-chain`
 - `has-proposal`
 - `has-bounty`
+- `has-member`
+- `has-payment`
 - `has-review`
 - `needs-task`
 - `supports-capability`
@@ -45,7 +54,9 @@ When adding a feature, also update the graph if the feature changes one of these
 The admin dashboard reads the graph summary and shows:
 
 - Node and edge count
+- Data source: local or Supabase
 - Risk and watch review counts
+- Member and payment-order counts
 - Testnet-ready chain rails
 - Coming-soon chain rails
 - Top readiness tasks

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   AlertTriangle,
@@ -26,7 +26,12 @@ import { useChain } from "@/hooks/useChain";
 import { useCommunities } from "@/hooks/useCommunities";
 import { listBounties, type BountyStatus } from "@/lib/bounties";
 import { reviewCommunity, type SecurityReviewLevel } from "@/lib/securityReview";
-import { buildKnowledgeGraph, summarizeKnowledgeGraph } from "@/lib/knowledgeGraph";
+import {
+  buildKnowledgeGraph,
+  buildLiveKnowledgeGraph,
+  summarizeKnowledgeGraph,
+  type KnowledgeGraph,
+} from "@/lib/knowledgeGraph";
 
 const ADMIN_WALLETS = getAdminWallets();
 const ADMIN_NFT_THRESHOLD = Number(import.meta.env.VITE_ADMIN_NFT_THRESHOLD ?? 0);
@@ -104,6 +109,8 @@ export default function AdminReconciliation() {
   const { communities, isLoading } = useCommunities();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | BountyStatus>("all");
+  const [liveGraph, setLiveGraph] = useState<KnowledgeGraph | null>(null);
+  const [graphError, setGraphError] = useState<string | null>(null);
 
   const allowlistConfigured = ADMIN_WALLETS.length > 0;
   const nftGateConfigured = ADMIN_NFT_THRESHOLD > 0;
@@ -119,11 +126,28 @@ export default function AdminReconciliation() {
   const openBounties = bounties.filter((bounty) => bounty.status === "open");
   const reviewBounties = bounties.filter((bounty) => bounty.status === "in_review");
   const rewardPool = openBounties.reduce((sum, bounty) => sum + bounty.rewardKes, 0);
-  const knowledgeGraph = useMemo(
-    () => buildKnowledgeGraph({ communities, bounties }),
+  const fallbackGraph = useMemo(
+    () => buildKnowledgeGraph({ communities, bounties, source: "local" }),
     [bounties, communities],
   );
+  const knowledgeGraph = liveGraph ?? fallbackGraph;
   const graphSummary = useMemo(() => summarizeKnowledgeGraph(knowledgeGraph), [knowledgeGraph]);
+
+  useEffect(() => {
+    let cancelled = false;
+    buildLiveKnowledgeGraph()
+      .then((graph) => {
+        if (cancelled) return;
+        setLiveGraph(graph);
+        setGraphError(null);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setLiveGraph(null);
+        setGraphError(error instanceof Error ? error.message : "Knowledge graph sync failed.");
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   const filteredOrders = paymentOrders.filter(([id, group, amount, status]) =>
     `${id} ${group} ${amount} ${status}`.toLowerCase().includes(searchTerm.toLowerCase()),
@@ -208,7 +232,12 @@ export default function AdminReconciliation() {
             <MetricCard icon={BriefcaseBusiness} label="Open bounty pool" value={formatRailAmountFromKes(rewardPool, chainMeta)} note={`${openBounties.length} open tasks`} />
             <MetricCard icon={FileWarning} label="Needs review" value={(flaggedReviews.length + reviewBounties.length).toString()} note="Security flags and submitted bounty work" />
             <MetricCard icon={ShieldCheck} label="Admin rail" value={chainMeta.label} note="Selected account and review rail" />
-            <MetricCard icon={Network} label="Knowledge graph" value={`${graphSummary.nodeCount}/${graphSummary.edgeCount}`} note="Nodes and relationships tracked" />
+            <MetricCard
+              icon={Network}
+              label="Knowledge graph"
+              value={`${graphSummary.nodeCount}/${graphSummary.edgeCount}`}
+              note={`${graphSummary.source === "supabase" ? "Live Supabase" : "Local"} nodes and relationships`}
+            />
             {nftGateConfigured && (
               <MetricCard icon={ShieldCheck} label="NFT admin gate" value={`${ADMIN_NFT_COUNT}/${ADMIN_NFT_THRESHOLD}`} note="Credential threshold for operator access" />
             )}
@@ -417,6 +446,11 @@ export default function AdminReconciliation() {
                 <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
                   Communities, proposals, bounties, chain rails, Asha checks, and readiness tasks are linked so admins can see what still blocks testnet.
                 </p>
+                {graphError && (
+                  <p className="mt-2 text-xs text-accent">
+                    Live graph sync failed. Showing local graph: {graphError}
+                  </p>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-2 text-right">
                 <div className="rounded-lg border p-3">
@@ -430,6 +464,18 @@ export default function AdminReconciliation() {
               </div>
             </div>
             <div className="grid gap-4 lg:grid-cols-3">
+              <div className="rounded-lg border p-4">
+                <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Data source</p>
+                <p className="mt-2 text-sm font-semibold capitalize">{graphSummary.source}</p>
+              </div>
+              <div className="rounded-lg border p-4">
+                <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Members tracked</p>
+                <p className="mt-2 text-sm font-semibold">{graphSummary.membershipCount}</p>
+              </div>
+              <div className="rounded-lg border p-4">
+                <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Payment orders</p>
+                <p className="mt-2 text-sm font-semibold">{graphSummary.paymentOrderCount}</p>
+              </div>
               <div className="rounded-lg border p-4">
                 <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Testnet ready</p>
                 <p className="mt-2 text-sm font-semibold">

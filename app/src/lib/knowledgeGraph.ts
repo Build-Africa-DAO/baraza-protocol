@@ -1,13 +1,18 @@
 import { BARAZA_CHAIN_CONFIGS, type BarazaChainConfig } from '@/lib/chains/config';
 import { MOCK_COMMUNITIES, MOCK_DECISIONS, type Community, type Decision } from '@/lib/constants';
-import { listBounties, type Bounty } from '@/lib/bounties';
+import { listBounties, listBountiesAsync, type Bounty } from '@/lib/bounties';
 import { reviewBounty, reviewCommunity, reviewProposal, type SecurityReview } from '@/lib/securityReview';
+import { getSupabaseClient, listCommunities } from '@/lib/communities';
+import { listMembershipsForCommunity, type MembershipRecord } from '@/lib/memberships';
+import type { PaymentOrder, PaymentOrderStatus } from '@/lib/payments';
 
 export type KnowledgeNodeType =
   | 'community'
   | 'chain'
   | 'proposal'
   | 'bounty'
+  | 'membership'
+  | 'payment-order'
   | 'security-review'
   | 'readiness-task'
   | 'capability';
@@ -16,6 +21,8 @@ export type KnowledgeEdgeType =
   | 'uses-chain'
   | 'has-proposal'
   | 'has-bounty'
+  | 'has-member'
+  | 'has-payment'
   | 'has-review'
   | 'needs-task'
   | 'supports-capability'
@@ -40,6 +47,7 @@ export interface KnowledgeEdge {
 
 export interface KnowledgeGraph {
   generatedAt: string;
+  source: 'supabase' | 'local';
   nodes: KnowledgeNode[];
   edges: KnowledgeEdge[];
 }
@@ -49,9 +57,32 @@ export interface KnowledgeGraphSummary {
   edgeCount: number;
   riskCount: number;
   watchCount: number;
+  source: 'supabase' | 'local';
+  membershipCount: number;
+  paymentOrderCount: number;
   comingSoonChains: string[];
   testnetReadyChains: string[];
   topTasks: KnowledgeNode[];
+}
+
+interface PaymentOrderRow {
+  order_id: string;
+  community_id: string;
+  status: PaymentOrderStatus;
+  amount_expected: number | string;
+  amount_received: number | string | null;
+  currency: string;
+  created_at: string;
+  updated_at?: string | null;
+  confirmed_at?: string | null;
+}
+
+interface MembershipRow {
+  community_id: string;
+  wallet_address: string | null;
+  status: 'active' | 'pending' | 'revoked' | string;
+  joined_at: string | null;
+  created_at?: string | null;
 }
 
 const READINESS_TASKS: KnowledgeNode[] = [
@@ -167,6 +198,39 @@ function bountyNode(bounty: Bounty): KnowledgeNode {
   };
 }
 
+function membershipNode(record: MembershipRecord): KnowledgeNode {
+  const wallet = record.walletAddress || 'unknown-account';
+  return {
+    id: nodeId('membership', `${record.communityId}:${wallet}`),
+    type: 'membership',
+    label: `${record.status} member`,
+    status: record.status,
+    summary: `Membership record for ${wallet.slice(0, 8)}...`,
+    metadata: {
+      communityId: record.communityId,
+      walletAddress: wallet,
+      joinedAt: record.joinedAt,
+    },
+  };
+}
+
+function paymentOrderNode(order: PaymentOrder): KnowledgeNode {
+  return {
+    id: nodeId('payment-order', order.order_id),
+    type: 'payment-order',
+    label: order.order_id,
+    status: order.status,
+    summary: `${order.currency} ${order.amount_received ?? order.amount_expected} for membership activation`,
+    metadata: {
+      communityId: order.community_id,
+      currency: order.currency,
+      expected: order.amount_expected,
+      received: order.amount_received,
+      confirmedAt: order.confirmed_at,
+    },
+  };
+}
+
 function reviewNode(subjectId: string, review: SecurityReview): KnowledgeNode {
   return {
     id: nodeId('security-review', subjectId),
@@ -193,11 +257,16 @@ export function buildKnowledgeGraph(input?: {
   communities?: Community[];
   proposals?: Decision[];
   bounties?: Bounty[];
+  memberships?: MembershipRecord[];
+  paymentOrders?: PaymentOrder[];
+  source?: 'supabase' | 'local';
   now?: string;
 }): KnowledgeGraph {
   const communities = input?.communities ?? MOCK_COMMUNITIES;
   const proposals = input?.proposals ?? MOCK_DECISIONS;
   const bounties = input?.bounties ?? listBounties();
+  const memberships = input?.memberships ?? communities.flatMap((community) => listMembershipsForCommunity(community.id));
+  const paymentOrders = input?.paymentOrders ?? [];
   const nodes = new Map<string, KnowledgeNode>();
   const edges: KnowledgeEdge[] = [];
 
@@ -261,6 +330,24 @@ export function buildKnowledgeGraph(input?: {
     if (bounty.rewardToken === 'SOL') addEdge(bountyId, nodeId('chain', 'solana'), 'settles-on', 'SOL reward');
   });
 
+  memberships.forEach((membership) => {
+    const membershipId = nodeId('membership', `${membership.communityId}:${membership.walletAddress || 'unknown-account'}`);
+    const communityId = nodeId('community', membership.communityId);
+    addNode(membershipNode(membership));
+    addEdge(communityId, membershipId, 'has-member', 'member');
+  });
+
+  paymentOrders.forEach((order) => {
+    const orderId = nodeId('payment-order', order.order_id);
+    const communityId = nodeId('community', order.community_id);
+    addNode(paymentOrderNode(order));
+    addEdge(communityId, orderId, 'has-payment', 'payment');
+
+    if (order.currency.toUpperCase() === 'XLM') {
+      addEdge(orderId, nodeId('chain', 'stellar'), 'settles-on', 'Stellar payment');
+    }
+  });
+
   for (const task of READINESS_TASKS) {
     if (task.id.includes('stellar')) addEdge(nodeId('chain', 'stellar'), task.id, 'needs-task', 'needs');
     if (task.id.includes('solana')) addEdge(nodeId('chain', 'solana'), task.id, 'needs-task', 'needs');
@@ -269,6 +356,7 @@ export function buildKnowledgeGraph(input?: {
 
   return {
     generatedAt: input?.now ?? new Date().toISOString(),
+    source: input?.source ?? 'local',
     nodes: Array.from(nodes.values()),
     edges,
   };
@@ -281,6 +369,9 @@ export function summarizeKnowledgeGraph(graph: KnowledgeGraph): KnowledgeGraphSu
     edgeCount: graph.edges.length,
     riskCount: reviews.filter((node) => node.status === 'risk').length,
     watchCount: reviews.filter((node) => node.status === 'watch').length,
+    source: graph.source,
+    membershipCount: graph.nodes.filter((node) => node.type === 'membership').length,
+    paymentOrderCount: graph.nodes.filter((node) => node.type === 'payment-order').length,
     comingSoonChains: graph.nodes
       .filter((node) => node.type === 'chain' && node.status === 'coming-soon')
       .map((node) => node.label),
@@ -292,6 +383,62 @@ export function summarizeKnowledgeGraph(graph: KnowledgeGraph): KnowledgeGraphSu
       .sort((a, b) => String(a.status).localeCompare(String(b.status)))
       .slice(0, 5),
   };
+}
+
+function membershipFromRow(row: MembershipRow): MembershipRecord {
+  return {
+    communityId: row.community_id,
+    walletAddress: row.wallet_address ?? 'unknown-account',
+    status: row.status === 'active' || row.status === 'pending' || row.status === 'revoked' ? row.status : 'pending',
+    joinedAt: row.joined_at ?? row.created_at ?? new Date().toISOString(),
+  };
+}
+
+function paymentOrderFromRow(row: PaymentOrderRow): PaymentOrder {
+  return {
+    order_id: row.order_id,
+    community_id: row.community_id,
+    membership_tier_id: null,
+    status: row.status,
+    amount_expected: Number(row.amount_expected),
+    amount_received: row.amount_received === null ? null : Number(row.amount_received),
+    currency: row.currency,
+    confirmed_at: row.confirmed_at ?? null,
+    created_at: row.created_at,
+    updated_at: row.updated_at ?? row.created_at,
+  };
+}
+
+export async function buildLiveKnowledgeGraph(): Promise<KnowledgeGraph & { source: 'supabase' | 'local' }> {
+  const client = getSupabaseClient();
+  if (!client) {
+    return buildKnowledgeGraph({ source: 'local' });
+  }
+
+  const [communities, bounties, membershipsResult, paymentOrdersResult] = await Promise.all([
+    listCommunities(),
+    listBountiesAsync(),
+    client
+      .from('memberships')
+      .select('community_id,wallet_address,status,joined_at,created_at')
+      .limit(500),
+    client
+      .from('payment_orders')
+      .select('order_id,community_id,status,amount_expected,amount_received,currency,confirmed_at,created_at,updated_at')
+      .order('created_at', { ascending: false })
+      .limit(500),
+  ]);
+
+  if (membershipsResult.error) throw membershipsResult.error;
+  if (paymentOrdersResult.error) throw paymentOrdersResult.error;
+
+  return buildKnowledgeGraph({
+    communities,
+    bounties,
+    memberships: (membershipsResult.data ?? []).map((row) => membershipFromRow(row as MembershipRow)),
+    paymentOrders: (paymentOrdersResult.data ?? []).map((row) => paymentOrderFromRow(row as PaymentOrderRow)),
+    source: 'supabase',
+  });
 }
 
 export function knowledgeGraphToMermaid(graph: KnowledgeGraph): string {
