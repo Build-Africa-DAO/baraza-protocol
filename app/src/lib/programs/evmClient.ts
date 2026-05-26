@@ -72,6 +72,11 @@ const PUBLIC_RPC: Record<number, string> = {
   8453: 'https://mainnet.base.org',
   84532: 'https://sepolia.base.org',
   11155111: 'https://rpc.sepolia.org',
+  11155420: 'https://sepolia.optimism.io',
+  421614: 'https://sepolia-rollup.arbitrum.io/rpc',
+  80002: 'https://rpc-amoy.polygon.technology',
+  97: 'https://data-seed-prebsc-1-s1.bnbchain.org:8545',
+  44787: 'https://alfajores-forno.celo-testnet.org',
 };
 
 export function getPublicRpc(chainId: number): string {

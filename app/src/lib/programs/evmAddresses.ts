@@ -115,12 +115,13 @@ export function getEvmAddresses(chainId: number): EvmAddresses | null {
 /** Chain IDs with deployed contracts. */
 export const SUPPORTED_EVM_CHAIN_IDS = Object.keys(ADDRESSES).map(Number);
 
-/** Map from Baraza chain name to EVM chain ID. */
+/** Map from Baraza chain name to the testnet chain ID used by the app. */
 export const CHAIN_NAME_TO_ID: Record<string, number> = {
-  ethereum: 1,
-  optimism: 10,
-  polygon: 137,
-  arbitrum: 42161,
-  celo: 42220,
-  base: 8453,
+  ethereum: 11155111,
+  optimism: 11155420,
+  polygon: 80002,
+  arbitrum: 421614,
+  bnb: 97,
+  celo: 44787,
+  base: 84532,
 };
