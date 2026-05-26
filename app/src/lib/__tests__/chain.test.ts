@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CHAINS, CHAIN_LIST, readStoredChain, writeStoredChain } from '@/lib/chain';
+import { CHAIN_NAME_TO_ID } from '@/lib/programs/evmAddresses';
 
 describe('CHAINS metadata', () => {
   it('exposes all 9 chain entries', () => {
@@ -59,6 +60,12 @@ describe('CHAINS metadata', () => {
     expect(CHAINS.polygon.testnet.chainId).toBe(80002);
     expect(CHAINS.bnb.testnet.chainId).toBe(97);
     expect(CHAINS.celo.testnet.chainId).toBe(44787);
+  });
+
+  it('uses testnet chain IDs for EVM account switching', () => {
+    for (const id of ['ethereum', 'base', 'arbitrum', 'optimism', 'polygon', 'bnb', 'celo'] as const) {
+      expect(CHAIN_NAME_TO_ID[id]).toBe(CHAINS[id].testnet.chainId);
+    }
   });
 
   it('CHAIN_LIST has all chains in expected order', () => {
