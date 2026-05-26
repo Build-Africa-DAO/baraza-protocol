@@ -29,7 +29,6 @@ import CommunityGallery from '@/components/CommunityGallery';
 import BountyBoard from '@/components/BountyBoard';
 import { useSeo } from '@/lib/seo';
 import { getBountyStatsForCommunity } from '@/lib/bounties';
-import { isAdminWallet } from '@/lib/access';
 import AshaSecurityReview from '@/components/security/AshaSecurityReview';
 import { reviewCommunity } from '@/lib/securityReview';
 import { useChain } from '@/hooks/useChain';
@@ -266,7 +265,7 @@ const CommunityDashboard: React.FC = () => {
 
   const bountyStats = getBountyStatsForCommunity(community.id);
   const currentTab = TABS.find((t) => t.key === activeTab);
-  const canPostBounties = isMember || isAdminWallet(publicKey?.toBase58());
+  const canPostBounties = isMember;
   const securityReview = reviewCommunity(community);
   const activeRailLabel = chainMeta.testnet.label;
   const tokenGateStatus = getTokenGateStatus(community.id, publicKey?.toBase58(), 'proposal');

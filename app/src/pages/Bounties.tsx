@@ -368,9 +368,7 @@ export default function Bounties() {
               <div className="mt-4 rounded-lg border px-4 py-3 text-sm">
                 {selectedBountyAccess.allowed ? (
                   <span>
-                    {selectedBountyAccess.isAdmin
-                      ? 'Admin account verified. You can post bounties for this community.'
-                      : 'Active member verified. You can post bounties for this community.'}
+                    Active member verified. You can post bounties for this community.
                   </span>
                 ) : (
                   <span>{bountyCreateAccessMessage(selectedBountyAccess.reason)}</span>
