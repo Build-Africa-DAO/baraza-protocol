@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   ShieldOff,
   Sparkles,
+  Network,
   Users,
   Vote,
 } from "lucide-react";
@@ -25,6 +26,7 @@ import { useChain } from "@/hooks/useChain";
 import { useCommunities } from "@/hooks/useCommunities";
 import { listBounties, type BountyStatus } from "@/lib/bounties";
 import { reviewCommunity, type SecurityReviewLevel } from "@/lib/securityReview";
+import { buildKnowledgeGraph, summarizeKnowledgeGraph } from "@/lib/knowledgeGraph";
 
 const ADMIN_WALLETS = getAdminWallets();
 const ADMIN_NFT_THRESHOLD = Number(import.meta.env.VITE_ADMIN_NFT_THRESHOLD ?? 0);
@@ -117,6 +119,11 @@ export default function AdminReconciliation() {
   const openBounties = bounties.filter((bounty) => bounty.status === "open");
   const reviewBounties = bounties.filter((bounty) => bounty.status === "in_review");
   const rewardPool = openBounties.reduce((sum, bounty) => sum + bounty.rewardKes, 0);
+  const knowledgeGraph = useMemo(
+    () => buildKnowledgeGraph({ communities, bounties }),
+    [bounties, communities],
+  );
+  const graphSummary = useMemo(() => summarizeKnowledgeGraph(knowledgeGraph), [knowledgeGraph]);
 
   const filteredOrders = paymentOrders.filter(([id, group, amount, status]) =>
     `${id} ${group} ${amount} ${status}`.toLowerCase().includes(searchTerm.toLowerCase()),
@@ -201,6 +208,7 @@ export default function AdminReconciliation() {
             <MetricCard icon={BriefcaseBusiness} label="Open bounty pool" value={formatRailAmountFromKes(rewardPool, chainMeta)} note={`${openBounties.length} open tasks`} />
             <MetricCard icon={FileWarning} label="Needs review" value={(flaggedReviews.length + reviewBounties.length).toString()} note="Security flags and submitted bounty work" />
             <MetricCard icon={ShieldCheck} label="Admin rail" value={chainMeta.label} note="Selected account and review rail" />
+            <MetricCard icon={Network} label="Knowledge graph" value={`${graphSummary.nodeCount}/${graphSummary.edgeCount}`} note="Nodes and relationships tracked" />
             {nftGateConfigured && (
               <MetricCard icon={ShieldCheck} label="NFT admin gate" value={`${ADMIN_NFT_COUNT}/${ADMIN_NFT_THRESHOLD}`} note="Credential threshold for operator access" />
             )}
@@ -396,6 +404,62 @@ export default function AdminReconciliation() {
                 ))}
               </tbody>
             </table>
+          </section>
+
+          <section className="baraza-card mt-6 p-5">
+            <div className="mb-4 flex flex-col justify-between gap-3 md:flex-row md:items-start">
+              <div>
+                <div className="mb-2 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-widest">
+                  <Network className="h-3.5 w-3.5 text-primary" />
+                  Knowledge graph
+                </div>
+                <h2 className="font-display text-xl font-semibold">Shared source of truth</h2>
+                <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                  Communities, proposals, bounties, chain rails, Asha checks, and readiness tasks are linked so admins can see what still blocks testnet.
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-right">
+                <div className="rounded-lg border p-3">
+                  <p className="font-display text-xl font-bold">{graphSummary.riskCount}</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Risks</p>
+                </div>
+                <div className="rounded-lg border p-3">
+                  <p className="font-display text-xl font-bold">{graphSummary.watchCount}</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Watch</p>
+                </div>
+              </div>
+            </div>
+            <div className="grid gap-4 lg:grid-cols-3">
+              <div className="rounded-lg border p-4">
+                <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Testnet ready</p>
+                <p className="mt-2 text-sm font-semibold">
+                  {graphSummary.testnetReadyChains.length ? graphSummary.testnetReadyChains.join(", ") : "No rails marked ready"}
+                </p>
+              </div>
+              <div className="rounded-lg border p-4">
+                <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Coming soon</p>
+                <p className="mt-2 text-sm font-semibold">
+                  {graphSummary.comingSoonChains.length ? graphSummary.comingSoonChains.join(", ") : "No coming-soon rails"}
+                </p>
+              </div>
+              <div className="rounded-lg border p-4">
+                <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Next task</p>
+                <p className="mt-2 text-sm font-semibold">{graphSummary.topTasks[0]?.label ?? "No readiness task"}</p>
+              </div>
+            </div>
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              {graphSummary.topTasks.slice(0, 4).map((task) => (
+                <article key={task.id} className="rounded-lg border p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="text-sm font-bold">{task.label}</p>
+                    <span className="rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      {task.status}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-xs leading-5 text-muted-foreground">{task.summary}</p>
+                </article>
+              ))}
+            </div>
           </section>
         </div>
       </section>

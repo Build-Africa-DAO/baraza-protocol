@@ -102,6 +102,7 @@ export const BARAZA_CHAIN_CONFIGS: Record<Chain, BarazaChainConfig> = {
   optimism: evmConfig('optimism', 'VITE_OPTIMISM_RPC_URL'),
   polygon: evmConfig('polygon', 'VITE_POLYGON_RPC_URL'),
   bnb: evmConfig('bnb', 'VITE_BNB_RPC_URL', 'coming-soon'),
+  xdc: evmConfig('xdc', 'VITE_XDC_RPC_URL', 'coming-soon'),
 };
 
 function evmConfig(
