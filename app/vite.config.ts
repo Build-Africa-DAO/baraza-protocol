@@ -38,12 +38,16 @@ export default defineConfig({
             return 'wallet-vendor';
           }
 
-          if (
-            id.includes('/node_modules/@stellar/') ||
-            id.includes('/node_modules/@noble/') ||
-            id.includes('/node_modules/@scure/')
-          ) {
+          if (id.includes('/node_modules/@stellar/')) {
             return 'stellar-vendor';
+          }
+
+          if (id.includes('/node_modules/@noble/')) {
+            return 'noble-crypto';
+          }
+
+          if (id.includes('/node_modules/@scure/')) {
+            return 'scure-crypto';
           }
 
           if (

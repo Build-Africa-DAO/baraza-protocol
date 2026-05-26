@@ -1,13 +1,13 @@
 import {
+  Account,
   Asset,
-  Horizon,
   Keypair,
   Memo,
   Networks,
   Operation,
   StrKey,
   TransactionBuilder,
-} from '@stellar/stellar-sdk';
+} from '@stellar/stellar-base';
 
 export type StellarNetwork = 'testnet' | 'mainnet' | 'custom';
 
@@ -33,6 +33,22 @@ export interface StellarPaymentInput {
 }
 
 export interface StellarPaymentResult {
+  hash: string;
+  ledger: number;
+  successful: boolean;
+}
+
+interface HorizonAccountResponse {
+  sequence: string;
+  balances: Array<{
+    asset_type: string;
+    asset_code?: string;
+    asset_issuer?: string;
+    balance: string;
+  }>;
+}
+
+interface HorizonTransactionResponse {
   hash: string;
   ledger: number;
   successful: boolean;
@@ -95,8 +111,22 @@ export function memoFromText(memoText: string | undefined): Memo | undefined {
   return Memo.text(value);
 }
 
-function createServer(config = getStellarConfig()): Horizon.Server {
-  return new Horizon.Server(config.horizonUrl);
+function horizonUrl(config: StellarConfig, path: string): string {
+  return `${config.horizonUrl.replace(/\/$/, '')}${path}`;
+}
+
+async function fetchHorizonJson<T>(url: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(url, init);
+  if (!response.ok) {
+    throw new Error(`Stellar Horizon request failed with status ${response.status}.`);
+  }
+  return response.json() as Promise<T>;
+}
+
+async function loadHorizonAccount(accountId: string, config: StellarConfig): Promise<HorizonAccountResponse> {
+  return fetchHorizonJson<HorizonAccountResponse>(
+    horizonUrl(config, `/accounts/${encodeURIComponent(accountId)}`),
+  );
 }
 
 export async function fetchStellarBalances(
@@ -107,10 +137,10 @@ export async function fetchStellarBalances(
     throw new Error('Invalid Stellar account address.');
   }
 
-  const account = await createServer(config).loadAccount(accountId);
+  const account = await loadHorizonAccount(accountId, config);
   return account.balances.map((entry) => ({
-    assetCode: 'asset_code' in entry ? entry.asset_code : 'XLM',
-    assetIssuer: 'asset_issuer' in entry ? entry.asset_issuer : null,
+    assetCode: entry.asset_code ?? 'XLM',
+    assetIssuer: entry.asset_issuer ?? null,
     balance: entry.balance,
     type: entry.asset_type,
   }));
@@ -119,7 +149,7 @@ export async function fetchStellarBalances(
 export async function confirmStellarTransaction(
   txHash: string,
   config = getStellarConfig(),
-  server: ConfirmTransactionServer = createServer(config),
+  server?: ConfirmTransactionServer,
 ): Promise<StellarPaymentResult | null> {
   const hash = txHash.trim();
   if (!/^[a-f0-9]{64}$/i.test(hash)) {
@@ -127,7 +157,11 @@ export async function confirmStellarTransaction(
   }
 
   try {
-    const tx = await server.transactions().transaction(hash).call();
+    const tx = server
+      ? await server.transactions().transaction(hash).call()
+      : await fetchHorizonJson<HorizonTransactionResponse>(
+          horizonUrl(config, `/transactions/${encodeURIComponent(hash)}`),
+        );
     return {
       hash: tx.hash,
       ledger: tx.ledger,
@@ -153,13 +187,12 @@ export async function submitTestnetXlmPayment(
   }
 
   const source = Keypair.fromSecret(input.sourceSecret);
-  const server = createServer(config);
-  const account = await server.loadAccount(source.publicKey());
-  const fee = await server.fetchBaseFee();
+  const accountRecord = await loadHorizonAccount(source.publicKey(), config);
+  const account = new Account(source.publicKey(), accountRecord.sequence);
   const memo = memoFromText(input.memoText);
 
   const builder = new TransactionBuilder(account, {
-    fee: String(fee),
+    fee: '100',
     networkPassphrase: config.networkPassphrase,
   }).addOperation(
     Operation.payment({
@@ -172,7 +205,14 @@ export async function submitTestnetXlmPayment(
   const tx = (memo ? builder.addMemo(memo) : builder).setTimeout(60).build();
   tx.sign(source);
 
-  const result = await server.submitTransaction(tx);
+  const result = await fetchHorizonJson<HorizonTransactionResponse>(
+    horizonUrl(config, '/transactions'),
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ tx: tx.toXDR() }).toString(),
+    },
+  );
   return {
     hash: result.hash,
     ledger: result.ledger,
