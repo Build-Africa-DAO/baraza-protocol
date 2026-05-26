@@ -29,4 +29,12 @@ describe('access', () => {
     expect(access.allowed).toBe(false);
     expect(access.reason).toBe('not-member');
   });
+
+  it('does not let admins bypass community membership for bounty creation', () => {
+    const access = getBountyCreateAccess('c1', 'admin-1', ['admin-1']);
+
+    expect(access.allowed).toBe(false);
+    expect(access.reason).toBe('not-member');
+    expect(access.isAdmin).toBe(true);
+  });
 });

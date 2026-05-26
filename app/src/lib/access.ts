@@ -16,8 +16,9 @@ export function isAdminWallet(walletAddress: string | null | undefined, adminWal
 export function getBountyCreateAccess(
   communityId: string | null | undefined,
   walletAddress: string | null | undefined,
+  adminWallets?: string[],
 ): { allowed: boolean; reason: BountyCreateAccessReason; isAdmin: boolean; isMember: boolean } {
-  const isAdmin = isAdminWallet(walletAddress);
+  const isAdmin = isAdminWallet(walletAddress, adminWallets);
   if (!walletAddress) {
     return { allowed: false, reason: 'connect-account', isAdmin: false, isMember: false };
   }
@@ -26,7 +27,7 @@ export function getBountyCreateAccess(
   }
 
   const isMember = !!getActiveMembership(communityId, walletAddress);
-  const allowed = isAdmin || isMember;
+  const allowed = isMember;
   return {
     allowed,
     reason: allowed ? 'allowed' : 'not-member',
@@ -38,6 +39,6 @@ export function getBountyCreateAccess(
 export function bountyCreateAccessMessage(reason: BountyCreateAccessReason): string {
   if (reason === 'connect-account') return 'Connect your Solana account to post a bounty.';
   if (reason === 'select-community') return 'Choose a community before posting a bounty.';
-  if (reason === 'not-member') return 'Only Baraza admins or active members of this community can post bounties.';
+  if (reason === 'not-member') return 'Only active members of this community can post bounties.';
   return 'You can post bounties for this community.';
 }

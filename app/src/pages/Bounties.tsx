@@ -19,6 +19,7 @@ import { formatRailAmountFromKes, formatRailAmountWithKes, cn } from '@/lib/util
 import { useSeo } from '@/lib/seo';
 import { bountyCreateAccessMessage, getBountyCreateAccess } from '@/lib/access';
 import { useChain } from '@/hooks/useChain';
+import { getActiveMembership } from '@/lib/memberships';
 
 const STATUS_OPTIONS: { value: BountyStatus | 'all'; label: string }[] = [
   { value: 'all', label: 'All bounties' },
@@ -138,6 +139,12 @@ export default function Bounties() {
     () => getBountyCreateAccess(newBounty.communityId || null, walletAddress),
     [newBounty.communityId, walletAddress],
   );
+  const memberCommunities = useMemo(() => {
+    if (!walletAddress) return [];
+    return communities.filter((community) => {
+      return (community.chain ?? 'solana') === chain && !!getActiveMembership(community.id, walletAddress);
+    });
+  }, [chain, communities, walletAddress]);
 
   const filtered = bounties.filter((bounty) => {
     const community = communityById.get(bounty.communityId);
@@ -170,6 +177,20 @@ export default function Bounties() {
   const openRewardPool = activeChainBounties
     .filter((bounty) => bounty.status === 'open')
     .reduce((sum, bounty) => sum + bounty.rewardKes, 0);
+
+  const handlePostBountyClick = () => {
+    if (!connected || !publicKey) {
+      setVisible(true);
+      return;
+    }
+    if (memberCommunities.length === 0) {
+      setShowPostForm(false);
+      setFormMessage(`Join a ${chainMeta.label} group first. Only active group members can post bounties.`);
+      return;
+    }
+    setShowPostForm((value) => !value);
+    setFormMessage(null);
+  };
 
   const handleCreateBounty = async () => {
     const community = communityById.get(newBounty.communityId);
@@ -239,14 +260,7 @@ export default function Bounties() {
               </p>
               <button
                 type="button"
-                onClick={() => {
-                  if (!connected || !publicKey) {
-                    setVisible(true);
-                    return;
-                  }
-                  setShowPostForm((value) => !value);
-                  setFormMessage(null);
-                }}
+                onClick={handlePostBountyClick}
                 className="btn-warm mt-5 inline-flex items-center gap-2 text-sm"
               >
                 <PlusCircle className="h-4 w-4" />
@@ -279,10 +293,15 @@ export default function Bounties() {
                     className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none"
                   >
                     <option value="">Select community</option>
-                    {communities.map((community) => (
+                    {memberCommunities.map((community) => (
                       <option key={community.id} value={community.id}>{community.name}</option>
                     ))}
                   </select>
+                  {memberCommunities.length === 0 && (
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      Join a group on {chainMeta.label} before posting a bounty.
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="mb-2 block text-xs font-semibold">Title</label>
