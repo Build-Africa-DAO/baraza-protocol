@@ -152,23 +152,6 @@ const AshaChat: React.FC = () => {
     };
   }, [isOpen]);
 
-  // Send pending message from hero search bar
-  useEffect(() => {
-    if (isOpen && pendingMessage) {
-      clearPending();
-      sendMessage(pendingMessage);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, pendingMessage]);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) close();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [isOpen, close]);
-
   const sendMessage = useCallback((text: string) => {
     if (!text.trim()) return;
 
@@ -194,6 +177,23 @@ const AshaChat: React.FC = () => {
       setMessages((prev) => [...prev, ashaMsg]);
     }, 900 + Math.random() * 400);
   }, [chainMeta]);
+
+  // Send pending message from hero search bar
+  useEffect(() => {
+    if (isOpen && pendingMessage) {
+      clearPending();
+      sendMessage(pendingMessage);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, pendingMessage]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) close();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isOpen, close]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
