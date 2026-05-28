@@ -9,6 +9,8 @@ export interface MembershipRecord {
   walletAddress: string;
   status: MembershipStatus;
   joinedAt: string;
+  /** RAZA voting weight from MemberAccount. Default 1 for all active members. */
+  razaBalance: number;
 }
 
 function readMemberships(): MembershipRecord[] {
@@ -53,12 +55,12 @@ export function listMembershipsForCommunity(communityId: string): MembershipReco
     .sort((a, b) => new Date(b.joinedAt).getTime() - new Date(a.joinedAt).getTime());
 }
 
-/** Supabase row shape returned by the memberships table SELECT. */
 interface MembershipRow {
   community_id: string;
   wallet_address: string;
   status: string;
   joined_at: string;
+  voting_weight?: number | null;
 }
 
 function rowToRecord(row: MembershipRow): MembershipRecord {
@@ -67,6 +69,7 @@ function rowToRecord(row: MembershipRow): MembershipRecord {
     walletAddress: row.wallet_address,
     status: row.status === 'ACTIVE' ? 'active' : row.status === 'PENDING' ? 'pending' : 'revoked',
     joinedAt: row.joined_at,
+    razaBalance: row.voting_weight ?? 1,
   };
 }
 
@@ -80,7 +83,7 @@ export async function fetchMembershipsForWallet(walletAddress: string): Promise<
   if (client) {
     const { data, error } = await client
       .from('memberships')
-      .select('community_id,wallet_address,status,joined_at')
+      .select('community_id,wallet_address,status,joined_at,voting_weight')
       .eq('wallet_address', walletAddress)
       .in('status', ['ACTIVE', 'PENDING'])
       .order('joined_at', { ascending: false });
@@ -105,7 +108,7 @@ export async function fetchActiveMembership(
   if (client) {
     const { data, error } = await client
       .from('memberships')
-      .select('community_id,wallet_address,status,joined_at')
+      .select('community_id,wallet_address,status,joined_at,voting_weight')
       .eq('community_id', communityId)
       .eq('wallet_address', walletAddress)
       .in('status', ['ACTIVE', 'PENDING'])
@@ -127,6 +130,7 @@ export function recordActiveMembership(communityId: string, walletAddress: strin
     walletAddress,
     status: 'active',
     joinedAt: new Date().toISOString(),
+    razaBalance: 1,
   };
 
   if (existingIndex >= 0) {

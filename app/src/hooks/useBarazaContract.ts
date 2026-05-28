@@ -11,7 +11,7 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
 import { useToast } from '@/hooks/use-toast';
 import { dataStore } from '@/lib/dataStore';
-import { communityPda, createBarazaReadClient, toSlug } from '@/lib/programs';
+import { communityPda, createBarazaReadClient, memberPda, hashToBytes32, toSlug } from '@/lib/programs';
 import { getCommunityChainMapping, getDecisionChainMapping } from '@/lib/chainMappings';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -69,6 +69,8 @@ interface UseBarazaContractResult {
   // Read
   fetchTreasuryBalance: (communityId: string) => Promise<number>;
   fetchVoteState: (proposalId: string) => Promise<VoteState | null>;
+  /** Returns the member's RAZA voting weight (0 = not a member or account not found). */
+  fetchRazaBalance: (communityId: string, walletAddress: string) => Promise<number>;
   // Write
   castVote: (proposalId: string, communityId: string, support: boolean) => Promise<boolean>;
   /** feeKES is the membership fee in KES. KES→lamports conversion happens on the program/backend side. */
@@ -150,6 +152,27 @@ export function useBarazaContract(): UseBarazaContractResult {
     [readClient]
   );
 
+  const fetchRazaBalance = useCallback(
+    async (communityId: string, walletAddress: string): Promise<number> => {
+      const cacheKey = `raza:${communityId}:${walletAddress}`;
+      const cached = fromCache<number>(cacheKey);
+      if (cached !== null) return cached;
+
+      try {
+        const communityKey = resolveCommunityKey(communityId);
+        const memberIdHash = hashToBytes32(`wallet:${walletAddress}`);
+        const [memberKey] = memberPda(communityKey, memberIdHash);
+        const member = await readClient.fetchMember(memberKey);
+        const weight = member ? member.votingWeight.toNumber() : 0;
+        return setCache(cacheKey, weight);
+      } catch (error) {
+        console.warn('[baraza] fetchRazaBalance on-chain read failed:', error);
+        return 0;
+      }
+    },
+    [readClient, resolveCommunityKey],
+  );
+
   // ── Writes ─────────────────────────────────────────────────────────────────
 
   const blockUnwiredWrite = useCallback(
@@ -208,6 +231,7 @@ export function useBarazaContract(): UseBarazaContractResult {
   return {
     fetchTreasuryBalance,
     fetchVoteState,
+    fetchRazaBalance,
     castVote,
     joinCommunity,
     createCommunity,
