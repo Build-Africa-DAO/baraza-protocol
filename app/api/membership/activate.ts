@@ -17,7 +17,10 @@ export const config = { runtime: 'edge' };
 interface ActivateRequest {
   orderId: string;
   communityId: string;
-  walletAddress: string;
+  /** Solana base58 pubkey. Required unless phoneIdentifier is provided. */
+  walletAddress: string | null;
+  /** phone:+254... identifier for phone-only users with no wallet. */
+  phoneIdentifier?: string | null;
   activationSecret: string;
 }
 
@@ -186,8 +189,12 @@ export default async function handler(req: Request): Promise<Response> {
 
   if (!body.orderId) return bad('orderId is required');
   if (!body.communityId) return bad('communityId is required');
-  if (!body.walletAddress) return bad('walletAddress is required');
+  if (!body.walletAddress && !body.phoneIdentifier) return bad('walletAddress or phoneIdentifier is required');
   if (!body.activationSecret) return bad('activationSecret is required');
+
+  // Resolve the effective identity address.
+  // walletAddress takes priority; phoneIdentifier is the fallback for phone-only flows.
+  const effectiveAddress = body.walletAddress ?? body.phoneIdentifier!;
 
   // Gate: order must be in a terminal positive state.
   const order = await fetchOrder(url, serviceKey, body.orderId);
@@ -212,15 +219,15 @@ export default async function handler(req: Request): Promise<Response> {
   if (await hashActivationSecret(body.activationSecret) !== order.activation_secret_hash) {
     return bad('Activation secret does not match this payment order.', 403);
   }
-  if (order.wallet_address && order.wallet_address !== body.walletAddress) {
-    return bad('Order is already bound to a different wallet.', 403);
+  if (order.wallet_address && order.wallet_address !== effectiveAddress) {
+    return bad('Order is already bound to a different identity.', 403);
   }
   if (!order.wallet_address) {
-    await bindOrderWallet(url, serviceKey, body.orderId, body.walletAddress);
+    await bindOrderWallet(url, serviceKey, body.orderId, effectiveAddress);
   }
 
   // Idempotent: return existing membership if one already exists.
-  const existing = await findExistingMembership(url, serviceKey, body.communityId, body.walletAddress);
+  const existing = await findExistingMembership(url, serviceKey, body.communityId, effectiveAddress);
   if (existing) {
     return json({
       ok: true,
@@ -231,23 +238,22 @@ export default async function handler(req: Request): Promise<Response> {
     });
   }
 
-  // No user identity yet — use a hash of the wallet as the user_id_hash for now.
-  // Production replaces this with the HMAC-peppered phone hash from auth.
-  const userIdHash = `wallet:${body.walletAddress}`;
+  // user_id_hash: wallet-derived for wallet users, phone-derived for phone-only.
+  // Production replaces both with the HMAC-peppered phone hash from auth.
+  const userIdHash = effectiveAddress;
 
   const memberId = generateMemberId();
   const result = await insertMembership(url, serviceKey, {
     member_id: memberId,
     community_id: body.communityId,
     user_id_hash: userIdHash,
-    wallet_address: body.walletAddress,
+    wallet_address: effectiveAddress,
     payment_order_id: body.orderId,
   });
 
   if (!result.ok) {
     if (result.duplicate) {
-      // Lost the insert race; another caller just created the membership.
-      const winner = await findExistingMembership(url, serviceKey, body.communityId, body.walletAddress);
+      const winner = await findExistingMembership(url, serviceKey, body.communityId, effectiveAddress);
       if (winner) {
         return json({
           ok: true,

@@ -1,8 +1,17 @@
 import type { UssdSession } from './session';
 
+export interface PendingPayOrder {
+  communityCode: string;
+  phoneNumber: string;
+  amount: number;
+  currency: string;
+}
+
 export interface MenuResult {
   text: string;
   action: 'CON' | 'END';
+  /** Set when the USSD handler should create a payment order after returning this response. */
+  pendingPayOrder?: PendingPayOrder;
 }
 
 const MOCK_COMMUNITIES = [
@@ -105,12 +114,14 @@ function payDuesMenu(path: string[], phoneNumber: string): MenuResult {
     };
   }
 
+  const communityCode = path[1] ?? '';
   const confirm = path[2];
   if (confirm === '2') return { text: 'Payment cancelled.', action: 'END' };
   if (confirm === '1') {
     return {
-      text: `M-Pesa request sent to ${phoneNumber}. Enter PIN to complete.`,
+      text: `Processing payment for ${phoneNumber}. You will receive an SMS with your order details.`,
       action: 'END',
+      pendingPayOrder: { communityCode, phoneNumber, amount: 100, currency: 'KES' },
     };
   }
 

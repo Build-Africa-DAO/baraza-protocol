@@ -21,6 +21,7 @@ import {
   type PaymentOrderStatus,
 } from "@/lib/payments";
 import { recordActiveMembership } from "@/lib/memberships";
+import { getPhoneAuthSession } from "@/lib/phoneAuth";
 import { useChain } from "@/hooks/useChain";
 
 interface DisplayStep {
@@ -152,16 +153,22 @@ export default function JoinStatus() {
     };
   }, [isLocalOrder, hasSupabase, orderId, activationSecret]);
 
-  // ─── On RECONCILED (or INDEXER_CONFIRMED) with a wallet present, record the
-  //     membership locally for the dashboard AND try to persist via the
-  //     /api/membership/activate endpoint. The local write always succeeds; the
-  //     server write degrades gracefully when the endpoint is unreachable.
+  // ─── On RECONCILED (or INDEXER_CONFIRMED), record the membership locally and
+  //     persist via /api/membership/activate. Works for both wallet-connected
+  //     users (publicKey) and phone-only users (getPhoneAuthSession).
   useEffect(() => {
     if (membershipRecordedRef.current) return;
     if (status !== "RECONCILED" && status !== "INDEXER_CONFIRMED") return;
-    if (!publicKey || !id) return;
+    if (!id) return;
 
-    recordActiveMembership(id, publicKey.toBase58());
+    const walletAddr = publicKey?.toBase58() ?? null;
+    const phoneAddr = getPhoneAuthSession().phone
+      ? `phone:${getPhoneAuthSession().phone}`
+      : null;
+    const identity = walletAddr ?? phoneAddr;
+    if (!identity) return;
+
+    recordActiveMembership(id, identity);
     membershipRecordedRef.current = true;
 
     if (!orderId || orderId.startsWith("ord_local_") || !activationSecret) return;
@@ -172,7 +179,8 @@ export default function JoinStatus() {
       body: JSON.stringify({
         orderId,
         communityId: id,
-        walletAddress: publicKey.toBase58(),
+        walletAddress: walletAddr,
+        phoneIdentifier: walletAddr ? null : phoneAddr,
         activationSecret,
       }),
     }).catch(() => {
