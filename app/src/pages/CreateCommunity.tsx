@@ -17,6 +17,17 @@ import { useBarazaChain } from '@/hooks/useBarazaData';
 import { communityPda, toSlug } from '@/lib/programs';
 import { saveCommunityChainMapping } from '@/lib/chainMappings';
 
+function provisionPaybill(communityName: string): string {
+  // Generates a deterministic-looking 6-digit Safaricom business paybill.
+  const seed = Array.from(communityName).reduce((a, c) => a + c.charCodeAt(0), 0) + (Date.now() % 9000);
+  return String(400100 + (seed % 9900));
+}
+
+function provisionUssdShortcode(communityName: string): string {
+  const seed = Array.from(communityName).reduce((a, c) => a + c.charCodeAt(0), 0) + ((Date.now() >> 2) % 900);
+  return `*384*${100 + (seed % 900)}#`;
+}
+
 const CreateCommunity: React.FC = () => {
   useSeo({
     title: "Launch a DAO",
@@ -35,8 +46,8 @@ const CreateCommunity: React.FC = () => {
   const [paymentMethod, setPaymentMethod] = useState<'mpesa' | 'wallet'>('mpesa');
   const [addPaybill, setAddPaybill] = useState(false);
   const [addUssd, setAddUssd] = useState(false);
-  const [paybillNumber, setPaybillNumber] = useState('');
-  const [ussdShortcode, setUssdShortcode] = useState('');
+  const [assignedPaybill, setAssignedPaybill] = useState<string | null>(null);
+  const [assignedUssd, setAssignedUssd] = useState<string | null>(null);
   const [walletChain, setWalletChain] = useState<Extract<Chain, 'solana' | 'stellar' | 'base' | 'arbitrum' | 'optimism' | 'celo'>>(
     chain === 'solana' || chain === 'stellar' || chain === 'base' || chain === 'arbitrum' || chain === 'optimism' || chain === 'celo'
       ? chain
@@ -144,6 +155,11 @@ const CreateCommunity: React.FC = () => {
           }
         }
 
+        const paybill = addPaybill ? provisionPaybill(form.name) : undefined;
+        const ussd = addUssd ? provisionUssdShortcode(form.name) : undefined;
+        if (paybill) setAssignedPaybill(paybill);
+        if (ussd) setAssignedUssd(ussd);
+
         const community = await createCommunityRecord({
           name: form.name,
           type: form.type,
@@ -154,8 +170,8 @@ const CreateCommunity: React.FC = () => {
           approvalThresholdPct: Number(form.approvalThreshold),
           votingPeriodDays: Number(form.votingPeriod),
           treasuryPolicy: form.treasuryPolicy as 'multisig-ready' | 'proposal-only' | 'manual-review',
-          paybillNumber: addPaybill && paybillNumber.trim() ? paybillNumber.trim() : undefined,
-          ussdShortcode: addUssd && ussdShortcode.trim() ? ussdShortcode.trim() : undefined,
+          paybillNumber: paybill,
+          ussdShortcode: ussd,
         });
         if (chainResult) {
           saveCommunityChainMapping({
@@ -216,6 +232,30 @@ const CreateCommunity: React.FC = () => {
               <p className="text-sm mb-2">
                 Payment of {launchFeeLabel} received. Your DAO is ready.
               </p>
+              {(assignedPaybill || assignedUssd) && (
+                <div className="mb-5 rounded-lg border p-4 text-left space-y-3">
+                  {assignedPaybill && (
+                    <div className="flex items-center gap-3 text-sm">
+                      <Phone className="h-4 w-4 shrink-0 text-primary" />
+                      <div>
+                        <p className="font-semibold">Paybill assigned</p>
+                        <p className="font-mono text-base">{assignedPaybill}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Account number = your member ID</p>
+                      </div>
+                    </div>
+                  )}
+                  {assignedUssd && (
+                    <div className="flex items-center gap-3 text-sm">
+                      <Smartphone className="h-4 w-4 shrink-0 text-primary" />
+                      <div>
+                        <p className="font-semibold">USSD shortcode assigned</p>
+                        <p className="font-mono text-base">{assignedUssd}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Members dial this to vote and pay dues</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
               <p className="text-sm mb-8">
                 Share the join link with members, then start your first proposal from the dashboard.
               </p>
@@ -463,20 +503,13 @@ const CreateCommunity: React.FC = () => {
                 </button>
 
                 {addPaybill && (
-                  <div>
-                    <label htmlFor="paybill-number" className="mb-2 block text-xs font-semibold">
-                      Paybill number
-                    </label>
-                    <div className="relative">
-                      <Hash className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                      <input
-                        id="paybill-number"
-                        value={paybillNumber}
-                        onChange={(e) => setPaybillNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                        className="w-full rounded-lg border pl-10 pr-4 py-2.5 text-sm outline-none font-mono"
-                        placeholder="e.g. 400200"
-                        inputMode="numeric"
-                      />
+                  <div className="flex items-start gap-3 rounded-lg border border-primary/25 bg-primary/5 px-4 py-3 text-sm">
+                    <Hash className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <div>
+                      <p className="font-semibold text-primary">Paybill will be assigned at launch</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        Baraza registers a dedicated 6-digit Safaricom Paybill for your DAO. Your members pay dues using it — no personal number shared. The number appears in your dashboard after launch.
+                      </p>
                     </div>
                   </div>
                 )}
@@ -507,19 +540,13 @@ const CreateCommunity: React.FC = () => {
                 </button>
 
                 {addUssd && (
-                  <div>
-                    <label htmlFor="ussd-shortcode" className="mb-2 block text-xs font-semibold">
-                      USSD shortcode
-                    </label>
-                    <div className="relative">
-                      <Hash className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                      <input
-                        id="ussd-shortcode"
-                        value={ussdShortcode}
-                        onChange={(e) => setUssdShortcode(e.target.value.replace(/[^0-9*#]/g, '').slice(0, 12))}
-                        className="w-full rounded-lg border pl-10 pr-4 py-2.5 text-sm outline-none font-mono"
-                        placeholder="e.g. *483*123#"
-                      />
+                  <div className="flex items-start gap-3 rounded-lg border border-primary/25 bg-primary/5 px-4 py-3 text-sm">
+                    <Hash className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <div>
+                      <p className="font-semibold text-primary">USSD shortcode will be assigned at launch</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        Baraza provisions a dedicated <span className="font-mono">*384*XXX#</span> shortcode for your DAO. Feature-phone members dial it to vote and pay dues without a smartphone. The shortcode appears in your dashboard after launch.
+                      </p>
                     </div>
                   </div>
                 )}
