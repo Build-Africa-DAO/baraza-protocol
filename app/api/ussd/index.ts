@@ -65,6 +65,21 @@ async function createPaymentOrder(pending: PendingPayOrder, baseUrl: string): Pr
   return orderId;
 }
 
+async function fetchRazaBalanceForPhone(phoneNumber: string): Promise<number> {
+  const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/$/, '');
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !serviceKey) return 0;
+
+  const identity = encodeURIComponent(`phone:${phoneNumber}`);
+  const res = await fetch(
+    `${supabaseUrl}/rest/v1/memberships?wallet_address=eq.${identity}&status=in.(ACTIVE,PENDING)&select=voting_weight`,
+    { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } },
+  );
+  if (!res.ok) return 0;
+  const rows = (await res.json().catch(() => [])) as Array<{ voting_weight?: number | null }>;
+  return rows.reduce((sum, r) => sum + (r.voting_weight ?? 1), 0);
+}
+
 async function sendActivationSms(phoneNumber: string, activationUrl: string): Promise<void> {
   const username = process.env.AT_USERNAME;
   const apiKey = process.env.AT_API_KEY;
@@ -131,7 +146,11 @@ export default async function handler(req: Request): Promise<Response> {
   const countryCode = resolveCountryFromPhone(phoneNumber);
   const session = getOrCreateSession({ sessionId, phoneNumber, serviceCode, countryCode });
 
-  const result = handleUssdInput({ session, text, phoneNumber });
+  // Prefetch RAZA balance when the user navigates to the balance menu (root '1').
+  const isBalanceMenu = text === '1' || text.startsWith('1*');
+  const razaBalance = isBalanceMenu ? await fetchRazaBalanceForPhone(phoneNumber) : undefined;
+
+  const result = handleUssdInput({ session, text, phoneNumber, razaBalance });
 
   if (result.action === 'END') {
     destroySession(sessionId);
