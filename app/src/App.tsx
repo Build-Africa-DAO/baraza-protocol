@@ -5,6 +5,7 @@ import WalletProviders from '@/components/WalletProviders';
 import ChainProvider from '@/components/ChainProvider';
 import PageLoader from '@/components/PageLoader';
 import { AshaChatProvider } from '@/contexts/AshaChatContext';
+import { OfflineProvider } from '@/contexts/OfflineContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import AshaChat from '@/components/chat/AshaChat';
 
@@ -29,6 +30,7 @@ const App: React.FC = () => {
     <ThemeProvider>
       <ChainProvider>
         <WalletProviders>
+          <OfflineProvider>
           <AshaChatProvider>
             <Suspense fallback={<PageLoader />}>
             <Routes>
@@ -58,6 +60,7 @@ const App: React.FC = () => {
             <AshaChat />
             <Toaster />
           </AshaChatProvider>
+          </OfflineProvider>
         </WalletProviders>
       </ChainProvider>
     </ThemeProvider>
