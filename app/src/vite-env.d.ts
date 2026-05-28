@@ -17,6 +17,11 @@ interface ImportMetaEnv {
   readonly VITE_STELLAR_NETWORK_PASSPHRASE: string | undefined;
   readonly VITE_WALLETCONNECT_PROJECT_ID: string | undefined;
   readonly VITE_ADMIN_WALLETS: string | undefined;
+  readonly VITE_BASE_RPC_URL: string | undefined;
+  readonly VITE_ETH_RPC_URL: string | undefined;
+  readonly VITE_ARBITRUM_RPC_URL: string | undefined;
+  readonly VITE_OPTIMISM_RPC_URL: string | undefined;
+  readonly VITE_CELO_RPC_URL: string | undefined;
 }
 
 interface ImportMeta {
