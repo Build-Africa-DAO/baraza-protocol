@@ -109,8 +109,8 @@ Replace mock data one flow at a time. Do not remove a guard until the program is
 ### 4a - Read Flows
 
 - [x] Add typed client readers and PDA helpers for all five Solana programs
-- [ ] Wire `fetchCommunity` to `community_registry` account read
-- [ ] Wire `fetchMembership` to `membership` account read
+- [x] Wire `fetchCommunity` to `community_registry` account read
+- [x] Wire `fetchMembership` to `membership` account read (requires persisted chain mapping; member_id_hash is backend-supplied)
 - [x] Wire `fetchProposal` to `governance` account read when passed a proposal PDA
 - [x] Wire `fetchTreasury` to `treasury_vault` PDA balance read when community key/slug can be resolved
 - [x] Persist on-chain community/proposal addresses so page-level local IDs resolve without fallback guesses
