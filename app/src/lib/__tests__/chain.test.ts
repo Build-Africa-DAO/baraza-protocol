@@ -3,8 +3,8 @@ import { CHAINS, CHAIN_LIST, readStoredChain, writeStoredChain } from '@/lib/cha
 import { CHAIN_NAME_TO_ID } from '@/lib/programs/evmAddresses';
 
 describe('CHAINS metadata', () => {
-  it('exposes all 9 chain entries', () => {
-    for (const id of ['solana', 'stellar', 'ethereum', 'base', 'arbitrum', 'optimism', 'polygon', 'bnb', 'celo'] as const) {
+  it('exposes all 10 chain entries', () => {
+    for (const id of ['solana', 'stellar', 'ethereum', 'base', 'arbitrum', 'optimism', 'polygon', 'bnb', 'celo', 'xdc'] as const) {
       expect(CHAINS[id]).toBeDefined();
     }
   });
@@ -15,6 +15,8 @@ describe('CHAINS metadata', () => {
     }
     expect(CHAINS.bnb.enabled).toBe(false);
     expect(CHAINS.bnb.comingSoon).toBeTruthy();
+    expect(CHAINS.xdc.enabled).toBe(false);
+    expect(CHAINS.xdc.comingSoon).toBeTruthy();
   });
 
   it('uses integration-pending labels for disabled chains', () => {
@@ -83,6 +85,7 @@ describe('CHAINS metadata', () => {
       'polygon',
       'bnb',
       'celo',
+      'xdc',
     ]);
   });
 });

@@ -105,8 +105,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     timeZone: 'UTC',
     badgeBg: '#0066FF',
     badgeText: '#FFFFFF',
-    enabled: false,
-    comingSoon: 'Coming soon',
+    enabled: true,
   },
   ethereum: {
     id: 'ethereum',
@@ -306,7 +305,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     accountLabel: 'XDC account',
     suggestedWallet: 'MetaMask',
     walletExamples: 'MetaMask, XDC Pay, or WalletConnect',
-    accountCta: 'Connect XDC account',
+    accountCta: 'Connect MetaMask or EVM account',
     testnet: {
       label: 'XDC Apothem',
       chainId: 51,
