@@ -28,11 +28,12 @@ export function BrandLogo({ className, iconOnly = false, size = "md" }: BrandLog
       {!iconOnly && (
         <span
           className={cn(
-            "font-display font-extrabold tracking-tight text-foreground",
+            "font-display font-extrabold tracking-tight",
             font,
           )}
         >
-          Baraza
+          <span className="text-foreground">bara</span>
+          <span style={{ color: "#FFB300" }}>za</span>
         </span>
       )}
     </div>
