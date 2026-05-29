@@ -328,6 +328,7 @@ export function buildKnowledgeGraph(input?: {
     if (bounty.rewardToken === 'G$') addEdge(bountyId, nodeId('chain', 'celo'), 'settles-on', 'G$ reward');
     if (bounty.rewardToken === 'XLM') addEdge(bountyId, nodeId('chain', 'stellar'), 'settles-on', 'XLM reward');
     if (bounty.rewardToken === 'SOL') addEdge(bountyId, nodeId('chain', 'solana'), 'settles-on', 'SOL reward');
+    if (bounty.rewardToken === 'BRZA') addEdge(bountyId, nodeId('chain', 'stellar'), 'settles-on', 'BRZA reward');
   });
 
   memberships.forEach((membership) => {

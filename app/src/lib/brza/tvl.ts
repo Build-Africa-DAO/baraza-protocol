@@ -27,10 +27,9 @@ export function getNextTarget(usd: number) {
     { label: 'Bridge BRZA to Solana', usd: BRZA_ASSET.tvlTargets.solanaPool },
     { label: 'Open public IDO', usd: BRZA_ASSET.tvlTargets.ido },
   ];
-  const next = targets.find(t => usd < t.usd) ?? targets[targets.length - 1];
-  const prevUsd = targets.find(t => t.usd === next.usd)
-    ? targets[targets.indexOf(targets.find(t => t.usd === next.usd)!) - 1]?.usd ?? 0
-    : 0;
+  const nextIdx = targets.findIndex(t => usd < t.usd);
+  const next = nextIdx === -1 ? targets[targets.length - 1] : targets[nextIdx];
+  const prevUsd = nextIdx > 0 ? targets[nextIdx - 1].usd : 0;
   const range = next.usd - prevUsd;
   const progress = usd - prevUsd;
   return {
