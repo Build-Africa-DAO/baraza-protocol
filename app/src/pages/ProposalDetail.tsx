@@ -34,6 +34,11 @@ export default function ProposalDetail() {
   const [commentBody, setCommentBody] = useState("");
   const [commentVersion, setCommentVersion] = useState(0);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const comments = useMemo(() => proposal ? listProposalComments(proposal.id) : [], [proposal?.id, commentVersion]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const auditTrail = useMemo(() => proposal ? listProposalAuditTrail(proposal.id) : [], [proposal?.id, commentVersion]);
+
   useSeo({
     title: proposal && community
       ? `${proposal.title} — ${community.name}`
@@ -85,8 +90,6 @@ export default function ProposalDetail() {
     : null;
   const quorumRequiredPct = community?.quorumPct ?? DEFAULT_GOVERNANCE.quorumPct;
   const securityReview = reviewProposal(proposal, community);
-  const comments = useMemo(() => listProposalComments(proposal.id), [proposal.id, commentVersion]);
-  const auditTrail = useMemo(() => listProposalAuditTrail(proposal.id), [proposal.id, commentVersion]);
 
   const handleVote = (vote: VoteOption) => async () => {
     await requireWallet(async () => {
