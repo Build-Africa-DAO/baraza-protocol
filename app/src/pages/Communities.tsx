@@ -22,13 +22,13 @@ const CHAIN_FILTERS: { value: ChainFilter; label: string; dot?: string }[] = [
 
 function emptyChainTitle(chainFilter: ChainFilter): string {
   if (chainFilter === "all") return "No DAOs or chamas match that filter yet";
-  if (chainFilter === "solana") return "No Solana DAOs or chamas match that filter";
+  if (chainFilter === "solana") return "No DAOs or chamas match that filter";
   return `No ${CHAINS[chainFilter].label} DAOs or chamas yet`;
 }
 
 function emptyChainDescription(chainFilter: ChainFilter): string {
   if (chainFilter === "stellar") {
-    return "No DAOs or chamas have selected Stellar as their settlement rail yet. Launch one and use XLM payment verification for member dues.";
+    return "No DAOs or chamas are using this payment rail yet. Launch one and invite members.";
   }
   if (chainFilter !== "all" && chainFilter !== "solana") {
     return `No DAOs or chamas have selected ${CHAINS[chainFilter].label} yet. Launch one to track the governance contract rollout for that rail.`;

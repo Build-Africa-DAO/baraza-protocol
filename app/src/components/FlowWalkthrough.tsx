@@ -35,9 +35,9 @@ const flows: Record<FlowKey, { label: string; title: string; steps: FlowStep[] }
       },
       {
         title: "Pay dues",
-        detail: "Members can pay by M-Pesa or Stellar XLM, then attach proof to the membership request.",
+        detail: "Members can pay by M-Pesa or their account, then attach proof to the membership request.",
         icon: CircleDollarSign,
-        stat: "KES/XLM",
+        stat: "KES",
       },
       {
         title: "Vote",
@@ -71,7 +71,7 @@ const flows: Record<FlowKey, { label: string; title: string; steps: FlowStep[] }
       },
       {
         title: "Confirm money",
-        detail: "M-Pesa confirmations and Stellar settlement checks connect payments to the shared record.",
+        detail: "Payment confirmations connect contributions to the shared record automatically.",
         icon: Banknote,
         stat: "Verified",
       },
