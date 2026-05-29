@@ -38,12 +38,12 @@ describe('ChainSelector — closed state', () => {
 });
 
 describe('ChainSelector — open state', () => {
-  it('lists all 9 chains, with Solana as the selected option', () => {
+  it('lists all 10 chains, with Solana as the selected option', () => {
     renderSelector();
     fireEvent.click(screen.getByRole('button', { name: /solana selected/i }));
     const listbox = screen.getByRole('listbox');
     const options = within(listbox).getAllByRole('option');
-    expect(options).toHaveLength(9);
+    expect(options).toHaveLength(10);
     expect(options[0]).toHaveAttribute('aria-selected', 'true');
     // All non-Solana options are unselected
     for (let i = 1; i < options.length; i++) {

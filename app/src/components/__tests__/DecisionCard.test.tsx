@@ -125,14 +125,14 @@ describe('DecisionCard — voting', () => {
     render(<DecisionCard {...defaults({ lifecycleStage: 'active' })} />);
     fireEvent.click(screen.getByRole('button', { name: /support/i }));
     await waitFor(() => expect(mockCastVote).toHaveBeenCalledTimes(1));
-    expect(mockCastVote).toHaveBeenCalledWith('d1', 'c1', true);
+    expect(mockCastVote).toHaveBeenCalledWith('d1', 'c1', 'yes');
   });
 
   it('calls castVote with vote=false when Object clicked', async () => {
     render(<DecisionCard {...defaults({ lifecycleStage: 'active' })} />);
     fireEvent.click(screen.getByRole('button', { name: /object/i }));
     await waitFor(() => expect(mockCastVote).toHaveBeenCalledTimes(1));
-    expect(mockCastVote).toHaveBeenCalledWith('d1', 'c1', false);
+    expect(mockCastVote).toHaveBeenCalledWith('d1', 'c1', 'no');
   });
 
   it('prevents double-voting (second click is a no-op)', async () => {
