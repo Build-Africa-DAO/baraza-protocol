@@ -7,12 +7,12 @@ const urlField = z
   .transform((value) => value.replace(/\/$/, ''));
 
 const envSchema = z.object({
-  VITE_SITE_URL: urlField,
+  VITE_SITE_URL: urlField.catch('https://baraza-protocol.vercel.app'),
   VITE_SOLANA_NETWORK: z.enum(['devnet', 'testnet', 'mainnet', 'mainnet-beta']).default('devnet'),
-  VITE_RPC_ENDPOINT: urlField,
+  VITE_RPC_ENDPOINT: urlField.catch('https://api.devnet.solana.com'),
   VITE_STELLAR_NETWORK: z.enum(['testnet', 'mainnet']).default('testnet'),
-  VITE_STELLAR_HORIZON_URL: urlField,
-  VITE_STELLAR_NETWORK_PASSPHRASE: z.string().trim().min(1),
+  VITE_STELLAR_HORIZON_URL: urlField.catch('https://horizon-testnet.stellar.org'),
+  VITE_STELLAR_NETWORK_PASSPHRASE: z.string().trim().min(1).catch('Test SDF Network ; September 2015'),
   VITE_WALLETCONNECT_PROJECT_ID: z.string().trim().optional(),
   VITE_SUPABASE_URL: z.string().trim().url().optional().or(z.literal('')),
   VITE_SUPABASE_ANON_KEY: z.string().trim().optional(),
