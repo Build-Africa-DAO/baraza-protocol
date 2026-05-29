@@ -37,7 +37,7 @@ export interface Community {
   name: string;
   description: string;
   chain: Chain;
-  treasuryCurrency: 'KES' | 'SOL' | 'XLM' | 'G$' | 'ETH' | 'CELO';
+  treasuryCurrency: 'KES' | 'BRZA' | 'SOL' | 'XLM' | 'G$' | 'ETH' | 'CELO';
   memberCount: number;
   treasuryBalanceKes: number;
   membershipTiers: MembershipTier[];
