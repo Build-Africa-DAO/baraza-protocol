@@ -514,14 +514,14 @@ function validateAndBuildBounty(input: CreateBountyInput): Bounty {
     summary: input.summary.trim(),
     skills: splitSkills(input.skills),
     access: input.access ?? (input.roleGated ? 'community-restricted' : 'public'),
-    rewardToken: input.rewardToken ?? 'SOL',
+    rewardToken: input.rewardToken ?? 'BRZA',
   };
 }
 
 function parseRewardToken(raw: string | null | undefined): RewardToken {
-  return raw === 'G$' || raw === 'XLM' || raw === 'COMMUNITY_TOKEN' || raw === 'SOL'
+  return raw === 'BRZA' || raw === 'G$' || raw === 'XLM' || raw === 'COMMUNITY_TOKEN' || raw === 'SOL'
     ? raw
-    : 'SOL';
+    : 'BRZA';
 }
 
 export function listWorkerProfileBounties(accountOrName: string): Bounty[] {
@@ -554,7 +554,7 @@ export async function triggerBountyPayout(input: {
       brief: bounty.summary,
       access: bounty.access ?? 'community-restricted',
       status: bounty.status === 'paid' || bounty.status === 'awarded' ? 'completed' : 'open',
-      rewardToken: bounty.rewardToken ?? 'SOL',
+      rewardToken: bounty.rewardToken ?? 'BRZA',
       rewardAmount: String(bounty.rewardKes),
       rewardKesEstimate: bounty.rewardKes,
       postedByMemberId: bounty.postedBy,
@@ -562,7 +562,7 @@ export async function triggerBountyPayout(input: {
       createdAt: new Date().toISOString(),
     },
     recipient: input.recipient,
-    token: bounty.rewardToken ?? 'SOL',
+    token: bounty.rewardToken ?? 'BRZA',
   });
 
   if (!result?.ok) return { ok: false, message: result?.error ?? 'Bounty payout is not available yet.' };

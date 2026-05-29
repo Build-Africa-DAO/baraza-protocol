@@ -8,7 +8,7 @@ export type BountyStatus = 'open' | 'in-progress' | 'completed' | 'disputed';
 
 export type BountyAccess = 'public' | 'community-restricted';
 
-export type RewardToken = 'SOL' | 'G$' | 'XLM' | 'COMMUNITY_TOKEN';
+export type RewardToken = 'BRZA' | 'SOL' | 'G$' | 'XLM' | 'COMMUNITY_TOKEN';
 
 export type AdminRole =
   | 'founder'
