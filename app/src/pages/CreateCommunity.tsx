@@ -507,9 +507,9 @@ const CreateCommunity: React.FC = () => {
                           onChange={(e) => setWalletChain(e.target.value as typeof walletChain)}
                           className="w-full appearance-none rounded-lg border py-3 pl-8 pr-4 text-sm font-semibold outline-none cursor-pointer"
                         >
-                          <option value="solana">Baraza Token - Phantom / Solflare</option>
-                          <option value="stellar">Stellar - Freighter / Lobstr</option>
-                          <option value="celo">Celo - Valora / MetaMask</option>
+                          <option value="solana">Solana into BRZA - Phantom / Solflare</option>
+                          <option value="stellar">Stellar into BRZA - Freighter / Lobstr</option>
+                          <option value="celo">Celo EVM into BRZA - Valora / MetaMask</option>
                         </select>
                       </div>
                       <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm">

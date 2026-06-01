@@ -45,6 +45,9 @@ export default function AIPlatformSection() {
               Visitors can understand the model, organisers can launch a DAO or community, and members can
               vote and track funds — Asha is available when someone needs a next step.
             </p>
+            <p className="mt-3 max-w-2xl text-xs font-semibold leading-5 text-primary">
+              BRZA is the native Baraza Token. Solana, Stellar, EVM routes, and M-Pesa connect into one member experience.
+            </p>
 
             <div className="mt-5 flex flex-col gap-2 sm:flex-row">
               <button

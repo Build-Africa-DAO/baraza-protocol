@@ -161,7 +161,7 @@ const SEED_BOUNTIES: Bounty[] = [
     status: 'open',
     postedBy: 'TechBridge Nairobi',
     summary: 'Review governance contract assumptions and produce issue-ranked audit notes.',
-    skills: ['Baraza Token', 'Rust', 'Security'],
+    skills: ['Solana', 'Rust', 'Security'],
     access: 'community-restricted',
     rewardToken: 'SOL',
   },
@@ -184,7 +184,7 @@ const SEED_BOUNTIES: Bounty[] = [
   {
     id: 'b-tb-onchain',
     communityId: '3',
-    title: 'Baraza Token program deployment guide',
+    title: 'Solana program deployment guide',
     category: 'Dev',
     rewardKes: 35000,
     deadline: '2026-06-20',
@@ -192,7 +192,7 @@ const SEED_BOUNTIES: Bounty[] = [
     status: 'in_progress',
     postedBy: 'TechBridge Nairobi',
     summary: 'Write a step-by-step guide for deploying Anchor programs to devnet.',
-    skills: ['Baraza Token', 'Anchor', 'Technical writing'],
+    skills: ['Solana', 'Anchor', 'Technical writing'],
     assignee: 'Amara T.',
     roleGated: true,
     access: 'community-restricted',
@@ -306,13 +306,14 @@ const SEED_BOUNTIES: Bounty[] = [
   },
 ];
 
-function normalisePublicBountyWording(bounty: Bounty): Bounty {
+function restoreTechnicalRailWording(bounty: Bounty): Bounty {
+  if (bounty.id !== 'b-tb-onchain') return bounty;
   return {
     ...bounty,
-    title: bounty.title === 'Solana program deployment guide'
-      ? 'Baraza Token program deployment guide'
+    title: bounty.title === 'Baraza Token program deployment guide'
+      ? 'Solana program deployment guide'
       : bounty.title,
-    skills: bounty.skills.map((skill) => skill === 'Solana' ? 'Baraza Token' : skill),
+    skills: bounty.skills.map((skill) => skill === 'Baraza Token' ? 'Solana' : skill),
   };
 }
 
@@ -322,11 +323,11 @@ function readLocalBounties(): Bounty[] {
     const raw = window.localStorage.getItem(LOCAL_BOUNTIES_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
     if (!Array.isArray(parsed)) return [];
-    const normalised = parsed.map((bounty) => normalisePublicBountyWording(bounty));
-    if (JSON.stringify(normalised) !== JSON.stringify(parsed)) {
-      writeLocalBounties(normalised);
+    const restored = parsed.map((bounty) => restoreTechnicalRailWording(bounty));
+    if (JSON.stringify(restored) !== JSON.stringify(parsed)) {
+      writeLocalBounties(restored);
     }
-    return normalised;
+    return restored;
   } catch {
     return [];
   }
@@ -358,7 +359,7 @@ function splitSkills(raw: string[]): string[] {
 }
 
 function bountyFromRow(row: BountyRow, submissions = 0): Bounty {
-  return normalisePublicBountyWording({
+  return restoreTechnicalRailWording({
     id: row.id,
     communityId: row.community_id,
     title: row.title,

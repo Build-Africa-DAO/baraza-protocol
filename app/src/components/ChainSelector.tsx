@@ -72,7 +72,7 @@ export default function ChainSelector({ variant = 'desktop', className }: ChainS
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-label={`${chainMeta.label} selected. Click to switch.`}
+        aria-label={`Baraza Token rail: ${chainMeta.label} selected. Click to switch.`}
         className={cn(
           'inline-flex items-center gap-2 rounded-xl border border-border/60 bg-surface text-xs font-semibold text-foreground transition-colors hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70',
           isMobile ? 'w-full justify-between px-3.5 py-3 text-sm' : 'px-3 py-2',
@@ -84,6 +84,8 @@ export default function ChainSelector({ variant = 'desktop', className }: ChainS
             className="h-2 w-2 rounded-full"
             style={{ background: chainMeta.badgeBg }}
           />
+          <span className="font-bold text-primary">BRZA</span>
+          <span className="text-muted-foreground">·</span>
           {chainMeta.label}
         </span>
         <ChevronDown
@@ -97,7 +99,7 @@ export default function ChainSelector({ variant = 'desktop', className }: ChainS
       {open && (
         <ul
           role="listbox"
-          aria-label="Select treasury rail"
+          aria-label="Select Baraza Token rail"
           className={cn(
             'absolute z-50 overflow-hidden rounded-xl border border-border/60 bg-card/95 shadow-[0_24px_60px_hsl(84_17%_2%/0.6)] backdrop-blur',
             isMobile ? 'left-0 right-0 top-full mt-2' : 'right-0 top-full mt-2 w-72',
@@ -138,6 +140,9 @@ export default function ChainSelector({ variant = 'desktop', className }: ChainS
                     />
                     <span className="min-w-0">
                       <span className="block truncate font-semibold">{meta.label}</span>
+                      <span className="block truncate text-[11px] font-semibold text-primary">
+                        {meta.railType} into BRZA
+                      </span>
                       <span className="block truncate text-[11px] text-muted-foreground">
                         Suggested: {meta.suggestedWallet}
                       </span>
@@ -157,6 +162,12 @@ export default function ChainSelector({ variant = 'desktop', className }: ChainS
               </li>
             );
           })}
+          <li className="border-t border-border/60 px-3 py-2.5">
+            <p className="text-[11px] font-semibold text-foreground">M-Pesa phone payments</p>
+            <p className="mt-0.5 text-[10px] leading-4 text-muted-foreground">
+              Members can pay in KSh by phone. Baraza records the BRZA equivalent behind the flow.
+            </p>
+          </li>
         </ul>
       )}
     </div>

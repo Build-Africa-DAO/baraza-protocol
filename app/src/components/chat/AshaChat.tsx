@@ -73,7 +73,7 @@ const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
   {
     keywords: ['wallet', 'phantom', 'solflare', 'connect', 'sign in', 'login'],
     reply:
-      'Different rails use different accounts. Baraza Token actions use Phantom, Solflare, or Backpack. Stellar uses Freighter, Lobstr, or Albedo. Celo can use Valora or MetaMask.',
+      'BRZA is the native Baraza Token. Different rails connect into it: Solana uses Phantom, Solflare, or Backpack; Stellar uses Freighter, Lobstr, or Albedo; and Celo is the first visible EVM route with Valora or MetaMask. Members can also pay in KSh through M-Pesa while Baraza records the BRZA equivalent behind the flow.',
   },
   {
     keywords: ['solana', 'blockchain', 'on-chain', 'web3', 'crypto'],

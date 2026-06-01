@@ -13,11 +13,11 @@ describe('bounties', () => {
     expect(getBountiesForCommunity('1').length).toBeGreaterThan(0);
   });
 
-  it('migrates legacy Solana wording in stored bounty overrides', () => {
+  it('restores technical Solana wording in the deployment bounty', () => {
     window.localStorage.setItem('baraza.bounties.v1', JSON.stringify([{
       id: 'b-tb-onchain',
       communityId: '3',
-      title: 'Solana program deployment guide',
+      title: 'Baraza Token program deployment guide',
       category: 'Dev',
       rewardKes: 35000,
       deadline: '2026-06-20',
@@ -25,16 +25,15 @@ describe('bounties', () => {
       status: 'in_review',
       postedBy: 'TechBridge Nairobi',
       summary: 'Write a deployment guide.',
-      skills: ['Solana', 'Anchor'],
+      skills: ['Baraza Token', 'Anchor'],
       access: 'community-restricted',
       rewardToken: 'SOL',
     }]));
 
     const bounty = listBounties().find((item) => item.id === 'b-tb-onchain');
 
-    expect(bounty?.title).toBe('Baraza Token program deployment guide');
-    expect(bounty?.skills).toContain('Baraza Token');
-    expect(window.localStorage.getItem('baraza.bounties.v1')).not.toContain('"Solana"');
+    expect(bounty?.title).toBe('Solana program deployment guide');
+    expect(bounty?.skills).toContain('Solana');
   });
 
   it('creates a local bounty record', () => {

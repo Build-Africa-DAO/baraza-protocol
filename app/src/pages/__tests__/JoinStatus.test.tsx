@@ -76,7 +76,7 @@ describe('JoinStatus payment rail copy', () => {
 
     renderStatus('/join/1/status?orderId=ord_mpesa_demo');
 
-    expect(screen.getByText('Submitting to Baraza Token')).toBeInTheDocument();
+    expect(screen.getByText('Submitting to Solana')).toBeInTheDocument();
     expect(screen.queryByText('Submitting to Base')).not.toBeInTheDocument();
   });
 });

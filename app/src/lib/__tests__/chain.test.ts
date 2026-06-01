@@ -43,10 +43,17 @@ describe('CHAINS metadata', () => {
 
   it('defines a suggested wallet for every chain', () => {
     for (const chain of CHAIN_LIST) {
+      expect(chain.railType.length).toBeGreaterThan(0);
       expect(chain.suggestedWallet.length).toBeGreaterThan(0);
       expect(chain.walletExamples).toContain(chain.suggestedWallet);
       expect(chain.accountCta).toContain(chain.suggestedWallet);
     }
+  });
+
+  it('keeps the BRZA asset separate from the Solana rail label', () => {
+    expect(CHAINS.solana.label).toBe('Solana');
+    expect(CHAINS.solana.currency.code).toBe('BRZA');
+    expect(CHAINS.celo.railType).toBe('EVM rail');
   });
 
   it('defines testnet metadata for every chain', () => {

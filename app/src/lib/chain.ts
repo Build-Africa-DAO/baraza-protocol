@@ -1,13 +1,11 @@
 /**
  * Chain selection.
  *
- * Distinct from `lib/network.ts`, which selects the Solana cluster
- * (mainnet/devnet/testnet). This module is about which blockchain the
- * user is browsing. Solana handles membership credentials and governance.
- * Solana stays the active testnet rail for governance and membership.
- * Stellar is shown as the next payment/settlement rail, and Celo is visible for
- * G$ bounty rewards. EVM execution remains gated by the governance-contract
- * roadmap until deployed contracts are configured.
+ * Distinct from `lib/network.ts`, which selects test or live infrastructure.
+ * BRZA is the native Baraza asset. This module models the rail underneath it:
+ * Solana first for membership and governance, Stellar for settlement, and Celo
+ * as the first visible EVM route. M-Pesa is a phone payment path into BRZA and
+ * is intentionally not represented as a blockchain.
  */
 
 export type Chain =
@@ -26,6 +24,7 @@ export interface ChainMeta {
   id: Chain;
   label: string;
   short: string;
+  railType: string;
   accountLabel: string;
   suggestedWallet: string;
   walletExamples: string;
@@ -59,14 +58,15 @@ const GOVERNANCE_REVIEW = 'Governance review';
 export const CHAINS: Record<Chain, ChainMeta> = {
   solana: {
     id: 'solana',
-    label: 'Baraza Token',
-    short: 'BRZA',
-    accountLabel: 'Baraza account',
+    label: 'Solana',
+    short: 'SOL',
+    railType: 'Primary rail',
+    accountLabel: 'Solana account',
     suggestedWallet: 'Phantom',
     walletExamples: 'Phantom, Solflare, or Backpack',
-    accountCta: 'Connect Baraza account with Phantom',
+    accountCta: 'Connect Solana account with Phantom',
     testnet: {
-      label: 'BRZA Testnet',
+      label: 'Solana Devnet',
       nativeSymbol: 'SOL',
       explorerUrl: 'https://explorer.solana.com/?cluster=devnet',
     },
@@ -86,6 +86,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     id: 'stellar',
     label: 'Stellar',
     short: 'XLM',
+    railType: 'Settlement rail',
     accountLabel: 'Stellar account',
     suggestedWallet: 'Freighter',
     walletExamples: 'Freighter, Lobstr, or Albedo',
@@ -111,6 +112,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     id: 'ethereum',
     label: 'Ethereum',
     short: 'ETH',
+    railType: 'EVM rail',
     accountLabel: 'Ethereum account',
     suggestedWallet: 'MetaMask',
     walletExamples: 'MetaMask, Coinbase Wallet, Rabby, or WalletConnect',
@@ -138,6 +140,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     id: 'base',
     label: 'Base',
     short: 'BASE',
+    railType: 'EVM rail',
     accountLabel: 'Base account',
     suggestedWallet: 'Coinbase Wallet',
     walletExamples: 'MetaMask, Coinbase Wallet, Rabby, or WalletConnect',
@@ -165,6 +168,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     id: 'arbitrum',
     label: 'Arbitrum',
     short: 'ARB',
+    railType: 'EVM rail',
     accountLabel: 'Arbitrum account',
     suggestedWallet: 'Rabby',
     walletExamples: 'MetaMask, Coinbase Wallet, Rabby, or WalletConnect',
@@ -192,6 +196,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     id: 'optimism',
     label: 'Optimism',
     short: 'OP',
+    railType: 'EVM rail',
     accountLabel: 'Optimism account',
     suggestedWallet: 'MetaMask',
     walletExamples: 'MetaMask, Coinbase Wallet, Rabby, or WalletConnect',
@@ -219,6 +224,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     id: 'polygon',
     label: 'Polygon',
     short: 'POL',
+    railType: 'EVM rail',
     accountLabel: 'Polygon account',
     suggestedWallet: 'MetaMask',
     walletExamples: 'MetaMask, Coinbase Wallet, Rabby, or WalletConnect',
@@ -246,6 +252,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     id: 'bnb',
     label: 'BNB Chain',
     short: 'BNB',
+    railType: 'EVM rail',
     accountLabel: 'BNB Chain account',
     suggestedWallet: 'Trust Wallet',
     walletExamples: 'MetaMask, Trust Wallet, Binance Wallet, or WalletConnect',
@@ -275,6 +282,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     id: 'celo',
     label: 'Celo',
     short: 'CELO',
+    railType: 'EVM rail',
     accountLabel: 'Celo account',
     suggestedWallet: 'Valora',
     walletExamples: 'Valora, MetaMask, Coinbase Wallet, or WalletConnect',
@@ -302,6 +310,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     id: 'xdc',
     label: 'XDC',
     short: 'XDC',
+    railType: 'EVM rail',
     accountLabel: 'XDC account',
     suggestedWallet: 'MetaMask',
     walletExamples: 'MetaMask, XDC Pay, or WalletConnect',
