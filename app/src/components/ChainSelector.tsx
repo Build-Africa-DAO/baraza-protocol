@@ -162,12 +162,6 @@ export default function ChainSelector({ variant = 'desktop', className }: ChainS
               </li>
             );
           })}
-          <li className="border-t border-border/60 px-3 py-2.5">
-            <p className="text-[11px] font-semibold text-foreground">M-Pesa phone payments</p>
-            <p className="mt-0.5 text-[10px] leading-4 text-muted-foreground">
-              Members can pay in KSh by phone. Baraza records the BRZA equivalent behind the flow.
-            </p>
-          </li>
         </ul>
       )}
     </div>

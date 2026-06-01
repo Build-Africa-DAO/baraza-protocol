@@ -20,6 +20,7 @@ export const CHAIN_ACTIONS = {
 
 export const CHAIN_TESTNET_NAMES: Record<Chain, string> = {
   solana: 'Solana Devnet',
+  mpesa: 'M-Pesa Sandbox',
   stellar: 'Stellar Testnet',
   ethereum: 'Sepolia',
   base: 'Base Sepolia',

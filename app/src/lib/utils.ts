@@ -30,7 +30,7 @@ function formatNativeRailAmountFromKes(amountKes: number, chainOrMeta: Chain | C
 
 export function formatRailAmountFromKes(amountKes: number, chainOrMeta: Chain | ChainMeta): string {
   const meta = typeof chainOrMeta === 'string' ? CHAINS[chainOrMeta] : chainOrMeta;
-  return meta.id === 'solana'
+  return meta.id === 'solana' || meta.id === 'mpesa'
     ? formatKSh(amountKes)
     : formatNativeRailAmountFromKes(amountKes, meta);
 }
@@ -38,6 +38,7 @@ export function formatRailAmountFromKes(amountKes: number, chainOrMeta: Chain | 
 export function formatRailAmountWithKes(amountKes: number, chainOrMeta: Chain | ChainMeta): string {
   const meta = typeof chainOrMeta === 'string' ? CHAINS[chainOrMeta] : chainOrMeta;
   const nativeAmount = formatNativeRailAmountFromKes(amountKes, meta);
+  if (meta.id === 'mpesa') return formatKSh(amountKes);
   return meta.id === 'solana'
     ? `${formatKSh(amountKes)} (${nativeAmount} eq.)`
     : `${nativeAmount} (${formatKSh(amountKes)} eq.)`;

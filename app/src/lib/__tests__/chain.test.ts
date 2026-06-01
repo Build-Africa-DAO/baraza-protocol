@@ -3,14 +3,14 @@ import { CHAINS, CHAIN_LIST, VISIBLE_CHAIN_LIST, readStoredChain, writeStoredCha
 import { CHAIN_NAME_TO_ID } from '@/lib/programs/evmAddresses';
 
 describe('CHAINS metadata', () => {
-  it('exposes all 10 chain entries', () => {
-    for (const id of ['solana', 'stellar', 'ethereum', 'base', 'arbitrum', 'optimism', 'polygon', 'bnb', 'celo', 'xdc'] as const) {
+  it('exposes all supported rail entries', () => {
+    for (const id of ['solana', 'mpesa', 'stellar', 'ethereum', 'base', 'arbitrum', 'optimism', 'polygon', 'bnb', 'celo', 'xdc'] as const) {
       expect(CHAINS[id]).toBeDefined();
     }
   });
 
   it('marks supported review rails as enabled', () => {
-    for (const id of ['solana', 'stellar', 'ethereum', 'base', 'arbitrum', 'optimism', 'polygon', 'celo'] as const) {
+    for (const id of ['solana', 'mpesa', 'stellar', 'ethereum', 'base', 'arbitrum', 'optimism', 'polygon', 'celo'] as const) {
       expect(CHAINS[id].enabled).toBe(true);
     }
     expect(CHAINS.bnb.enabled).toBe(false);
@@ -54,6 +54,7 @@ describe('CHAINS metadata', () => {
     expect(CHAINS.solana.label).toBe('Solana');
     expect(CHAINS.solana.currency.code).toBe('BRZA');
     expect(CHAINS.celo.railType).toBe('EVM rail');
+    expect(CHAINS.mpesa.railType).toBe('Mobile money rail');
   });
 
   it('defines testnet metadata for every chain', () => {
@@ -84,6 +85,7 @@ describe('CHAINS metadata', () => {
   it('CHAIN_LIST has all chains in expected order', () => {
     expect(CHAIN_LIST.map((c) => c.id)).toEqual([
       'solana',
+      'mpesa',
       'stellar',
       'ethereum',
       'base',
@@ -97,7 +99,7 @@ describe('CHAINS metadata', () => {
   });
 
   it('shows only product-ready rails in normal pickers', () => {
-    expect(VISIBLE_CHAIN_LIST.map((chain) => chain.id)).toEqual(['solana', 'stellar', 'celo']);
+    expect(VISIBLE_CHAIN_LIST.map((chain) => chain.id)).toEqual(['solana', 'mpesa', 'stellar', 'celo']);
   });
 });
 
@@ -114,6 +116,11 @@ describe('readStoredChain', () => {
   it('returns stored stellar when set', () => {
     writeStoredChain('stellar');
     expect(readStoredChain()).toBe('stellar');
+  });
+
+  it('returns stored M-Pesa when set', () => {
+    writeStoredChain('mpesa');
+    expect(readStoredChain()).toBe('mpesa');
   });
 
   it('returns stored Celo when set', () => {

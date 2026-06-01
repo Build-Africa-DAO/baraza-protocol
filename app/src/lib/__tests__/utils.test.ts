@@ -25,12 +25,14 @@ describe('formatUSD', () => {
 describe('rail formatting', () => {
   it('formats KES source amounts in selected rail currency', () => {
     expect(formatRailAmountFromKes(2600, 'solana')).toBe('KSh 2,600');
+    expect(formatRailAmountFromKes(2600, 'mpesa')).toBe('KSh 2,600');
     expect(formatRailAmountFromKes(1600, 'stellar')).toBe('XLM 100');
     expect(formatRailAmountFromKes(450000, 'base')).toBe('ETH 1.00');
   });
 
   it('keeps KES equivalent visible for reconciled amounts', () => {
     expect(formatRailAmountWithKes(6500, 'solana')).toBe('KSh 6,500 (BRZA 2,500 eq.)');
+    expect(formatRailAmountWithKes(6500, 'mpesa')).toBe('KSh 6,500');
     expect(formatRailAmountWithKes(6500, 'base')).toContain('KSh 6,500');
   });
 

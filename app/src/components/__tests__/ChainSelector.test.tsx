@@ -38,12 +38,12 @@ describe('ChainSelector — closed state', () => {
 });
 
 describe('ChainSelector — open state', () => {
-  it('lists the three visible rails, with Solana as the selected option', () => {
+  it('lists the four visible rails, with Solana as the selected option', () => {
     renderSelector();
     fireEvent.click(screen.getByRole('button', { name: /baraza token rail: solana selected/i }));
     const listbox = screen.getByRole('listbox');
     const options = within(listbox).getAllByRole('option');
-    expect(options).toHaveLength(3);
+    expect(options).toHaveLength(4);
     expect(options[0]).toHaveAttribute('aria-selected', 'true');
     // All non-Solana options are unselected
     for (let i = 1; i < options.length; i++) {
@@ -51,11 +51,12 @@ describe('ChainSelector — open state', () => {
     }
   });
 
-  it('explains that M-Pesa is a phone payment path into BRZA', () => {
+  it('lists M-Pesa as an active mobile-money rail into BRZA', () => {
     renderSelector();
     fireEvent.click(screen.getByRole('button', { name: /baraza token rail: solana selected/i }));
-    expect(screen.getByText('M-Pesa phone payments')).toBeInTheDocument();
-    expect(screen.getByText(/records the BRZA equivalent behind the flow/i)).toBeInTheDocument();
+    const mpesaOption = screen.getByRole('option', { name: /^m-pesa$/i });
+    expect(mpesaOption).not.toBeDisabled();
+    expect(mpesaOption).toHaveTextContent('Mobile money rail into BRZA');
   });
 
   it('allows Stellar selection', () => {
@@ -108,7 +109,7 @@ describe('ChainSelector — keyboard navigation', () => {
     const trigger = screen.getByRole('button', { name: /baraza token rail: solana selected/i });
     fireEvent.click(trigger);
 
-    // Solana (index 0), Stellar (index 1), and Celo are visible.
+    // Solana (index 0), M-Pesa (index 1), Stellar (index 2), and Celo are visible.
     fireEvent.keyDown(window, { key: 'ArrowDown' });
 
     // No crash, listbox still open

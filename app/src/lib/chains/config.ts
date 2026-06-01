@@ -62,6 +62,18 @@ export const BARAZA_CHAIN_CONFIGS: Record<Chain, BarazaChainConfig> = {
     },
     status: 'partial',
   },
+  mpesa: {
+    id: 'mpesa',
+    label: CHAINS.mpesa.label,
+    testnetName: CHAIN_TESTNET_NAMES.mpesa,
+    testnetRequired: TESTNET_REQUIRED,
+    explorerUrl: CHAINS.mpesa.testnet.explorerUrl,
+    suggestedWallet: CHAINS.mpesa.suggestedWallet,
+    nativeCurrency: 'KES',
+    capabilities: ['payments', 'membership'],
+    contracts: {},
+    status: 'testnet-ready',
+  },
   stellar: {
     id: 'stellar',
     label: CHAINS.stellar.label,
@@ -106,7 +118,7 @@ export const BARAZA_CHAIN_CONFIGS: Record<Chain, BarazaChainConfig> = {
 };
 
 function evmConfig(
-  chain: Exclude<Chain, 'solana' | 'stellar' | 'celo'>,
+  chain: Exclude<Chain, 'solana' | 'mpesa' | 'stellar' | 'celo'>,
   rpcEnvVar: string,
   status: BarazaChainConfig['status'] = 'partial',
 ): BarazaChainConfig {

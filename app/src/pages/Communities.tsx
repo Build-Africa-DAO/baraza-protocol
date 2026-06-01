@@ -29,6 +29,9 @@ function emptyChainDescription(chainFilter: ChainFilter): string {
   if (chainFilter === "stellar") {
     return "No DAOs or communities are using this payment rail yet. Launch one and invite members.";
   }
+  if (chainFilter === "mpesa") {
+    return "No DAOs or communities are using M-Pesa mobile money yet. Launch one and invite members to contribute in KSh by phone.";
+  }
   if (chainFilter !== "all" && chainFilter !== "solana") {
     return `No DAOs or communities have selected ${CHAINS[chainFilter].label} yet. Launch one to track the governance contract rollout for that rail.`;
   }

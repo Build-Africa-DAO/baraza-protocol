@@ -10,6 +10,7 @@
 
 export type Chain =
   | 'solana'
+  | 'mpesa'
   | 'stellar'
   | 'ethereum'
   | 'base'
@@ -80,6 +81,32 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     timeZone: 'America/Los_Angeles',
     badgeBg: '#14F195',
     badgeText: '#0B132B',
+    enabled: true,
+  },
+  mpesa: {
+    id: 'mpesa',
+    label: 'M-Pesa',
+    short: 'KSh',
+    railType: 'Mobile money rail',
+    accountLabel: 'M-Pesa phone',
+    suggestedWallet: 'M-Pesa',
+    walletExamples: 'M-Pesa phone number',
+    accountCta: 'Connect M-Pesa phone',
+    testnet: {
+      label: 'M-Pesa Sandbox',
+      nativeSymbol: 'KES',
+      explorerUrl: 'https://developer.safaricom.co.ke',
+    },
+    currency: {
+      code: 'KES',
+      symbol: 'KSh',
+      locale: 'en-KE',
+      decimals: 0,
+      kesPerUnit: 1,
+    },
+    timeZone: 'Africa/Nairobi',
+    badgeBg: '#00A651',
+    badgeText: '#FFFFFF',
     enabled: true,
   },
   stellar: {
@@ -338,6 +365,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
 
 export const CHAIN_LIST: ChainMeta[] = [
   CHAINS.solana,
+  CHAINS.mpesa,
   CHAINS.stellar,
   CHAINS.ethereum,
   CHAINS.base,
@@ -353,6 +381,7 @@ export const CHAIN_LIST: ChainMeta[] = [
 // placeholder rails in normal product pickers.
 export const VISIBLE_CHAIN_LIST: ChainMeta[] = [
   CHAINS.solana,
+  CHAINS.mpesa,
   CHAINS.stellar,
   CHAINS.celo,
 ];
