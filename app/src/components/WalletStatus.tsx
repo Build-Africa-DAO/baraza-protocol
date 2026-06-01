@@ -5,7 +5,7 @@ import { useConnection } from '@solana/wallet-adapter-react';
 import { Copy, LogOut, Mail, Phone, RefreshCw, ChevronDown, AlertTriangle, ExternalLink, X } from 'lucide-react';
 import { truncateAddress } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { EXPECTED_GENESIS, NETWORK_LABEL } from '@/lib/network';
+import { EXPECTED_GENESIS, NETWORK_LABEL, PRODUCT_ENVIRONMENT } from '@/lib/network';
 import { useChain } from '@/hooks/useChain';
 import { useEvmChain } from '@/hooks/useEvmChain';
 import type { Chain } from '@/lib/chain';
@@ -212,6 +212,10 @@ const WalletStatus: React.FC = () => {
   };
 
   const phoneIdentifier = formatAuthIdentifier(phoneSession);
+  const selectedNetworkLabel =
+    PRODUCT_ENVIRONMENT === 'live' && (chain === 'solana' || chain === 'stellar')
+      ? `${chainMeta.label} Mainnet`
+      : chainMeta.testnet.label;
 
   // If phone/email is connected but no wallet, show phone identity instead
   if (!selectedAddress && phoneIdentifier) {
@@ -260,7 +264,7 @@ const WalletStatus: React.FC = () => {
             {chainMeta.accountCta}
           </button>
           <p className="hidden text-[10px] font-semibold text-muted-foreground lg:block">
-            {chainMeta.suggestedWallet} on {chainMeta.testnet.label}
+            {chainMeta.suggestedWallet} on {selectedNetworkLabel}
           </p>
           <button
             type="button"

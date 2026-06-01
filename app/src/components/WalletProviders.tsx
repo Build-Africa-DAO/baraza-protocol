@@ -1,26 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
 import type { Adapter } from '@solana/wallet-adapter-base';
-import { clusterApiUrl } from '@solana/web3.js';
-import { WALLET_ADAPTER_NETWORK } from '@/lib/network';
-import { getPublicEnv } from '@/lib/env';
+import { RPC_ENDPOINT, WALLET_ADAPTER_NETWORK } from '@/lib/network';
 import BarazaWalletModalProvider from '@/components/BarazaWalletModalProvider';
-
-const RPC_ENDPOINTS = [
-  ...new Set(
-    [
-      getPublicEnv().VITE_RPC_ENDPOINT,
-      clusterApiUrl(WALLET_ADAPTER_NETWORK),
-    ].filter(Boolean) as string[]
-  ),
-];
 
 interface WalletProvidersProps {
   children: React.ReactNode;
 }
 
 export default function WalletProviders({ children }: WalletProvidersProps) {
-  const endpoint = useMemo(() => RPC_ENDPOINTS[0], []);
+  const endpoint = useMemo(() => RPC_ENDPOINT, []);
   const [wallets, setWallets] = useState<Adapter[]>([]);
 
   useEffect(() => {

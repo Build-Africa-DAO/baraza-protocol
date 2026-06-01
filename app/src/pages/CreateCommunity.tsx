@@ -21,7 +21,7 @@ const CreateCommunity: React.FC = () => {
   useSeo({
     title: "Launch a DAO",
     description:
-      "Launch a DAO, chama, SACCO, or co-operative on Baraza. Set membership rules, dues, quorum, and M-Pesa contribution paths in a single guided flow.",
+      "Launch a DAO, community, SACCO, or co-operative on Baraza. Set membership rules, dues, quorum, and M-Pesa contribution paths in a single guided flow.",
     path: "/create",
   });
   const navigate = useNavigate();
@@ -164,14 +164,14 @@ const CreateCommunity: React.FC = () => {
         toast({
           title: charge.persisted
             ? `${launchFeeLabel} payment received`
-            : `Chama launched (simulator offline)`,
+            : `Community launched (simulator offline)`,
           description: charge.persisted
             ? `Order ${charge.orderId.slice(0, 12)}... ${form.name} is live.`
             : 'Local dev mode - payment skipped, community launched.',
         });
       } catch (err) {
         toast({
-          title: 'Chama launch failed',
+          title: 'Community launch failed',
           description: err instanceof Error ? err.message : 'Check the form and try again.',
           variant: 'destructive',
         });
@@ -257,7 +257,7 @@ const CreateCommunity: React.FC = () => {
                 </h1>
               </div>
               <p className="max-w-xl text-sm font-semibold leading-6 text-foreground/92 drop-shadow md:text-base md:leading-7">
-                Launch a DAO or chama where members can contribute, submit proposals, and manage a shared treasury with clear rules.
+                Launch a DAO or community where members can contribute, submit proposals, and manage a shared treasury with clear rules.
               </p>
             </div>
             </CommunityBanner>
@@ -270,14 +270,14 @@ const CreateCommunity: React.FC = () => {
               {/* Name */}
               <div>
                 <label className="block text-xs font-semibold mb-2">
-                  DAO / Chama Name
+                  DAO / Community Name
                 </label>
                 <input
                   type="text"
                   name="name"
                   value={form.name}
                   onChange={handleChange}
-                  placeholder="e.g. Milele Chama"
+                  placeholder="e.g. Milele Community"
                   className="w-full rounded-xl px-4 py-3 text-sm outline-none border"
                 />
               </div>

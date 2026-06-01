@@ -1,7 +1,7 @@
 import { getPublicEnv } from '@/lib/env';
+import { STELLAR_HORIZON_URL, STELLAR_NETWORK } from '@/lib/network';
 
 const _publicEnv = getPublicEnv();
-const _stellarNetwork = _publicEnv.VITE_STELLAR_NETWORK;
 const _siteUrl = _publicEnv.VITE_SITE_URL.replace(/\/$/, '');
 
 // ── Token identity ─────────────────────────────────────────────────────────
@@ -17,8 +17,8 @@ export const BRZA_ASSET = {
   distributorAddress: import.meta.env.VITE_BRZA_DISTRIBUTOR_ADDRESS || '',
   totalSupply: 1_000_000_000,
   decimals: 7,
-  network: _stellarNetwork as 'testnet' | 'mainnet',
-  horizonUrl: _publicEnv.VITE_STELLAR_HORIZON_URL,
+  network: STELLAR_NETWORK,
+  horizonUrl: STELLAR_HORIZON_URL,
 } as const;
 
 // ── Price phases ────────────────────────────────────────────────────────────

@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, Moon, PlayCircle, Search, Sparkles, Sun, X } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import ChainSelector from "@/components/ChainSelector";
+import EnvironmentSelector from "@/components/EnvironmentSelector";
 import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
 
@@ -134,6 +135,9 @@ export default function Header({ walletSlot }: HeaderProps) {
 
           <div className="hidden sm:block">
             <ChainSelector />
+          </div>
+          <div className="hidden lg:block">
+            <EnvironmentSelector />
           </div>
 
           {walletSlot && <div className="hidden sm:block">{walletSlot}</div>}
@@ -269,6 +273,7 @@ export default function Header({ walletSlot }: HeaderProps) {
                 {theme === "dark" ? "Light mode" : "Dark mode"}
               </button>
               <ChainSelector variant="mobile" />
+              <EnvironmentSelector variant="mobile" />
               {walletSlot}
             </div>
           </nav>

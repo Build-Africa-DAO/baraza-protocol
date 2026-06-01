@@ -11,10 +11,10 @@ import {
 } from '@/lib/utils';
 
 describe('formatKSh', () => {
-  it('formats zero', () => expect(formatKSh(0)).toBe('KES 0'));
-  it('formats thousands', () => expect(formatKSh(234500)).toBe('KES 234,500'));
-  it('formats millions', () => expect(formatKSh(1248500)).toBe('KES 1,248,500'));
-  it('formats small fee', () => expect(formatKSh(500)).toBe('KES 500'));
+  it('formats zero', () => expect(formatKSh(0)).toBe('KSh 0'));
+  it('formats thousands', () => expect(formatKSh(234500)).toBe('KSh 234,500'));
+  it('formats millions', () => expect(formatKSh(1248500)).toBe('KSh 1,248,500'));
+  it('formats small fee', () => expect(formatKSh(500)).toBe('KSh 500'));
 });
 
 describe('formatUSD', () => {
@@ -24,13 +24,14 @@ describe('formatUSD', () => {
 
 describe('rail formatting', () => {
   it('formats KES source amounts in selected rail currency', () => {
-    expect(formatRailAmountFromKes(2600, 'solana')).toBe('BRZA 1,000');
+    expect(formatRailAmountFromKes(2600, 'solana')).toBe('KSh 2,600');
     expect(formatRailAmountFromKes(1600, 'stellar')).toBe('XLM 100');
     expect(formatRailAmountFromKes(450000, 'base')).toBe('ETH 1.00');
   });
 
   it('keeps KES equivalent visible for reconciled amounts', () => {
-    expect(formatRailAmountWithKes(6500, 'base')).toContain('KES 6,500');
+    expect(formatRailAmountWithKes(6500, 'solana')).toBe('KSh 6,500 (BRZA 2,500 eq.)');
+    expect(formatRailAmountWithKes(6500, 'base')).toContain('KSh 6,500');
   });
 
   it('formats dates in the selected rail timezone', () => {

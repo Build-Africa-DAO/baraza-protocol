@@ -54,7 +54,7 @@ export default function Evaluate() {
   useSeo({
     title: "Evaluate a group before you join",
     description:
-      "A practical checklist to compare DAOs, chamas, SACCOs, and co-operatives on membership clarity, treasury rules, voting fairness, and dispute handling before depositing dues.",
+      "A practical checklist to compare DAOs, communities, SACCOs, and co-operatives on membership clarity, treasury rules, voting fairness, and dispute handling before depositing dues.",
     path: "/evaluate",
   });
 

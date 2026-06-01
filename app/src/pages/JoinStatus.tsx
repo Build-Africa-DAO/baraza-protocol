@@ -222,7 +222,7 @@ export default function JoinStatus() {
               </h1>
               <p className="mt-2 text-sm">
                 Order <span className="font-mono">{orderId || "(none)"}</span> for{" "}
-                {community?.name ?? "Chama"} is moving from{" "}
+                {community?.name ?? "Community"} is moving from{" "}
                 {isStellarRail ? "Stellar payment verification" : "M-Pesa confirmation"} to active membership.
               </p>
             </div>

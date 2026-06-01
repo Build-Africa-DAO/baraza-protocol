@@ -81,7 +81,7 @@ export default function JoinDao() {
   const { community } = useCommunity(id);
   const { chainMeta } = useChain();
   useSeo({
-    title: community ? `Join ${community.name}` : "Join a DAO or chama",
+    title: community ? `Join ${community.name}` : "Join a DAO or community",
     description: "Verify your phone, pay membership dues via M-Pesa, and activate your membership.",
     path: id ? `/join/${id}` : undefined,
     noIndex: true,

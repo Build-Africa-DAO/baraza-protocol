@@ -9,9 +9,9 @@ import { useSeo } from "@/lib/seo";
 
 export default function Index() {
   useSeo({
-    title: "Launch treasury tools for your DAO, chama, or SACCO",
+    title: "Launch treasury tools for your DAO, community, or SACCO",
     description:
-      "Baraza is a phone-first treasury and governance platform for DAOs, chamas, SACCOs, and welfare groups. Collect M-Pesa dues in KES, submit proposals, vote, and manage shared funds.",
+      "Baraza is a phone-first treasury and governance platform for DAOs, communities, SACCOs, and welfare groups. Collect M-Pesa dues in KSh, submit proposals, vote, and manage shared funds.",
     path: "/",
   });
 

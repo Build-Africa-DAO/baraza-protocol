@@ -2,12 +2,12 @@ import { Marquee } from "@/components/ui/marquee";
 import { Banknote, CheckCircle2, Clock3, TrendingUp, Users, Vote } from "lucide-react";
 
 const communities = [
-  { name: "Kilimani Chama", type: "Savings", members: 48, fund: "KES 2.4M", signal: "+12%" },
-  { name: "Westlands SACCO", type: "Co-op", members: 120, fund: "KES 8.1M", signal: "+31%" },
-  { name: "Techies Welfare", type: "Welfare", members: 32, fund: "KES 640K", signal: "+8%" },
-  { name: "Mama Mboga Fund", type: "Investment", members: 65, fund: "KES 1.8M", signal: "+18%" },
-  { name: "Estate Owners", type: "Housing", members: 90, fund: "KES 12M", signal: "+24%" },
-  { name: "Green Farms Co-op", type: "Co-op", members: 78, fund: "KES 3.2M", signal: "+15%" },
+  { name: "Kilimani Chama", type: "Savings", members: 48, fund: "KSh 2.4M", signal: "+12%" },
+  { name: "Westlands SACCO", type: "Co-op", members: 120, fund: "KSh 8.1M", signal: "+31%" },
+  { name: "Techies Welfare", type: "Welfare", members: 32, fund: "KSh 640K", signal: "+8%" },
+  { name: "Mama Mboga Fund", type: "Investment", members: 65, fund: "KSh 1.8M", signal: "+18%" },
+  { name: "Estate Owners", type: "Housing", members: 90, fund: "KSh 12M", signal: "+24%" },
+  { name: "Green Farms Co-op", type: "Co-op", members: 78, fund: "KSh 3.2M", signal: "+15%" },
 ];
 
 const recentActivity = [
