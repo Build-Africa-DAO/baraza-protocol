@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CHAINS, CHAIN_LIST, readStoredChain, writeStoredChain } from '@/lib/chain';
+import { CHAINS, CHAIN_LIST, VISIBLE_CHAIN_LIST, readStoredChain, writeStoredChain } from '@/lib/chain';
 import { CHAIN_NAME_TO_ID } from '@/lib/programs/evmAddresses';
 
 describe('CHAINS metadata', () => {
@@ -88,6 +88,10 @@ describe('CHAINS metadata', () => {
       'xdc',
     ]);
   });
+
+  it('shows only product-ready rails in normal pickers', () => {
+    expect(VISIBLE_CHAIN_LIST.map((chain) => chain.id)).toEqual(['solana', 'stellar', 'celo']);
+  });
 });
 
 describe('readStoredChain', () => {
@@ -105,11 +109,14 @@ describe('readStoredChain', () => {
     expect(readStoredChain()).toBe('stellar');
   });
 
-  it('returns stored enabled EVM rails when set', () => {
-    for (const chain of ['ethereum', 'base', 'arbitrum', 'optimism', 'polygon', 'celo'] as const) {
-      writeStoredChain(chain);
-      expect(readStoredChain()).toBe(chain);
-    }
+  it('returns stored Celo when set', () => {
+    writeStoredChain('celo');
+    expect(readStoredChain()).toBe('celo');
+  });
+
+  it('falls back to Solana for hidden roadmap rails', () => {
+    writeStoredChain('base');
+    expect(readStoredChain()).toBe('solana');
   });
 
   it('falls back to solana when localStorage holds a garbage value', () => {

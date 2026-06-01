@@ -33,8 +33,8 @@ const CreateCommunity: React.FC = () => {
   const [isCreated, setIsCreated] = useState(false);
   const [createdCommunityId, setCreatedCommunityId] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'mpesa' | 'wallet'>('mpesa');
-  const [walletChain, setWalletChain] = useState<Extract<Chain, 'solana' | 'stellar' | 'base' | 'arbitrum' | 'optimism' | 'celo'>>(
-    chain === 'solana' || chain === 'stellar' || chain === 'base' || chain === 'arbitrum' || chain === 'optimism' || chain === 'celo'
+  const [walletChain, setWalletChain] = useState<Extract<Chain, 'solana' | 'stellar' | 'celo'>>(
+    chain === 'solana' || chain === 'stellar' || chain === 'celo'
       ? chain
       : 'solana',
   );
@@ -68,7 +68,7 @@ const CreateCommunity: React.FC = () => {
   );
 
   React.useEffect(() => {
-    if (chain === 'solana' || chain === 'stellar' || chain === 'base' || chain === 'arbitrum' || chain === 'optimism' || chain === 'celo') {
+    if (chain === 'solana' || chain === 'stellar' || chain === 'celo') {
       setWalletChain(chain);
     }
   }, [chain]);
@@ -509,9 +509,6 @@ const CreateCommunity: React.FC = () => {
                         >
                           <option value="solana">Solana - Phantom / Solflare</option>
                           <option value="stellar">Stellar - Freighter / Lobstr</option>
-                          <option value="base">Base - MetaMask / Coinbase Wallet</option>
-                          <option value="arbitrum">Arbitrum - MetaMask / Rabby</option>
-                          <option value="optimism">Optimism - MetaMask / Rabby</option>
                           <option value="celo">Celo - Valora / MetaMask</option>
                         </select>
                       </div>

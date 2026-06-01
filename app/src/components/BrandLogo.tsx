@@ -18,7 +18,7 @@ export function BrandLogo({ className, iconOnly = false, size = "md" }: BrandLog
   return (
     <div className={cn("flex items-center gap-1.5 leading-none", className)}>
       <img
-        src="/baraza-logo.svg"
+        src="/baraza-logo-v2.svg"
         alt={iconOnly ? "Baraza logo" : ""}
         width={icon}
         height={icon}

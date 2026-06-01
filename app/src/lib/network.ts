@@ -1,8 +1,9 @@
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { getPublicEnv } from '@/lib/env';
 
 type NetworkName = 'mainnet' | 'devnet' | 'testnet';
 
-const RAW = (import.meta.env.VITE_SOLANA_NETWORK ?? 'devnet').toLowerCase();
+const RAW = getPublicEnv().VITE_SOLANA_NETWORK.toLowerCase();
 
 const NETWORK: NetworkName =
   RAW === 'mainnet' || RAW === 'mainnet-beta'

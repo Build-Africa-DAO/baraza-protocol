@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { getPublicEnv } from "@/lib/env";
 
 type SeoOptions = {
   /** Pass `undefined` while data is loading to avoid a stale-title flash. */
@@ -14,7 +15,7 @@ const FALLBACK_ORIGIN = "https://baraza-protocol.vercel.app";
 const DEFAULT_IMAGE_PATH = "/og-image.svg";
 
 function getOrigin(): string {
-  const configured = import.meta.env.VITE_SITE_URL?.trim().replace(/\/$/, "");
+  const configured = getPublicEnv().VITE_SITE_URL.trim().replace(/\/$/, "");
   if (configured) return configured;
   if (typeof window === "undefined") return FALLBACK_ORIGIN;
   return window.location.origin || FALLBACK_ORIGIN;

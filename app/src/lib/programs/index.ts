@@ -23,6 +23,7 @@ export {
   paymentAttestationPda,
   paymentConfigPda,
   proposalPda,
+  treasuryReleaseReceiptPda,
   treasuryVaultPda,
   voteReceiptPda,
   toSlug,

@@ -7,7 +7,7 @@ import { COMMUNITY_TYPES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { useCommunities } from "@/hooks/useCommunities";
 import CommunityBanner from "@/components/CommunityBanner";
-import { CHAINS, type Chain } from "@/lib/chain";
+import { CHAINS, VISIBLE_CHAIN_LIST, type Chain } from "@/lib/chain";
 import { useSeo } from "@/lib/seo";
 import { useChain } from "@/hooks/useChain";
 
@@ -15,8 +15,7 @@ type ChainFilter = "all" | Chain;
 
 const CHAIN_FILTERS: { value: ChainFilter; label: string; dot?: string }[] = [
   { value: "all", label: "All rails" },
-  ...Object.values(CHAINS)
-    .filter((chain) => chain.enabled)
+  ...VISIBLE_CHAIN_LIST
     .map((chain) => ({ value: chain.id, label: chain.label, dot: chain.badgeBg })),
 ];
 

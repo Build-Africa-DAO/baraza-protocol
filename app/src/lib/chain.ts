@@ -340,24 +340,23 @@ export const CHAIN_LIST: ChainMeta[] = [
   CHAINS.xdc,
 ];
 
+// Keep roadmap metadata available to internal review surfaces without exposing
+// placeholder rails in normal product pickers.
+export const VISIBLE_CHAIN_LIST: ChainMeta[] = [
+  CHAINS.solana,
+  CHAINS.stellar,
+  CHAINS.celo,
+];
+
 const STORAGE_KEY = 'baraza:chain';
 const DEFAULT_CHAIN: Chain = 'solana';
+const VISIBLE_CHAIN_IDS = new Set<Chain>(VISIBLE_CHAIN_LIST.map((chain) => chain.id));
 
 export function readStoredChain(): Chain {
   if (typeof window === 'undefined') return DEFAULT_CHAIN;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (
-      raw === 'solana' ||
-      raw === 'stellar' ||
-      raw === 'ethereum' ||
-      raw === 'base' ||
-      raw === 'arbitrum' ||
-      raw === 'optimism' ||
-      raw === 'polygon' ||
-      raw === 'celo' ||
-      raw === 'xdc'
-    ) return raw;
+    if (VISIBLE_CHAIN_IDS.has(raw as Chain)) return raw as Chain;
   } catch {
     /* ignore */
   }

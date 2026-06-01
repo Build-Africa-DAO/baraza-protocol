@@ -3,7 +3,9 @@
 //! Per-community vault that holds SOL balances. Deposits are permissionless;
 //! withdrawals are gated behind:
 //!   1. `vault.withdrawals_enabled` (admin emergency control, default false).
-//!   2. A successful (Executed) governance TreasuryRelease proposal — TODO(cpi).
+//!   2. A successful (Executed) governance TreasuryRelease proposal.
+//!   3. The configured release authority signer (handoff to Squads in production).
+//!   4. A one-time release receipt PDA that prevents proposal replay.
 //!
 //! Per MVP_ARCHITECTURE.md §6.1 Treasury MVP policy:
 //!   - Deposits + balance visibility are LIVE in MVP.
@@ -21,6 +23,12 @@ use anchor_lang::system_program;
 
 declare_id!("ApPdkfooQLdVN8gAXRnddbtttruYNihiwjanYtXUnxYy");
 
+pub const GOVERNANCE_PROGRAM_ID: Pubkey = Pubkey::new_from_array([
+    192, 253, 191, 73, 222, 225, 12, 97, 239, 22, 209, 87, 210, 136, 24, 251, 188, 107, 10, 222,
+    115, 30, 212, 117, 232, 223, 66, 215, 177, 115, 99, 149,
+]);
+pub const PROPOSAL_ACCOUNT_DISCRIMINATOR: [u8; 8] = [164, 190, 4, 248, 203, 124, 243, 64];
+
 #[program]
 pub mod treasury_vault {
     use super::*;
@@ -30,6 +38,8 @@ pub mod treasury_vault {
         vault.community = ctx.accounts.community.key();
         vault.admin_authority = ctx.accounts.admin.key();
         vault.pending_admin = None;
+        vault.release_authority = ctx.accounts.admin.key();
+        vault.pending_release_authority = None;
         vault.status = VaultStatus::Active;
         vault.withdrawals_enabled = false;
         vault.total_sol_deposited = 0;
@@ -108,14 +118,10 @@ pub mod treasury_vault {
     /// Withdraws SOL from the vault. GATED by:
     ///   - vault.status == Active
     ///   - vault.withdrawals_enabled (admin emergency control, default false)
-    ///   - signer == vault.admin_authority (placeholder; production gates via
-    ///     CPI from governance::execute_proposal verifying an Executed
-    ///     TreasuryRelease proposal)
-    ///
-    /// TODO(cpi): replace admin signer check with proof of an Executed
-    /// TreasuryRelease proposal. Use instruction-sysvar introspection to
-    /// confirm caller is the governance program, OR pass the proposal account
-    /// and verify status == Executed + recipient + amount match.
+    ///   - the configured release authority signer (Squads vault in production)
+    ///   - an Executed governance TreasuryRelease proposal with matching
+    ///     community, native SOL recipient, and amount
+    ///   - a one-time release receipt PDA, initialized by this instruction
     pub fn release_sol(ctx: Context<ReleaseSol>, amount: u64) -> Result<()> {
         require!(amount > 0, TreasuryError::InvalidAmount);
         let vault = &mut ctx.accounts.vault;
@@ -127,17 +133,43 @@ pub mod treasury_vault {
             vault.withdrawals_enabled,
             TreasuryError::WithdrawalsDisabled
         );
-        require!(
-            ctx.accounts.admin.key() == vault.admin_authority,
-            TreasuryError::Unauthorized
+        require_keys_eq!(
+            ctx.accounts.executor.key(),
+            vault.release_authority,
+            TreasuryError::UnauthorizedReleaseAuthority
         );
+        let proposal = load_proposal_account(&ctx.accounts.proposal)?;
+        require!(
+            proposal.community == vault.community,
+            TreasuryError::ProposalMismatch
+        );
+        require!(
+            proposal.status == ProposalStatus::Executed,
+            TreasuryError::ProposalNotExecuted
+        );
+        match proposal.kind {
+            ProposalKind::TreasuryRelease {
+                recipient,
+                amount: proposal_amount,
+                token_mint,
+                ..
+            } => {
+                require!(token_mint.is_none(), TreasuryError::ProposalMismatch);
+                require_keys_eq!(
+                    recipient,
+                    ctx.accounts.recipient.key(),
+                    TreasuryError::ProposalMismatch
+                );
+                require!(proposal_amount == amount, TreasuryError::ProposalMismatch);
+            }
+            _ => return err!(TreasuryError::ProposalMismatch),
+        }
 
         let vault_info = vault.to_account_info();
         let vault_lamports = vault_info.lamports();
         let rent_minimum = Rent::get()?.minimum_balance(vault_info.data_len());
         require!(
-            vault_lamports >= amount
-                && vault_lamports.saturating_sub(amount) >= rent_minimum,
+            vault_lamports >= amount && vault_lamports.saturating_sub(amount) >= rent_minimum,
             TreasuryError::InsufficientBalance
         );
 
@@ -147,14 +179,17 @@ pub mod treasury_vault {
             .accounts
             .recipient
             .to_account_info()
-            .try_borrow_mut_lamports()? = ctx
-            .accounts
-            .recipient
-            .lamports()
-            .saturating_add(amount);
+            .try_borrow_mut_lamports()? = ctx.accounts.recipient.lamports().saturating_add(amount);
 
         vault.total_sol_released = vault.total_sol_released.saturating_add(amount);
         vault.release_count = vault.release_count.saturating_add(1);
+        let receipt = &mut ctx.accounts.release_receipt;
+        receipt.proposal = ctx.accounts.proposal.key();
+        receipt.vault = vault.key();
+        receipt.recipient = ctx.accounts.recipient.key();
+        receipt.amount = amount;
+        receipt.released_at_slot = Clock::get()?.slot;
+        receipt.bump = ctx.bumps.release_receipt;
 
         emit!(SolReleased {
             vault: vault.key(),
@@ -258,6 +293,57 @@ pub mod treasury_vault {
         });
         Ok(())
     }
+
+    /// Step 1 of a two-step release-authority handoff. Production deployments
+    /// nominate the Squads vault PDA, then accept through a Squads transaction.
+    pub fn nominate_release_authority(
+        ctx: Context<MutateVault>,
+        new_release_authority: Pubkey,
+    ) -> Result<()> {
+        let vault = &mut ctx.accounts.vault;
+        require!(
+            ctx.accounts.admin.key() == vault.admin_authority,
+            TreasuryError::Unauthorized
+        );
+        vault.pending_release_authority = Some(new_release_authority);
+        emit!(ReleaseAuthorityNominated {
+            vault: vault.key(),
+            nominee: new_release_authority,
+        });
+        Ok(())
+    }
+
+    pub fn cancel_release_authority_nomination(ctx: Context<MutateVault>) -> Result<()> {
+        let vault = &mut ctx.accounts.vault;
+        require!(
+            ctx.accounts.admin.key() == vault.admin_authority,
+            TreasuryError::Unauthorized
+        );
+        vault.pending_release_authority = None;
+        Ok(())
+    }
+
+    /// Step 2 of a two-step release-authority handoff. The nominee must sign,
+    /// preventing an accidental or malicious one-sided authority replacement.
+    pub fn accept_release_authority(ctx: Context<AcceptReleaseAuthority>) -> Result<()> {
+        let vault = &mut ctx.accounts.vault;
+        let pending = vault
+            .pending_release_authority
+            .ok_or(TreasuryError::NoPendingReleaseAuthority)?;
+        require!(
+            ctx.accounts.nominee.key() == pending,
+            TreasuryError::Unauthorized
+        );
+        let previous = vault.release_authority;
+        vault.release_authority = ctx.accounts.nominee.key();
+        vault.pending_release_authority = None;
+        emit!(ReleaseAuthorityTransferred {
+            vault: vault.key(),
+            previous,
+            current: ctx.accounts.nominee.key(),
+        });
+        Ok(())
+    }
 }
 
 // ─────────────────────── Accounts ───────────────────────
@@ -269,6 +355,10 @@ pub struct TreasuryVaultAccount {
     /// Pending two-step admin transfer. Set by `nominate_admin`, cleared on
     /// `accept_admin` or `cancel_admin_nomination`.
     pub pending_admin: Option<Pubkey>,
+    /// Signer required for proposal-authorized releases. Hand this off to a
+    /// Squads vault PDA before enabling production withdrawals.
+    pub release_authority: Pubkey,
+    pub pending_release_authority: Option<Pubkey>,
     pub status: VaultStatus,
     pub withdrawals_enabled: bool,
     pub total_sol_deposited: u64,
@@ -283,6 +373,8 @@ impl TreasuryVaultAccount {
     pub const SIZE: usize = 32   // community
         + 32                      // admin_authority
         + (1 + 32)                // pending_admin Option<Pubkey>
+        + 32                      // release_authority
+        + (1 + 32)                // pending_release_authority Option<Pubkey>
         + 1                       // status
         + 1                       // withdrawals_enabled
         + 8 * 4                   // four u64 counters
@@ -292,11 +384,102 @@ impl TreasuryVaultAccount {
 
 // ─────────────────────── Enums ───────────────────────
 
+#[account]
+pub struct ReleaseReceiptAccount {
+    pub proposal: Pubkey,
+    pub vault: Pubkey,
+    pub recipient: Pubkey,
+    pub amount: u64,
+    pub released_at_slot: u64,
+    pub bump: u8,
+}
+
+impl ReleaseReceiptAccount {
+    pub const SIZE: usize = 32 * 3 + 8 * 2 + 1;
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub struct ProposalAccount {
+    pub community: Pubkey,
+    pub proposal_id: u64,
+    pub creator_member: Pubkey,
+    pub kind: ProposalKind,
+    pub metadata_uri: String,
+    pub status: ProposalStatus,
+    pub created_at_slot: u64,
+    pub voting_starts_at_slot: u64,
+    pub voting_ends_at_slot: u64,
+    pub eta_slot: Option<u64>,
+    pub executed_at_slot: Option<u64>,
+    pub canceled_at_slot: Option<u64>,
+    pub vetoed_at_slot: Option<u64>,
+    pub snapshot_slot: u64,
+    pub eligible_member_count: u32,
+    pub eligible_voting_weight: u64,
+    pub quorum_required: u64,
+    pub for_weight: u64,
+    pub against_weight: u64,
+    pub abstain_weight: u64,
+    pub voter_count: u32,
+    pub bump: u8,
+}
+
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, Debug)]
 pub enum VaultStatus {
     Active,
     Paused, // deposits + withdrawals temporarily blocked
     Closed, // terminal, no further state changes
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, Debug)]
+pub enum ProposalStatus {
+    Pending,
+    Active,
+    Defeated,
+    Succeeded,
+    Queued,
+    Executed,
+    Expired,
+    Canceled,
+    Vetoed,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
+pub enum ProposalKind {
+    TreasuryRelease {
+        recipient: Pubkey,
+        amount: u64,
+        token_mint: Option<Pubkey>,
+        purpose_tag: u8,
+    },
+    RuleChange {
+        target_field: ConfigField,
+        new_value_raw: [u8; 32],
+    },
+    MembershipAction {
+        target_member: Pubkey,
+        action: MemberActionKind,
+    },
+    Text,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, Debug)]
+pub enum ConfigField {
+    VotingDelay,
+    VotingPeriod,
+    TimelockDelay,
+    GracePeriod,
+    QuorumBps,
+    ApprovalThresholdBps,
+    ProposalThresholdWeight,
+    VetoerAuthority,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, Debug)]
+pub enum MemberActionKind {
+    Suspend,
+    Reinstate,
+    Revoke,
 }
 
 // ─────────────────────── Contexts ───────────────────────
@@ -345,16 +528,27 @@ pub struct ReleaseSol<'info> {
     #[account(mut)]
     pub vault: Account<'info, TreasuryVaultAccount>,
 
-    /// CHECK: ProposalAccount from governance program; status must be Executed
-    /// and kind must be TreasuryRelease with matching recipient + amount.
-    /// TODO(cpi): deserialize and validate here once governance crate is wired.
+    /// CHECK: owner, discriminator, status, community, and TreasuryRelease
+    /// payload are validated manually.
     pub proposal: UncheckedAccount<'info>,
 
-    /// CHECK: receives the SOL. Validated against proposal.kind.recipient in TODO(cpi).
+    #[account(
+        init,
+        payer = executor,
+        space = 8 + ReleaseReceiptAccount::SIZE,
+        seeds = [b"release", proposal.key().as_ref()],
+        bump,
+    )]
+    pub release_receipt: Account<'info, ReleaseReceiptAccount>,
+
+    /// CHECK: receives SOL and is validated against proposal.kind.recipient.
     #[account(mut)]
     pub recipient: AccountInfo<'info>,
 
-    pub admin: Signer<'info>,
+    #[account(mut)]
+    pub executor: Signer<'info>,
+
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
@@ -367,6 +561,14 @@ pub struct MutateVault<'info> {
 
 #[derive(Accounts)]
 pub struct AcceptAdmin<'info> {
+    #[account(mut)]
+    pub vault: Account<'info, TreasuryVaultAccount>,
+
+    pub nominee: Signer<'info>,
+}
+
+#[derive(Accounts)]
+pub struct AcceptReleaseAuthority<'info> {
     #[account(mut)]
     pub vault: Account<'info, TreasuryVaultAccount>,
 
@@ -431,6 +633,19 @@ pub struct AdminTransferred {
     pub current: Pubkey,
 }
 
+#[event]
+pub struct ReleaseAuthorityNominated {
+    pub vault: Pubkey,
+    pub nominee: Pubkey,
+}
+
+#[event]
+pub struct ReleaseAuthorityTransferred {
+    pub vault: Pubkey,
+    pub previous: Pubkey,
+    pub current: Pubkey,
+}
+
 // ─────────────────────── Errors ───────────────────────
 
 #[error_code]
@@ -449,4 +664,28 @@ pub enum TreasuryError {
     InsufficientBalance,
     #[msg("No pending admin nomination to accept")]
     NoPendingAdmin,
+    #[msg("Governance proposal is not executed")]
+    ProposalNotExecuted,
+    #[msg("Governance proposal does not authorize this SOL release")]
+    ProposalMismatch,
+    #[msg("Release executor is not the configured multisig authority")]
+    UnauthorizedReleaseAuthority,
+    #[msg("No pending release authority nomination to accept")]
+    NoPendingReleaseAuthority,
+}
+
+fn load_proposal_account(account: &UncheckedAccount) -> Result<ProposalAccount> {
+    require_keys_eq!(
+        *account.owner,
+        GOVERNANCE_PROGRAM_ID,
+        TreasuryError::ProposalMismatch
+    );
+
+    let data = account.try_borrow_data()?;
+    require!(
+        data.len() >= 8 && data[..8] == PROPOSAL_ACCOUNT_DISCRIMINATOR,
+        TreasuryError::ProposalMismatch
+    );
+    let mut proposal_bytes: &[u8] = &data[8..];
+    Ok(ProposalAccount::deserialize(&mut proposal_bytes)?)
 }

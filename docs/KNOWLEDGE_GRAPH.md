@@ -139,8 +139,8 @@ These are hard blockers before real funds move.
 
 | # | Task | File | Risk |
 | --- | --- | --- | --- |
-| 1 | Wire governance CPI dispatch into treasury releases | `programs/governance/src/lib.rs` → `execute_proposal` | **Critical** — withdrawals must be proposal-gated, not admin-only |
-| 2 | Implement treasury proposal-gate | `programs/treasury_vault/src/lib.rs` → `release_sol` | **Critical** — currently `withdrawals_enabled` + admin signer only |
+| 1 | Test governance-dispatched treasury releases on devnet | `programs/governance/src/lib.rs` → `execute_proposal` | **Critical** — native SOL CPI dispatch is wired locally but still needs a real devnet execution |
+| 2 | Hand treasury release authority to the production Squads vault PDA | Treasury deployment and operations | **Critical** — on-chain authority enforcement is wired; keep `withdrawals_enabled = false` until the deployed handoff is tested |
 | 3 | Wire Supabase payment orders to on-chain attestation | `programs/payment_attestation` + `/api/membership/activate` | **Critical** — off-chain membership is acceptable for testnet, not for live |
 | 4 | Restrict `bump_member_count` to membership CPI only | `programs/community_registry/src/lib.rs` | **High** — currently admin-only |
 | 5 | Replace admin-provided governance snapshot inputs with CPI reads | `programs/governance/src/lib.rs` → `activate_proposal` | **High** |

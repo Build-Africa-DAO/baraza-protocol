@@ -20,7 +20,7 @@ The active app in this repo is the Vite React SPA in `app/`. The root `vercel.js
 - Membership asset: Metaplex NFT/Core-style asset for wallet visibility.
 - Governance access: `MemberAccount` is the source of truth; token ownership alone does not grant voting rights.
 - Token-2022: `NonTransferable` is not the MVP path.
-- Treasury: real Solana treasury vault/account for deposits and balance visibility; withdrawals stay disabled until audit, emergency pause, and multisig/Squads controls exist.
+- Treasury: real Solana treasury vault/account for deposits and balance visibility; releases require governance approval and a configurable multisig/Squads authority. Withdrawals stay disabled until audit and deployed authority handoff testing.
 - Mobile money demo: live Africa's Talking sandbox M-Pesa webhook is required. Simulation is only for local developer tests.
 
 ## MVP Payment Scope
@@ -114,12 +114,13 @@ Working today:
 - The contract hook exists at `app/src/hooks/useBarazaContract.ts` and blocks unwired write flows instead of submitting no-op transactions.
 - Community creation and bounty workflows save to Supabase when configured, or to localStorage in local development.
 - Join dues can be verified through the M-Pesa simulator or Stellar testnet/mainnet Horizon.
-- The app uses the Baraza SVG mark from `app/public/baraza-logo.svg` for the header/footer logo and favicon.
+- The app uses the fire-and-council Baraza SVG mark from `app/public/baraza-logo-v2.svg` for app chrome and the favicon. BRZA token surfaces use `app/public/brza-token-logo.svg`.
+- Token and logo rollout steps are tracked in `app/docs/TOKEN_BRAND_REFRESH_CHECKLIST.md`.
 - The active colour palette is `#8ECAE6`, `#219EBC`, `#023047`, `#FFB703`, and `#FB8500`.
 
 Current prototype guardrails:
 
-- All five Anchor programs are implemented and pass `anchor build`. CPI wiring between programs (membership → registry member count, governance → treasury release, governance → membership action) is still TODO and gated by program deployment.
+- All five Anchor programs are implemented and pass `anchor build`. Governance now dispatches native SOL treasury releases by CPI. Membership -> registry member count, governance rule changes, and governance -> membership actions are still TODO and gated by program deployment.
 - Proposal creation and vote actions are wired to the on-chain program interface but show a "preview mode" toast until the programs are deployed to devnet/mainnet.
 - Unknown community IDs render a not-found state instead of falling back to the first mock community.
 - The dashboard "New Decision" link now targets the registered route `/dashboard/:id/decisions/create`.

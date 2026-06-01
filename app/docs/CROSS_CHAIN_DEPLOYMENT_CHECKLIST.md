@@ -17,7 +17,7 @@
 - [x] `cargo-build-sbf` is installed locally.
 - [x] Solana `anchor build` passes and generates SBF/IDL artifacts.
 - [x] Solana `anchor test --skip-local-validator --skip-build` deploys all five programs to a running local validator and passes executable-program smoke verification.
-- [x] Solana local happy path passes across community registry, payment attestation, membership activation, governance proposal creation, voting, and treasury vault deposit/release.
+- [x] Solana local happy path passes across community registry, payment attestation, membership activation, governance proposal creation, voting, treasury vault deposits, and treasury proposal-gate checks. Run a deployed governance-dispatched release before enabling withdrawals.
 - [x] Solana local negative checks pass for double voting and disabled treasury withdrawal.
 - [ ] Stellar source or generated Soroban bindings are not present yet.
 

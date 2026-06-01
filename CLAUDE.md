@@ -86,6 +86,9 @@ VITE_SUPABASE_ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY    server-only
 STELLAR_TREASURY_ACCOUNT     server-only
 CRON_SECRET                  server-only
+PAYMENT_ADAPTER_PROXY_SECRET server-only, trusted payment workflow auth
+PAYMENT_PHONE_HASH_PEPPER    server-only, HMAC pepper for phone hashes
+KOTANI_PAY_API_KEY           server-only
 ```
 
 ## Coding conventions
@@ -108,8 +111,8 @@ CRON_SECRET                  server-only
 
 ## Hard production blockers (do not enable treasury withdrawals until these are done)
 
-1. `programs/governance/src/lib.rs` — `execute_proposal` CPI dispatch is TODO
-2. `programs/treasury_vault/src/lib.rs` — `release_sol` must gate on executed proposal, not admin signer
+1. `programs/governance/src/lib.rs` — treasury CPI dispatch is wired; rule changes and membership actions are still TODO
+2. `programs/treasury_vault/src/lib.rs` — proposal validation, replay blocking, and release-authority enforcement are wired; hand the release authority to a Squads vault PDA and test it on devnet
 3. Supabase payment orders must be wired to `payment_attestation::attest_payment` + on-chain `activate_member`
 
 ## Do not

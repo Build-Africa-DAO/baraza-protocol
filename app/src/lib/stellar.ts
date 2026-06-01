@@ -8,6 +8,7 @@ import {
   StrKey,
   TransactionBuilder,
 } from '@stellar/stellar-base';
+import { getPublicEnv } from '@/lib/env';
 
 export type StellarNetwork = 'testnet' | 'mainnet' | 'custom';
 
@@ -71,15 +72,16 @@ function parseNetwork(raw: string | undefined): StellarNetwork {
 }
 
 export function getStellarConfig(): StellarConfig {
-  const network = parseNetwork(import.meta.env.VITE_STELLAR_NETWORK);
-  const envHorizon = import.meta.env.VITE_STELLAR_HORIZON_URL?.trim();
-  const envPassphrase = import.meta.env.VITE_STELLAR_NETWORK_PASSPHRASE?.trim();
+  const env = getPublicEnv();
+  const network = parseNetwork(env.VITE_STELLAR_NETWORK);
+  const envHorizon = env.VITE_STELLAR_HORIZON_URL.trim();
+  const envPassphrase = env.VITE_STELLAR_NETWORK_PASSPHRASE.trim();
   const horizonUrl = envHorizon || (network === 'mainnet' ? DEFAULT_MAINNET_HORIZON : DEFAULT_TESTNET_HORIZON);
   const networkPassphrase =
     envPassphrase || (network === 'mainnet' ? Networks.PUBLIC : Networks.TESTNET);
 
   return {
-    enabled: Boolean(envHorizon || import.meta.env.VITE_STELLAR_NETWORK),
+    enabled: Boolean(envHorizon),
     network,
     horizonUrl,
     networkPassphrase,

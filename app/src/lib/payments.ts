@@ -89,6 +89,20 @@ export interface PaymentOrder {
 const SELECT_COLUMNS =
   'order_id,community_id,membership_tier_id,status,amount_expected,amount_received,currency,confirmed_at,created_at,updated_at';
 
+function activationSecretKey(orderId: string): string {
+  return `baraza:payment-order-secret:${orderId}`;
+}
+
+export function storePaymentOrderActivationSecret(orderId: string, activationSecret: string): void {
+  if (!orderId || !activationSecret || typeof window === 'undefined') return;
+  window.sessionStorage.setItem(activationSecretKey(orderId), activationSecret);
+}
+
+export function getPaymentOrderActivationSecret(orderId: string): string {
+  if (!orderId || typeof window === 'undefined') return '';
+  return window.sessionStorage.getItem(activationSecretKey(orderId)) ?? '';
+}
+
 /**
  * Fetch a payment order by `order_id`. Returns null when Supabase is not
  * configured (caller should fall back to mock progression) OR when the
@@ -96,8 +110,10 @@ const SELECT_COLUMNS =
  */
 export async function fetchPaymentOrder(orderId: string, activationSecret?: string): Promise<PaymentOrder | null> {
   if (activationSecret) {
-    const params = new URLSearchParams({ orderId, activationSecret });
-    const res = await fetch(`/api/payment-orders/status?${params.toString()}`);
+    const params = new URLSearchParams({ orderId });
+    const res = await fetch(`/api/payment-orders/status?${params.toString()}`, {
+      headers: { 'x-activation-secret': activationSecret },
+    });
     if (res.status === 404) return null;
     if (!res.ok) throw new Error(`Could not fetch payment order (${res.status}).`);
     return (await res.json()) as PaymentOrder;

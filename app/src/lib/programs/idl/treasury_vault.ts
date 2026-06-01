@@ -14,6 +14,113 @@ export type TreasuryVault = {
   },
   "instructions": [
     {
+      "name": "acceptAdmin",
+      "docs": [
+        "Step 2 of a safe admin transfer. Signed by the nominee; completes the",
+        "handoff atomically. Prevents key-loss from a typo in `nominate_admin`."
+      ],
+      "discriminator": [
+        112,
+        42,
+        45,
+        90,
+        116,
+        181,
+        13,
+        170
+      ],
+      "accounts": [
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "nominee",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "acceptReleaseAuthority",
+      "docs": [
+        "Step 2 of a two-step release-authority handoff. The nominee must sign,",
+        "preventing an accidental or malicious one-sided authority replacement."
+      ],
+      "discriminator": [
+        77,
+        24,
+        105,
+        56,
+        196,
+        9,
+        182,
+        52
+      ],
+      "accounts": [
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "nominee",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "cancelAdminNomination",
+      "docs": [
+        "Clears a pending admin nomination. Callable only by the current admin."
+      ],
+      "discriminator": [
+        24,
+        177,
+        168,
+        131,
+        72,
+        94,
+        236,
+        165
+      ],
+      "accounts": [
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "cancelReleaseAuthorityNomination",
+      "discriminator": [
+        121,
+        73,
+        169,
+        10,
+        243,
+        74,
+        175,
+        155
+      ],
+      "accounts": [
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "depositSol",
       "docs": [
         "Permissionless. Transfers SOL from depositor into the vault PDA."
@@ -152,6 +259,73 @@ export type TreasuryVault = {
       "args": []
     },
     {
+      "name": "nominateAdmin",
+      "docs": [
+        "Step 1 of a safe two-step admin transfer. Nominates a successor without",
+        "immediately relinquishing control. The nominee must call `accept_admin`",
+        "to complete the handoff. Use `cancel_admin_nomination` to abort."
+      ],
+      "discriminator": [
+        134,
+        11,
+        31,
+        244,
+        20,
+        77,
+        138,
+        121
+      ],
+      "accounts": [
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "newAdmin",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "nominateReleaseAuthority",
+      "docs": [
+        "Step 1 of a two-step release-authority handoff. Production deployments",
+        "nominate the Squads vault PDA, then accept through a Squads transaction."
+      ],
+      "discriminator": [
+        239,
+        74,
+        158,
+        243,
+        125,
+        74,
+        120,
+        93
+      ],
+      "accounts": [
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "newReleaseAuthority",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
       "name": "recordSplDeposit",
       "docs": [
         "Records an SPL token deposit event. The token transfer itself is",
@@ -198,14 +372,10 @@ export type TreasuryVault = {
         "Withdraws SOL from the vault. GATED by:",
         "- vault.status == Active",
         "- vault.withdrawals_enabled (admin emergency control, default false)",
-        "- signer == vault.admin_authority (placeholder; production gates via",
-        "CPI from governance::execute_proposal verifying an Executed",
-        "TreasuryRelease proposal)",
-        "",
-        "TODO(cpi): replace admin signer check with proof of an Executed",
-        "TreasuryRelease proposal. Use instruction-sysvar introspection to",
-        "confirm caller is the governance program, OR pass the proposal account",
-        "and verify status == Executed + recipient + amount match."
+        "- the configured release authority signer (Squads vault in production)",
+        "- an Executed governance TreasuryRelease proposal with matching",
+        "community, native SOL recipient, and amount",
+        "- a one-time release receipt PDA, initialized by this instruction"
       ],
       "discriminator": [
         58,
@@ -225,17 +395,45 @@ export type TreasuryVault = {
         {
           "name": "proposal",
           "docs": [
-            "and kind must be TreasuryRelease with matching recipient + amount.",
-            "TODO(cpi): deserialize and validate here once governance crate is wired."
+            "payload are validated manually."
           ]
+        },
+        {
+          "name": "releaseReceipt",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  108,
+                  101,
+                  97,
+                  115,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "proposal"
+              }
+            ]
+          }
         },
         {
           "name": "recipient",
           "writable": true
         },
         {
-          "name": "admin",
+          "name": "executor",
+          "writable": true,
           "signer": true
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
@@ -277,38 +475,22 @@ export type TreasuryVault = {
           }
         }
       ]
-    },
-    {
-      "name": "transferAdmin",
-      "discriminator": [
-        42,
-        242,
-        66,
-        106,
-        228,
-        10,
-        111,
-        156
-      ],
-      "accounts": [
-        {
-          "name": "vault",
-          "writable": true
-        },
-        {
-          "name": "admin",
-          "signer": true
-        }
-      ],
-      "args": [
-        {
-          "name": "newAdmin",
-          "type": "pubkey"
-        }
-      ]
     }
   ],
   "accounts": [
+    {
+      "name": "releaseReceiptAccount",
+      "discriminator": [
+        60,
+        127,
+        241,
+        127,
+        212,
+        206,
+        214,
+        185
+      ]
+    },
     {
       "name": "treasuryVaultAccount",
       "discriminator": [
@@ -325,6 +507,19 @@ export type TreasuryVault = {
   ],
   "events": [
     {
+      "name": "adminNominated",
+      "discriminator": [
+        22,
+        247,
+        53,
+        33,
+        59,
+        59,
+        68,
+        112
+      ]
+    },
+    {
       "name": "adminTransferred",
       "discriminator": [
         255,
@@ -335,6 +530,32 @@ export type TreasuryVault = {
         217,
         38,
         179
+      ]
+    },
+    {
+      "name": "releaseAuthorityNominated",
+      "discriminator": [
+        146,
+        76,
+        182,
+        106,
+        206,
+        209,
+        157,
+        17
+      ]
+    },
+    {
+      "name": "releaseAuthorityTransferred",
+      "discriminator": [
+        146,
+        58,
+        61,
+        206,
+        47,
+        190,
+        191,
+        71
       ]
     },
     {
@@ -446,9 +667,50 @@ export type TreasuryVault = {
       "code": 6005,
       "name": "insufficientBalance",
       "msg": "Vault balance is insufficient (would breach rent minimum)"
+    },
+    {
+      "code": 6006,
+      "name": "noPendingAdmin",
+      "msg": "No pending admin nomination to accept"
+    },
+    {
+      "code": 6007,
+      "name": "proposalNotExecuted",
+      "msg": "Governance proposal is not executed"
+    },
+    {
+      "code": 6008,
+      "name": "proposalMismatch",
+      "msg": "Governance proposal does not authorize this SOL release"
+    },
+    {
+      "code": 6009,
+      "name": "unauthorizedReleaseAuthority",
+      "msg": "Release executor is not the configured multisig authority"
+    },
+    {
+      "code": 6010,
+      "name": "noPendingReleaseAuthority",
+      "msg": "No pending release authority nomination to accept"
     }
   ],
   "types": [
+    {
+      "name": "adminNominated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "nominee",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
     {
       "name": "adminTransferred",
       "type": {
@@ -465,6 +727,74 @@ export type TreasuryVault = {
           {
             "name": "current",
             "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "releaseAuthorityNominated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "nominee",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "releaseAuthorityTransferred",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "previous",
+            "type": "pubkey"
+          },
+          {
+            "name": "current",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "releaseReceiptAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "proposal",
+            "type": "pubkey"
+          },
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "releasedAtSlot",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }
@@ -553,6 +883,30 @@ export type TreasuryVault = {
           {
             "name": "adminAuthority",
             "type": "pubkey"
+          },
+          {
+            "name": "pendingAdmin",
+            "docs": [
+              "Pending two-step admin transfer. Set by `nominate_admin`, cleared on",
+              "`accept_admin` or `cancel_admin_nomination`."
+            ],
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "releaseAuthority",
+            "docs": [
+              "Signer required for proposal-authorized releases. Hand this off to a",
+              "Squads vault PDA before enabling production withdrawals."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "pendingReleaseAuthority",
+            "type": {
+              "option": "pubkey"
+            }
           },
           {
             "name": "status",
@@ -678,6 +1032,113 @@ export const IDL = {
     "description": "Baraza treasury vault program (deposits visible, withdrawals gated)"
   },
   "instructions": [
+    {
+      "name": "accept_admin",
+      "docs": [
+        "Step 2 of a safe admin transfer. Signed by the nominee; completes the",
+        "handoff atomically. Prevents key-loss from a typo in `nominate_admin`."
+      ],
+      "discriminator": [
+        112,
+        42,
+        45,
+        90,
+        116,
+        181,
+        13,
+        170
+      ],
+      "accounts": [
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "nominee",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "accept_release_authority",
+      "docs": [
+        "Step 2 of a two-step release-authority handoff. The nominee must sign,",
+        "preventing an accidental or malicious one-sided authority replacement."
+      ],
+      "discriminator": [
+        77,
+        24,
+        105,
+        56,
+        196,
+        9,
+        182,
+        52
+      ],
+      "accounts": [
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "nominee",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "cancel_admin_nomination",
+      "docs": [
+        "Clears a pending admin nomination. Callable only by the current admin."
+      ],
+      "discriminator": [
+        24,
+        177,
+        168,
+        131,
+        72,
+        94,
+        236,
+        165
+      ],
+      "accounts": [
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "cancel_release_authority_nomination",
+      "discriminator": [
+        121,
+        73,
+        169,
+        10,
+        243,
+        74,
+        175,
+        155
+      ],
+      "accounts": [
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
     {
       "name": "deposit_sol",
       "docs": [
@@ -817,6 +1278,73 @@ export const IDL = {
       "args": []
     },
     {
+      "name": "nominate_admin",
+      "docs": [
+        "Step 1 of a safe two-step admin transfer. Nominates a successor without",
+        "immediately relinquishing control. The nominee must call `accept_admin`",
+        "to complete the handoff. Use `cancel_admin_nomination` to abort."
+      ],
+      "discriminator": [
+        134,
+        11,
+        31,
+        244,
+        20,
+        77,
+        138,
+        121
+      ],
+      "accounts": [
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_admin",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "nominate_release_authority",
+      "docs": [
+        "Step 1 of a two-step release-authority handoff. Production deployments",
+        "nominate the Squads vault PDA, then accept through a Squads transaction."
+      ],
+      "discriminator": [
+        239,
+        74,
+        158,
+        243,
+        125,
+        74,
+        120,
+        93
+      ],
+      "accounts": [
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_release_authority",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
       "name": "record_spl_deposit",
       "docs": [
         "Records an SPL token deposit event. The token transfer itself is",
@@ -863,14 +1391,10 @@ export const IDL = {
         "Withdraws SOL from the vault. GATED by:",
         "- vault.status == Active",
         "- vault.withdrawals_enabled (admin emergency control, default false)",
-        "- signer == vault.admin_authority (placeholder; production gates via",
-        "CPI from governance::execute_proposal verifying an Executed",
-        "TreasuryRelease proposal)",
-        "",
-        "TODO(cpi): replace admin signer check with proof of an Executed",
-        "TreasuryRelease proposal. Use instruction-sysvar introspection to",
-        "confirm caller is the governance program, OR pass the proposal account",
-        "and verify status == Executed + recipient + amount match."
+        "- the configured release authority signer (Squads vault in production)",
+        "- an Executed governance TreasuryRelease proposal with matching",
+        "community, native SOL recipient, and amount",
+        "- a one-time release receipt PDA, initialized by this instruction"
       ],
       "discriminator": [
         58,
@@ -890,17 +1414,45 @@ export const IDL = {
         {
           "name": "proposal",
           "docs": [
-            "and kind must be TreasuryRelease with matching recipient + amount.",
-            "TODO(cpi): deserialize and validate here once governance crate is wired."
+            "payload are validated manually."
           ]
+        },
+        {
+          "name": "release_receipt",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  108,
+                  101,
+                  97,
+                  115,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "proposal"
+              }
+            ]
+          }
         },
         {
           "name": "recipient",
           "writable": true
         },
         {
-          "name": "admin",
+          "name": "executor",
+          "writable": true,
           "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
@@ -942,38 +1494,22 @@ export const IDL = {
           }
         }
       ]
-    },
-    {
-      "name": "transfer_admin",
-      "discriminator": [
-        42,
-        242,
-        66,
-        106,
-        228,
-        10,
-        111,
-        156
-      ],
-      "accounts": [
-        {
-          "name": "vault",
-          "writable": true
-        },
-        {
-          "name": "admin",
-          "signer": true
-        }
-      ],
-      "args": [
-        {
-          "name": "new_admin",
-          "type": "pubkey"
-        }
-      ]
     }
   ],
   "accounts": [
+    {
+      "name": "ReleaseReceiptAccount",
+      "discriminator": [
+        60,
+        127,
+        241,
+        127,
+        212,
+        206,
+        214,
+        185
+      ]
+    },
     {
       "name": "TreasuryVaultAccount",
       "discriminator": [
@@ -990,6 +1526,19 @@ export const IDL = {
   ],
   "events": [
     {
+      "name": "AdminNominated",
+      "discriminator": [
+        22,
+        247,
+        53,
+        33,
+        59,
+        59,
+        68,
+        112
+      ]
+    },
+    {
       "name": "AdminTransferred",
       "discriminator": [
         255,
@@ -1000,6 +1549,32 @@ export const IDL = {
         217,
         38,
         179
+      ]
+    },
+    {
+      "name": "ReleaseAuthorityNominated",
+      "discriminator": [
+        146,
+        76,
+        182,
+        106,
+        206,
+        209,
+        157,
+        17
+      ]
+    },
+    {
+      "name": "ReleaseAuthorityTransferred",
+      "discriminator": [
+        146,
+        58,
+        61,
+        206,
+        47,
+        190,
+        191,
+        71
       ]
     },
     {
@@ -1111,9 +1686,50 @@ export const IDL = {
       "code": 6005,
       "name": "InsufficientBalance",
       "msg": "Vault balance is insufficient (would breach rent minimum)"
+    },
+    {
+      "code": 6006,
+      "name": "NoPendingAdmin",
+      "msg": "No pending admin nomination to accept"
+    },
+    {
+      "code": 6007,
+      "name": "ProposalNotExecuted",
+      "msg": "Governance proposal is not executed"
+    },
+    {
+      "code": 6008,
+      "name": "ProposalMismatch",
+      "msg": "Governance proposal does not authorize this SOL release"
+    },
+    {
+      "code": 6009,
+      "name": "UnauthorizedReleaseAuthority",
+      "msg": "Release executor is not the configured multisig authority"
+    },
+    {
+      "code": 6010,
+      "name": "NoPendingReleaseAuthority",
+      "msg": "No pending release authority nomination to accept"
     }
   ],
   "types": [
+    {
+      "name": "AdminNominated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "nominee",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
     {
       "name": "AdminTransferred",
       "type": {
@@ -1130,6 +1746,74 @@ export const IDL = {
           {
             "name": "current",
             "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ReleaseAuthorityNominated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "nominee",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ReleaseAuthorityTransferred",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "previous",
+            "type": "pubkey"
+          },
+          {
+            "name": "current",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ReleaseReceiptAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "proposal",
+            "type": "pubkey"
+          },
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "released_at_slot",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }
@@ -1218,6 +1902,30 @@ export const IDL = {
           {
             "name": "admin_authority",
             "type": "pubkey"
+          },
+          {
+            "name": "pending_admin",
+            "docs": [
+              "Pending two-step admin transfer. Set by `nominate_admin`, cleared on",
+              "`accept_admin` or `cancel_admin_nomination`."
+            ],
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "release_authority",
+            "docs": [
+              "Signer required for proposal-authorized releases. Hand this off to a",
+              "Squads vault PDA before enabling production withdrawals."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "pending_release_authority",
+            "type": {
+              "option": "pubkey"
+            }
           },
           {
             "name": "status",

@@ -274,7 +274,13 @@ pub mod governance {
         Ok(())
     }
 
-    pub fn execute_proposal(ctx: Context<MutateProposal>) -> Result<()> {
+    /// Execution after timelock. Treasury releases require the configured
+    /// treasury release authority as executor plus four remaining accounts in
+    /// order: treasury program, vault, release receipt, and recipient. Text
+    /// proposals remain permissionless signaling-only no-ops.
+    pub fn execute_proposal<'info>(
+        ctx: Context<'_, '_, '_, 'info, ExecuteProposal<'info>>,
+    ) -> Result<()> {
         let cfg = &ctx.accounts.config;
         let prop = &mut ctx.accounts.proposal;
         require!(
@@ -287,8 +293,7 @@ pub mod governance {
         let grace_end = eta.saturating_add(cfg.grace_period_slots);
         require!(now <= grace_end, GovError::GraceExpired);
 
-        // TODO(cpi): dispatch by ProposalKind into sibling programs:
-        //   TreasuryRelease    -> treasury_vault::release_funds
+        // TODO(cpi): dispatch remaining ProposalKind variants:
         //   RuleChange         -> self::apply_rule_change
         //   MembershipAction   -> membership::apply_action
         //   Text               -> no-op (signaling)
@@ -297,6 +302,37 @@ pub mod governance {
 
         prop.executed_at_slot = Some(now);
         prop.status = ProposalStatus::Executed;
+        if let ProposalKind::TreasuryRelease { amount, .. } = prop.kind {
+            require!(
+                ctx.remaining_accounts.len() == 4,
+                GovError::MissingExecutionAccounts
+            );
+            let treasury_program = ctx.remaining_accounts[0].clone();
+            require_keys_eq!(
+                treasury_program.key(),
+                treasury_vault::ID,
+                GovError::InvalidExecutionProgram
+            );
+
+            // Treasury validates the newly Executed state, so persist the
+            // proposal before invoking it. The transaction still rolls back
+            // atomically if the CPI fails.
+            prop.exit(ctx.program_id)?;
+            treasury_vault::cpi::release_sol(
+                CpiContext::new(
+                    treasury_program,
+                    treasury_vault::cpi::accounts::ReleaseSol {
+                        vault: ctx.remaining_accounts[1].clone(),
+                        proposal: prop.to_account_info(),
+                        release_receipt: ctx.remaining_accounts[2].clone(),
+                        recipient: ctx.remaining_accounts[3].clone(),
+                        executor: ctx.accounts.executor.to_account_info(),
+                        system_program: ctx.accounts.system_program.to_account_info(),
+                    },
+                ),
+                amount,
+            )?;
+        }
         emit!(ProposalExecuted {
             proposal: prop.key()
         });
@@ -707,6 +743,23 @@ pub struct MutateProposal<'info> {
 }
 
 #[derive(Accounts)]
+pub struct ExecuteProposal<'info> {
+    #[account(
+        seeds = [b"config", proposal.community.as_ref()],
+        bump = config.bump,
+    )]
+    pub config: Account<'info, CommunityConfigAccount>,
+
+    #[account(mut)]
+    pub proposal: Account<'info, ProposalAccount>,
+
+    #[account(mut)]
+    pub executor: Signer<'info>,
+
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
 pub struct ActivateProposal<'info> {
     #[account(
         seeds = [b"config", proposal.community.as_ref()],
@@ -881,6 +934,10 @@ pub enum GovError {
     MemberMismatch,
     #[msg("Proposal threshold not met")]
     ProposalThresholdNotMet,
+    #[msg("Treasury execution requires treasury program, vault, release receipt, and recipient accounts")]
+    MissingExecutionAccounts,
+    #[msg("Execution target program does not match the proposal action")]
+    InvalidExecutionProgram,
 }
 
 // ─────────────────────── Helpers ───────────────────────

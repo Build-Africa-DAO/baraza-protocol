@@ -36,7 +36,7 @@ export default async function handler(req: Request): Promise<Response> {
       headers: {
         'access-control-allow-origin': '*',
         'access-control-allow-methods': 'GET, OPTIONS',
-        'access-control-allow-headers': 'content-type',
+        'access-control-allow-headers': 'content-type, x-activation-secret',
       },
     });
   }
@@ -48,9 +48,9 @@ export default async function handler(req: Request): Promise<Response> {
 
   const requestUrl = new URL(req.url);
   const orderId = requestUrl.searchParams.get('orderId') ?? '';
-  const activationSecret = requestUrl.searchParams.get('activationSecret') ?? '';
+  const activationSecret = req.headers.get('x-activation-secret') ?? '';
   if (!orderId || !activationSecret) {
-    return json({ error: 'invalid_request', message: 'orderId and activationSecret are required' }, { status: 400 });
+    return json({ error: 'invalid_request', message: 'orderId and x-activation-secret are required' }, { status: 400 });
   }
 
   const res = await fetch(

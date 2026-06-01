@@ -43,13 +43,10 @@ function isAuthorized(req: Request): boolean {
 }
 
 function paymentOrderFilter(from: string): string {
-  const params = new URLSearchParams({
+  return new URLSearchParams({
     status: `eq.${from}`,
-  });
-  if (process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production') {
-    params.set('provider_environment', 'eq.production');
-  }
-  return params.toString();
+    provider_environment: 'eq.sandbox',
+  }).toString();
 }
 
 async function patchOrders(from: string, to: string): Promise<number> {

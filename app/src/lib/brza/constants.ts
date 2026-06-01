@@ -1,18 +1,24 @@
-const _stellarNetwork = import.meta.env.VITE_STELLAR_NETWORK || 'testnet';
+import { getPublicEnv } from '@/lib/env';
+
+const _publicEnv = getPublicEnv();
+const _stellarNetwork = _publicEnv.VITE_STELLAR_NETWORK;
+const _siteUrl = _publicEnv.VITE_SITE_URL.replace(/\/$/, '');
 
 // ── Token identity ─────────────────────────────────────────────────────────
 
 export const BRZA_ASSET = {
   code: 'BRZA',
   name: 'Baraza Token',
+  description: 'The Baraza community finance and governance token.',
+  logoUrl: `${_siteUrl}/brza-token-logo.svg`,
+  metadataUrl: `${_siteUrl}/brza-token.json`,
+  websiteUrl: _siteUrl,
   issuerAddress: import.meta.env.VITE_BRZA_ISSUER_ADDRESS || '',
   distributorAddress: import.meta.env.VITE_BRZA_DISTRIBUTOR_ADDRESS || '',
   totalSupply: 1_000_000_000,
   decimals: 7,
   network: _stellarNetwork as 'testnet' | 'mainnet',
-  horizonUrl: _stellarNetwork === 'mainnet'
-    ? 'https://horizon.stellar.org'
-    : 'https://horizon-testnet.stellar.org',
+  horizonUrl: _publicEnv.VITE_STELLAR_HORIZON_URL,
 } as const;
 
 // ── Price phases ────────────────────────────────────────────────────────────
@@ -92,8 +98,8 @@ export function convertToBrza(
   currency: string,
   phase: BrzaPhase = CURRENT_PHASE,
 ): { brzaAmount: number; usdValue: number } {
-  const rate = FIAT_RATES[currency.toUpperCase()] ?? 1;
-  const priceUsd = BRZA_PHASES[phase].priceUsd || BRZA_PHASES.phase0.priceUsd;
+  const rate = getFiatRate(currency);
+  const priceUsd = getBrzaPriceUsd(phase);
   const usdValue = amount * rate;
   const brzaAmount = Math.round((usdValue / priceUsd) * 1e7) / 1e7;
   return { brzaAmount, usdValue };
@@ -104,15 +110,33 @@ export function formatBrza(amount: number): string {
 }
 
 export function formatLocal(usdValue: number, currency = 'KES'): string {
-  const rate = FIAT_RATES[currency.toUpperCase()] ?? 1;
+  const rate = getFiatRate(currency);
   const local = usdValue / rate;
   return `${currency} ${local.toLocaleString('en-KE', { maximumFractionDigits: 0 })}`;
+}
+
+export function getFiatRate(currency: string): number {
+  const normalized = currency.trim().toUpperCase();
+  const rate = FIAT_RATES[normalized];
+  if (!rate) throw new Error(`Unsupported fiat currency: ${currency}`);
+  return rate;
+}
+
+export function getBrzaPriceUsd(phase: BrzaPhase = CURRENT_PHASE): number {
+  const priceUsd = BRZA_PHASES[phase].priceUsd;
+  if (priceUsd <= 0) {
+    throw new Error(`BRZA ${phase} price is not configured.`);
+  }
+  return priceUsd;
 }
 
 export function vestedAmount(
   bucket: keyof typeof BRZA_VESTING,
   daysSinceTge: number,
 ): number {
+  if (!Number.isFinite(daysSinceTge) || daysSinceTge < 0) {
+    throw new Error('daysSinceTge must be a non-negative number.');
+  }
   const v = BRZA_VESTING[bucket];
   if (daysSinceTge < v.cliffDays) return 0;
   const elapsed = daysSinceTge - v.cliffDays;

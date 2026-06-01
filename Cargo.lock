@@ -929,6 +929,7 @@ name = "governance"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
+ "treasury_vault",
 ]
 
 [[package]]

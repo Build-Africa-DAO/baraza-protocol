@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Check, ChevronDown } from 'lucide-react';
-import { CHAIN_LIST, type Chain } from '@/lib/chain';
+import { VISIBLE_CHAIN_LIST, type Chain } from '@/lib/chain';
 import { useChain } from '@/hooks/useChain';
 import { cn } from '@/lib/utils';
 
@@ -33,11 +33,11 @@ export default function ChainSelector({ variant = 'desktop', className }: ChainS
         e.preventDefault();
         setFocusedIndex((prev) => {
           const direction = e.key === 'ArrowDown' ? 1 : -1;
-          const len = CHAIN_LIST.length;
+          const len = VISIBLE_CHAIN_LIST.length;
           // Skip disabled entries — keep advancing in the same direction.
           for (let step = 1; step <= len; step++) {
             const next = (prev + direction * step + len) % len;
-            if (CHAIN_LIST[next].enabled) return next;
+            if (VISIBLE_CHAIN_LIST[next].enabled) return next;
           }
           return prev;
         });
@@ -103,7 +103,7 @@ export default function ChainSelector({ variant = 'desktop', className }: ChainS
             isMobile ? 'left-0 right-0 top-full mt-2' : 'right-0 top-full mt-2 w-72',
           )}
         >
-          {CHAIN_LIST.map((meta, index) => {
+          {VISIBLE_CHAIN_LIST.map((meta, index) => {
             const active = meta.id === chain;
             const disabled = !meta.enabled;
             return (

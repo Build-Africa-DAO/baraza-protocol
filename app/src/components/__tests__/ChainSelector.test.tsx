@@ -38,12 +38,12 @@ describe('ChainSelector — closed state', () => {
 });
 
 describe('ChainSelector — open state', () => {
-  it('lists all 10 chains, with Solana as the selected option', () => {
+  it('lists the three visible rails, with Solana as the selected option', () => {
     renderSelector();
     fireEvent.click(screen.getByRole('button', { name: /solana selected/i }));
     const listbox = screen.getByRole('listbox');
     const options = within(listbox).getAllByRole('option');
-    expect(options).toHaveLength(10);
+    expect(options).toHaveLength(3);
     expect(options[0]).toHaveAttribute('aria-selected', 'true');
     // All non-Solana options are unselected
     for (let i = 1; i < options.length; i++) {
@@ -60,23 +60,21 @@ describe('ChainSelector — open state', () => {
     expect(screen.getByRole('button', { name: /stellar selected/i })).toBeInTheDocument();
   });
 
-  it('allows EVM review rail selection', () => {
+  it('keeps roadmap-only EVM review rails out of the picker', () => {
     renderSelector();
     fireEvent.click(screen.getByRole('button', { name: /solana selected/i }));
 
-    for (const name of ['ethereum', 'base', 'arbitrum', 'optimism', 'polygon', 'celo']) {
-      const option = screen.getByRole('option', { name: new RegExp(`^${name}$`, 'i') });
-      expect(option).not.toBeDisabled();
+    for (const name of ['ethereum', 'base', 'arbitrum', 'optimism', 'polygon', 'bnb chain', 'xdc']) {
+      expect(screen.queryByRole('option', { name: new RegExp(name, 'i') })).not.toBeInTheDocument();
     }
 
-    fireEvent.click(screen.getByRole('option', { name: /^base$/i }));
-    expect(screen.getByRole('button', { name: /base selected/i })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /^celo$/i })).not.toBeDisabled();
   });
 
-  it('disables unsupported rails with integration-pending labels', () => {
+  it('does not render unsupported rails', () => {
     renderSelector();
     fireEvent.click(screen.getByRole('button', { name: /solana selected/i }));
-    expect(screen.getByRole('option', { name: /bnb chain.*integration pending/i })).toBeDisabled();
+    expect(screen.queryByRole('option', { name: /bnb chain/i })).not.toBeInTheDocument();
   });
 
   it('closes on Escape', () => {
@@ -103,7 +101,7 @@ describe('ChainSelector — keyboard navigation', () => {
     const trigger = screen.getByRole('button', { name: /solana selected/i });
     fireEvent.click(trigger);
 
-    // Solana (index 0), Stellar (index 1), and selected EVM rails are enabled.
+    // Solana (index 0), Stellar (index 1), and Celo are visible.
     fireEvent.keyDown(window, { key: 'ArrowDown' });
 
     // No crash, listbox still open
@@ -132,8 +130,8 @@ describe('ChainSelector — persistence', () => {
   });
 
   it('reads the initial chain from localStorage if present', () => {
-    window.localStorage.setItem('baraza:chain', 'base');
+    window.localStorage.setItem('baraza:chain', 'stellar');
     renderSelector();
-    expect(screen.getByRole('button', { name: /base selected/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /stellar selected/i })).toBeInTheDocument();
   });
 });

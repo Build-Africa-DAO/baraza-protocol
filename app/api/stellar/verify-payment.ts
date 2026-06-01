@@ -60,6 +60,20 @@ function providerEnvironment(): 'sandbox' | 'production' {
   return stellarNetwork() === 'mainnet' ? 'production' : 'sandbox';
 }
 
+function configuredTreasuryAccount(): string | null {
+  const account = process.env.STELLAR_TREASURY_ACCOUNT?.trim() ?? '';
+  if (!account) {
+    if (stellarNetwork() === 'mainnet') {
+      throw new Error('STELLAR_TREASURY_ACCOUNT is required for Stellar mainnet verification.');
+    }
+    return null;
+  }
+  if (!/^G[A-Z2-7]{55}$/.test(account)) {
+    throw new Error('STELLAR_TREASURY_ACCOUNT must be a valid Stellar G-account.');
+  }
+  return account;
+}
+
 function generateOrderId(): string {
   return `ord_stellar_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -83,14 +97,17 @@ async function fetchHorizonJson<T>(path: string): Promise<T> {
   return (await res.json()) as T;
 }
 
-async function verifyNativePayment(txHash: string, expectedAmount: number): Promise<{ ledger: number; amount: number }> {
+async function verifyNativePayment(
+  txHash: string,
+  expectedAmount: number,
+  treasuryAccount: string | null,
+): Promise<{ ledger: number; amount: number }> {
   const transaction = await fetchHorizonJson<HorizonTransaction>(`/transactions/${txHash}`);
   if (!transaction.successful) throw new Error('Stellar transaction was not successful.');
 
   const operations = await fetchHorizonJson<{ _embedded?: { records?: HorizonOperation[] } }>(
     `/transactions/${txHash}/operations`,
   );
-  const treasuryAccount = process.env.STELLAR_TREASURY_ACCOUNT?.trim();
   const payment = operations._embedded?.records?.find((operation) => {
     const amount = Number(operation.amount);
     const isNativePayment = operation.type === 'payment' && operation.asset_type === 'native';
@@ -176,8 +193,18 @@ export default async function handler(req: Request): Promise<Response> {
   if (!/^[a-f0-9]{64}$/.test(txHash)) return bad('Enter a valid 64-character Stellar transaction hash.');
   if (!Number.isFinite(body.amountXlm) || body.amountXlm <= 0) return bad('amountXlm must be greater than zero.');
 
+  let treasuryAccount: string | null;
   try {
-    const proof = await verifyNativePayment(txHash, body.amountXlm);
+    treasuryAccount = configuredTreasuryAccount();
+  } catch (err) {
+    return json({
+      error: 'stellar_verifier_not_configured',
+      message: err instanceof Error ? err.message : 'Stellar treasury verification is not configured.',
+    }, { status: 503 });
+  }
+
+  try {
+    const proof = await verifyNativePayment(txHash, body.amountXlm, treasuryAccount);
     const orderId = generateOrderId();
     const activationSecret = generateActivationSecret();
     const persistResult = await persistOrder({

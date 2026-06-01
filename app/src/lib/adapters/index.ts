@@ -88,11 +88,11 @@ export async function processMembershipPayment(params: {
   currency: string;
   communityTreasuryAddress: string;
   communityCode: string;
-}): Promise<{ success: boolean; brzaAllocated: number; reference?: string; error?: string }> {
+}): Promise<{ success: boolean; pending?: boolean; brzaAllocated: number; reference?: string; error?: string }> {
   const { brzaAmount } = convertToBrza(params.amount, params.currency);
 
   if (!params.phone) {
-    return { success: true, brzaAllocated: brzaAmount };
+    return { success: false, brzaAllocated: 0, error: 'A phone number is required to verify the M-Pesa payment.' };
   }
 
   const result = await kotani.mpesaToBrza({
@@ -104,6 +104,10 @@ export async function processMembershipPayment(params: {
 
   if (result.status === 'failed') {
     return { success: false, brzaAllocated: 0, error: result.error };
+  }
+
+  if (result.status !== 'completed') {
+    return { success: false, pending: true, brzaAllocated: 0, reference: result.reference };
   }
 
   return { success: true, brzaAllocated: brzaAmount, reference: result.reference };

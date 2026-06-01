@@ -298,6 +298,12 @@ export type Governance = {
     },
     {
       "name": "executeProposal",
+      "docs": [
+        "Execution after timelock. Treasury releases require the configured",
+        "treasury release authority as executor plus four remaining accounts in",
+        "order: treasury program, vault, release receipt, and recipient. Text",
+        "proposals remain permissionless signaling-only no-ops."
+      ],
       "discriminator": [
         186,
         60,
@@ -335,6 +341,15 @@ export type Governance = {
         {
           "name": "proposal",
           "writable": true
+        },
+        {
+          "name": "executor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
@@ -839,6 +854,16 @@ export type Governance = {
       "code": 6018,
       "name": "proposalThresholdNotMet",
       "msg": "Proposal threshold not met"
+    },
+    {
+      "code": 6019,
+      "name": "missingExecutionAccounts",
+      "msg": "Treasury execution requires treasury program, vault, release receipt, and recipient accounts"
+    },
+    {
+      "code": 6020,
+      "name": "invalidExecutionProgram",
+      "msg": "Execution target program does not match the proposal action"
     }
   ],
   "types": [
@@ -1743,6 +1768,12 @@ export const IDL = {
     },
     {
       "name": "execute_proposal",
+      "docs": [
+        "Execution after timelock. Treasury releases require the configured",
+        "treasury release authority as executor plus four remaining accounts in",
+        "order: treasury program, vault, release receipt, and recipient. Text",
+        "proposals remain permissionless signaling-only no-ops."
+      ],
       "discriminator": [
         186,
         60,
@@ -1780,6 +1811,15 @@ export const IDL = {
         {
           "name": "proposal",
           "writable": true
+        },
+        {
+          "name": "executor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
@@ -2284,6 +2324,16 @@ export const IDL = {
       "code": 6018,
       "name": "ProposalThresholdNotMet",
       "msg": "Proposal threshold not met"
+    },
+    {
+      "code": 6019,
+      "name": "MissingExecutionAccounts",
+      "msg": "Treasury execution requires treasury program, vault, release receipt, and recipient accounts"
+    },
+    {
+      "code": 6020,
+      "name": "InvalidExecutionProgram",
+      "msg": "Execution target program does not match the proposal action"
     }
   ],
   "types": [

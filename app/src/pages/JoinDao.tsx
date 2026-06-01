@@ -10,6 +10,7 @@ import {
   Stars,
   Wallet,
 } from "lucide-react";
+import { storePaymentOrderActivationSecret } from "@/lib/payments";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { useWallet } from "@solana/wallet-adapter-react";
 import Layout from "@/components/Layout";
@@ -163,8 +164,8 @@ export default function JoinDao() {
     // Reset state before navigating so re-entering the page (back button)
     // doesn't leave the button permanently disabled.
     setIsSubmitting(false);
-    const secretParam = activationSecret ? `&activationSecret=${encodeURIComponent(activationSecret)}` : "";
-    navigate(`/join/${id}/status?orderId=${encodeURIComponent(orderId)}${secretParam}`);
+    if (activationSecret) storePaymentOrderActivationSecret(orderId, activationSecret);
+    navigate(`/join/${id}/status?orderId=${encodeURIComponent(orderId)}`);
   }
 
   async function handleStellarSubmit() {
@@ -201,8 +202,8 @@ export default function JoinDao() {
           : "Verified through Horizon. Supabase is offline, so this will continue in local demo mode.",
       });
 
-      const secretParam = data.activationSecret ? `&activationSecret=${encodeURIComponent(data.activationSecret)}` : "";
-      navigate(`/join/${id}/status?orderId=${encodeURIComponent(data.orderId)}${secretParam}&rail=stellar`);
+      if (data.activationSecret) storePaymentOrderActivationSecret(data.orderId, data.activationSecret);
+      navigate(`/join/${id}/status?orderId=${encodeURIComponent(data.orderId)}&rail=stellar`);
     } catch (err) {
       toast({
         title: "Stellar verification failed",

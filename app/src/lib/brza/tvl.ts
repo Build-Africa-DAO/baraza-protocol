@@ -1,5 +1,5 @@
 import { getBrzaBalance } from '@/lib/adapters/stellar';
-import { BRZA_PHASES, BRZA_TVL_TARGETS, CURRENT_PHASE, formatLocal, type BrzaPhase } from '@/lib/brza/constants';
+import { BRZA_TVL_TARGETS, CURRENT_PHASE, formatLocal, getBrzaPriceUsd, type BrzaPhase } from '@/lib/brza/constants';
 
 export type TvlPhase = 'building' | 'stellar_pool_ready' | 'solana_pool_ready' | 'ido_ready';
 
@@ -35,7 +35,7 @@ export function getNextTarget(usd: number) {
     label: next.label,
     usd: next.usd,
     remaining: Math.max(0, next.usd - usd),
-    pct: Math.min(100, Math.round(((usd - prevUsd) / range) * 100)),
+    pct: Math.max(0, Math.min(100, Math.round(((usd - prevUsd) / range) * 100))),
   };
 }
 
@@ -49,10 +49,11 @@ export async function fetchPlatformTvl(
   const results = await Promise.allSettled(treasuryAddresses.map(a => getBrzaBalance(a)));
   for (const r of results) {
     if (r.status === 'fulfilled' && !r.value.error) {
-      totalBrza += parseFloat(r.value.balance);
+      const balance = parseFloat(r.value.balance);
+      if (Number.isFinite(balance)) totalBrza += balance;
     }
   }
-  const priceUsd = BRZA_PHASES[brzaPhase].priceUsd || BRZA_PHASES.phase0.priceUsd;
+  const priceUsd = getBrzaPriceUsd(brzaPhase);
   const totalUsd = totalBrza * priceUsd;
   return {
     totalBrza,

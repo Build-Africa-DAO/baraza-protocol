@@ -121,6 +121,13 @@ export function treasuryVaultPda(communityKey: PublicKey): [PublicKey, number] {
   );
 }
 
+export function treasuryReleaseReceiptPda(proposalKey: PublicKey): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [enc.encode('release'), proposalKey.toBytes()],
+    TREASURY_VAULT_PROGRAM_ID,
+  );
+}
+
 export function toSlug(name: string): string {
   return name
     .toLowerCase()

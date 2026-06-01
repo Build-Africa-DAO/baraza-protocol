@@ -1,5 +1,5 @@
 import { getBrzaBalance } from '@/lib/adapters/stellar';
-import { BRZA_PHASES, CURRENT_PHASE, formatBrza, formatLocal, type BrzaPhase } from '@/lib/brza/constants';
+import { CURRENT_PHASE, formatBrza, formatLocal, getBrzaPriceUsd, type BrzaPhase } from '@/lib/brza/constants';
 
 export interface CommunityTreasuryRecord {
   communityId: string;
@@ -26,7 +26,10 @@ export async function fetchTreasuryBalance(
   const result = await getBrzaBalance(communityTreasuryAddress);
   if (result.error) return { brza: '0 BRZA', local: `${localCurrency} 0`, raw: 0, error: result.error };
   const raw = parseFloat(result.balance);
-  const priceUsd = BRZA_PHASES[phase].priceUsd || BRZA_PHASES.phase0.priceUsd;
+  if (!Number.isFinite(raw)) {
+    return { brza: '0 BRZA', local: `${localCurrency} 0`, raw: 0, error: 'Invalid BRZA balance returned by Stellar' };
+  }
+  const priceUsd = getBrzaPriceUsd(phase);
   return {
     brza: formatBrza(raw),
     local: formatLocal(raw * priceUsd, localCurrency),

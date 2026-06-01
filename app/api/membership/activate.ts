@@ -24,6 +24,7 @@ interface ActivateRequest {
 interface PaymentOrderRow {
   status: string;
   community_id: string;
+  provider_environment: string;
   activation_secret_hash: string | null;
   wallet_address: string | null;
 }
@@ -50,7 +51,7 @@ const TERMINAL_POSITIVE_STATUSES = new Set([
 
 async function fetchOrder(url: string, serviceKey: string, orderId: string): Promise<PaymentOrderRow | null> {
   const res = await fetch(
-    `${url}/rest/v1/payment_orders?order_id=eq.${encodeURIComponent(orderId)}&select=status,community_id,activation_secret_hash,wallet_address`,
+    `${url}/rest/v1/payment_orders?order_id=eq.${encodeURIComponent(orderId)}&select=status,community_id,provider_environment,activation_secret_hash,wallet_address`,
     {
       headers: {
         apikey: serviceKey,
@@ -73,7 +74,7 @@ async function bindOrderWallet(
   serviceKey: string,
   orderId: string,
   walletAddress: string,
-): Promise<boolean> {
+): Promise<'bound' | 'not_bound' | 'error'> {
   const res = await fetch(
     `${url}/rest/v1/payment_orders?order_id=eq.${encodeURIComponent(orderId)}&wallet_address=is.null`,
     {
@@ -87,7 +88,9 @@ async function bindOrderWallet(
       body: JSON.stringify({ wallet_address: walletAddress }),
     },
   );
-  return res.ok;
+  if (!res.ok) return 'error';
+  const rows = (await res.json().catch(() => [])) as Array<{ wallet_address?: string | null }>;
+  return rows.some((row) => row.wallet_address === walletAddress) ? 'bound' : 'not_bound';
 }
 
 async function findExistingMembership(
@@ -200,6 +203,12 @@ export default async function handler(req: Request): Promise<Response> {
       403,
     );
   }
+  if (
+    (process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production') &&
+    order.provider_environment !== 'production'
+  ) {
+    return bad('Sandbox payment orders cannot activate production memberships.', 403);
+  }
   if (!TERMINAL_POSITIVE_STATUSES.has(order.status)) {
     return bad(
       `Order ${body.orderId} is in status ${order.status}; activation requires INDEXER_CONFIRMED or RECONCILED.`,
@@ -216,7 +225,19 @@ export default async function handler(req: Request): Promise<Response> {
     return bad('Order is already bound to a different wallet.', 403);
   }
   if (!order.wallet_address) {
-    await bindOrderWallet(url, serviceKey, body.orderId, body.walletAddress);
+    const bindResult = await bindOrderWallet(url, serviceKey, body.orderId, body.walletAddress);
+    if (bindResult === 'error') {
+      return json({ error: 'upstream_error', message: 'Could not bind the payment order wallet.' }, { status: 502 });
+    }
+    if (bindResult === 'not_bound') {
+      const reboundOrder = await fetchOrder(url, serviceKey, body.orderId);
+      if (!reboundOrder) {
+        return bad(`Order ${body.orderId} not found`, 404);
+      }
+      if (reboundOrder.wallet_address !== body.walletAddress) {
+        return bad('Order is already bound to a different wallet.', 403);
+      }
+    }
   }
 
   // Idempotent: return existing membership if one already exists.
