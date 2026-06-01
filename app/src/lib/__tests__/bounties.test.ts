@@ -13,6 +13,30 @@ describe('bounties', () => {
     expect(getBountiesForCommunity('1').length).toBeGreaterThan(0);
   });
 
+  it('migrates legacy Solana wording in stored bounty overrides', () => {
+    window.localStorage.setItem('baraza.bounties.v1', JSON.stringify([{
+      id: 'b-tb-onchain',
+      communityId: '3',
+      title: 'Solana program deployment guide',
+      category: 'Dev',
+      rewardKes: 35000,
+      deadline: '2026-06-20',
+      submissions: 2,
+      status: 'in_review',
+      postedBy: 'TechBridge Nairobi',
+      summary: 'Write a deployment guide.',
+      skills: ['Solana', 'Anchor'],
+      access: 'community-restricted',
+      rewardToken: 'SOL',
+    }]));
+
+    const bounty = listBounties().find((item) => item.id === 'b-tb-onchain');
+
+    expect(bounty?.title).toBe('Baraza Token program deployment guide');
+    expect(bounty?.skills).toContain('Baraza Token');
+    expect(window.localStorage.getItem('baraza.bounties.v1')).not.toContain('"Solana"');
+  });
+
   it('creates a local bounty record', () => {
     const bounty = createBountyRecord({
       communityId: '1',

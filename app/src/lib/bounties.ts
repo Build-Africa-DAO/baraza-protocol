@@ -306,12 +306,27 @@ const SEED_BOUNTIES: Bounty[] = [
   },
 ];
 
+function normalisePublicBountyWording(bounty: Bounty): Bounty {
+  return {
+    ...bounty,
+    title: bounty.title === 'Solana program deployment guide'
+      ? 'Baraza Token program deployment guide'
+      : bounty.title,
+    skills: bounty.skills.map((skill) => skill === 'Solana' ? 'Baraza Token' : skill),
+  };
+}
+
 function readLocalBounties(): Bounty[] {
   if (typeof window === 'undefined') return [];
   try {
     const raw = window.localStorage.getItem(LOCAL_BOUNTIES_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    const normalised = parsed.map((bounty) => normalisePublicBountyWording(bounty));
+    if (JSON.stringify(normalised) !== JSON.stringify(parsed)) {
+      writeLocalBounties(normalised);
+    }
+    return normalised;
   } catch {
     return [];
   }
@@ -343,7 +358,7 @@ function splitSkills(raw: string[]): string[] {
 }
 
 function bountyFromRow(row: BountyRow, submissions = 0): Bounty {
-  return {
+  return normalisePublicBountyWording({
     id: row.id,
     communityId: row.community_id,
     title: row.title,
@@ -358,7 +373,7 @@ function bountyFromRow(row: BountyRow, submissions = 0): Bounty {
     access: row.access === 'public' ? 'public' : 'community-restricted',
     rewardToken: parseRewardToken(row.reward_token),
     payoutTxHash: row.payout_tx_hash ?? undefined,
-  };
+  });
 }
 
 function submissionFromRow(row: BountySubmissionRow): BountySubmission {
