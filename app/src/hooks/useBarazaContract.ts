@@ -222,7 +222,7 @@ export function useBarazaContract(): UseBarazaContractResult {
   const blockUnwiredWrite = useCallback(
     async (txId: string, action: string): Promise<boolean> => {
       if (!connected || !publicKey) {
-        toast({ title: 'Connect your Solana account first', variant: 'destructive' });
+        toast({ title: 'Connect your Baraza account first', variant: 'destructive' });
         return false;
       }
       if (pendingTxRef.current.has(txId)) {

@@ -43,9 +43,13 @@ function isAuthorized(req: Request): boolean {
 }
 
 function paymentOrderFilter(from: string): string {
+  const env =
+    process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production'
+      ? 'production'
+      : 'sandbox';
   return new URLSearchParams({
     status: `eq.${from}`,
-    provider_environment: 'eq.sandbox',
+    provider_environment: `eq.${env}`,
   }).toString();
 }
 

@@ -32,8 +32,22 @@ describe('payment order demo promoter API', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('restricts every lifecycle promotion to sandbox orders', async () => {
+  it('promotes production orders when VERCEL_ENV=production', async () => {
     process.env.VERCEL_ENV = 'production';
+    const fetchMock = vi.fn().mockResolvedValue(Response.json([]));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const response = await handler(request());
+
+    expect(response.status).toBe(200);
+    expect(fetchMock).toHaveBeenCalledTimes(5);
+    for (const [url] of fetchMock.mock.calls) {
+      expect(url).toContain('provider_environment=eq.production');
+      expect(url).not.toContain('provider_environment=eq.sandbox');
+    }
+  });
+
+  it('promotes only sandbox orders in non-production environments', async () => {
     const fetchMock = vi.fn().mockResolvedValue(Response.json([]));
     vi.stubGlobal('fetch', fetchMock);
 

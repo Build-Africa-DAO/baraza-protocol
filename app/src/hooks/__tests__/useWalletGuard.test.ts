@@ -76,7 +76,7 @@ describe('useWalletGuard - requireWallet', () => {
     });
     expect(outcome).toBeUndefined();
     expect(mockToast).toHaveBeenCalledWith(
-      expect.objectContaining({ title: 'Connecting Solana account...' }),
+      expect.objectContaining({ title: 'Connecting Baraza account...' }),
     );
   });
 

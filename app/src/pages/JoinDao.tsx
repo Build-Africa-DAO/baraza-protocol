@@ -173,14 +173,31 @@ export default function JoinDao() {
     setIsVerifyingStellar(true);
 
     try {
+      // Get a server-signed intent that cryptographically binds communityId to this payment.
+      // Falls back gracefully when the intent service is not configured (testnet dev).
+      let intentToken: string | null = null;
+      try {
+        const intentRes = await fetch("/api/stellar/create-payment-intent", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ communityId: id, amountXlm: Number(stellarAmountXlm) }),
+        });
+        if (intentRes.ok) {
+          const intentData = (await intentRes.json()) as { intentToken?: string };
+          intentToken = intentData.intentToken ?? null;
+        }
+      } catch {
+        // Intent service unavailable — verify-payment will use legacy path on testnet
+      }
+
       const res = await fetch("/api/stellar/verify-payment", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          communityId: id,
-          txHash: stellarTxHash.trim().toLowerCase(),
-          amountXlm: Number(stellarAmountXlm),
-        }),
+        body: JSON.stringify(
+          intentToken
+            ? { intentToken, txHash: stellarTxHash.trim().toLowerCase() }
+            : { communityId: id, txHash: stellarTxHash.trim().toLowerCase(), amountXlm: Number(stellarAmountXlm) },
+        ),
       });
       const data = (await res.json()) as {
         orderId?: string;

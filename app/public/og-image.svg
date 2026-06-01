@@ -60,6 +60,6 @@
   <g transform="translate(900 88)" opacity="0.85">
     <rect x="0" y="0" width="228" height="60" rx="30" fill="#F4D06F" fill-opacity="0.10" stroke="#F4D06F" stroke-opacity="0.35"/>
     <circle cx="32" cy="30" r="7" fill="#F4D06F"/>
-    <text x="54" y="38" font-family="'Hanken Grotesk', 'Inter', sans-serif" font-size="20" font-weight="700" fill="#F4D06F" letter-spacing="0.4">M-Pesa - Solana</text>
+    <text x="54" y="38" font-family="'Hanken Grotesk', 'Inter', sans-serif" font-size="20" font-weight="700" fill="#F4D06F" letter-spacing="0.4">M-Pesa - BRZA</text>
   </g>
 </svg>

@@ -37,7 +37,7 @@ export function getBountyCreateAccess(
 }
 
 export function bountyCreateAccessMessage(reason: BountyCreateAccessReason): string {
-  if (reason === 'connect-account') return 'Connect your Solana account to post a bounty.';
+  if (reason === 'connect-account') return 'Connect your Baraza account to post a bounty.';
   if (reason === 'select-community') return 'Choose a community before posting a bounty.';
   if (reason === 'not-member') return 'Only active members of this community can post bounties.';
   return 'You can post bounties for this community.';

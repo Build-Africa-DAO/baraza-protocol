@@ -1,9 +1,13 @@
 export const config = { runtime: 'edge' };
 
 interface VerifyStellarRequest {
-  communityId: string;
+  // Preferred: server-signed token that binds communityId+amountXlm at intent creation time.
+  // Required on mainnet. On testnet, falls back to legacy fields when absent.
+  intentToken?: string;
   txHash: string;
-  amountXlm: number;
+  // Legacy fields — testnet/sandbox only when intentToken is not provided
+  communityId?: string;
+  amountXlm?: number;
 }
 
 interface HorizonTransaction {
@@ -42,6 +46,12 @@ function json(body: unknown, init?: ResponseInit): Response {
 
 function bad(message: string, status = 400): Response {
   return json({ error: 'invalid_request', message }, { status });
+}
+
+function base64url(bytes: Uint8Array): string {
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
 function stellarNetwork(): 'testnet' | 'mainnet' | 'custom' {
@@ -87,6 +97,55 @@ function generateActivationSecret(): string {
 async function hashActivationSecret(secret: string): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(secret));
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function verifyIntentToken(
+  token: string,
+): Promise<{ communityId: string; amountXlm: number } | null> {
+  const secret = process.env.STELLAR_INTENT_SECRET;
+  if (!secret) return null;
+
+  const dot = token.lastIndexOf('.');
+  if (dot < 0) return null;
+  const encodedPayload = token.slice(0, dot);
+  const sig = token.slice(dot + 1);
+
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['verify'],
+  );
+
+  const sigPad = sig.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - sig.length % 4) % 4);
+  let sigBytes: Uint8Array;
+  try {
+    const bin = atob(sigPad);
+    sigBytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+  } catch {
+    return null;
+  }
+  if (base64url(sigBytes) !== sig) return null;
+
+  const signature = sigBytes.buffer.slice(sigBytes.byteOffset, sigBytes.byteOffset + sigBytes.byteLength) as ArrayBuffer;
+  const valid = await crypto.subtle.verify('HMAC', key, signature, new TextEncoder().encode(encodedPayload));
+  if (!valid) return null;
+
+  const payPad =
+    encodedPayload.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - encodedPayload.length % 4) % 4);
+  try {
+    const parsed = JSON.parse(atob(payPad)) as {
+      communityId: string;
+      amountXlm: number;
+      expiresAt: string;
+    };
+    if (new Date(parsed.expiresAt) < new Date()) return null;
+    if (!parsed.communityId || !Number.isFinite(parsed.amountXlm) || parsed.amountXlm <= 0) return null;
+    return { communityId: parsed.communityId, amountXlm: parsed.amountXlm };
+  } catch {
+    return null;
+  }
 }
 
 async function fetchHorizonJson<T>(path: string): Promise<T> {
@@ -189,9 +248,25 @@ export default async function handler(req: Request): Promise<Response> {
   }
 
   const txHash = body.txHash?.trim().toLowerCase();
-  if (!body.communityId) return bad('communityId is required');
   if (!/^[a-f0-9]{64}$/.test(txHash)) return bad('Enter a valid 64-character Stellar transaction hash.');
-  if (!Number.isFinite(body.amountXlm) || body.amountXlm <= 0) return bad('amountXlm must be greater than zero.');
+
+  // Resolve communityId and amountXlm from the signed intent (preferred) or legacy fields (testnet only).
+  let communityId: string;
+  let amountXlm: number;
+
+  if (body.intentToken) {
+    const claim = await verifyIntentToken(body.intentToken);
+    if (!claim) return bad('Payment intent token is invalid or expired.');
+    communityId = claim.communityId;
+    amountXlm = claim.amountXlm;
+  } else if (stellarNetwork() !== 'mainnet') {
+    if (!body.communityId) return bad('communityId is required');
+    if (!Number.isFinite(body.amountXlm) || (body.amountXlm ?? 0) <= 0) return bad('amountXlm must be greater than zero.');
+    communityId = body.communityId;
+    amountXlm = body.amountXlm!;
+  } else {
+    return bad('intentToken is required for production Stellar payments.');
+  }
 
   let treasuryAccount: string | null;
   try {
@@ -204,13 +279,13 @@ export default async function handler(req: Request): Promise<Response> {
   }
 
   try {
-    const proof = await verifyNativePayment(txHash, body.amountXlm, treasuryAccount);
+    const proof = await verifyNativePayment(txHash, amountXlm, treasuryAccount);
     const orderId = generateOrderId();
     const activationSecret = generateActivationSecret();
     const persistResult = await persistOrder({
       orderId,
       activationSecret,
-      communityId: body.communityId,
+      communityId,
       txHash,
       amountXlm: proof.amount,
     });

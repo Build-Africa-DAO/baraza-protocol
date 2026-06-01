@@ -680,9 +680,9 @@ const CommunityDashboard: React.FC = () => {
                           <p className="mt-1 font-mono text-xs break-all">{publicKey.toBase58()}</p>
                         </div>
                         <div className="flex items-center justify-between border-b pb-3">
-                          <span>SOL balance</span>
+                          <span>Network fee balance</span>
                           <span className="font-display text-lg font-bold tabular-nums">
-                            {walletSol === null ? '-' : `${walletSol.toFixed(4)} SOL`}
+                            {walletSol === null ? '-' : `${walletSol.toFixed(4)} native units`}
                           </span>
                         </div>
                         <div className="flex items-center justify-between border-b pb-3">

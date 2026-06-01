@@ -347,7 +347,7 @@ const WalletStatus: React.FC = () => {
       {wrongChain && (
         <div className="absolute -top-8 right-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1 rounded-full bg-destructive/15 border border-destructive/30 text-destructive text-[11px] font-medium">
           <AlertTriangle className="w-3 h-3" />
-          Wrong Solana setup - switch to {NETWORK_LABEL}
+          Wrong Baraza network setup - switch to {NETWORK_LABEL}
         </div>
       )}
 
