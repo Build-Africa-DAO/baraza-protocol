@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link, useSearchParams } from 'react-router-dom';
+import { useLocation, useParams, Link, useSearchParams } from 'react-router-dom';
 import {
   Users, TrendingUp, Vote, History, PlusCircle, CreditCard,
   ArrowLeft, Calendar, ShieldCheck, ReceiptText,
@@ -67,9 +67,10 @@ const TABS: TabDef[] = [
 
 const DASHBOARD_TAB_KEYS = new Set<DashboardTab>(TABS.map((tab) => tab.key));
 
-function getTabFromSearch(searchParams: URLSearchParams): DashboardTab {
+function getDashboardTab(searchParams: URLSearchParams, pathname: string): DashboardTab {
   const tab = searchParams.get('tab') as DashboardTab | null;
-  return tab && DASHBOARD_TAB_KEYS.has(tab) ? tab : 'overview';
+  if (tab && DASHBOARD_TAB_KEYS.has(tab)) return tab;
+  return /\/dao\/[^/]+\/(?:proposals|vote)\/?$/.test(pathname) ? 'governance' : 'overview';
 }
 
 // ─── Sidebar nav ─────────────────────────────────────────────────────────────
@@ -162,11 +163,12 @@ function SidebarNav({
 
 const CommunityDashboard: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { publicKey } = useWallet();
   const { connection } = useConnection();
   const { chain } = useChain();
-  const [activeTab, setActiveTab] = useState<DashboardTab>(() => getTabFromSearch(searchParams));
+  const [activeTab, setActiveTab] = useState<DashboardTab>(() => getDashboardTab(searchParams, location.pathname));
   const [isMember, setIsMember] = useState(false);
   const [walletSol, setWalletSol] = useState<number | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -196,8 +198,8 @@ const CommunityDashboard: React.FC = () => {
   }, [community, publicKey]);
 
   useEffect(() => {
-    setActiveTab(getTabFromSearch(searchParams));
-  }, [searchParams]);
+    setActiveTab(getDashboardTab(searchParams, location.pathname));
+  }, [location.pathname, searchParams]);
 
   // Keep dashboard sections linkable while closing the mobile menu after selection.
   const handleTabChange = (tab: DashboardTab) => {
