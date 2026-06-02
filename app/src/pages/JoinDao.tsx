@@ -21,6 +21,7 @@ import { normaliseKenyanPhone } from "@/lib/phone";
 import CommunityBanner from "@/components/CommunityBanner";
 import { useSeo } from "@/lib/seo";
 import { useChain } from "@/hooks/useChain";
+import { PRODUCT_ENVIRONMENT } from "@/lib/network";
 
 const joinSteps = [
   { label: "Invite opened", state: "current" },
@@ -180,7 +181,11 @@ export default function JoinDao() {
         const intentRes = await fetch("/api/stellar/create-payment-intent", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ communityId: id, amountXlm: Number(stellarAmountXlm) }),
+          body: JSON.stringify({
+            communityId: id,
+            amountXlm: Number(stellarAmountXlm),
+            environment: PRODUCT_ENVIRONMENT,
+          }),
         });
         if (intentRes.ok) {
           const intentData = (await intentRes.json()) as { intentToken?: string };
@@ -195,8 +200,13 @@ export default function JoinDao() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify(
           intentToken
-            ? { intentToken, txHash: stellarTxHash.trim().toLowerCase() }
-            : { communityId: id, txHash: stellarTxHash.trim().toLowerCase(), amountXlm: Number(stellarAmountXlm) },
+            ? { intentToken, txHash: stellarTxHash.trim().toLowerCase(), environment: PRODUCT_ENVIRONMENT }
+            : {
+                communityId: id,
+                txHash: stellarTxHash.trim().toLowerCase(),
+                amountXlm: Number(stellarAmountXlm),
+                environment: PRODUCT_ENVIRONMENT,
+              },
         ),
       });
       const data = (await res.json()) as {

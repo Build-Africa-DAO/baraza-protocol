@@ -4,11 +4,11 @@ import handler from '../../../api/stellar/verify-payment';
 const TX_HASH = 'a'.repeat(64);
 const INTENT_SECRET = 'test-intent-secret-32-bytes-long!';
 
-function legacyRequest(): Request {
+function legacyRequest(environment?: 'test' | 'live'): Request {
   return new Request('https://baraza.example/api/stellar/verify-payment', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ communityId: 'community-test', txHash: TX_HASH, amountXlm: 1 }),
+    body: JSON.stringify({ communityId: 'community-test', txHash: TX_HASH, amountXlm: 1, environment }),
   });
 }
 
@@ -110,6 +110,22 @@ describe('Stellar payment verification API', () => {
       body: JSON.stringify({ communityId: 'community-test', txHash: TX_HASH, amountXlm: 1 }),
     });
     const response = await handler(req);
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: 'invalid_request',
+      message: 'intentToken is required for production Stellar payments.',
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('treats live-mode requests as mainnet even when server env defaults to testnet', async () => {
+    process.env.STELLAR_NETWORK = 'testnet';
+    process.env.STELLAR_TREASURY_ACCOUNT = 'G' + 'A'.repeat(55);
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const response = await handler(legacyRequest('live'));
 
     expect(response.status).toBe(400);
     await expect(response.json()).resolves.toMatchObject({

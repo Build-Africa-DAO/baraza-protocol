@@ -5,6 +5,7 @@ interface VerifyStellarRequest {
   // Required on mainnet. On testnet, falls back to legacy fields when absent.
   intentToken?: string;
   txHash: string;
+  environment?: 'test' | 'live';
   // Legacy fields — testnet/sandbox only when intentToken is not provided
   communityId?: string;
   amountXlm?: number;
@@ -54,26 +55,27 @@ function base64url(bytes: Uint8Array): string {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
-function stellarNetwork(): 'testnet' | 'mainnet' | 'custom' {
+function stellarNetwork(requestedEnvironment?: 'test' | 'live'): 'testnet' | 'mainnet' | 'custom' {
   const raw = process.env.STELLAR_NETWORK ?? process.env.VITE_STELLAR_NETWORK;
+  if (requestedEnvironment === 'live') return 'mainnet';
   if (raw === 'mainnet' || raw === 'custom') return raw;
   return 'testnet';
 }
 
-function horizonUrl(): string {
+function horizonUrl(requestedEnvironment?: 'test' | 'live'): string {
   const configured = process.env.STELLAR_HORIZON_URL ?? process.env.VITE_STELLAR_HORIZON_URL;
   if (configured?.trim()) return configured.replace(/\/$/, '');
-  return stellarNetwork() === 'mainnet' ? DEFAULT_MAINNET_HORIZON : DEFAULT_TESTNET_HORIZON;
+  return stellarNetwork(requestedEnvironment) === 'mainnet' ? DEFAULT_MAINNET_HORIZON : DEFAULT_TESTNET_HORIZON;
 }
 
-function providerEnvironment(): 'sandbox' | 'production' {
-  return stellarNetwork() === 'mainnet' ? 'production' : 'sandbox';
+function providerEnvironment(requestedEnvironment?: 'test' | 'live'): 'sandbox' | 'production' {
+  return stellarNetwork(requestedEnvironment) === 'mainnet' ? 'production' : 'sandbox';
 }
 
-function configuredTreasuryAccount(): string | null {
+function configuredTreasuryAccount(requestedEnvironment?: 'test' | 'live'): string | null {
   const account = process.env.STELLAR_TREASURY_ACCOUNT?.trim() ?? '';
   if (!account) {
-    if (stellarNetwork() === 'mainnet') {
+    if (stellarNetwork(requestedEnvironment) === 'mainnet') {
       throw new Error('STELLAR_TREASURY_ACCOUNT is required for Stellar mainnet verification.');
     }
     return null;
@@ -148,8 +150,8 @@ async function verifyIntentToken(
   }
 }
 
-async function fetchHorizonJson<T>(path: string): Promise<T> {
-  const res = await fetch(`${horizonUrl()}${path}`, {
+async function fetchHorizonJson<T>(path: string, requestedEnvironment?: 'test' | 'live'): Promise<T> {
+  const res = await fetch(`${horizonUrl(requestedEnvironment)}${path}`, {
     headers: { accept: 'application/json' },
   });
   if (!res.ok) throw new Error(`Stellar Horizon returned ${res.status}`);
@@ -160,12 +162,14 @@ async function verifyNativePayment(
   txHash: string,
   expectedAmount: number,
   treasuryAccount: string | null,
+  requestedEnvironment?: 'test' | 'live',
 ): Promise<{ ledger: number; amount: number }> {
-  const transaction = await fetchHorizonJson<HorizonTransaction>(`/transactions/${txHash}`);
+  const transaction = await fetchHorizonJson<HorizonTransaction>(`/transactions/${txHash}`, requestedEnvironment);
   if (!transaction.successful) throw new Error('Stellar transaction was not successful.');
 
   const operations = await fetchHorizonJson<{ _embedded?: { records?: HorizonOperation[] } }>(
     `/transactions/${txHash}/operations`,
+    requestedEnvironment,
   );
   const payment = operations._embedded?.records?.find((operation) => {
     const amount = Number(operation.amount);
@@ -189,6 +193,7 @@ async function persistOrder(input: {
   communityId: string;
   txHash: string;
   amountXlm: number;
+  environment?: 'test' | 'live';
 }): Promise<PersistOrderResult> {
   const url = process.env.SUPABASE_URL?.replace(/\/$/, '');
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -206,7 +211,7 @@ async function persistOrder(input: {
       order_id: input.orderId,
       community_id: input.communityId,
       provider: 'stellar',
-      provider_environment: providerEnvironment(),
+      provider_environment: providerEnvironment(input.environment),
       provider_reference: input.txHash,
       activation_secret_hash: await hashActivationSecret(input.activationSecret),
       amount_expected: input.amountXlm,
@@ -249,6 +254,7 @@ export default async function handler(req: Request): Promise<Response> {
 
   const txHash = body.txHash?.trim().toLowerCase();
   if (!/^[a-f0-9]{64}$/.test(txHash)) return bad('Enter a valid 64-character Stellar transaction hash.');
+  const requestedEnvironment = body.environment === 'live' ? 'live' : 'test';
 
   // Resolve communityId and amountXlm from the signed intent (preferred) or legacy fields (testnet only).
   let communityId: string;
@@ -259,7 +265,7 @@ export default async function handler(req: Request): Promise<Response> {
     if (!claim) return bad('Payment intent token is invalid or expired.');
     communityId = claim.communityId;
     amountXlm = claim.amountXlm;
-  } else if (stellarNetwork() !== 'mainnet') {
+  } else if (stellarNetwork(requestedEnvironment) !== 'mainnet') {
     if (!body.communityId) return bad('communityId is required');
     if (!Number.isFinite(body.amountXlm) || (body.amountXlm ?? 0) <= 0) return bad('amountXlm must be greater than zero.');
     communityId = body.communityId;
@@ -270,7 +276,7 @@ export default async function handler(req: Request): Promise<Response> {
 
   let treasuryAccount: string | null;
   try {
-    treasuryAccount = configuredTreasuryAccount();
+    treasuryAccount = configuredTreasuryAccount(requestedEnvironment);
   } catch (err) {
     return json({
       error: 'stellar_verifier_not_configured',
@@ -279,7 +285,7 @@ export default async function handler(req: Request): Promise<Response> {
   }
 
   try {
-    const proof = await verifyNativePayment(txHash, amountXlm, treasuryAccount);
+    const proof = await verifyNativePayment(txHash, amountXlm, treasuryAccount, requestedEnvironment);
     const orderId = generateOrderId();
     const activationSecret = generateActivationSecret();
     const persistResult = await persistOrder({
@@ -288,6 +294,7 @@ export default async function handler(req: Request): Promise<Response> {
       communityId,
       txHash,
       amountXlm: proof.amount,
+      environment: requestedEnvironment,
     });
 
     if (persistResult.status === 'duplicate') {
@@ -315,7 +322,7 @@ export default async function handler(req: Request): Promise<Response> {
       ledger: proof.ledger,
       amountXlm: proof.amount,
       persisted,
-      horizonUrl: horizonUrl(),
+      horizonUrl: horizonUrl(requestedEnvironment),
     });
   } catch (err) {
     return json({
