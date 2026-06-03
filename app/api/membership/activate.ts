@@ -69,6 +69,27 @@ async function hashActivationSecret(secret: string): Promise<string> {
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+async function walletHash(wallet: string): Promise<string> {
+  const pepper = process.env.PAYMENT_PHONE_HASH_PEPPER?.trim();
+  if (!pepper) return `wallet:${wallet}`;
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(pepper),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const digest = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(wallet));
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
 async function bindOrderWallet(
   url: string,
   serviceKey: string,
@@ -218,7 +239,7 @@ export default async function handler(req: Request): Promise<Response> {
   if (!order.activation_secret_hash) {
     return bad(`Order ${body.orderId} cannot be activated because it was created without an activation secret.`, 409);
   }
-  if (await hashActivationSecret(body.activationSecret) !== order.activation_secret_hash) {
+  if (!timingSafeEqual(await hashActivationSecret(body.activationSecret), order.activation_secret_hash)) {
     return bad('Activation secret does not match this payment order.', 403);
   }
   if (order.wallet_address && order.wallet_address !== body.walletAddress) {
@@ -252,9 +273,7 @@ export default async function handler(req: Request): Promise<Response> {
     });
   }
 
-  // No user identity yet — use a hash of the wallet as the user_id_hash for now.
-  // Production replaces this with the HMAC-peppered phone hash from auth.
-  const userIdHash = `wallet:${body.walletAddress}`;
+  const userIdHash = await walletHash(body.walletAddress);
 
   const memberId = generateMemberId();
   const result = await insertMembership(url, serviceKey, {
