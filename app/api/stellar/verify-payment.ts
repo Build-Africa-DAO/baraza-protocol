@@ -1,4 +1,4 @@
-export const config = { runtime: 'edge' };
+export const config = { runtime: 'nodejs' };
 
 interface VerifyStellarRequest {
   // Preferred: server-signed token that binds communityId+amountXlm at intent creation time.
@@ -137,7 +137,10 @@ async function verifyIntentToken(
   const payPad =
     encodedPayload.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - encodedPayload.length % 4) % 4);
   try {
-    const parsed = JSON.parse(atob(payPad)) as {
+    // atob returns a Latin-1 byte string; pass through TextDecoder to recover
+    // the original UTF-8 text (handles non-ASCII communityId values correctly).
+    const payBytes = Uint8Array.from(atob(payPad), (c) => c.charCodeAt(0));
+    const parsed = JSON.parse(new TextDecoder().decode(payBytes)) as {
       communityId: string;
       amountXlm: number;
       expiresAt: string;
@@ -163,7 +166,7 @@ async function verifyNativePayment(
   expectedAmount: number,
   treasuryAccount: string | null,
   requestedEnvironment?: 'test' | 'live',
-): Promise<{ ledger: number; amount: number }> {
+): Promise<{ ledger: number; amount: number; payer: string | null }> {
   const transaction = await fetchHorizonJson<HorizonTransaction>(`/transactions/${txHash}`, requestedEnvironment);
   if (!transaction.successful) throw new Error('Stellar transaction was not successful.');
 
@@ -184,7 +187,42 @@ async function verifyNativePayment(
       : 'Transaction does not contain enough native XLM payment value.');
   }
 
-  return { ledger: transaction.ledger, amount: Number(payment.amount) };
+  return { ledger: transaction.ledger, amount: Number(payment.amount), payer: payment.from ?? null };
+}
+
+async function attestOnChain(params: {
+  txHash: string;
+  communityId: string;
+  amountXlm: number;
+  payer: string | null;
+  ledger: number;
+}): Promise<{ attested: boolean; error?: string }> {
+  const contractId = process.env.STELLAR_CONTRACT_PAYMENT_ATTESTATION?.trim();
+  const signerSecret = process.env.STELLAR_SIGNER_SECRET?.trim();
+  if (!contractId || !signerSecret) return { attested: false };
+
+  try {
+    // Dynamic import keeps the Stellar SDK out of the edge bundle path.
+    const { PaymentAttestationClient } = await import('@/lib/stellar/contracts/payment_attestation');
+    const network = process.env.STELLAR_NETWORK === 'mainnet' ? 'mainnet' : 'testnet';
+    const client = new PaymentAttestationClient({ contractId, signerSecret, env: network });
+
+    const STROOP = 10_000_000n;
+    const amountStroops = BigInt(Math.round(params.amountXlm * Number(STROOP)));
+    const payerAddress = params.payer ?? process.env.STELLAR_TREASURY_ACCOUNT ?? '';
+
+    await client.attest({
+      txHashHex: params.txHash,
+      communityId: params.communityId,
+      amountStroops,
+      payer: payerAddress,
+      ledger: params.ledger,
+    });
+
+    return { attested: true };
+  } catch (err) {
+    return { attested: false, error: err instanceof Error ? err.message : String(err) };
+  }
 }
 
 async function persistOrder(input: {
@@ -313,6 +351,17 @@ export default async function handler(req: Request): Promise<Response> {
 
     const persisted = persistResult.status === 'persisted';
 
+    // Best-effort on-chain attestation — does not block or fail the response.
+    const attestResult = persisted
+      ? await attestOnChain({
+          txHash,
+          communityId,
+          amountXlm: proof.amount,
+          payer: proof.payer,
+          ledger: proof.ledger,
+        })
+      : { attested: false };
+
     return json({
       orderId: persisted ? orderId : `ord_local_stellar_${Date.now().toString(36)}`,
       activationSecret: persisted ? activationSecret : null,
@@ -322,6 +371,7 @@ export default async function handler(req: Request): Promise<Response> {
       ledger: proof.ledger,
       amountXlm: proof.amount,
       persisted,
+      onChainAttested: attestResult.attested,
       horizonUrl: horizonUrl(requestedEnvironment),
     });
   } catch (err) {

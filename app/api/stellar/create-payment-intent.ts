@@ -26,6 +26,12 @@ function base64url(bytes: Uint8Array): string {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
+// btoa() is Latin-1 only — encode to UTF-8 bytes first so non-ASCII
+// communityId values (Arabic, Swahili, etc.) don't throw a DOMException.
+function base64urlFromString(str: string): string {
+  return base64url(new TextEncoder().encode(str));
+}
+
 async function signPayload(encodedPayload: string, secret: string): Promise<string> {
   const key = await crypto.subtle.importKey(
     'raw',
@@ -76,7 +82,7 @@ export default async function handler(req: Request): Promise<Response> {
     expiresAt,
     nonce,
   });
-  const encodedPayload = btoa(payload).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  const encodedPayload = base64urlFromString(payload);
   const sig = await signPayload(encodedPayload, secret);
 
   return json({
