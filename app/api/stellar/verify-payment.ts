@@ -303,7 +303,7 @@ export default async function handler(req: Request): Promise<Response> {
     if (!claim) return bad('Payment intent token is invalid or expired.');
     communityId = claim.communityId;
     amountXlm = claim.amountXlm;
-  } else if (stellarNetwork(requestedEnvironment) !== 'mainnet') {
+  } else if (stellarNetwork(requestedEnvironment) !== 'mainnet' && process.env.NODE_ENV === 'development') {
     if (!body.communityId) return bad('communityId is required');
     if (!Number.isFinite(body.amountXlm) || (body.amountXlm ?? 0) <= 0) return bad('amountXlm must be greater than zero.');
     communityId = body.communityId;

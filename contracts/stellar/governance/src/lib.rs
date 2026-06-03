@@ -2,8 +2,21 @@
 
 use soroban_sdk::{
     contract, contractimpl, contracttype, symbol_short,
-    Address, Env, String,
+    Address, Env, String, Symbol, Val, Vec,
 };
+
+fn require_member(env: &Env, community_id: &String, voter: &Address) {
+    let membership: Address = env.storage().instance().get(&DataKey::Membership).unwrap();
+    let args: Vec<Val> = soroban_sdk::vec![
+        env,
+        community_id.clone().into(),
+        voter.clone().into(),
+    ];
+    let is_member: bool = env.invoke_contract(&membership, &Symbol::new(env, "is_member"), args);
+    if !is_member {
+        panic!("not a member");
+    }
+}
 
 /// 7 days in seconds — default voting window.
 const DEFAULT_VOTING_PERIOD: u64 = 7 * 24 * 60 * 60;
@@ -85,6 +98,8 @@ impl GovernanceContract {
             panic!("title required");
         }
 
+        require_member(&env, &community_id, &proposer);
+
         let id: u64 = env.storage().instance().get(&DataKey::NextId).unwrap();
         let period: u64 = env.storage().instance().get(&DataKey::VotingPeriod).unwrap();
         let deadline = env.ledger().timestamp() + period;
@@ -130,6 +145,8 @@ impl GovernanceContract {
             .persistent()
             .get(&DataKey::Proposal(proposal_id))
             .unwrap_or_else(|| panic!("proposal not found"));
+
+        require_member(&env, &proposal.community_id, &voter);
 
         if proposal.status != ProposalStatus::Active {
             panic!("proposal not active");

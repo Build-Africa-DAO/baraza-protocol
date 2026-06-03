@@ -35,9 +35,7 @@ function json(body: unknown, init?: ResponseInit): Response {
 
 function isAuthorized(req: Request): boolean {
   const cronSecret = process.env.CRON_SECRET;
-  // Allow unauthenticated calls when no secret is configured (dev / preview
-  // without the secret set). Production should always set CRON_SECRET.
-  if (!cronSecret) return process.env.VERCEL_ENV !== 'production' && process.env.NODE_ENV !== 'production';
+  if (!cronSecret) return false;
   const header = req.headers.get('authorization') ?? '';
   return header === `Bearer ${cronSecret}`;
 }

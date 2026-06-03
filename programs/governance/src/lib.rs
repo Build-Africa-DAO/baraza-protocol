@@ -132,9 +132,10 @@ pub mod governance {
         let now = Clock::get()?.slot;
         require!(now >= prop.voting_starts_at_slot, GovError::TooEarly);
 
+        require!(total_eligible_weight >= 1, GovError::ParamOutOfBounds);
         prop.eligible_voting_weight = total_eligible_weight;
         prop.eligible_member_count = total_eligible_members;
-        prop.quorum_required = bps_of(total_eligible_weight, cfg.quorum_bps)?;
+        prop.quorum_required = bps_of(total_eligible_weight, cfg.quorum_bps)?.max(1);
         prop.status = ProposalStatus::Active;
 
         emit!(ProposalActivated {
