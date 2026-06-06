@@ -78,6 +78,7 @@ function assertDriftGuards() {
   const governanceSource = readFileSync(new URL('../programs/governance/src/lib.rs', import.meta.url), 'utf8');
   const membershipSource = readFileSync(new URL('../programs/membership/src/lib.rs', import.meta.url), 'utf8');
   const paymentSource = readFileSync(new URL('../programs/payment_attestation/src/lib.rs', import.meta.url), 'utf8');
+  const treasurySource = readFileSync(new URL('../programs/treasury_vault/src/lib.rs', import.meta.url), 'utf8');
 
   const membershipProgramBytes = extractByteArray(governanceSource, 'MEMBERSHIP_PROGRAM_ID');
   if (!bytesEqual(membershipProgramBytes, [...programIds.membership.toBytes()])) {
@@ -87,6 +88,11 @@ function assertDriftGuards() {
   const paymentProgramBytes = extractByteArray(membershipSource, 'PAYMENT_ATTESTATION_PROGRAM_ID');
   if (!bytesEqual(paymentProgramBytes, [...programIds.payment_attestation.toBytes()])) {
     throw new Error('membership PAYMENT_ATTESTATION_PROGRAM_ID drifted from Anchor.toml payment_attestation id');
+  }
+
+  const governanceProgramBytes = extractByteArray(treasurySource, 'GOVERNANCE_PROGRAM_ID');
+  if (!bytesEqual(governanceProgramBytes, [...programIds.governance.toBytes()])) {
+    throw new Error('treasury_vault GOVERNANCE_PROGRAM_ID drifted from Anchor.toml governance id');
   }
 
   const memberDiscriminator = extractByteArray(governanceSource, 'MEMBER_ACCOUNT_DISCRIMINATOR');
@@ -99,6 +105,11 @@ function assertDriftGuards() {
     throw new Error('membership PAYMENT_ATTESTATION_DISCRIMINATOR drifted from Anchor account discriminator');
   }
 
+  const proposalDiscriminator = extractByteArray(treasurySource, 'PROPOSAL_ACCOUNT_DISCRIMINATOR');
+  if (!bytesEqual(proposalDiscriminator, accountDiscriminator('ProposalAccount'))) {
+    throw new Error('treasury_vault PROPOSAL_ACCOUNT_DISCRIMINATOR drifted from Anchor account discriminator');
+  }
+
   const governanceMemberFields = extractStructFields(governanceSource, 'MemberAccount');
   const membershipMemberFields = extractStructFields(membershipSource, 'MemberAccount');
   if (governanceMemberFields.join('\n') !== membershipMemberFields.join('\n')) {
@@ -109,6 +120,21 @@ function assertDriftGuards() {
   const paymentFields = extractStructFields(paymentSource, 'PaymentAttestationAccount');
   if (membershipPaymentFields.join('\n') !== paymentFields.join('\n')) {
     throw new Error('membership PaymentAttestationAccount mirror drifted from payment_attestation account');
+  }
+
+  const governanceProposalFields = extractStructFields(governanceSource, 'ProposalAccount');
+  const treasuryProposalFields = extractStructFields(treasurySource, 'ProposalAccount');
+  if (governanceProposalFields.join('\n') !== treasuryProposalFields.join('\n')) {
+    throw new Error('treasury_vault ProposalAccount mirror drifted from governance ProposalAccount');
+  }
+  if (!governanceSource.includes('treasury_vault::cpi::release_sol')) {
+    throw new Error('governance execute_proposal no longer dispatches treasury releases by CPI');
+  }
+  if (!governanceSource.includes('prop.exit(ctx.program_id)?')) {
+    throw new Error('governance treasury dispatch must persist Executed status before CPI');
+  }
+  if (!treasurySource.includes('ctx.accounts.executor.key(),\n            vault.release_authority')) {
+    throw new Error('treasury releases must require the configured multisig release authority');
   }
 
   console.log('cross-program validation constants match source programs');
@@ -278,6 +304,10 @@ const voteReceipt = pda(
 );
 const vault = pda(
   [Buffer.from('treasury'), community.toBuffer()],
+  treasuryVault.programId,
+);
+const releaseReceipt = pda(
+  [Buffer.from('release'), proposal.toBuffer()],
   treasuryVault.programId,
 );
 
@@ -560,8 +590,10 @@ await expectReject('treasury release while withdrawals disabled', { codes: ['Wit
   .accounts({
     vault,
     proposal,
+    releaseReceipt,
     recipient: recipient.publicKey,
-    admin: payer.publicKey,
+    executor: payer.publicKey,
+    systemProgram: SystemProgram.programId,
   })
   .rpc());
 
@@ -573,15 +605,30 @@ await treasuryVault.methods
   })
   .rpc();
 
-await treasuryVault.methods
+await expectReject('treasury release from unauthorized executor', { codes: ['UnauthorizedReleaseAuthority'] }, () => treasuryVault.methods
   .releaseSol(new anchor.BN(10_000_000))
   .accounts({
     vault,
     proposal,
+    releaseReceipt,
     recipient: recipient.publicKey,
-    admin: payer.publicKey,
+    executor: badSigner.publicKey,
+    systemProgram: SystemProgram.programId,
   })
-  .rpc();
+  .signers([badSigner])
+  .rpc());
+
+await expectReject('treasury release without executed proposal', { codes: ['ProposalNotExecuted'] }, () => treasuryVault.methods
+  .releaseSol(new anchor.BN(10_000_000))
+  .accounts({
+    vault,
+    proposal,
+    releaseReceipt,
+    recipient: recipient.publicKey,
+    executor: payer.publicKey,
+    systemProgram: SystemProgram.programId,
+  })
+  .rpc());
 
 const communityAccount = await communityRegistry.account.communityAccount.fetch(community);
 const memberAccount = await membership.account.memberAccount.fetch(member);
@@ -596,8 +643,8 @@ if (!proposalAccount.forWeight.eq(new anchor.BN(10))) throw new Error('proposal 
 if (!receiptAccount.weight.eq(new anchor.BN(10))) throw new Error('vote receipt weight mismatch');
 if (!vaultAccount.withdrawalsEnabled) throw new Error('vault withdrawals were not enabled');
 if (!vaultAccount.totalSolDeposited.eq(new anchor.BN(50_000_000))) throw new Error('vault deposit total mismatch');
-if (!vaultAccount.totalSolReleased.eq(new anchor.BN(10_000_000))) throw new Error('vault release total mismatch');
+if (!vaultAccount.totalSolReleased.eq(new anchor.BN(0))) throw new Error('vault release total mismatch');
 if (!vaultAccount.depositCount.eq(new anchor.BN(2))) throw new Error('vault deposit count mismatch');
-if (!vaultAccount.releaseCount.eq(new anchor.BN(1))) throw new Error('vault release count mismatch');
+if (!vaultAccount.releaseCount.eq(new anchor.BN(0))) throw new Error('vault release count mismatch');
 
-console.log(`integration flow: community -> member activation -> proposal -> vote -> treasury passed (${slug})`);
+console.log(`integration flow: community -> member activation -> proposal -> vote -> treasury proposal gate passed (${slug})`);

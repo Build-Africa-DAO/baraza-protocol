@@ -106,6 +106,7 @@ const VALID_CHAINS: Chain[] = [
   'polygon',
   'bnb',
   'celo',
+  'xdc',
 ];
 
 function parseChain(raw: string | null | undefined): Chain {

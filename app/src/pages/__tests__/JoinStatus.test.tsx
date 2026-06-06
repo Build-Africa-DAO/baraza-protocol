@@ -15,7 +15,7 @@ vi.mock('@/components/Layout', () => ({
 
 vi.mock('@/hooks/useCommunities', () => ({
   useCommunity: () => ({
-    community: { id: '1', name: 'Kibera Youth Collective' },
+    community: { id: '1', name: 'Kibera Youth Collective', chain: 'solana' },
     isLoading: false,
     error: null,
     reload: vi.fn(),
@@ -43,6 +43,7 @@ function renderStatus(path: string) {
 }
 
 afterEach(() => {
+  window.localStorage.clear();
   cleanup();
 });
 
@@ -68,5 +69,14 @@ describe('JoinStatus payment rail copy', () => {
     expect(screen.getByText('Check your phone for the M-Pesa prompt')).toBeInTheDocument();
     expect(screen.getByText(/M-Pesa confirmation/)).toBeInTheDocument();
     expect(screen.queryByText('Stellar payment verified')).not.toBeInTheDocument();
+  });
+
+  it('uses the community chain for membership submission copy even when another chain is selected globally', () => {
+    window.localStorage.setItem('baraza:chain', 'base');
+
+    renderStatus('/join/1/status?orderId=ord_mpesa_demo');
+
+    expect(screen.getByText('Submitting to Solana')).toBeInTheDocument();
+    expect(screen.queryByText('Submitting to Base')).not.toBeInTheDocument();
   });
 });

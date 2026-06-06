@@ -18,14 +18,16 @@ This review covers the current Solana and Stellar surfaces needed for a testnet 
 
 ### Blockers Before Production Treasury Movement
 
-1. Treasury withdrawals are still admin-gated, not proposal-gated.
+1. Treasury withdrawals are proposal-gated but still disabled for public review.
    - File: `programs/treasury_vault/src/lib.rs`
-   - The header says withdrawals require an executed governance proposal, but `release_sol` currently checks `withdrawals_enabled` plus `admin` signer. The proposal account is unchecked until the TODO CPI validation is implemented.
+   - `release_sol` requires `withdrawals_enabled`, the configured release-authority signer, an executed governance `TreasuryRelease` proposal with matching community, native SOL recipient, and amount, and initializes a one-time release receipt PDA to block replay.
+   - Governance `execute_proposal` dispatches native SOL treasury releases by CPI. The release authority is transferable with a two-step handoff so production deployments can assign a Squads vault PDA.
+   - Existing treasury vault PDAs created before the release-authority fields were added must be migrated or recreated after upgrading the program; their previous allocation is too small for the new account layout.
    - Testnet recommendation: keep `withdrawals_enabled = false` for public review. Allow deposits and balances only.
 
-2. Governance execution does not dispatch proposal effects yet.
+2. Governance execution only dispatches native SOL treasury releases.
    - File: `programs/governance/src/lib.rs`
-   - `execute_proposal` transitions proposals to `Executed` but the CPI dispatch into treasury, membership, or rule changes is still TODO.
+   - `execute_proposal` transitions proposals to `Executed` and dispatches `TreasuryRelease` into `treasury_vault`. Membership actions and rule changes are still TODO.
    - Testnet recommendation: label execution as a governance signal until CPI is implemented.
 
 3. Membership activation depends on payment attestation, but the off-chain-to-on-chain attestation path is not wired end to end.
@@ -64,17 +66,19 @@ This review covers the current Solana and Stellar surfaces needed for a testnet 
 | `governance` | `DzMhDFtq2s2bUn4LNDVzDLLnbbRQ8jW1FKeWPQDDq25A` | `initialize_config`, `create_proposal`, `activate_proposal`, `cast_vote`, `finalize_proposal`, `queue_proposal`, `execute_proposal`, `expire_proposal`, `cancel_proposal`, `veto_proposal` |
 | `membership` | `34MQRw2XSScvMYTiyYLix31qnrmh9vARwpmXM6ycNtuK` | `create_tier`, `update_tier`, `set_tier_status`, `register_member`, `activate_member`, `suspend_member`, `reinstate_member`, `revoke_member`, `mark_expired`, `migrate_wallet`, `update_member_tier` |
 | `payment_attestation` | `Az2CdHJFBLxRY6pigkYSsni6A8N1dQo3JUp3d62NGVpT` | `initialize_config`, `transfer_trusted_attester`, `nominate_authority`, `cancel_authority_nomination`, `accept_authority`, `attest_payment`, `consume_payment_for_mint`, `void_payment_attestation` |
-| `treasury_vault` | `ApPdkfooQLdVN8gAXRnddbtttruYNihiwjanYtXUnxYy` | `initialize_vault`, `deposit_sol`, `record_spl_deposit`, `release_sol`, `enable_withdrawals`, `disable_withdrawals`, `set_vault_status`, `nominate_admin`, `cancel_admin_nomination`, `accept_admin` |
+| `treasury_vault` | `ApPdkfooQLdVN8gAXRnddbtttruYNihiwjanYtXUnxYy` | `initialize_vault`, `deposit_sol`, `record_spl_deposit`, `release_sol`, `enable_withdrawals`, `disable_withdrawals`, `set_vault_status`, `nominate_admin`, `cancel_admin_nomination`, `accept_admin`, `nominate_release_authority`, `cancel_release_authority_nomination`, `accept_release_authority` |
 
 ## API List
 
 | Endpoint | Method | Purpose | Required input | Env vars | Side effect |
 | --- | --- | --- | --- | --- | --- |
-| `/api/stellar/verify-payment` | `POST` | Verify a Stellar testnet/mainnet native XLM payment by transaction hash | `communityId`, `txHash`, `amountXlm` | `STELLAR_NETWORK`, `STELLAR_HORIZON_URL`, `STELLAR_TREASURY_ACCOUNT`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Inserts `payment_orders` row when Supabase is configured |
-| `/api/membership/activate` | `POST` | Activate a membership after a confirmed/reconciled payment order | `orderId`, `communityId`, `walletAddress`, `activationSecret` | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Inserts/returns `memberships` row |
-| `/api/payment-orders/status` | `GET` | Poll safe payment order status | `orderId`, `activationSecret` query params | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Read-only |
-| `/api/cron/promote-orders` | Any | Promote demo payment orders along the status lifecycle | Bearer `CRON_SECRET` in production | `CRON_SECRET`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Updates `payment_orders.status` |
+| `/api/stellar/verify-payment` | `POST` | Verify a Stellar testnet/mainnet native XLM payment by transaction hash | `communityId`, `txHash`, `amountXlm` | `STELLAR_NETWORK`, `STELLAR_HORIZON_URL`, `STELLAR_TREASURY_ACCOUNT`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Inserts `payment_orders` row when Supabase is configured; mainnet fails closed unless a valid treasury G-account is configured |
+| `/api/membership/activate` | `POST` | Activate a membership after a confirmed/reconciled payment order | `orderId`, `communityId`, `walletAddress`, `activationSecret` | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Atomically binds the single-use payment order wallet, rejects sandbox orders in production, then inserts/returns a `memberships` row |
+| `/api/payment-orders/status` | `GET` | Poll safe payment order status | `orderId` query param, `x-activation-secret` header | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Read-only; activation credentials stay out of URLs |
+| `/api/cron/promote-orders` | Any | Promote sandbox demo payment orders along the status lifecycle | Bearer `CRON_SECRET` in production | `CRON_SECRET`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Updates sandbox `payment_orders.status` only; production orders require real attestation/indexer evidence |
 | `/api/mpesa/simulate` | `POST` | Sandbox-only simulated mobile-money payment | `phone`, `communityId`, `amount`, optional `tierId`, `currency` | `MPESA_SIMULATOR_ENABLED`, `MPESA_SIMULATOR_SECRET`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Inserts `payment_orders` row when Supabase is configured |
+| `/api/payments/brza-membership` | `POST` | Trusted server workflow for idempotent Kotani M-Pesa -> BRZA membership initiation | Bearer `PAYMENT_ADAPTER_PROXY_SECRET`; `phone`, community fields, `amountKes`, `idempotencyKey` | `PAYMENT_ADAPTER_PROXY_SECRET`, `PAYMENT_PHONE_HASH_PEPPER`, `KOTANI_PAY_API_KEY`, `KOTANI_API_BASE`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Inserts a hashed `payment_orders` row before calling Kotani, then records pending or failed state; reconciliation performs confirmation |
+| `/api/payments/reconcile-brza-membership` | `POST` | Trusted reconciliation for a pending Kotani BRZA membership payment | Bearer `PAYMENT_ADAPTER_PROXY_SECRET`; `orderId` | `PAYMENT_ADAPTER_PROXY_SECRET`, `KOTANI_PAY_API_KEY`, `KOTANI_API_BASE`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Reads the ledger order and Kotani status, then records confirmed, failed, expired, or amount-mismatch state |
 
 ## Required Testnet Env Vars
 
@@ -193,5 +197,5 @@ stellar CLI: missing from PATH
 3. Deploy the five Solana programs and update Vercel program ID env vars.
 4. Add a seed script for community, tier, governance config, and vault initialization.
 5. Wire Supabase payment orders to `payment_attestation::attest_payment`, `consume_payment_for_mint`, and `membership::activate_member`.
-6. Implement governance CPI dispatch for treasury releases before enabling withdrawals.
+6. Hand the release authority to the production Squads vault PDA and test a real governance-dispatched treasury release before enabling withdrawals.
 7. Decide whether Stellar needs only payment verification or a Soroban governance contract. If Soroban is needed, scaffold it as a separate contract workspace and add build/deploy docs.

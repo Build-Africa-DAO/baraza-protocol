@@ -42,6 +42,7 @@ baraza-protocol/
 vscode-themes/
 .codex/
 .playwright-mcp/
+.agents/
 .claude/
 builder-template-app/
 

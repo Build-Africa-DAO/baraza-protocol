@@ -45,7 +45,16 @@ Set these in Vercel Project Settings -> Environment Variables.
 | `VITE_STELLAR_NETWORK_PASSPHRASE` | Build-time | Testnet passphrase for review |
 | `STELLAR_NETWORK` | Runtime | Server-side Stellar verifier network |
 | `STELLAR_HORIZON_URL` | Runtime | Server-side Horizon URL |
-| `STELLAR_TREASURY_ACCOUNT` | Runtime, recommended | Enforces that verified XLM reaches the DAO treasury |
+| `STELLAR_TREASURY_ACCOUNT` | Runtime, required for mainnet | Enforces that verified XLM reaches the DAO treasury; recommended for testnet review |
+| `PAYMENT_ADAPTER_PROXY_SECRET` | Runtime, secret | Restricts trusted server payment-adapter calls |
+| `PAYMENT_PHONE_HASH_PEPPER` | Runtime, secret | HMAC pepper for durable phone hashes in payment orders |
+| `KOTANI_PAY_API_KEY` | Runtime, secret | Kotani M-Pesa on/off-ramp API key |
+| `KOTANI_API_BASE` | Runtime | Kotani API base URL |
+
+BRZA membership payments use two trusted server calls:
+
+1. `POST /api/payments/brza-membership` creates the ledger row before requesting the Kotani on-ramp.
+2. `POST /api/payments/reconcile-brza-membership` checks pending orders against Kotani and only confirms exact KES amounts.
 
 For Stellar testnet review:
 
@@ -69,6 +78,8 @@ Run every file in `supabase/migrations/` in filename order before testing durabl
 005_stellar_settlements.sql
 006_bounties_security_stellar.sql
 007_enable_evm_community_rails.sql
+008_bounty_access_reward_token.sql
+009_membership_payment_order_unique.sql
 ```
 
 Dashboard path: Supabase -> SQL Editor -> paste each migration in order.
@@ -96,7 +107,7 @@ After redeploy completes:
 2. Browse /communities and confirm seed DAOs render.
 3. Create a community and confirm it persists to the Supabase communities table.
 4. Join with M-Pesa simulator and confirm a payment_orders row is created.
-5. Wait for cron or call /api/cron/promote-orders with CRON_SECRET.
+5. Wait for cron or call /api/cron/promote-orders with CRON_SECRET. The demo promoter advances sandbox orders only.
 6. Confirm payment status advances to RECONCILED and memberships receives a row.
 7. Join with Stellar by sending 1 XLM on testnet, pasting the tx hash, and confirming the Stellar status path.
 8. Open /dashboard/<id> and /profile to confirm member-facing state.

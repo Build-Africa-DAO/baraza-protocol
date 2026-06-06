@@ -1,14 +1,5 @@
-import { Connection, clusterApiUrl } from '@solana/web3.js';
-import { WALLET_ADAPTER_NETWORK } from '@/lib/network';
-
-const RPC_ENDPOINTS = [
-  ...new Set(
-    [
-      import.meta.env.VITE_RPC_ENDPOINT,
-      clusterApiUrl(WALLET_ADAPTER_NETWORK),
-    ].filter(Boolean) as string[]
-  ),
-];
+import { Connection } from '@solana/web3.js';
+import { RPC_ENDPOINTS } from '@/lib/network';
 
 let activeEndpointIndex = 0;
 

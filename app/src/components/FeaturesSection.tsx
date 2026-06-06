@@ -50,10 +50,10 @@ const workflow = [
 ];
 
 const ledgerRows = [
-  { item: "Monthly dues", status: "Confirmed", value: "+ KES 168,000", tone: "text-primary" },
+  { item: "Monthly dues", status: "Confirmed", value: "+ KSh 168,000", tone: "text-primary" },
   { item: "Maize mill vote", status: "In quorum", value: "78%", tone: "text-accent" },
-  { item: "Supplier payout", status: "Approved", value: "- KES 48,000", tone: "text-orange" },
-  { item: "Emergency fund", status: "Locked", value: "KES 210,000", tone: "text-secondary" },
+  { item: "Supplier payout", status: "Approved", value: "- KSh 48,000", tone: "text-orange" },
+  { item: "Emergency fund", status: "Locked", value: "KSh 210,000", tone: "text-secondary" },
 ];
 
 function WorkflowCard({ step, index }: { step: (typeof workflow)[number]; index: number }) {

@@ -15,6 +15,7 @@ import { isSupabaseConfigured } from "@/lib/communities";
 import { useSeo } from "@/lib/seo";
 import {
   fetchPaymentOrder,
+  getPaymentOrderActivationSecret,
   isFailureStatus,
   isTerminalStatus,
   PAYMENT_HAPPY_PATH,
@@ -73,7 +74,7 @@ export default function JoinStatus() {
   const { publicKey } = useWallet();
   const { chainMeta } = useChain();
   const orderId = params.get("orderId") ?? "";
-  const activationSecret = params.get("activationSecret") ?? "";
+  const activationSecret = getPaymentOrderActivationSecret(orderId);
   const rail = params.get("rail") ?? (orderId.startsWith("ord_stellar_") || orderId.startsWith("ord_local_stellar_") ? "stellar" : "mpesa");
   const isStellarRail = rail === "stellar";
 

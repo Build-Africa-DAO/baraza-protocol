@@ -256,7 +256,7 @@ export default function Bounties() {
               <p className="mb-2 font-mono text-xs uppercase tracking-widest">Baraza marketplace</p>
               <h1 className="font-display text-3xl font-bold md:text-5xl">Bounty board</h1>
               <p className="mt-3 max-w-xl text-sm leading-6">
-                Paid community work on {chainMeta.label} across events, integrations, creative tasks, research, and operations.
+                Paid community work settled in BRZA across events, integrations, creative tasks, research, and operations.
               </p>
               <button
                 type="button"

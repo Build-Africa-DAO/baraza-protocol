@@ -5,7 +5,7 @@ import { useConnection } from '@solana/wallet-adapter-react';
 import { Copy, LogOut, Mail, Phone, RefreshCw, ChevronDown, AlertTriangle, ExternalLink, X } from 'lucide-react';
 import { truncateAddress } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { EXPECTED_GENESIS, NETWORK_LABEL } from '@/lib/network';
+import { EXPECTED_GENESIS, NETWORK_LABEL, PRODUCT_ENVIRONMENT } from '@/lib/network';
 import { useChain } from '@/hooks/useChain';
 import { useEvmChain } from '@/hooks/useEvmChain';
 import type { Chain } from '@/lib/chain';
@@ -114,6 +114,8 @@ const WalletStatus: React.FC = () => {
   const handleCopy = () => {
     const address = chain === 'solana'
       ? publicKey?.toBase58()
+      : chain === 'mpesa'
+        ? phoneSession.phone
       : chain === 'stellar'
         ? stellarAddress
         : evmAddress;
@@ -126,6 +128,9 @@ const WalletStatus: React.FC = () => {
   const handleDisconnect = () => {
     if (chain === 'solana') {
       void disconnect();
+    } else if (chain === 'mpesa') {
+      clearPhoneAuthSession();
+      setPhoneSession({ phone: null, email: null });
     } else if (chain === 'stellar') {
       setStellarAddress(null);
       setStellarError(null);
@@ -164,6 +169,12 @@ const WalletStatus: React.FC = () => {
       setVisible(true);
       return;
     }
+    if (chain === 'mpesa') {
+      setAuthTab('phone');
+      setShowPhoneModal(true);
+      setAuthError(null);
+      return;
+    }
     if (chain === 'stellar') {
       void handleConnectStellar();
       return;
@@ -173,12 +184,16 @@ const WalletStatus: React.FC = () => {
 
   const isConnectingSelected = chain === 'solana'
     ? connecting
+    : chain === 'mpesa'
+      ? false
     : chain === 'stellar'
       ? isConnectingStellar
       : isConnectingEvm;
 
   const selectedAddress = chain === 'solana'
     ? publicKey?.toBase58() ?? null
+    : chain === 'mpesa'
+      ? null
     : chain === 'stellar'
       ? stellarAddress
       : evmAddress;
@@ -212,8 +227,12 @@ const WalletStatus: React.FC = () => {
   };
 
   const phoneIdentifier = formatAuthIdentifier(phoneSession);
+  const selectedNetworkLabel =
+    PRODUCT_ENVIRONMENT === 'live' && (chain === 'solana' || chain === 'stellar')
+      ? `${chainMeta.label} Mainnet`
+      : chainMeta.testnet.label;
 
-  // If phone/email is connected but no wallet, show phone identity instead
+  // If phone/email is connected but no wallet, show phone identity instead.
   if (!selectedAddress && phoneIdentifier) {
     return (
       <div className="relative" ref={ref}>
@@ -230,10 +249,11 @@ const WalletStatus: React.FC = () => {
           <div className="absolute right-0 top-full z-50 mt-2 w-52 baraza-card py-1 animate-fade-in">
             <button
               onClick={handleConnect}
+              disabled={chain === 'mpesa'}
               className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-surface"
             >
               <RefreshCw className="h-3.5 w-3.5 text-muted-foreground" />
-              Also connect wallet
+              {chain === 'mpesa' ? 'M-Pesa phone connected' : 'Also connect account'}
             </button>
             <div className="my-1 border-t border-border/50" />
             <button
@@ -260,7 +280,7 @@ const WalletStatus: React.FC = () => {
             {chainMeta.accountCta}
           </button>
           <p className="hidden text-[10px] font-semibold text-muted-foreground lg:block">
-            {chainMeta.suggestedWallet} on {chainMeta.testnet.label}
+            {chainMeta.suggestedWallet} on {selectedNetworkLabel}
           </p>
           <button
             type="button"
@@ -282,17 +302,21 @@ const WalletStatus: React.FC = () => {
         {showPhoneModal && (
           <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-xl border border-border/70 bg-card p-4 shadow-[var(--shadow-deep)]">
             <div className="mb-3 flex items-center justify-between">
-              <p className="text-sm font-bold">Connect with phone or email</p>
+              <p className="text-sm font-bold">
+                {chain === 'mpesa' ? 'Connect M-Pesa mobile money' : 'Connect with phone or email'}
+              </p>
               <button type="button" onClick={() => setShowPhoneModal(false)} className="rounded p-0.5 text-muted-foreground hover:text-foreground">
                 <X className="h-4 w-4" />
               </button>
             </div>
             <p className="mb-3 text-[11px] leading-4 text-muted-foreground">
-              Use your phone number (for M-Pesa) or email to identify yourself without a crypto wallet.
+              {chain === 'mpesa'
+                ? 'Use your M-Pesa phone number to pay in KSh while Baraza records the BRZA equivalent.'
+                : 'Use your phone number for M-Pesa or email to identify yourself before account setup.'}
             </p>
 
             {/* Tab switcher */}
-            <div className="mb-3 flex rounded-lg border border-border/60 p-0.5">
+            {chain !== 'mpesa' && <div className="mb-3 flex rounded-lg border border-border/60 p-0.5">
               {(['phone', 'email'] as const).map((tab) => (
                 <button
                   key={tab}
@@ -304,7 +328,7 @@ const WalletStatus: React.FC = () => {
                   {tab === 'phone' ? 'Phone' : 'Email'}
                 </button>
               ))}
-            </div>
+            </div>}
 
             {authTab === 'phone' ? (
               <input
@@ -334,7 +358,7 @@ const WalletStatus: React.FC = () => {
               onClick={handleSavePhone}
               className="mt-2.5 w-full rounded-lg bg-primary px-3 py-2 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              Continue
+              {chain === 'mpesa' ? 'Connect M-Pesa phone' : 'Save contact'}
             </button>
           </div>
         )}
@@ -347,7 +371,7 @@ const WalletStatus: React.FC = () => {
       {wrongChain && (
         <div className="absolute -top-8 right-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1 rounded-full bg-destructive/15 border border-destructive/30 text-destructive text-[11px] font-medium">
           <AlertTriangle className="w-3 h-3" />
-          Wrong Solana setup - switch to {NETWORK_LABEL}
+          Wrong Baraza network setup - switch to {NETWORK_LABEL}
         </div>
       )}
 
@@ -403,7 +427,7 @@ const WalletStatus: React.FC = () => {
             className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors"
           >
             <LogOut className="w-3.5 h-3.5" />
-            Disconnect wallet
+            Disconnect account
           </button>
         </div>
       )}

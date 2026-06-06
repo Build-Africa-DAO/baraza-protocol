@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type DragEvent } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight, BriefcaseBusiness, CalendarDays, CheckCircle2,
   CircleDot, Clock, Columns3, ExternalLink, LayoutList, Lock,
-  Megaphone, Send, ThumbsDown, ThumbsUp, Trophy, UserPlus,
+  GripVertical, Megaphone, Send, ThumbsDown, ThumbsUp, Trophy, UserPlus,
   Zap,
 } from 'lucide-react';
 import {
@@ -72,19 +72,33 @@ function CompactCard({
   interested,
   onToggleInterest,
   onAdvanceStatus,
+  onDragStart,
+  onDragEnd,
+  isDragging,
   chainMeta,
 }: {
   bounty: Bounty;
   interested: boolean;
   onToggleInterest: (id: string) => void;
   onAdvanceStatus: (id: string, status: BountyStatus, assignee?: string) => void;
+  onDragStart: (event: DragEvent<HTMLElement>, bountyId: string) => void;
+  onDragEnd: () => void;
+  isDragging: boolean;
   chainMeta: ChainMeta;
 }) {
   const cfg = STATUS_CONFIG[bounty.status];
   const StatusIcon = cfg.icon;
 
   return (
-    <article className="rounded-xl border border-border/70 bg-card/70 p-3.5 transition-colors hover:border-primary/40">
+    <article
+      draggable
+      onDragStart={(event) => onDragStart(event, bounty.id)}
+      onDragEnd={onDragEnd}
+      className={cn(
+        'cursor-grab rounded-xl border border-border/70 bg-card/70 p-3.5 transition-all hover:border-primary/40 active:cursor-grabbing',
+        isDragging && 'scale-[0.98] opacity-45',
+      )}
+    >
       <div className="mb-2 flex flex-wrap items-center gap-1.5">
         <span className={cn('inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', cfg.badgeClass)}>
           <StatusIcon className="h-2.5 w-2.5" />
@@ -96,6 +110,7 @@ function CompactCard({
             <Lock className="h-2.5 w-2.5" /> Members only
           </span>
         )}
+        <GripVertical className="ml-auto h-3.5 w-3.5 text-muted-foreground/60" aria-label="Drag bounty" />
       </div>
 
       <Link to={`/bounties/${bounty.id}`} className="block text-sm font-bold leading-snug text-foreground transition-colors hover:text-primary">
@@ -454,20 +469,35 @@ function FullCard({
 // ─── Kanban column ─────────────────────────────────────────────────────────────
 
 function KanbanColumn({
-  status, bounties, interested, onToggleInterest, onAdvanceStatus, chainMeta,
+  status, bounties, interested, onToggleInterest, onAdvanceStatus,
+  draggedBountyId, dropTarget, onCardDragStart, onCardDragEnd, onDragEnter, onDrop, chainMeta,
 }: {
   status: BountyStatus;
   bounties: Bounty[];
   interested: Set<string>;
   onToggleInterest: (id: string) => void;
   onAdvanceStatus: (id: string, status: BountyStatus, assignee?: string) => void;
+  draggedBountyId: string | null;
+  dropTarget: BountyStatus | null;
+  onCardDragStart: (event: DragEvent<HTMLElement>, bountyId: string) => void;
+  onCardDragEnd: () => void;
+  onDragEnter: (status: BountyStatus) => void;
+  onDrop: (event: DragEvent<HTMLDivElement>, status: BountyStatus) => void;
   chainMeta: ChainMeta;
 }) {
   const cfg = STATUS_CONFIG[status];
   const ColIcon = cfg.icon;
 
   return (
-    <div className="flex min-w-[220px] flex-1 flex-col gap-2">
+    <div
+      onDragEnter={() => onDragEnter(status)}
+      onDragOver={(event) => event.preventDefault()}
+      onDrop={(event) => onDrop(event, status)}
+      className={cn(
+        'flex min-w-[220px] flex-1 flex-col gap-2 rounded-xl transition-colors',
+        dropTarget === status && 'bg-primary/5 ring-2 ring-primary/50 ring-offset-4 ring-offset-background',
+      )}
+    >
       <div className="flex items-center gap-2 rounded-lg border border-border/50 bg-surface/60 px-3 py-2">
         <ColIcon className="h-3.5 w-3.5 text-muted-foreground" />
         <span className="text-xs font-bold text-foreground">{cfg.columnLabel}</span>
@@ -489,6 +519,9 @@ function KanbanColumn({
             interested={interested.has(bounty.id)}
             onToggleInterest={onToggleInterest}
             onAdvanceStatus={onAdvanceStatus}
+            onDragStart={onCardDragStart}
+            onDragEnd={onCardDragEnd}
+            isDragging={draggedBountyId === bounty.id}
             chainMeta={chainMeta}
           />
         ))}
@@ -506,6 +539,8 @@ export default function BountyBoard({ communityId, communityName = 'this communi
   const [bounties, setBounties] = useState(() => getBountiesForCommunity(communityId));
   const [view, setView] = useState<ViewMode>('board');
   const [interested, setInterested] = useState<Set<string>>(readInterest);
+  const [draggedBountyId, setDraggedBountyId] = useState<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<BountyStatus | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -526,11 +561,29 @@ export default function BountyBoard({ communityId, communityName = 'this communi
     void getBountiesForCommunityAsync(communityId).then(setBounties).catch(() => {});
   };
 
+  const handleDragStart = (event: DragEvent<HTMLElement>, bountyId: string) => {
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', bountyId);
+    setDraggedBountyId(bountyId);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedBountyId(null);
+    setDropTarget(null);
+  };
+
+  const handleDrop = (event: DragEvent<HTMLDivElement>, status: BountyStatus) => {
+    event.preventDefault();
+    const bountyId = event.dataTransfer.getData('text/plain') || draggedBountyId;
+    if (bountyId) handleAdvanceStatus(bountyId, status);
+    handleDragEnd();
+  };
+
   const openCount = bounties.filter((b) => b.status === 'open').length;
   const rewardPool = bounties.filter((b) => b.status === 'open').reduce((sum, b) => sum + b.rewardKes, 0);
   const shown = compact ? bounties.slice(0, 2) : bounties;
   const byStatus = KANBAN_COLUMNS.reduce<Record<BountyStatus, Bounty[]>>((acc, s) => {
-    acc[s] = bounties.filter((b) => b.status === s);
+    acc[s] = bounties.filter((b) => b.status === s || (s === 'paid' && b.status === 'awarded'));
     return acc;
   }, {} as Record<BountyStatus, Bounty[]>);
 
@@ -594,7 +647,10 @@ export default function BountyBoard({ communityId, communityName = 'this communi
 
       {/* Board view */}
       {!compact && view === 'board' && (
-        <div className="overflow-x-auto pb-2">
+        <div className="overflow-x-auto px-1 pb-2">
+          <p className="mb-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+            <GripVertical className="h-3.5 w-3.5" /> Drag a bounty card between columns to update its status.
+          </p>
           <div className="flex gap-3 min-w-max">
             {KANBAN_COLUMNS.map((status) => (
               <KanbanColumn
@@ -604,6 +660,12 @@ export default function BountyBoard({ communityId, communityName = 'this communi
                 interested={interested}
                 onToggleInterest={handleToggleInterest}
                 onAdvanceStatus={handleAdvanceStatus}
+                draggedBountyId={draggedBountyId}
+                dropTarget={dropTarget}
+                onCardDragStart={handleDragStart}
+                onCardDragEnd={handleDragEnd}
+                onDragEnter={setDropTarget}
+                onDrop={handleDrop}
                 chainMeta={chainMeta}
               />
             ))}

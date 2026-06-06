@@ -30,13 +30,20 @@ async function hashActivationSecret(secret: string): Promise<string> {
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 export default async function handler(req: Request): Promise<Response> {
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       headers: {
         'access-control-allow-origin': '*',
         'access-control-allow-methods': 'GET, OPTIONS',
-        'access-control-allow-headers': 'content-type',
+        'access-control-allow-headers': 'content-type, x-activation-secret',
       },
     });
   }
@@ -48,9 +55,9 @@ export default async function handler(req: Request): Promise<Response> {
 
   const requestUrl = new URL(req.url);
   const orderId = requestUrl.searchParams.get('orderId') ?? '';
-  const activationSecret = requestUrl.searchParams.get('activationSecret') ?? '';
+  const activationSecret = req.headers.get('x-activation-secret') ?? '';
   if (!orderId || !activationSecret) {
-    return json({ error: 'invalid_request', message: 'orderId and activationSecret are required' }, { status: 400 });
+    return json({ error: 'invalid_request', message: 'orderId and x-activation-secret are required' }, { status: 400 });
   }
 
   const res = await fetch(
@@ -67,7 +74,7 @@ export default async function handler(req: Request): Promise<Response> {
   const rows = (await res.json().catch(() => [])) as PaymentOrderRow[];
   const order = rows[0];
   if (!order) return json({ error: 'not_found' }, { status: 404 });
-  if (!order.activation_secret_hash || await hashActivationSecret(activationSecret) !== order.activation_secret_hash) {
+  if (!order.activation_secret_hash || !timingSafeEqual(await hashActivationSecret(activationSecret), order.activation_secret_hash)) {
     return json({ error: 'forbidden' }, { status: 403 });
   }
 

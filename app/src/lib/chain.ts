@@ -1,16 +1,16 @@
 /**
  * Chain selection.
  *
- * Distinct from `lib/network.ts`, which selects the Solana cluster
- * (mainnet/devnet/testnet). This module is about which blockchain the
- * user is browsing. Solana handles membership credentials and governance.
- * Stellar is enabled as the payment/settlement rail. Base, Arbitrum,
- * Optimism, and Celo are enabled as EVM target rails for community setup, but
- * contract execution still remains gated by the governance-contract roadmap.
+ * Distinct from `lib/network.ts`, which selects test or live infrastructure.
+ * BRZA is the native Baraza asset. This module models the rail underneath it:
+ * Solana first for membership and governance, Stellar for settlement, and Celo
+ * as the first visible EVM route. M-Pesa is a phone payment path into BRZA and
+ * is intentionally not represented as a blockchain.
  */
 
 export type Chain =
   | 'solana'
+  | 'mpesa'
   | 'stellar'
   | 'ethereum'
   | 'base'
@@ -18,12 +18,14 @@ export type Chain =
   | 'optimism'
   | 'polygon'
   | 'bnb'
-  | 'celo';
+  | 'celo'
+  | 'xdc';
 
 export interface ChainMeta {
   id: Chain;
   label: string;
   short: string;
+  railType: string;
   accountLabel: string;
   suggestedWallet: string;
   walletExamples: string;
@@ -59,31 +61,59 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     id: 'solana',
     label: 'Solana',
     short: 'SOL',
+    railType: 'Primary rail',
     accountLabel: 'Solana account',
     suggestedWallet: 'Phantom',
     walletExamples: 'Phantom, Solflare, or Backpack',
-    accountCta: 'Connect Phantom',
+    accountCta: 'Connect Solana account with Phantom',
     testnet: {
       label: 'Solana Devnet',
       nativeSymbol: 'SOL',
       explorerUrl: 'https://explorer.solana.com/?cluster=devnet',
     },
     currency: {
-      code: 'SOL',
-      symbol: 'SOL',
-      locale: 'en-US',
-      decimals: 4,
-      kesPerUnit: 22000,
+      code: 'BRZA',
+      symbol: 'BRZA',
+      locale: 'en-KE',
+      decimals: 2,
+      kesPerUnit: 2.6,
     },
     timeZone: 'America/Los_Angeles',
     badgeBg: '#14F195',
     badgeText: '#0B132B',
     enabled: true,
   },
+  mpesa: {
+    id: 'mpesa',
+    label: 'M-Pesa',
+    short: 'KSh',
+    railType: 'Mobile money rail',
+    accountLabel: 'M-Pesa phone',
+    suggestedWallet: 'M-Pesa',
+    walletExamples: 'M-Pesa phone number',
+    accountCta: 'Connect M-Pesa phone',
+    testnet: {
+      label: 'M-Pesa Sandbox',
+      nativeSymbol: 'KES',
+      explorerUrl: 'https://developer.safaricom.co.ke',
+    },
+    currency: {
+      code: 'KES',
+      symbol: 'KSh',
+      locale: 'en-KE',
+      decimals: 0,
+      kesPerUnit: 1,
+    },
+    timeZone: 'Africa/Nairobi',
+    badgeBg: '#00A651',
+    badgeText: '#FFFFFF',
+    enabled: true,
+  },
   stellar: {
     id: 'stellar',
     label: 'Stellar',
     short: 'XLM',
+    railType: 'Settlement rail',
     accountLabel: 'Stellar account',
     suggestedWallet: 'Freighter',
     walletExamples: 'Freighter, Lobstr, or Albedo',
@@ -109,6 +139,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     id: 'ethereum',
     label: 'Ethereum',
     short: 'ETH',
+    railType: 'EVM rail',
     accountLabel: 'Ethereum account',
     suggestedWallet: 'MetaMask',
     walletExamples: 'MetaMask, Coinbase Wallet, Rabby, or WalletConnect',
@@ -136,6 +167,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     id: 'base',
     label: 'Base',
     short: 'BASE',
+    railType: 'EVM rail',
     accountLabel: 'Base account',
     suggestedWallet: 'Coinbase Wallet',
     walletExamples: 'MetaMask, Coinbase Wallet, Rabby, or WalletConnect',
@@ -163,6 +195,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     id: 'arbitrum',
     label: 'Arbitrum',
     short: 'ARB',
+    railType: 'EVM rail',
     accountLabel: 'Arbitrum account',
     suggestedWallet: 'Rabby',
     walletExamples: 'MetaMask, Coinbase Wallet, Rabby, or WalletConnect',
@@ -190,6 +223,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     id: 'optimism',
     label: 'Optimism',
     short: 'OP',
+    railType: 'EVM rail',
     accountLabel: 'Optimism account',
     suggestedWallet: 'MetaMask',
     walletExamples: 'MetaMask, Coinbase Wallet, Rabby, or WalletConnect',
@@ -217,6 +251,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     id: 'polygon',
     label: 'Polygon',
     short: 'POL',
+    railType: 'EVM rail',
     accountLabel: 'Polygon account',
     suggestedWallet: 'MetaMask',
     walletExamples: 'MetaMask, Coinbase Wallet, Rabby, or WalletConnect',
@@ -244,6 +279,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     id: 'bnb',
     label: 'BNB Chain',
     short: 'BNB',
+    railType: 'EVM rail',
     accountLabel: 'BNB Chain account',
     suggestedWallet: 'Trust Wallet',
     walletExamples: 'MetaMask, Trust Wallet, Binance Wallet, or WalletConnect',
@@ -273,6 +309,7 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     id: 'celo',
     label: 'Celo',
     short: 'CELO',
+    railType: 'EVM rail',
     accountLabel: 'Celo account',
     suggestedWallet: 'Valora',
     walletExamples: 'Valora, MetaMask, Coinbase Wallet, or WalletConnect',
@@ -296,10 +333,39 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     enabled: true,
     comingSoon: GOVERNANCE_REVIEW,
   },
+  xdc: {
+    id: 'xdc',
+    label: 'XDC',
+    short: 'XDC',
+    railType: 'EVM rail',
+    accountLabel: 'XDC account',
+    suggestedWallet: 'MetaMask',
+    walletExamples: 'MetaMask, XDC Pay, or WalletConnect',
+    accountCta: 'Connect MetaMask or EVM account',
+    testnet: {
+      label: 'XDC Apothem',
+      chainId: 51,
+      nativeSymbol: 'TXDC',
+      explorerUrl: 'https://apothem.xinfinscan.com',
+    },
+    currency: {
+      code: 'TXDC',
+      symbol: 'TXDC',
+      locale: 'en-US',
+      decimals: 2,
+      kesPerUnit: 8,
+    },
+    timeZone: 'UTC',
+    badgeBg: '#2A6DF4',
+    badgeText: '#FFFFFF',
+    enabled: false,
+    comingSoon: 'G$ ecosystem review',
+  },
 };
 
 export const CHAIN_LIST: ChainMeta[] = [
   CHAINS.solana,
+  CHAINS.mpesa,
   CHAINS.stellar,
   CHAINS.ethereum,
   CHAINS.base,
@@ -308,25 +374,27 @@ export const CHAIN_LIST: ChainMeta[] = [
   CHAINS.polygon,
   CHAINS.bnb,
   CHAINS.celo,
+  CHAINS.xdc,
+];
+
+// Keep roadmap metadata available to internal review surfaces without exposing
+// placeholder rails in normal product pickers.
+export const VISIBLE_CHAIN_LIST: ChainMeta[] = [
+  CHAINS.solana,
+  CHAINS.mpesa,
+  CHAINS.stellar,
+  CHAINS.celo,
 ];
 
 const STORAGE_KEY = 'baraza:chain';
 const DEFAULT_CHAIN: Chain = 'solana';
+const VISIBLE_CHAIN_IDS = new Set<Chain>(VISIBLE_CHAIN_LIST.map((chain) => chain.id));
 
 export function readStoredChain(): Chain {
   if (typeof window === 'undefined') return DEFAULT_CHAIN;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (
-      raw === 'solana' ||
-      raw === 'stellar' ||
-      raw === 'ethereum' ||
-      raw === 'base' ||
-      raw === 'arbitrum' ||
-      raw === 'optimism' ||
-      raw === 'polygon' ||
-      raw === 'celo'
-    ) return raw;
+    if (VISIBLE_CHAIN_IDS.has(raw as Chain)) return raw as Chain;
   } catch {
     /* ignore */
   }

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ExternalLink, Info, Lock, Phone, Settings, ShieldCheck, Smartphone } from 'lucide-react';
+import { Coins, ExternalLink, Info, Lock, Phone, Settings, ShieldCheck, Smartphone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Community } from '@/lib/constants';
 import { PAYBILL_ADDON_FEE_KES, USSD_ADDON_FEE_KES } from '@/lib/constants';
@@ -194,20 +194,26 @@ export default function CommunitySettings({ community, isMember }: Props) {
           {[
             { label: 'Transfer admin rights', note: 'Nominate a new admin account with two-step approval', disabled: true },
             { label: 'Update governance rules', note: 'Change quorum, approval threshold, or voting period through a member proposal', disabled: true },
+            { label: 'Create community token', note: 'Optional SPL token launch with umbrella treasury split. Coming soon after program deployment.', disabled: true, icon: Coins },
             { label: 'Manage treasury', note: 'Release funds, set multisig signers, and view attestations', disabled: false, href: `/dashboard/${community.id}/treasury` },
             { label: 'Export member list', note: 'Download CSV of all credential holders', disabled: true },
-          ].map((action) => (
+          ].map((action) => {
+            const ActionIcon = action.icon;
+            return (
             <div
               key={action.label}
               className="flex items-center justify-between rounded-lg border border-border/50 p-3"
             >
-              <div>
-                <p className="text-sm font-semibold">{action.label}</p>
-                <p className="text-[11px] text-muted-foreground">{action.note}</p>
+              <div className="flex min-w-0 items-start gap-2">
+                {ActionIcon && <ActionIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />}
+                <div>
+                  <p className="text-sm font-semibold">{action.label}</p>
+                  <p className="text-[11px] text-muted-foreground">{action.note}</p>
+                </div>
               </div>
               {action.disabled ? (
                 <span className="shrink-0 rounded border border-border/50 px-2 py-1 text-[10px] text-muted-foreground">
-                  Locked
+                  {action.label === 'Create community token' ? 'Coming soon' : 'Locked'}
                 </span>
               ) : (
                 <Link
@@ -219,7 +225,8 @@ export default function CommunitySettings({ community, isMember }: Props) {
                 </Link>
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

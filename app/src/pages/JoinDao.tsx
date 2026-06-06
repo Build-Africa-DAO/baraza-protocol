@@ -10,6 +10,7 @@ import {
   Stars,
   Wallet,
 } from "lucide-react";
+import { storePaymentOrderActivationSecret } from "@/lib/payments";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { useWallet } from "@solana/wallet-adapter-react";
 import Layout from "@/components/Layout";
@@ -20,6 +21,7 @@ import { normaliseKenyanPhone } from "@/lib/phone";
 import CommunityBanner from "@/components/CommunityBanner";
 import { useSeo } from "@/lib/seo";
 import { useChain } from "@/hooks/useChain";
+import { PRODUCT_ENVIRONMENT } from "@/lib/network";
 
 const joinSteps = [
   { label: "Invite opened", state: "current" },
@@ -163,8 +165,8 @@ export default function JoinDao() {
     // Reset state before navigating so re-entering the page (back button)
     // doesn't leave the button permanently disabled.
     setIsSubmitting(false);
-    const secretParam = activationSecret ? `&activationSecret=${encodeURIComponent(activationSecret)}` : "";
-    navigate(`/join/${id}/status?orderId=${encodeURIComponent(orderId)}${secretParam}`);
+    if (activationSecret) storePaymentOrderActivationSecret(orderId, activationSecret);
+    navigate(`/join/${id}/status?orderId=${encodeURIComponent(orderId)}`);
   }
 
   async function handleStellarSubmit() {
@@ -172,14 +174,38 @@ export default function JoinDao() {
     setIsVerifyingStellar(true);
 
     try {
+      let intentToken: string | null = null;
+      try {
+        const intentRes = await fetch("/api/stellar/create-payment-intent", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            communityId: id,
+            amountXlm: Number(stellarAmountXlm),
+            environment: PRODUCT_ENVIRONMENT,
+          }),
+        });
+        if (intentRes.ok) {
+          const intentData = (await intentRes.json()) as { intentToken?: string };
+          intentToken = intentData.intentToken ?? null;
+        }
+      } catch {
+        // Intent service unavailable - verify-payment will use legacy path on testnet.
+      }
+
       const res = await fetch("/api/stellar/verify-payment", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          communityId: id,
-          txHash: stellarTxHash.trim().toLowerCase(),
-          amountXlm: Number(stellarAmountXlm),
-        }),
+        body: JSON.stringify(
+          intentToken
+            ? { intentToken, txHash: stellarTxHash.trim().toLowerCase(), environment: PRODUCT_ENVIRONMENT }
+            : {
+                communityId: id,
+                txHash: stellarTxHash.trim().toLowerCase(),
+                amountXlm: Number(stellarAmountXlm),
+                environment: PRODUCT_ENVIRONMENT,
+              },
+        ),
       });
       const data = (await res.json()) as {
         orderId?: string;
@@ -201,8 +227,8 @@ export default function JoinDao() {
           : "Verified through Horizon. Supabase is offline, so this will continue in local demo mode.",
       });
 
-      const secretParam = data.activationSecret ? `&activationSecret=${encodeURIComponent(data.activationSecret)}` : "";
-      navigate(`/join/${id}/status?orderId=${encodeURIComponent(data.orderId)}${secretParam}&rail=stellar`);
+      if (data.activationSecret) storePaymentOrderActivationSecret(data.orderId, data.activationSecret);
+      navigate(`/join/${id}/status?orderId=${encodeURIComponent(data.orderId)}&rail=stellar`);
     } catch (err) {
       toast({
         title: "Stellar verification failed",

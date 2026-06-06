@@ -6,6 +6,7 @@ dist
 target
 **/target
 .git
+.agents
 .claude
 .codex
 .playwright-mcp

@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Upload, Download, AlertCircle, ChevronDown, ChevronUp, Users } from 'lucide-react';
-import { parseCsvMembers, csvMembersToText, SAMPLE_CSV_TEMPLATE } from '@/lib/csvImport';
+import { parseCsvMembers, SAMPLE_CSV_TEMPLATE } from '@/lib/csvImport';
 import type { CsvMemberRow, ParseResult } from '@/lib/csvImport';
 
 interface CsvImportProps {

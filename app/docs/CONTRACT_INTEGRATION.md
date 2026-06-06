@@ -13,8 +13,8 @@
 - [x] `cargo-build-sbf` is installed locally.
 - [x] `anchor build` passes and generates SBF/IDL artifacts.
 - [x] `anchor test --skip-local-validator --skip-build` deploys all five programs to a running local validator and passes the executable-program smoke test.
-- [x] Local instruction-level happy path passes: create community, initialize payment/governance config, create tier, register member, attest/consume payment, activate member, create/activate proposal, cast vote, initialize treasury vault, deposit SOL, record SPL deposit, enable withdrawals, and release SOL.
-- [x] Local negative checks assert expected program errors for unauthorized payment attestations, mismatched attestation activation, inactive-member proposal creation, invalid proposal transitions, double voting, and treasury release while withdrawals are disabled.
+- [x] Local instruction-level path passes: create community, initialize payment/governance config, create tier, register member, attest/consume payment, activate member, create/activate proposal, cast vote, initialize treasury vault, deposit SOL, and record SPL deposit.
+- [x] Local negative checks assert expected program errors for unauthorized payment attestations, mismatched attestation activation, inactive-member proposal creation, invalid proposal transitions, double voting, treasury release while withdrawals are disabled, treasury release from an unauthorized executor, and treasury release without an executed proposal.
 - [x] Cross-program validation drift guards compare hard-coded program IDs, account discriminators, and mirrored account layouts against the source programs before the Anchor smoke flow runs.
 - [x] Drift-only smoke mode passes without a validator: `npm run test:contracts:drift` from `app/`.
 - [x] EVM contracts are cloned into `contracts/evm` and rebranded to Baraza.
@@ -109,8 +109,8 @@ Replace mock data one flow at a time. Do not remove a guard until the program is
 ### 4a - Read Flows
 
 - [x] Add typed client readers and PDA helpers for all five Solana programs
-- [ ] Wire `fetchCommunity` to `community_registry` account read
-- [ ] Wire `fetchMembership` to `membership` account read
+- [x] Wire `fetchCommunity` to `community_registry` account read
+- [x] Wire `fetchMembership` to `membership` account read (requires persisted chain mapping; member_id_hash is backend-supplied)
 - [x] Wire `fetchProposal` to `governance` account read when passed a proposal PDA
 - [x] Wire `fetchTreasury` to `treasury_vault` PDA balance read when community key/slug can be resolved
 - [x] Persist on-chain community/proposal addresses so page-level local IDs resolve without fallback guesses
@@ -153,7 +153,7 @@ tx.add(ix);
 
 - [ ] Wire payment attestation submission via `payment_attestation` program
 - [ ] Confirm config PDA and trusted attester signer are present before any payment call
-- [ ] HIGH RISK: Treasury withdrawals must stay disabled until executed-proposal validation or Squads multisig control is wired
+- [ ] HIGH RISK: Treasury withdrawals must stay disabled until the governance CPI dispatch is tested on devnet and the release authority is handed to a Squads vault PDA
 - [ ] Wire `treasury_vault` withdrawal only after proposal execution validation is confirmed
 - [ ] Remove preview guard for payment; withdrawal guard stays until treasury wiring is complete
 

@@ -1,9 +1,14 @@
-export const config = { runtime: 'edge' };
+export const config = { runtime: 'nodejs' };
 
 interface VerifyStellarRequest {
-  communityId: string;
+  // Preferred: server-signed token that binds communityId+amountXlm at intent creation time.
+  // Required on mainnet. On testnet, falls back to legacy fields when absent.
+  intentToken?: string;
   txHash: string;
-  amountXlm: number;
+  environment?: 'test' | 'live';
+  // Legacy fields — testnet/sandbox only when intentToken is not provided
+  communityId?: string;
+  amountXlm?: number;
 }
 
 interface HorizonTransaction {
@@ -44,20 +49,41 @@ function bad(message: string, status = 400): Response {
   return json({ error: 'invalid_request', message }, { status });
 }
 
-function stellarNetwork(): 'testnet' | 'mainnet' | 'custom' {
+function base64url(bytes: Uint8Array): string {
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+function stellarNetwork(requestedEnvironment?: 'test' | 'live'): 'testnet' | 'mainnet' | 'custom' {
   const raw = process.env.STELLAR_NETWORK ?? process.env.VITE_STELLAR_NETWORK;
+  if (requestedEnvironment === 'live') return 'mainnet';
   if (raw === 'mainnet' || raw === 'custom') return raw;
   return 'testnet';
 }
 
-function horizonUrl(): string {
+function horizonUrl(requestedEnvironment?: 'test' | 'live'): string {
   const configured = process.env.STELLAR_HORIZON_URL ?? process.env.VITE_STELLAR_HORIZON_URL;
   if (configured?.trim()) return configured.replace(/\/$/, '');
-  return stellarNetwork() === 'mainnet' ? DEFAULT_MAINNET_HORIZON : DEFAULT_TESTNET_HORIZON;
+  return stellarNetwork(requestedEnvironment) === 'mainnet' ? DEFAULT_MAINNET_HORIZON : DEFAULT_TESTNET_HORIZON;
 }
 
-function providerEnvironment(): 'sandbox' | 'production' {
-  return stellarNetwork() === 'mainnet' ? 'production' : 'sandbox';
+function providerEnvironment(requestedEnvironment?: 'test' | 'live'): 'sandbox' | 'production' {
+  return stellarNetwork(requestedEnvironment) === 'mainnet' ? 'production' : 'sandbox';
+}
+
+function configuredTreasuryAccount(requestedEnvironment?: 'test' | 'live'): string | null {
+  const account = process.env.STELLAR_TREASURY_ACCOUNT?.trim() ?? '';
+  if (!account) {
+    if (stellarNetwork(requestedEnvironment) === 'mainnet') {
+      throw new Error('STELLAR_TREASURY_ACCOUNT is required for Stellar mainnet verification.');
+    }
+    return null;
+  }
+  if (!/^G[A-Z2-7]{55}$/.test(account)) {
+    throw new Error('STELLAR_TREASURY_ACCOUNT must be a valid Stellar G-account.');
+  }
+  return account;
 }
 
 function generateOrderId(): string {
@@ -75,22 +101,79 @@ async function hashActivationSecret(secret: string): Promise<string> {
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
-async function fetchHorizonJson<T>(path: string): Promise<T> {
-  const res = await fetch(`${horizonUrl()}${path}`, {
+async function verifyIntentToken(
+  token: string,
+): Promise<{ communityId: string; amountXlm: number } | null> {
+  const secret = process.env.STELLAR_INTENT_SECRET;
+  if (!secret) return null;
+
+  const dot = token.lastIndexOf('.');
+  if (dot < 0) return null;
+  const encodedPayload = token.slice(0, dot);
+  const sig = token.slice(dot + 1);
+
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['verify'],
+  );
+
+  const sigPad = sig.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - sig.length % 4) % 4);
+  let sigBytes: Uint8Array;
+  try {
+    const bin = atob(sigPad);
+    sigBytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+  } catch {
+    return null;
+  }
+  if (base64url(sigBytes) !== sig) return null;
+
+  const signature = sigBytes.buffer.slice(sigBytes.byteOffset, sigBytes.byteOffset + sigBytes.byteLength) as ArrayBuffer;
+  const valid = await crypto.subtle.verify('HMAC', key, signature, new TextEncoder().encode(encodedPayload));
+  if (!valid) return null;
+
+  const payPad =
+    encodedPayload.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - encodedPayload.length % 4) % 4);
+  try {
+    // atob returns a Latin-1 byte string; pass through TextDecoder to recover
+    // the original UTF-8 text (handles non-ASCII communityId values correctly).
+    const payBytes = Uint8Array.from(atob(payPad), (c) => c.charCodeAt(0));
+    const parsed = JSON.parse(new TextDecoder().decode(payBytes)) as {
+      communityId: string;
+      amountXlm: number;
+      expiresAt: string;
+    };
+    if (new Date(parsed.expiresAt) < new Date()) return null;
+    if (!parsed.communityId || !Number.isFinite(parsed.amountXlm) || parsed.amountXlm <= 0) return null;
+    return { communityId: parsed.communityId, amountXlm: parsed.amountXlm };
+  } catch {
+    return null;
+  }
+}
+
+async function fetchHorizonJson<T>(path: string, requestedEnvironment?: 'test' | 'live'): Promise<T> {
+  const res = await fetch(`${horizonUrl(requestedEnvironment)}${path}`, {
     headers: { accept: 'application/json' },
   });
   if (!res.ok) throw new Error(`Stellar Horizon returned ${res.status}`);
   return (await res.json()) as T;
 }
 
-async function verifyNativePayment(txHash: string, expectedAmount: number): Promise<{ ledger: number; amount: number }> {
-  const transaction = await fetchHorizonJson<HorizonTransaction>(`/transactions/${txHash}`);
+async function verifyNativePayment(
+  txHash: string,
+  expectedAmount: number,
+  treasuryAccount: string | null,
+  requestedEnvironment?: 'test' | 'live',
+): Promise<{ ledger: number; amount: number; payer: string | null }> {
+  const transaction = await fetchHorizonJson<HorizonTransaction>(`/transactions/${txHash}`, requestedEnvironment);
   if (!transaction.successful) throw new Error('Stellar transaction was not successful.');
 
   const operations = await fetchHorizonJson<{ _embedded?: { records?: HorizonOperation[] } }>(
     `/transactions/${txHash}/operations`,
+    requestedEnvironment,
   );
-  const treasuryAccount = process.env.STELLAR_TREASURY_ACCOUNT?.trim();
   const payment = operations._embedded?.records?.find((operation) => {
     const amount = Number(operation.amount);
     const isNativePayment = operation.type === 'payment' && operation.asset_type === 'native';
@@ -104,8 +187,9 @@ async function verifyNativePayment(txHash: string, expectedAmount: number): Prom
       : 'Transaction does not contain enough native XLM payment value.');
   }
 
-  return { ledger: transaction.ledger, amount: Number(payment.amount) };
+  return { ledger: transaction.ledger, amount: Number(payment.amount), payer: payment.from ?? null };
 }
+
 
 async function persistOrder(input: {
   orderId: string;
@@ -113,6 +197,7 @@ async function persistOrder(input: {
   communityId: string;
   txHash: string;
   amountXlm: number;
+  environment?: 'test' | 'live';
 }): Promise<PersistOrderResult> {
   const url = process.env.SUPABASE_URL?.replace(/\/$/, '');
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -130,7 +215,7 @@ async function persistOrder(input: {
       order_id: input.orderId,
       community_id: input.communityId,
       provider: 'stellar',
-      provider_environment: providerEnvironment(),
+      provider_environment: providerEnvironment(input.environment),
       provider_reference: input.txHash,
       activation_secret_hash: await hashActivationSecret(input.activationSecret),
       amount_expected: input.amountXlm,
@@ -172,20 +257,48 @@ export default async function handler(req: Request): Promise<Response> {
   }
 
   const txHash = body.txHash?.trim().toLowerCase();
-  if (!body.communityId) return bad('communityId is required');
   if (!/^[a-f0-9]{64}$/.test(txHash)) return bad('Enter a valid 64-character Stellar transaction hash.');
-  if (!Number.isFinite(body.amountXlm) || body.amountXlm <= 0) return bad('amountXlm must be greater than zero.');
+  const requestedEnvironment = body.environment === 'live' ? 'live' : 'test';
+
+  // Resolve communityId and amountXlm from the signed intent (preferred) or legacy fields (testnet only).
+  let communityId: string;
+  let amountXlm: number;
+
+  if (body.intentToken) {
+    const claim = await verifyIntentToken(body.intentToken);
+    if (!claim) return bad('Payment intent token is invalid or expired.');
+    communityId = claim.communityId;
+    amountXlm = claim.amountXlm;
+  } else if (stellarNetwork(requestedEnvironment) !== 'mainnet' && process.env.NODE_ENV === 'development') {
+    if (!body.communityId) return bad('communityId is required');
+    if (!Number.isFinite(body.amountXlm) || (body.amountXlm ?? 0) <= 0) return bad('amountXlm must be greater than zero.');
+    communityId = body.communityId;
+    amountXlm = body.amountXlm!;
+  } else {
+    return bad('intentToken is required for production Stellar payments.');
+  }
+
+  let treasuryAccount: string | null;
+  try {
+    treasuryAccount = configuredTreasuryAccount(requestedEnvironment);
+  } catch (err) {
+    return json({
+      error: 'stellar_verifier_not_configured',
+      message: err instanceof Error ? err.message : 'Stellar treasury verification is not configured.',
+    }, { status: 503 });
+  }
 
   try {
-    const proof = await verifyNativePayment(txHash, body.amountXlm);
+    const proof = await verifyNativePayment(txHash, amountXlm, treasuryAccount, requestedEnvironment);
     const orderId = generateOrderId();
     const activationSecret = generateActivationSecret();
     const persistResult = await persistOrder({
       orderId,
       activationSecret,
-      communityId: body.communityId,
+      communityId,
       txHash,
       amountXlm: proof.amount,
+      environment: requestedEnvironment,
     });
 
     if (persistResult.status === 'duplicate') {
@@ -213,7 +326,7 @@ export default async function handler(req: Request): Promise<Response> {
       ledger: proof.ledger,
       amountXlm: proof.amount,
       persisted,
-      horizonUrl: horizonUrl(),
+      horizonUrl: horizonUrl(requestedEnvironment),
     });
   } catch (err) {
     return json({

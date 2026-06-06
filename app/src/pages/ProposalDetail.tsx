@@ -1,5 +1,6 @@
+import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Loader2, ThumbsDown, ThumbsUp } from "lucide-react";
+import { ArrowLeft, CircleMinus, Loader2, MessageCircle, ThumbsDown, ThumbsUp } from "lucide-react";
 import Layout from "@/components/Layout";
 import { DEFAULT_GOVERNANCE } from "@/lib/constants";
 import { useDecision } from "@/hooks/useBarazaData";
@@ -14,6 +15,13 @@ import { useSeo } from "@/lib/seo";
 import AshaSecurityReview from "@/components/security/AshaSecurityReview";
 import { reviewProposal } from "@/lib/securityReview";
 import { useChain } from "@/hooks/useChain";
+import {
+  addProposalComment,
+  listProposalAuditTrail,
+  listProposalComments,
+  voteOptionLabel,
+} from "@/lib/governance";
+import type { VoteOption } from "@/types";
 
 export default function ProposalDetail() {
   const { id, decisionId } = useParams<{ id: string; decisionId: string }>();
@@ -23,6 +31,13 @@ export default function ProposalDetail() {
   const { castVote, isPending } = useBarazaContract();
   const { toast } = useToast();
   const { chainMeta } = useChain();
+  const [commentBody, setCommentBody] = useState("");
+  const [commentVersion, setCommentVersion] = useState(0);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const comments = useMemo(() => proposal ? listProposalComments(proposal.id) : [], [proposal?.id, commentVersion]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const auditTrail = useMemo(() => proposal ? listProposalAuditTrail(proposal.id) : [], [proposal?.id, commentVersion]);
 
   useSeo({
     title: proposal && community
@@ -76,12 +91,12 @@ export default function ProposalDetail() {
   const quorumRequiredPct = community?.quorumPct ?? DEFAULT_GOVERNANCE.quorumPct;
   const securityReview = reviewProposal(proposal, community);
 
-  const handleVote = (vote: boolean) => async () => {
+  const handleVote = (vote: VoteOption) => async () => {
     await requireWallet(async () => {
       const success = await castVote(proposal.id, proposal.communityId, vote);
       if (success) {
         toast({
-          title: vote ? "Support recorded" : "Objection recorded",
+          title: `${voteOptionLabel(vote)} vote recorded`,
           description: "Your signed vote is queued for the next governance tally.",
         });
       } else {
@@ -92,6 +107,24 @@ export default function ProposalDetail() {
         });
       }
     });
+  };
+
+  const handleAddComment = () => {
+    try {
+      addProposalComment({
+        proposalId: proposal.id,
+        memberId: "local-member",
+        body: commentBody,
+      });
+      setCommentBody("");
+      setCommentVersion((value) => value + 1);
+    } catch (err) {
+      toast({
+        title: "Comment failed",
+        description: err instanceof Error ? err.message : "Could not add proposal comment.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -154,29 +187,68 @@ export default function ProposalDetail() {
                   </div>
                 </div>
 
-                <div className="mt-6 grid gap-3 md:grid-cols-2">
+                <div className="mt-6 grid gap-3 md:grid-cols-3">
                   <button
                     type="button"
-                    onClick={handleVote(true)}
+                    onClick={handleVote("yes")}
                     disabled={isPending || !isVotable}
                     className="btn-warm justify-center gap-2 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ThumbsUp className="h-4 w-4" />}
-                    Cast support vote
+                    Vote yes
                   </button>
                   <button
                     type="button"
-                    onClick={handleVote(false)}
+                    onClick={handleVote("no")}
                     disabled={isPending || !isVotable}
                     className="btn-ghost justify-center gap-2 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ThumbsDown className="h-4 w-4" />}
-                    Cast objection vote
+                    Vote no
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleVote("abstain")}
+                    disabled={isPending || !isVotable}
+                    className="btn-ghost justify-center gap-2 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CircleMinus className="h-4 w-4" />}
+                    Abstain
                   </button>
                 </div>
                 <p className="mt-3 text-xs">
                   Your vote is recorded after account approval.
                 </p>
+              </div>
+
+              <div className="baraza-card p-5 md:p-6">
+                <div className="mb-4 flex items-center gap-2">
+                  <MessageCircle className="h-4 w-4 text-primary" />
+                  <h2 className="font-display text-xl font-semibold">Proposal comments</h2>
+                </div>
+                <textarea
+                  value={commentBody}
+                  onChange={(event) => setCommentBody(event.target.value)}
+                  placeholder="Add a member comment or question for the proposal record."
+                  className="min-h-24 w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                />
+                <button type="button" onClick={handleAddComment} className="btn-warm mt-3 text-sm">
+                  Add comment
+                </button>
+                <div className="mt-5 space-y-3">
+                  {comments.length === 0 ? (
+                    <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+                      No comments yet. Members can ask questions before voting.
+                    </p>
+                  ) : comments.map((comment) => (
+                    <article key={comment.id} className="rounded-lg border p-4">
+                      <p className="text-sm leading-6">{comment.body}</p>
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        {comment.memberId} · {formatRailDate(comment.createdAt, chainMeta, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                      </p>
+                    </article>
+                  ))}
+                </div>
               </div>
             </main>
 
@@ -202,6 +274,15 @@ export default function ProposalDetail() {
                       {formatRailDate(proposal.endsAt, chainMeta, { day: "2-digit", month: "short", year: "numeric" })}
                     </p>
                   </div>
+                  {auditTrail.map((entry) => (
+                    <div key={entry.id} className="relative">
+                      <span className="absolute -left-[1.6rem] top-1 h-3 w-3 rounded-full bg-accent" />
+                      <p className="text-sm">{entry.action}</p>
+                      <p className="text-xs">
+                        {formatRailDate(entry.createdAt, chainMeta, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               </div>
             </aside>

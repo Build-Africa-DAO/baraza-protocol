@@ -11,17 +11,24 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
 import { useToast } from '@/hooks/use-toast';
 import { dataStore } from '@/lib/dataStore';
-import { communityPda, createBarazaReadClient, memberPda, hashToBytes32, toSlug } from '@/lib/programs';
-import { getCommunityChainMapping, getDecisionChainMapping } from '@/lib/chainMappings';
+import { communityPda, createBarazaReadClient, hashToBytes32, memberPda, toSlug } from '@/lib/programs';
+import { getCommunityChainMapping, getDecisionChainMapping, getMemberChainMapping } from '@/lib/chainMappings';
+import type { VoteOption } from '@/types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface OnChainCommunity {
-  id: string;
+  slug: string;
   name: string;
-  treasuryBalance: number; // in lamports
+  admin: string; // base58
   memberCount: number;
-  admin: string;
+  status: string;
+}
+
+export interface OnChainMembership {
+  status: 'active' | 'pending' | 'revoked';
+  votingWeight: number;
+  walletAddress: string; // base58
 }
 
 export interface VoteState {
@@ -67,12 +74,14 @@ function tryPublicKey(value: string): PublicKey | null {
 
 interface UseBarazaContractResult {
   // Read
+  fetchCommunity: (communityId: string) => Promise<OnChainCommunity | null>;
+  fetchMembership: (communityId: string, walletAddress: string) => Promise<OnChainMembership | null>;
   fetchTreasuryBalance: (communityId: string) => Promise<number>;
   fetchVoteState: (proposalId: string) => Promise<VoteState | null>;
   /** Returns the member's RAZA voting weight (0 = not a member or account not found). */
   fetchRazaBalance: (communityId: string, walletAddress: string) => Promise<number>;
   // Write
-  castVote: (proposalId: string, communityId: string, support: boolean) => Promise<boolean>;
+  castVote: (proposalId: string, communityId: string, support: boolean | VoteOption) => Promise<boolean>;
   /** feeKES is the membership fee in KES. KES→lamports conversion happens on the program/backend side. */
   joinCommunity: (communityId: string, feeKES: number) => Promise<boolean>;
   /** feeKES is the monthly dues in KES. KES→lamports conversion happens on the program/backend side. */
@@ -103,6 +112,64 @@ export function useBarazaContract(): UseBarazaContractResult {
   }, []);
 
   // ── Reads ──────────────────────────────────────────────────────────────────
+
+  const fetchCommunity = useCallback(
+    async (communityId: string): Promise<OnChainCommunity | null> => {
+      const cacheKey = `community:${communityId}`;
+      const cached = fromCache<OnChainCommunity>(cacheKey);
+      if (cached !== null) return cached;
+
+      try {
+        const communityKey = resolveCommunityKey(communityId);
+        const account = await readClient.fetchCommunity(communityKey);
+        if (!account) return null;
+
+        return setCache(cacheKey, {
+          slug: account.slug,
+          name: account.name,
+          admin: account.adminAuthority.toBase58(),
+          memberCount: account.memberCount,
+          status: Object.keys(account.status)[0] ?? 'unknown',
+        });
+      } catch (error) {
+        console.warn('[baraza] fetchCommunity on-chain read failed:', error);
+        return null;
+      }
+    },
+    [readClient, resolveCommunityKey]
+  );
+
+  const fetchMembership = useCallback(
+    async (communityId: string, walletAddress: string): Promise<OnChainMembership | null> => {
+      const cacheKey = `membership:${communityId}:${walletAddress}`;
+      const cached = fromCache<OnChainMembership>(cacheKey);
+      if (cached !== null) return cached;
+
+      // member_id_hash is set by the backend and is not derivable from the wallet
+      // address alone — we rely on the persisted chain mapping.
+      const mapping = getMemberChainMapping(`${communityId}:${walletAddress}`);
+      if (!mapping) return null;
+
+      try {
+        const memberKey = tryPublicKey(mapping.memberAddress);
+        if (!memberKey) return null;
+
+        const account = await readClient.fetchMember(memberKey);
+        if (!account) return null;
+
+        const statusKey = (Object.keys(account.status)[0] ?? 'pending') as OnChainMembership['status'];
+        return setCache(cacheKey, {
+          status: statusKey,
+          votingWeight: account.votingWeight.toNumber(),
+          walletAddress: account.walletAddress.toBase58(),
+        });
+      } catch (error) {
+        console.warn('[baraza] fetchMembership on-chain read failed:', error);
+        return null;
+      }
+    },
+    [readClient]
+  );
 
   const fetchTreasuryBalance = useCallback(
     async (communityId: string): Promise<number> => {
@@ -178,7 +245,7 @@ export function useBarazaContract(): UseBarazaContractResult {
   const blockUnwiredWrite = useCallback(
     async (txId: string, action: string): Promise<boolean> => {
       if (!connected || !publicKey) {
-        toast({ title: 'Connect your Solana account first', variant: 'destructive' });
+        toast({ title: 'Connect your Baraza account first', variant: 'destructive' });
         return false;
       }
       if (pendingTxRef.current.has(txId)) {
@@ -204,8 +271,9 @@ export function useBarazaContract(): UseBarazaContractResult {
   );
 
   const castVote = useCallback(
-    async (proposalId: string, _communityId: string, _support: boolean): Promise<boolean> => {
-      const txId = `vote:${proposalId}:${publicKey?.toBase58()}`;
+    async (proposalId: string, _communityId: string, support: boolean | VoteOption): Promise<boolean> => {
+      const vote = typeof support === 'boolean' ? (support ? 'yes' : 'no') : support;
+      const txId = `vote:${proposalId}:${vote}:${publicKey?.toBase58()}`;
       return blockUnwiredWrite(txId, 'Vote casting');
     },
     [blockUnwiredWrite, publicKey]
@@ -229,6 +297,8 @@ export function useBarazaContract(): UseBarazaContractResult {
   );
 
   return {
+    fetchCommunity,
+    fetchMembership,
     fetchTreasuryBalance,
     fetchVoteState,
     fetchRazaBalance,

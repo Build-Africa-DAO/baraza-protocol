@@ -18,9 +18,9 @@ function renderSelector() {
 }
 
 describe('ChainSelector — closed state', () => {
-  it('renders the current chain (Solana by default)', () => {
+  it('renders BRZA with Solana as the default rail', () => {
     renderSelector();
-    expect(screen.getByRole('button', { name: /solana selected/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /baraza token rail: solana selected/i })).toHaveTextContent('BRZA');
   });
 
   it('does not render the listbox when closed', () => {
@@ -30,7 +30,7 @@ describe('ChainSelector — closed state', () => {
 
   it('toggles open on trigger click', () => {
     renderSelector();
-    const trigger = screen.getByRole('button', { name: /solana selected/i });
+    const trigger = screen.getByRole('button', { name: /baraza token rail: solana selected/i });
     fireEvent.click(trigger);
     expect(screen.getByRole('listbox')).toBeInTheDocument();
     expect(trigger).toHaveAttribute('aria-expanded', 'true');
@@ -38,12 +38,12 @@ describe('ChainSelector — closed state', () => {
 });
 
 describe('ChainSelector — open state', () => {
-  it('lists all 9 chains, with Solana as the selected option', () => {
+  it('lists the four visible rails, with Solana as the selected option', () => {
     renderSelector();
-    fireEvent.click(screen.getByRole('button', { name: /solana selected/i }));
+    fireEvent.click(screen.getByRole('button', { name: /baraza token rail: solana selected/i }));
     const listbox = screen.getByRole('listbox');
     const options = within(listbox).getAllByRole('option');
-    expect(options).toHaveLength(9);
+    expect(options).toHaveLength(4);
     expect(options[0]).toHaveAttribute('aria-selected', 'true');
     // All non-Solana options are unselected
     for (let i = 1; i < options.length; i++) {
@@ -51,37 +51,43 @@ describe('ChainSelector — open state', () => {
     }
   });
 
+  it('lists M-Pesa as an active mobile-money rail into BRZA', () => {
+    renderSelector();
+    fireEvent.click(screen.getByRole('button', { name: /baraza token rail: solana selected/i }));
+    const mpesaOption = screen.getByRole('option', { name: /^m-pesa$/i });
+    expect(mpesaOption).not.toBeDisabled();
+    expect(mpesaOption).toHaveTextContent('Mobile money rail into BRZA');
+  });
+
   it('allows Stellar selection', () => {
     renderSelector();
-    fireEvent.click(screen.getByRole('button', { name: /solana selected/i }));
+    fireEvent.click(screen.getByRole('button', { name: /baraza token rail: solana selected/i }));
     const stellarOption = screen.getByRole('option', { name: /^stellar$/i });
     expect(stellarOption).not.toBeDisabled();
     fireEvent.click(stellarOption);
     expect(screen.getByRole('button', { name: /stellar selected/i })).toBeInTheDocument();
   });
 
-  it('allows EVM review rail selection', () => {
+  it('keeps roadmap-only EVM review rails out of the picker', () => {
     renderSelector();
-    fireEvent.click(screen.getByRole('button', { name: /solana selected/i }));
+    fireEvent.click(screen.getByRole('button', { name: /baraza token rail: solana selected/i }));
 
-    for (const name of ['ethereum', 'base', 'arbitrum', 'optimism', 'polygon', 'celo']) {
-      const option = screen.getByRole('option', { name: new RegExp(`^${name}$`, 'i') });
-      expect(option).not.toBeDisabled();
+    for (const name of ['ethereum', 'base', 'arbitrum', 'optimism', 'polygon', 'bnb chain', 'xdc']) {
+      expect(screen.queryByRole('option', { name: new RegExp(name, 'i') })).not.toBeInTheDocument();
     }
 
-    fireEvent.click(screen.getByRole('option', { name: /^base$/i }));
-    expect(screen.getByRole('button', { name: /base selected/i })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /^celo$/i })).not.toBeDisabled();
   });
 
-  it('disables unsupported rails with integration-pending labels', () => {
+  it('does not render unsupported rails', () => {
     renderSelector();
-    fireEvent.click(screen.getByRole('button', { name: /solana selected/i }));
-    expect(screen.getByRole('option', { name: /bnb chain.*integration pending/i })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: /baraza token rail: solana selected/i }));
+    expect(screen.queryByRole('option', { name: /bnb chain/i })).not.toBeInTheDocument();
   });
 
   it('closes on Escape', () => {
     renderSelector();
-    fireEvent.click(screen.getByRole('button', { name: /solana selected/i }));
+    fireEvent.click(screen.getByRole('button', { name: /baraza token rail: solana selected/i }));
     expect(screen.getByRole('listbox')).toBeInTheDocument();
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
@@ -89,7 +95,7 @@ describe('ChainSelector — open state', () => {
 
   it('closes on outside click', () => {
     const { container } = renderSelector();
-    fireEvent.click(screen.getByRole('button', { name: /solana selected/i }));
+    fireEvent.click(screen.getByRole('button', { name: /baraza token rail: solana selected/i }));
     expect(screen.getByRole('listbox')).toBeInTheDocument();
     // mousedown outside the component should trigger close.
     fireEvent.mouseDown(container.ownerDocument.body);
@@ -100,10 +106,10 @@ describe('ChainSelector — open state', () => {
 describe('ChainSelector — keyboard navigation', () => {
   it('ArrowDown can focus Stellar as the next enabled option', () => {
     renderSelector();
-    const trigger = screen.getByRole('button', { name: /solana selected/i });
+    const trigger = screen.getByRole('button', { name: /baraza token rail: solana selected/i });
     fireEvent.click(trigger);
 
-    // Solana (index 0), Stellar (index 1), and selected EVM rails are enabled.
+    // Solana (index 0), M-Pesa (index 1), Stellar (index 2), and Celo are visible.
     fireEvent.keyDown(window, { key: 'ArrowDown' });
 
     // No crash, listbox still open
@@ -112,7 +118,7 @@ describe('ChainSelector — keyboard navigation', () => {
 
   it('ArrowUp closes nothing and lands on enabled option', () => {
     renderSelector();
-    fireEvent.click(screen.getByRole('button', { name: /solana selected/i }));
+    fireEvent.click(screen.getByRole('button', { name: /baraza token rail: solana selected/i }));
     fireEvent.keyDown(window, { key: 'ArrowUp' });
     expect(screen.getByRole('listbox')).toBeInTheDocument();
   });
@@ -124,16 +130,16 @@ describe('ChainSelector — persistence', () => {
     // Initial: nothing in storage (cleared in beforeEach)
     expect(window.localStorage.getItem('baraza:chain')).toBeNull();
 
-    fireEvent.click(screen.getByRole('button', { name: /solana selected/i }));
+    fireEvent.click(screen.getByRole('button', { name: /baraza token rail: solana selected/i }));
     // Clicking the already-selected Solana option still triggers a write.
-    fireEvent.click(screen.getByRole('option', { name: /solana/i }));
+    fireEvent.click(screen.getByRole('option', { name: /^solana$/i }));
 
     expect(window.localStorage.getItem('baraza:chain')).toBe('solana');
   });
 
   it('reads the initial chain from localStorage if present', () => {
-    window.localStorage.setItem('baraza:chain', 'base');
+    window.localStorage.setItem('baraza:chain', 'stellar');
     renderSelector();
-    expect(screen.getByRole('button', { name: /base selected/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /stellar selected/i })).toBeInTheDocument();
   });
 });

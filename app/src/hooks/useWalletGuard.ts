@@ -30,8 +30,8 @@ export function useWalletGuard(options: WalletGuardOptions = {}): WalletGuardRes
     async <T>(fn: () => Promise<T>): Promise<T | undefined> => {
       if (connecting) {
         toast({
-          title: 'Connecting Solana account...',
-          description: 'Please wait while your Solana account connects.',
+          title: 'Connecting Baraza account...',
+          description: 'Please wait while your Baraza account connects.',
         });
         return undefined;
       }

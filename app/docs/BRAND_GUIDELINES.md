@@ -8,13 +8,14 @@
 ## 1. Logo
 
 ### Mark
-The Baraza logomark is three interconnected nodes forming a triangle — representing community members connected in mutual trust. The top node is the coordinator/leader; the two base nodes are members; the central gold dot represents the community fund.
+The Baraza logomark is a council gathered around a shared fire. The three people represent community participation, the crowned center figure represents accountable coordination, and the fire represents a visible shared treasury and common purpose.
 
 ### Usage rules
-- Always use the SVG version (`<BrandLogo />` component)
+- Always use the versioned SVG (`/baraza-logo-v2.svg`) through the `<BrandLogo />` component
+- Use `/brza-token-logo.svg` for BRZA token metadata, wallet listings, and token-specific surfaces
 - Minimum size: 28px icon / 16px wordmark
 - Never stretch, rotate, recolour, or add drop shadows to the mark
-- Clear space = 1× the icon width on all sides
+- Clear space = 1x the icon width on all sides
 
 ### Variants
 | Variant | When to use |

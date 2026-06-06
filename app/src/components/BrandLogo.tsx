@@ -16,9 +16,9 @@ export function BrandLogo({ className, iconOnly = false, size = "md" }: BrandLog
   const { icon, font } = sizes[size];
 
   return (
-    <div className={cn("flex items-center gap-2.5 leading-none", className)}>
+    <div className={cn("flex items-center gap-1.5 leading-none", className)}>
       <img
-        src="/baraza-logo.svg"
+        src="/baraza-logo-v2.svg"
         alt={iconOnly ? "Baraza logo" : ""}
         width={icon}
         height={icon}
@@ -27,12 +27,11 @@ export function BrandLogo({ className, iconOnly = false, size = "md" }: BrandLog
 
       {!iconOnly && (
         <span
-          className={cn(
-            "font-display font-extrabold tracking-tight text-foreground",
-            font,
-          )}
+          className={cn("font-display tracking-tight", font)}
+          style={{ letterSpacing: "-0.05em" }}
         >
-          Baraza
+          <span className="font-semibold text-foreground">bara</span>
+          <span className="font-extrabold" style={{ color: "#FFB300" }}>za</span>
         </span>
       )}
     </div>

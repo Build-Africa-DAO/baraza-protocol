@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatKSh(amount: number): string {
-  return `KES ${amount.toLocaleString('en-KE')}`;
+  return `KSh ${amount.toLocaleString('en-KE')}`;
 }
 
 export function formatUSD(amount: number): string {
@@ -18,7 +18,7 @@ export function formatUSD(amount: number): string {
   });
 }
 
-export function formatRailAmountFromKes(amountKes: number, chainOrMeta: Chain | ChainMeta): string {
+function formatNativeRailAmountFromKes(amountKes: number, chainOrMeta: Chain | ChainMeta): string {
   const meta = typeof chainOrMeta === 'string' ? CHAINS[chainOrMeta] : chainOrMeta;
   const amount = amountKes / meta.currency.kesPerUnit;
   const formatted = amount.toLocaleString(meta.currency.locale, {
@@ -28,8 +28,20 @@ export function formatRailAmountFromKes(amountKes: number, chainOrMeta: Chain | 
   return `${meta.currency.symbol} ${formatted}`;
 }
 
+export function formatRailAmountFromKes(amountKes: number, chainOrMeta: Chain | ChainMeta): string {
+  const meta = typeof chainOrMeta === 'string' ? CHAINS[chainOrMeta] : chainOrMeta;
+  return meta.id === 'solana' || meta.id === 'mpesa'
+    ? formatKSh(amountKes)
+    : formatNativeRailAmountFromKes(amountKes, meta);
+}
+
 export function formatRailAmountWithKes(amountKes: number, chainOrMeta: Chain | ChainMeta): string {
-  return `${formatRailAmountFromKes(amountKes, chainOrMeta)} (${formatKSh(amountKes)} eq.)`;
+  const meta = typeof chainOrMeta === 'string' ? CHAINS[chainOrMeta] : chainOrMeta;
+  const nativeAmount = formatNativeRailAmountFromKes(amountKes, meta);
+  if (meta.id === 'mpesa') return formatKSh(amountKes);
+  return meta.id === 'solana'
+    ? `${formatKSh(amountKes)} (${nativeAmount} eq.)`
+    : `${nativeAmount} (${formatKSh(amountKes)} eq.)`;
 }
 
 export function formatRailDate(
