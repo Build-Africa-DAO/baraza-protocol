@@ -86,7 +86,7 @@ describe('membership activation API', () => {
 
     expect(response.status).toBe(403);
     await expect(response.json()).resolves.toMatchObject({
-      message: 'Order is already bound to a different wallet.',
+      message: 'Order is already bound to a different identity.',
     });
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });
