@@ -62,45 +62,51 @@ describe('Stellar payment verification API', () => {
 
   it('rejects malformed configured treasury accounts before calling Horizon', async () => {
     const savedNodeEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
-    process.env.STELLAR_TREASURY_ACCOUNT = 'not-a-stellar-account';
-    const fetchMock = vi.fn();
-    vi.stubGlobal('fetch', fetchMock);
+    try {
+      process.env.NODE_ENV = 'development';
+      process.env.STELLAR_TREASURY_ACCOUNT = 'not-a-stellar-account';
+      const fetchMock = vi.fn();
+      vi.stubGlobal('fetch', fetchMock);
 
-    const response = await handler(legacyRequest());
+      const response = await handler(legacyRequest());
 
-    process.env.NODE_ENV = savedNodeEnv;
-    expect(response.status).toBe(503);
-    await expect(response.json()).resolves.toMatchObject({
-      error: 'stellar_verifier_not_configured',
-      message: 'STELLAR_TREASURY_ACCOUNT must be a valid Stellar G-account.',
-    });
-    expect(fetchMock).not.toHaveBeenCalled();
+      expect(response.status).toBe(503);
+      await expect(response.json()).resolves.toMatchObject({
+        error: 'stellar_verifier_not_configured',
+        message: 'STELLAR_TREASURY_ACCOUNT must be a valid Stellar G-account.',
+      });
+      expect(fetchMock).not.toHaveBeenCalled();
+    } finally {
+      process.env.NODE_ENV = savedNodeEnv;
+    }
   });
 
   it('allows legacy treasury-less verification on testnet for local review', async () => {
     const savedNodeEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
-    process.env.STELLAR_NETWORK = 'testnet';
-    const fetchMock = vi.fn()
-      .mockResolvedValueOnce(Response.json({ hash: TX_HASH, ledger: 123, successful: true }))
-      .mockResolvedValueOnce(Response.json({
-        _embedded: {
-          records: [{ type: 'payment', asset_type: 'native', amount: '1.0000000', to: 'GDESTINATION' }],
-        },
-      }));
-    vi.stubGlobal('fetch', fetchMock);
+    try {
+      process.env.NODE_ENV = 'development';
+      process.env.STELLAR_NETWORK = 'testnet';
+      const fetchMock = vi.fn()
+        .mockResolvedValueOnce(Response.json({ hash: TX_HASH, ledger: 123, successful: true }))
+        .mockResolvedValueOnce(Response.json({
+          _embedded: {
+            records: [{ type: 'payment', asset_type: 'native', amount: '1.0000000', to: 'GDESTINATION' }],
+          },
+        }));
+      vi.stubGlobal('fetch', fetchMock);
 
-    const response = await handler(legacyRequest());
+      const response = await handler(legacyRequest());
 
-    process.env.NODE_ENV = savedNodeEnv;
-    expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toMatchObject({
-      status: 'PAYMENT_CONFIRMED',
-      rail: 'stellar',
-      persisted: false,
-    });
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(response.status).toBe(200);
+      await expect(response.json()).resolves.toMatchObject({
+        status: 'PAYMENT_CONFIRMED',
+        rail: 'stellar',
+        persisted: false,
+      });
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    } finally {
+      process.env.NODE_ENV = savedNodeEnv;
+    }
   });
 
   it('rejects mainnet requests that omit intentToken', async () => {

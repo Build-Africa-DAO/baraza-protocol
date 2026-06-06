@@ -109,13 +109,44 @@ export const BARAZA_CHAIN_CONFIGS: Record<Chain, BarazaChainConfig> = {
     status: 'coming-soon',
   },
   ethereum: evmConfig('ethereum', 'VITE_ETH_RPC_URL'),
-  base: evmConfig('base', 'VITE_BASE_RPC_URL'),
+  base: baseConfig(),
   arbitrum: evmConfig('arbitrum', 'VITE_ARBITRUM_RPC_URL'),
   optimism: evmConfig('optimism', 'VITE_OPTIMISM_RPC_URL'),
   polygon: evmConfig('polygon', 'VITE_POLYGON_RPC_URL'),
   bnb: evmConfig('bnb', 'VITE_BNB_RPC_URL', 'coming-soon'),
   xdc: evmConfig('xdc', 'VITE_XDC_RPC_URL', 'coming-soon'),
 };
+
+function baseConfig(): BarazaChainConfig {
+  const meta = CHAINS.base;
+  const isTestnet = import.meta.env.VITE_BASE_TESTNET === 'true';
+  // Manager is deployed at well-known addresses; individual DAO contracts come from Manager.deploy()
+  const managerAddr = import.meta.env.VITE_BASE_MANAGER_ADDRESS?.trim()
+    ?? (isTestnet ? '0x550c326d688fd51ae65ac6a2d48749e631023a03' : '0x3ac0e64fe2931f8e082c6bb29283540de9b5371c');
+  const governorAddr = import.meta.env.VITE_BASE_GOVERNOR_ADDRESS?.trim() ?? PLACEHOLDER_CONTRACT_ADDRESS;
+  const tokenAddr = import.meta.env.VITE_BASE_TOKEN_ADDRESS?.trim() ?? PLACEHOLDER_CONTRACT_ADDRESS;
+  const treasuryAddr = import.meta.env.VITE_BASE_TREASURY_ADDRESS?.trim() ?? PLACEHOLDER_CONTRACT_ADDRESS;
+  const isConfigured = managerAddr !== PLACEHOLDER_CONTRACT_ADDRESS;
+  return {
+    id: 'base',
+    label: meta.label,
+    testnetName: CHAIN_TESTNET_NAMES.base,
+    testnetRequired: TESTNET_REQUIRED,
+    chainId: meta.testnet.chainId,
+    rpcEnvVar: 'VITE_BASE_RPC_URL',
+    defaultRpcUrl: undefined,
+    explorerUrl: meta.testnet.explorerUrl,
+    suggestedWallet: meta.suggestedWallet,
+    nativeCurrency: meta.testnet.nativeSymbol,
+    capabilities: ['governance', 'membership', 'treasury'],
+    contracts: {
+      governance: governorAddr,
+      membership: tokenAddr,
+      treasury: treasuryAddr,
+    },
+    status: isConfigured ? 'testnet-ready' : 'partial',
+  };
+}
 
 function evmConfig(
   chain: Exclude<Chain, 'solana' | 'mpesa' | 'stellar' | 'celo'>,

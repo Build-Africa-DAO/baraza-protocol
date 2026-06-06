@@ -190,40 +190,6 @@ async function verifyNativePayment(
   return { ledger: transaction.ledger, amount: Number(payment.amount), payer: payment.from ?? null };
 }
 
-async function attestOnChain(params: {
-  txHash: string;
-  communityId: string;
-  amountXlm: number;
-  payer: string | null;
-  ledger: number;
-}): Promise<{ attested: boolean; error?: string }> {
-  const contractId = process.env.STELLAR_CONTRACT_PAYMENT_ATTESTATION?.trim();
-  const signerSecret = process.env.STELLAR_SIGNER_SECRET?.trim();
-  if (!contractId || !signerSecret) return { attested: false };
-
-  try {
-    // Dynamic import keeps the Stellar SDK out of the edge bundle path.
-    const { PaymentAttestationClient } = await import('@/lib/stellar/contracts/payment_attestation');
-    const network = process.env.STELLAR_NETWORK === 'mainnet' ? 'mainnet' : 'testnet';
-    const client = new PaymentAttestationClient({ contractId, signerSecret, env: network });
-
-    const STROOP = 10_000_000n;
-    const amountStroops = BigInt(Math.round(params.amountXlm * Number(STROOP)));
-    const payerAddress = params.payer ?? process.env.STELLAR_TREASURY_ACCOUNT ?? '';
-
-    await client.attest({
-      txHashHex: params.txHash,
-      communityId: params.communityId,
-      amountStroops,
-      payer: payerAddress,
-      ledger: params.ledger,
-    });
-
-    return { attested: true };
-  } catch (err) {
-    return { attested: false, error: err instanceof Error ? err.message : String(err) };
-  }
-}
 
 async function persistOrder(input: {
   orderId: string;
@@ -351,17 +317,6 @@ export default async function handler(req: Request): Promise<Response> {
 
     const persisted = persistResult.status === 'persisted';
 
-    // Best-effort on-chain attestation — does not block or fail the response.
-    const attestResult = persisted
-      ? await attestOnChain({
-          txHash,
-          communityId,
-          amountXlm: proof.amount,
-          payer: proof.payer,
-          ledger: proof.ledger,
-        })
-      : { attested: false };
-
     return json({
       orderId: persisted ? orderId : `ord_local_stellar_${Date.now().toString(36)}`,
       activationSecret: persisted ? activationSecret : null,
@@ -371,7 +326,6 @@ export default async function handler(req: Request): Promise<Response> {
       ledger: proof.ledger,
       amountXlm: proof.amount,
       persisted,
-      onChainAttested: attestResult.attested,
       horizonUrl: horizonUrl(requestedEnvironment),
     });
   } catch (err) {

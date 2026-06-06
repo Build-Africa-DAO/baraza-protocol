@@ -40,6 +40,15 @@ interface ImportMetaEnv {
   readonly VITE_CELO_RPC_URL: string | undefined;
   readonly VITE_XDC_RPC_URL: string | undefined;
 
+  // Base chain governance contracts
+  // Manager is pre-deployed; VITE_BASE_MANAGER_ADDRESS only needed to override the default.
+  readonly VITE_BASE_MANAGER_ADDRESS: string | undefined;
+  readonly VITE_BASE_TESTNET: string | undefined;
+  // Per-DAO contracts — set after Manager.deploy() for a specific community
+  readonly VITE_BASE_GOVERNOR_ADDRESS: string | undefined;
+  readonly VITE_BASE_TOKEN_ADDRESS: string | undefined;
+  readonly VITE_BASE_TREASURY_ADDRESS: string | undefined;
+
   // EVM contract addresses
   readonly VITE_ETH_CONTRACT_ADDR: string | undefined;
   readonly VITE_BASE_CONTRACT_ADDR: string | undefined;
