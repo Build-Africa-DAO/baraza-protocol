@@ -22,7 +22,7 @@ const timestamp = (chainMeta: ChainMeta) =>
 const initialMessage = (chainMeta: ChainMeta): Message => ({
     id: '1',
     role: 'asha',
-    text: "Habari! I'm Asha, your Baraza guide. I can help you understand the website, launch a DAO or community, manage members, or plan a vote.",
+    text: "Habari! I'm Asha, your Baraza guide. I can help you understand the website, launch a DAO, manage members, or plan a vote.",
     time: timestamp(chainMeta),
 });
 
@@ -38,32 +38,32 @@ const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
   {
     keywords: ['ai', 'asha', 'guide', 'copilot', 'assistant', 'platform', 'use baraza'],
     reply:
-      'Baraza combines the website, the operating platform, and Asha AI in one flow. Use the website to understand the model, Explore to find DAOs and communities, Launch to create one, dashboards to manage KSh treasury and votes, and ask me when you need help choosing settings or explaining the next action.',
+      'Baraza combines the website, the operating platform, and Asha AI in one flow. Use the website to understand the model, Explore to find DAOs, Launch to create one, dashboards to manage KES treasury and votes, and ask me when you need help choosing settings or explaining the next action.',
   },
   {
     keywords: ['plan', 'setup', 'best setup', 'rules', 'quorum', 'threshold'],
     reply:
-      'A solid setup starts with your group type, monthly dues in KSh, quorum, approval threshold, and voting period. For most welfare groups, start with 51% quorum, 66% approval, a 7-day vote window, and clear rules for emergency spending. Then invite members to review before joining.',
+      'A solid setup starts with your group type, monthly dues in KES, quorum, approval threshold, and voting period. For most welfare groups, start with 51% quorum, 66% approval, a 7-day vote window, and clear rules for emergency spending. Then invite members to review before joining.',
   },
   {
     keywords: ['create', 'start', 'new group', 'community', 'chama', 'sacco'],
     reply:
-      'To create a DAO or community, tap "Launch" in the menu. Fill in your group name, choose a type (DAO, Chama, SACCO, Cooperative, etc.), set monthly dues in KSh, and write a short description. Once created, share the link so members can join instantly.',
+      'To create a DAO, tap "Launch" in the menu. Fill in your group name, choose a community type (Savings Group, SACCO, Cooperative, etc.), set monthly dues in KES, and write a short description. Once created, share the link so members can join instantly.',
   },
   {
     keywords: ['vote', 'voting', 'decision', 'propose', 'proposal'],
     reply:
-      "Any member can create a proposal to spend DAO or community funds. Give it a title, description, and funding amount in KSh, then set a voting window. All members vote Support or Object. When time's up, the majority wins. Simple, transparent, and fair.",
+      "Any member can create a proposal to spend DAO funds. Give it a title, description, and funding amount in KES, then set a voting window. All members vote Support or Object. When time's up, the majority wins. Simple, transparent, and fair.",
   },
   {
     keywords: ['fund', 'money', 'KES', 'shilling', 'fee', 'pay', 'balance', 'treasury'],
     reply:
-      'Every DAO or community has a shared KSh fund built from monthly membership dues. The balance is always visible to all members on the dashboard. When a Decision is approved, funds are released and every transaction is logged.',
+      'Every DAO has a shared KES fund built from monthly membership dues. The balance is always visible to all members on the dashboard. When a Decision is approved, funds are released and every transaction is logged.',
   },
   {
     keywords: ['join', 'member', 'membership', 'card', 'how to join'],
     reply:
-      'To join a DAO or community, find it on Explore and click "Become a member". After paying the monthly dues, your membership is issued after payment proof and approval.',
+      'To join a DAO, find it on Explore and click "Become a member". After paying the monthly dues, your membership is issued after payment proof and approval.',
   },
   {
     keywords: ['dashboard', 'stats', 'overview', 'manage'],
@@ -73,7 +73,7 @@ const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
   {
     keywords: ['wallet', 'phantom', 'solflare', 'connect', 'sign in', 'login'],
     reply:
-      'BRZA is the native Baraza Token. Different rails connect into it: Solana uses Phantom, Solflare, or Backpack; Stellar uses Freighter, Lobstr, or Albedo; and Celo is the first visible EVM route with Valora or MetaMask. Members can also pay in KSh through M-Pesa while Baraza records the BRZA equivalent behind the flow.',
+      'Different rails use different accounts. Solana actions use Phantom, Solflare, or Backpack. Stellar uses Freighter, Lobstr, or Albedo. Base, Arbitrum, and Optimism use MetaMask, Coinbase Wallet, Rabby, or WalletConnect. Celo can use Valora or MetaMask.',
   },
   {
     keywords: ['solana', 'blockchain', 'on-chain', 'web3', 'crypto'],
@@ -98,12 +98,12 @@ const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
   {
     keywords: ['hello', 'hi', 'habari', 'hey', 'hola', 'sasa'],
     reply:
-      'Habari! Great to have you here. Ask me about launching a DAO or community, how voting works, managing KSh funds, joining a group, or anything else. What would you like to know?',
+      'Habari! Great to have you here. Ask me about launching a DAO, how voting works, managing KES funds, joining a group, or anything else. What would you like to know?',
   },
   {
     keywords: ['thank', 'thanks', 'asante', 'awesome', 'great', 'perfect'],
     reply:
-      'Karibu sana! Happy to help anytime. If you get stuck anywhere in Baraza, just ask. Good luck with your DAO or community!',
+      'Karibu sana! Happy to help anytime. If you get stuck anywhere in Baraza, just ask. Good luck with your DAO!',
   },
 ];
 
@@ -112,7 +112,7 @@ const getAshaResponse = (input: string): string => {
   for (const { keywords, reply } of RESPONSES) {
     if (keywords.some((kw) => lower.includes(kw))) return reply;
   }
-  return 'Great question! Baraza helps DAOs, communities and SACCOs manage KSh funds and make decisions together. Try asking me about launching a DAO or community, how voting works, the shared fund, or how to join an existing group.';
+  return 'Great question! Baraza helps DAOs and communities manage KES funds and make decisions together. Try asking me about launching a DAO, how voting works, the shared fund, or how to join an existing group.';
 };
 
 const TypingDots: React.FC = () => (
@@ -129,7 +129,7 @@ const TypingDots: React.FC = () => (
 );
 
 const AshaChat: React.FC = () => {
-  const { isOpen, close, pendingMessage, clearPending } = useAshaChat();
+  const { isOpen, open, close, pendingMessage, clearPending } = useAshaChat();
   const { chainMeta } = useChain();
   const [messages, setMessages] = useState<Message[]>(() => [initialMessage(chainMeta)]);
   const [input, setInput] = useState('');
@@ -151,23 +151,6 @@ const AshaChat: React.FC = () => {
       if (focusTimerRef.current !== null) clearTimeout(focusTimerRef.current);
     };
   }, [isOpen]);
-
-  // Send pending message from hero search bar
-  useEffect(() => {
-    if (isOpen && pendingMessage) {
-      clearPending();
-      sendMessage(pendingMessage);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, pendingMessage]);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) close();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [isOpen, close]);
 
   const sendMessage = useCallback((text: string) => {
     if (!text.trim()) return;
@@ -195,6 +178,23 @@ const AshaChat: React.FC = () => {
     }, 900 + Math.random() * 400);
   }, [chainMeta]);
 
+  // Send pending message from hero search bar
+  useEffect(() => {
+    if (isOpen && pendingMessage) {
+      clearPending();
+      sendMessage(pendingMessage);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, pendingMessage]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) close();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isOpen, close]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     sendMessage(input);
@@ -211,14 +211,12 @@ const AshaChat: React.FC = () => {
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            disabled
-            aria-label="Asha chat coming soon"
-            title="Asha AI guide is coming soon"
-            className="fixed bottom-5 right-5 z-50 hidden h-14 w-14 cursor-not-allowed rounded-full opacity-70 md:flex items-center justify-center shadow-lg"
+            onClick={() => open()}
+            aria-label="Open Asha chat"
+            className="fixed bottom-5 right-5 z-50 hidden w-14 h-14 rounded-full md:flex items-center justify-center shadow-lg animate-pulse-glow transition-transform hover:scale-110 active:scale-95"
             style={{ background: 'var(--gradient-warm)' }}
           >
             <MessageCircle className="w-6 h-6 text-warm-foreground" />
-            <span className="sr-only">Coming soon</span>
           </motion.button>
         )}
       </AnimatePresence>

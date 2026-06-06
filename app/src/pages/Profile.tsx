@@ -19,7 +19,8 @@ import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import Layout from "@/components/Layout";
 import { formatRailAmountFromKes, formatRailDate, truncateAddress } from "@/lib/utils";
 import CommunityBanner from "@/components/CommunityBanner";
-import { listMembershipsForWallet } from "@/lib/memberships";
+import { fetchMembershipsForWallet, listMembershipsForWallet } from "@/lib/memberships";
+import { fetchTotalRazaBalance } from "@/hooks/useRazaBalance";
 import { useCommunities } from "@/hooks/useCommunities";
 import { CHAINS } from "@/lib/chain";
 import { useSeo } from "@/lib/seo";
@@ -57,6 +58,7 @@ export default function Profile() {
   const stellarConfig = useMemo(() => getStellarConfig(), []);
   const [stellarAccount, setStellarAccount] = useState<string | null>(null);
   const [stellarInput, setStellarInput] = useState("");
+  const [totalRaza, setTotalRaza] = useState<number | null>(null);
   const [stellarBalances, setStellarBalances] = useState<StellarBalance[]>([]);
   const [stellarMessage, setStellarMessage] = useState<string | null>(null);
   const [isLoadingStellar, setIsLoadingStellar] = useState(false);
@@ -70,23 +72,40 @@ export default function Profile() {
   // and skip the lookup when no wallet is connected.
   const address = publicKey?.toBase58() ?? "";
 
-  const myMemberships = useMemo(() => {
-    if (!address) return [];
-    const records = listMembershipsForWallet(address);
-    return records
-      .map((record) => {
-        const community = communities.find((c) => c.id === record.communityId);
-        if (!community) return null;
-        return { record, community };
-      })
-      .filter((entry): entry is { record: ReturnType<typeof listMembershipsForWallet>[number]; community: typeof communities[number] } => entry !== null);
+  const [myMemberships, setMyMemberships] = useState<
+    Array<{ record: ReturnType<typeof listMembershipsForWallet>[number]; community: typeof communities[number] }>
+  >([]);
+
+  useEffect(() => {
+    if (!address) { setMyMemberships([]); return; }
+    // Optimistic sync read
+    const syncRecords = listMembershipsForWallet(address);
+    setMyMemberships(
+      syncRecords
+        .map((r) => { const c = communities.find((c) => c.id === r.communityId); return c ? { record: r, community: c } : null; })
+        .filter((e): e is NonNullable<typeof e> => e !== null),
+    );
+    // Then async Supabase read for fresh voting_weight
+    fetchMembershipsForWallet(address).then((records) => {
+      setMyMemberships(
+        records
+          .map((r) => { const c = communities.find((c) => c.id === r.communityId); return c ? { record: r, community: c } : null; })
+          .filter((e): e is NonNullable<typeof e> => e !== null),
+      );
+    }).catch(() => undefined);
   }, [address, communities]);
 
-  const memberBounties = useMemo(() => {
-    return myMemberships.flatMap(({ community }) =>
+  useEffect(() => {
+    if (!address) { setTotalRaza(null); return; }
+    fetchTotalRazaBalance(address).then(setTotalRaza).catch(() => setTotalRaza(null));
+  }, [address]);
+
+  const memberBounties = useMemo(
+    () => myMemberships.flatMap(({ community }) =>
       getOpenBountiesForCommunity(community.id).map((bounty) => ({ bounty, community })),
-    );
-  }, [myMemberships]);
+    ),
+    [myMemberships],
+  );
 
   useEffect(() => {
     if (!address) return;
@@ -191,7 +210,7 @@ export default function Profile() {
             </div>
             <h1 className="font-display text-2xl font-bold">{chainMeta.accountCta}</h1>
             <p className="mt-3 text-sm">
-              Your profile shows your memberships, voting history, and credentials across every DAO or community you join.
+              Your profile shows your memberships, voting history, and credentials across every DAO you join.
             </p>
             <button onClick={() => setVisible(true)} className="btn-warm mt-6 inline-flex items-center gap-2 text-sm">
               Connect {chainMeta.label}
@@ -227,6 +246,20 @@ export default function Profile() {
 
           <div className="grid gap-6 lg:grid-cols-[0.34fr_0.66fr]">
             <aside className="space-y-6">
+              {/* RAZA balance summary */}
+              <div className="baraza-card p-5">
+                <h2 className="mb-3 font-mono text-xs uppercase tracking-widest">RAZA balance</h2>
+                <div className="flex items-end gap-2">
+                  <span className="font-display text-4xl font-black tabular-nums leading-none">
+                    {totalRaza === null ? '—' : totalRaza}
+                  </span>
+                  <span className="mb-1 text-sm font-semibold text-muted-foreground">RAZA</span>
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Voting weight across all active memberships. Increases with governance participation.
+                </p>
+              </div>
+
               <div className="baraza-card p-5">
                 <h2 className="mb-4 font-mono text-xs uppercase tracking-widest">
                   Linked accounts
@@ -403,7 +436,7 @@ export default function Profile() {
                   Active roles
                 </h2>
                 <p className="text-sm">
-                  No group roles yet. Join a community or launch one to receive your first role.
+                  No group roles yet. Join a DAO or launch one to receive your first role.
                 </p>
               </div>
             </aside>
@@ -452,6 +485,9 @@ export default function Profile() {
                               </span>
                               <span>Joined {formatRailDate(record.joinedAt, chainMeta, { month: 'short', year: 'numeric' })}</span>
                               <span>{formatRailAmountFromKes(community.membershipFee, chainMeta)}/mo</span>
+                              <span className="font-semibold text-primary">
+                                {record.razaBalance} RAZA
+                              </span>
                             </div>
                           </div>
                           <ArrowRight className="h-4 w-4 shrink-0" />
@@ -464,7 +500,7 @@ export default function Profile() {
                       Not a member of any DAO yet
                     </p>
                     <p className="mt-2 text-sm">
-                      Join a DAO or community to receive your membership credential and vote on proposals.
+                      Join a DAO to receive your membership credential and vote on proposals.
                     </p>
                     <div className="mt-5 flex flex-col items-center justify-center gap-2 sm:flex-row">
                       <Link to="/communities" className="btn-warm inline-flex items-center gap-2 text-sm">

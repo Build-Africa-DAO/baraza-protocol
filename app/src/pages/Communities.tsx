@@ -7,7 +7,7 @@ import { COMMUNITY_TYPES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { useCommunities } from "@/hooks/useCommunities";
 import CommunityBanner from "@/components/CommunityBanner";
-import { CHAINS, VISIBLE_CHAIN_LIST, type Chain } from "@/lib/chain";
+import { CHAINS, type Chain } from "@/lib/chain";
 import { useSeo } from "@/lib/seo";
 import { useChain } from "@/hooks/useChain";
 
@@ -15,34 +15,40 @@ type ChainFilter = "all" | Chain;
 
 const CHAIN_FILTERS: { value: ChainFilter; label: string; dot?: string }[] = [
   { value: "all", label: "All rails" },
-  ...VISIBLE_CHAIN_LIST
+  ...Object.values(CHAINS)
+    .filter((chain) => chain.enabled)
     .map((chain) => ({ value: chain.id, label: chain.label, dot: chain.badgeBg })),
 ];
 
-function emptyChainTitle(chainFilter: ChainFilter): string {
-  if (chainFilter === "all") return "No DAOs or communities match that filter yet";
-  if (chainFilter === "solana") return "No DAOs or communities match that filter";
-  return `No ${CHAINS[chainFilter].label} DAOs or communities yet`;
+function emptyChainTitle(chainFilter: ChainFilter, search: string): string {
+  const q = search.trim();
+  if (q) {
+    if (chainFilter === "all") return `No communities match "${q}"`;
+    const label = chainFilter === "solana" ? "Solana" : CHAINS[chainFilter].label;
+    return `No ${label} communities match "${q}"`;
+  }
+  if (chainFilter === "all") return "No DAOs yet";
+  if (chainFilter === "solana") return "No Solana DAOs yet";
+  return `No ${CHAINS[chainFilter].label} DAOs yet`;
 }
 
-function emptyChainDescription(chainFilter: ChainFilter): string {
+function emptyChainDescription(chainFilter: ChainFilter, search: string): string {
+  const q = search.trim();
+  if (q) return "Try a different search term or clear the filters, or launch your own DAO.";
   if (chainFilter === "stellar") {
-    return "No DAOs or communities are using this payment rail yet. Launch one and invite members.";
-  }
-  if (chainFilter === "mpesa") {
-    return "No DAOs or communities are using M-Pesa mobile money yet. Launch one and invite members to contribute in KSh by phone.";
+    return "No DAOs have selected Stellar as their settlement rail yet. Launch one and use XLM payment verification for member dues.";
   }
   if (chainFilter !== "all" && chainFilter !== "solana") {
-    return `No DAOs or communities have selected ${CHAINS[chainFilter].label} yet. Launch one to track the governance contract rollout for that rail.`;
+    return `No DAOs have selected ${CHAINS[chainFilter].label} yet. Launch one to track the governance contract rollout for that rail.`;
   }
-  return "Try a different type, or launch your own DAO or community.";
+  return "Be the first — launch your own DAO and start governing funds with Baraza.";
 }
 
 export default function Communities() {
   useSeo({
     title: "Browse DAOs",
     description:
-      "Discover DAOs, communities, SACCOs, and co-operatives on Baraza. Filter by community type and treasury rail to find a group to join or evaluate.",
+      "Discover DAOs and communities on Baraza. Filter by community type and treasury rail to find a group to join or evaluate.",
     path: "/communities",
   });
   const { communities, isLoading, error } = useCommunities();
@@ -95,7 +101,7 @@ export default function Communities() {
               DAOs &amp; Communities
             </h1>
             <p>
-              Find a DAO or community to join, or explore how groups are governing KSh funds with Baraza.
+              Find a DAO to join, or explore how communities are governing KES funds with Baraza.
             </p>
           </div>
           </CommunityBanner>
@@ -225,7 +231,7 @@ export default function Communities() {
           {/* Results count */}
           {isLoading ? (
             <p className="text-xs mb-5">Loading groups...</p>
-          ) : hasActiveFilter ? (
+          ) : hasActiveFilter && filtered.length > 0 ? (
             <p className="text-xs mb-5">
               {filtered.length} {filtered.length === 1 ? "community" : "communities"} found
             </p>
@@ -296,10 +302,10 @@ export default function Communities() {
                 <Search className="w-6 h-6" />
               </div>
               <p className="font-display text-base font-semibold mb-1">
-                {emptyChainTitle(chainFilter)}
+                {emptyChainTitle(chainFilter, search)}
               </p>
               <p className="text-sm mb-6">
-                {emptyChainDescription(chainFilter)}
+                {emptyChainDescription(chainFilter, search)}
               </p>
               <Link to="/create" className="btn-primary inline-flex items-center gap-2 text-sm">
                 <PlusCircle className="w-4 h-4" /> Launch a DAO

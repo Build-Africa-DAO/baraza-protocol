@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, Coins, ShieldCheck, Smartphone, Users } from "lucide-react";
+import { ArrowRight, Coins, Link2, ShieldCheck, Users } from "lucide-react";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 
 const steps = [
-  { icon: Smartphone, title: "Connect your account", desc: "Use your existing wallet or sign in with your phone number. No seed phrase required for new members." },
-  { icon: ShieldCheck, title: "Set basics & rules", desc: "Name your DAO or community, pick a type, set monthly dues in KSh, and define quorum, approval, and voting period." },
+  { icon: Link2, title: "Choose the right account", desc: "Solana uses Phantom or Solflare. Stellar uses Freighter or Lobstr. Base, Arbitrum, and Optimism use MetaMask, Coinbase Wallet, or Rabby." },
+  { icon: ShieldCheck, title: "Set basics & rules", desc: "Name your DAO, pick a community type, set monthly dues in KES, and define quorum, approval, and voting period." },
   { icon: Users, title: "Invite members", desc: "Share the join link. Members can join with M-Pesa or a connected account." },
   { icon: Coins, title: "Govern transparently", desc: "Members propose, vote, and release funds. Every action stays visible in one shared record." },
 ];

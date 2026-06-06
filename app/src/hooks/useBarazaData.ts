@@ -5,7 +5,7 @@
  * Components re-render only when the store emits a change.
  */
 
-import { type DependencyList, useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { type DependencyList, useEffect, useLayoutEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useAnchorWallet, useConnection } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
 
@@ -22,7 +22,7 @@ import {
 
 function useStoreSnapshot<T>(selector: () => T, deps: DependencyList = []): T {
   const selectorRef = useRef(selector);
-  selectorRef.current = selector;
+  useLayoutEffect(() => { selectorRef.current = selector; });
   const [snapshot, setSnapshot] = useState(selector);
 
   useEffect(() => {

@@ -68,6 +68,7 @@ export function isRefundStatus(s: PaymentOrderStatus): boolean {
 export function isTerminalStatus(s: PaymentOrderStatus): boolean {
   return (
     s === 'RECONCILED' ||
+    s === 'INDEXER_CONFIRMED' ||
     isFailureStatus(s) ||
     s === 'REFUND_CONFIRMED'
   );

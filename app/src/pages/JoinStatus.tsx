@@ -22,7 +22,7 @@ import {
   type PaymentOrderStatus,
 } from "@/lib/payments";
 import { recordActiveMembership } from "@/lib/memberships";
-import { CHAINS } from "@/lib/chain";
+import { getPhoneAuthSession } from "@/lib/phoneAuth";
 import { useChain } from "@/hooks/useChain";
 
 interface DisplayStep {
@@ -72,12 +72,11 @@ export default function JoinStatus() {
   const [params] = useSearchParams();
   const { community } = useCommunity(id);
   const { publicKey } = useWallet();
-  const { chain } = useChain();
+  const { chainMeta } = useChain();
   const orderId = params.get("orderId") ?? "";
   const activationSecret = getPaymentOrderActivationSecret(orderId);
   const rail = params.get("rail") ?? (orderId.startsWith("ord_stellar_") || orderId.startsWith("ord_local_stellar_") ? "stellar" : "mpesa");
   const isStellarRail = rail === "stellar";
-  const membershipChainMeta = CHAINS[community?.chain ?? chain];
 
   useSeo({
     title: community ? `Join status - ${community.name}` : "Join status",
@@ -155,16 +154,22 @@ export default function JoinStatus() {
     };
   }, [isLocalOrder, hasSupabase, orderId, activationSecret]);
 
-  // ─── On RECONCILED (or INDEXER_CONFIRMED) with a wallet present, record the
-  //     membership locally for the dashboard AND try to persist via the
-  //     /api/membership/activate endpoint. The local write always succeeds; the
-  //     server write degrades gracefully when the endpoint is unreachable.
+  // ─── On RECONCILED (or INDEXER_CONFIRMED), record the membership locally and
+  //     persist via /api/membership/activate. Works for both wallet-connected
+  //     users (publicKey) and phone-only users (getPhoneAuthSession).
   useEffect(() => {
     if (membershipRecordedRef.current) return;
     if (status !== "RECONCILED" && status !== "INDEXER_CONFIRMED") return;
-    if (!publicKey || !id) return;
+    if (!id) return;
 
-    recordActiveMembership(id, publicKey.toBase58());
+    const walletAddr = publicKey?.toBase58() ?? null;
+    const phoneAddr = getPhoneAuthSession().phone
+      ? `phone:${getPhoneAuthSession().phone}`
+      : null;
+    const identity = walletAddr ?? phoneAddr;
+    if (!identity) return;
+
+    recordActiveMembership(id, identity);
     membershipRecordedRef.current = true;
 
     if (!orderId || orderId.startsWith("ord_local_") || !activationSecret) return;
@@ -175,7 +180,8 @@ export default function JoinStatus() {
       body: JSON.stringify({
         orderId,
         communityId: id,
-        walletAddress: publicKey.toBase58(),
+        walletAddress: walletAddr,
+        phoneIdentifier: walletAddr ? null : phoneAddr,
         activationSecret,
       }),
     }).catch(() => {
@@ -195,12 +201,12 @@ export default function JoinStatus() {
             { code: "payment-confirmed", label: "Payment received - activating membership", minStatus: "PAYMENT_CONFIRMED" },
           ];
 
-      return [...paymentSteps, ...getDisplaySteps(membershipChainMeta.label)].map((step) => ({
+      return [...paymentSteps, ...getDisplaySteps(chainMeta.label)].map((step) => ({
         ...step,
         state: deriveStepState(step.minStatus, status),
       }));
     },
-    [isStellarRail, membershipChainMeta.label, status],
+    [chainMeta.label, isStellarRail, status],
   );
 
   const isFailed = isFailureStatus(status);
@@ -222,7 +228,7 @@ export default function JoinStatus() {
               </h1>
               <p className="mt-2 text-sm">
                 Order <span className="font-mono">{orderId || "(none)"}</span> for{" "}
-                {community?.name ?? "Community"} is moving from{" "}
+                {community?.name ?? "Chama"} is moving from{" "}
                 {isStellarRail ? "Stellar payment verification" : "M-Pesa confirmation"} to active membership.
               </p>
             </div>
@@ -293,7 +299,7 @@ export default function JoinStatus() {
                 {!publicKey && isComplete && (
                   <div className="rounded-lg border p-5">
                     <p className="text-sm leading-6">
-                      {membershipChainMeta.accountCta} to bind this membership to your account.
+                      {chainMeta.accountCta} to bind this membership to your account.
                     </p>
                   </div>
                 )}

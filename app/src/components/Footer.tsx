@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
-import { Github, Globe } from "lucide-react";
+import { Code2, Globe } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
+import { useChain } from "@/hooks/useChain";
 
 type FooterLink =
   | { label: string; to: string }
@@ -54,6 +55,8 @@ function FooterLinkItem({ link }: { link: FooterLink }) {
 }
 
 export default function Footer() {
+  const { chainMeta } = useChain();
+
   return (
     <footer className="border-t border-border/60 bg-card/50 backdrop-blur-sm">
       <div className="container mx-auto px-4 py-14">
@@ -61,12 +64,12 @@ export default function Footer() {
           <div>
             <BrandLogo size="md" className="mb-4" />
             <p className="mb-5 max-w-xs text-sm leading-relaxed text-muted-foreground">
-              A KSh treasury layer for DAOs, communities, and SACCOs that collect dues, vote on proposals,
+              A KES treasury layer for DAOs and communities that collect dues, vote on proposals,
               and move funds with shared visibility.
             </p>
             <div className="flex items-center gap-2">
               {[
-                { icon: Github, label: "GitHub", href: "https://github.com/Azizudinly/baraza-protocol" },
+                { icon: Code2, label: "GitHub", href: "https://github.com/Azizudinly/baraza-protocol" },
                 { icon: Globe, label: "Website", href: "/" },
               ].map(({ icon: Icon, label, href }) => (
                 <a
@@ -103,8 +106,9 @@ export default function Footer() {
               &copy; {new Date().getFullYear()} Baraza Protocol. All rights reserved.
             </p>
             <div className="hidden h-3 w-px bg-border sm:block" />
+            <p className="text-xs text-muted-foreground">Built for {chainMeta.label}</p>
           </div>
-            <p className="text-xs text-muted-foreground">Built for Kenyan DAOs, communities &amp; SACCOs</p>
+            <p className="text-xs text-muted-foreground">Built for Kenyan DAOs &amp; communities</p>
         </div>
       </div>
     </footer>

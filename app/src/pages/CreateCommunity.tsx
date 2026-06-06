@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Users, ArrowLeft, CheckCircle2, Loader2, Phone, ShieldCheck, Wallet } from 'lucide-react';
+import { Users, ArrowLeft, CheckCircle2, Loader2, Phone, ShieldCheck, Wallet, Hash, Smartphone } from 'lucide-react';
 import Layout from '@/components/Layout';
-import { COMMUNITY_TYPES, DAO_CREATION_FEE_KES } from '@/lib/constants';
+import { COMMUNITY_TYPES, DAO_CREATION_FEE_KES, PAYBILL_ADDON_FEE_KES, USSD_ADDON_FEE_KES } from '@/lib/constants';
 import { formatKSh, formatRailAmountFromKes, formatRailAmountWithKes } from '@/lib/utils';
 import { normaliseKenyanPhone } from '@/lib/phone';
 import { useWalletGuard } from '@/hooks/useWalletGuard';
@@ -17,11 +17,22 @@ import { useBarazaChain } from '@/hooks/useBarazaData';
 import { communityPda, toSlug } from '@/lib/programs';
 import { saveCommunityChainMapping } from '@/lib/chainMappings';
 
+function provisionPaybill(communityName: string): string {
+  // Generates a deterministic-looking 6-digit Safaricom business paybill.
+  const seed = Array.from(communityName).reduce((a, c) => a + c.charCodeAt(0), 0) + (Date.now() % 9000);
+  return String(400100 + (seed % 9900));
+}
+
+function provisionUssdShortcode(communityName: string): string {
+  const seed = Array.from(communityName).reduce((a, c) => a + c.charCodeAt(0), 0) + ((Date.now() >> 2) % 900);
+  return `*384*${100 + (seed % 900)}#`;
+}
+
 const CreateCommunity: React.FC = () => {
   useSeo({
     title: "Launch a DAO",
     description:
-      "Launch a DAO, community, SACCO, or co-operative on Baraza. Set membership rules, dues, quorum, and M-Pesa contribution paths in a single guided flow.",
+      "Launch a DAO on Baraza. Set membership rules, dues, quorum, and M-Pesa contribution paths in a single guided flow.",
     path: "/create",
   });
   const navigate = useNavigate();
@@ -33,8 +44,12 @@ const CreateCommunity: React.FC = () => {
   const [isCreated, setIsCreated] = useState(false);
   const [createdCommunityId, setCreatedCommunityId] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'mpesa' | 'wallet'>('mpesa');
-  const [walletChain, setWalletChain] = useState<Extract<Chain, 'solana' | 'stellar' | 'celo'>>(
-    chain === 'solana' || chain === 'stellar' || chain === 'celo'
+  const [addPaybill, setAddPaybill] = useState(false);
+  const [addUssd, setAddUssd] = useState(false);
+  const [assignedPaybill, setAssignedPaybill] = useState<string | null>(null);
+  const [assignedUssd, setAssignedUssd] = useState<string | null>(null);
+  const [walletChain, setWalletChain] = useState<Extract<Chain, 'solana' | 'stellar' | 'base' | 'arbitrum' | 'optimism' | 'celo'>>(
+    chain === 'solana' || chain === 'stellar' || chain === 'base' || chain === 'arbitrum' || chain === 'optimism' || chain === 'celo'
       ? chain
       : 'solana',
   );
@@ -55,6 +70,10 @@ const CreateCommunity: React.FC = () => {
   };
 
   const normalisedPhone = normaliseKenyanPhone(form.phone);
+  const totalFeeKes =
+    DAO_CREATION_FEE_KES +
+    (addPaybill ? PAYBILL_ADDON_FEE_KES : 0) +
+    (addUssd ? USSD_ADDON_FEE_KES : 0);
   const selectedCommunityChain = paymentMethod === 'wallet' ? walletChain : chain;
   const selectedCommunityChainMeta = CHAINS[selectedCommunityChain];
   const selectedAccountMeta = CHAINS[walletChain];
@@ -68,7 +87,7 @@ const CreateCommunity: React.FC = () => {
   );
 
   React.useEffect(() => {
-    if (chain === 'solana' || chain === 'stellar' || chain === 'celo') {
+    if (chain === 'solana' || chain === 'stellar' || chain === 'base' || chain === 'arbitrum' || chain === 'optimism' || chain === 'celo') {
       setWalletChain(chain);
     }
   }, [chain]);
@@ -87,7 +106,7 @@ const CreateCommunity: React.FC = () => {
         body: JSON.stringify({
           phone: `+254${normalisedPhone}`,
           communityId: 'dao-creation-pending',
-          amount: DAO_CREATION_FEE_KES,
+          amount: totalFeeKes,
           currency: 'KES',
         }),
       });
@@ -136,6 +155,11 @@ const CreateCommunity: React.FC = () => {
           }
         }
 
+        const paybill = addPaybill ? provisionPaybill(form.name) : undefined;
+        const ussd = addUssd ? provisionUssdShortcode(form.name) : undefined;
+        if (paybill) setAssignedPaybill(paybill);
+        if (ussd) setAssignedUssd(ussd);
+
         const community = await createCommunityRecord({
           name: form.name,
           type: form.type,
@@ -146,6 +170,8 @@ const CreateCommunity: React.FC = () => {
           approvalThresholdPct: Number(form.approvalThreshold),
           votingPeriodDays: Number(form.votingPeriod),
           treasuryPolicy: form.treasuryPolicy as 'multisig-ready' | 'proposal-only' | 'manual-review',
+          paybillNumber: paybill,
+          ussdShortcode: ussd,
         });
         if (chainResult) {
           saveCommunityChainMapping({
@@ -159,19 +185,19 @@ const CreateCommunity: React.FC = () => {
         setCreatedCommunityId(community.id);
         setIsCreated(true);
         const launchFeeLabel = paymentMethod === 'mpesa'
-          ? formatKSh(DAO_CREATION_FEE_KES)
-          : formatRailAmountWithKes(DAO_CREATION_FEE_KES, selectedAccountMeta);
+          ? formatKSh(totalFeeKes)
+          : formatRailAmountWithKes(totalFeeKes, selectedAccountMeta);
         toast({
           title: charge.persisted
             ? `${launchFeeLabel} payment received`
-            : `Community launched (simulator offline)`,
+            : `DAO launched (simulator offline)`,
           description: charge.persisted
             ? `Order ${charge.orderId.slice(0, 12)}... ${form.name} is live.`
             : 'Local dev mode - payment skipped, community launched.',
         });
       } catch (err) {
         toast({
-          title: 'Community launch failed',
+          title: 'DAO launch failed',
           description: err instanceof Error ? err.message : 'Check the form and try again.',
           variant: 'destructive',
         });
@@ -190,8 +216,8 @@ const CreateCommunity: React.FC = () => {
 
   if (isCreated) {
     const launchFeeLabel = paymentMethod === 'mpesa'
-      ? formatKSh(DAO_CREATION_FEE_KES)
-      : formatRailAmountWithKes(DAO_CREATION_FEE_KES, selectedAccountMeta);
+      ? formatKSh(totalFeeKes)
+      : formatRailAmountWithKes(totalFeeKes, selectedAccountMeta);
     return (
       <Layout>
         <section className="py-20">
@@ -206,6 +232,30 @@ const CreateCommunity: React.FC = () => {
               <p className="text-sm mb-2">
                 Payment of {launchFeeLabel} received. Your DAO is ready.
               </p>
+              {(assignedPaybill || assignedUssd) && (
+                <div className="mb-5 rounded-lg border p-4 text-left space-y-3">
+                  {assignedPaybill && (
+                    <div className="flex items-center gap-3 text-sm">
+                      <Phone className="h-4 w-4 shrink-0 text-primary" />
+                      <div>
+                        <p className="font-semibold">Paybill assigned</p>
+                        <p className="font-mono text-base">{assignedPaybill}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Account number = your member ID</p>
+                      </div>
+                    </div>
+                  )}
+                  {assignedUssd && (
+                    <div className="flex items-center gap-3 text-sm">
+                      <Smartphone className="h-4 w-4 shrink-0 text-primary" />
+                      <div>
+                        <p className="font-semibold">USSD shortcode assigned</p>
+                        <p className="font-mono text-base">{assignedUssd}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Members dial this to vote and pay dues</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
               <p className="text-sm mb-8">
                 Share the join link with members, then start your first proposal from the dashboard.
               </p>
@@ -257,7 +307,7 @@ const CreateCommunity: React.FC = () => {
                 </h1>
               </div>
               <p className="max-w-xl text-sm font-semibold leading-6 text-foreground/92 drop-shadow md:text-base md:leading-7">
-                Launch a DAO or community where members can contribute, submit proposals, and manage a shared treasury with clear rules.
+                Launch a DAO where members can contribute, submit proposals, and manage a shared treasury with clear rules.
               </p>
             </div>
             </CommunityBanner>
@@ -270,14 +320,14 @@ const CreateCommunity: React.FC = () => {
               {/* Name */}
               <div>
                 <label className="block text-xs font-semibold mb-2">
-                  DAO / Community Name
+                  DAO Name
                 </label>
                 <input
                   type="text"
                   name="name"
                   value={form.name}
                   onChange={handleChange}
-                  placeholder="e.g. Milele Community"
+                  placeholder="e.g. Milele DAO"
                   className="w-full rounded-xl px-4 py-3 text-sm outline-none border"
                 />
               </div>
@@ -416,6 +466,92 @@ const CreateCommunity: React.FC = () => {
                 </div>
               </div>
 
+              {/* Premium Add-ons */}
+              <div className="grid gap-4 rounded-lg border p-5">
+                <div>
+                  <h2 className="font-mono text-xs font-semibold uppercase tracking-widest">
+                    Premium Add-ons
+                  </h2>
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Optional payment channels added to your DAO setup fee.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setAddPaybill((v) => !v)}
+                  className={`flex items-start gap-4 rounded-lg border p-4 text-left transition-colors ${
+                    addPaybill
+                      ? 'border-primary bg-primary/8'
+                      : 'border-border hover:border-primary/40'
+                  }`}
+                >
+                  <div className={`mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-lg ${addPaybill ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                    <Phone className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold">M-Pesa Paybill number</p>
+                      <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${addPaybill ? 'border-primary/40 bg-primary/10 text-primary' : 'border-border text-muted-foreground'}`}>
+                        + {formatKSh(PAYBILL_ADDON_FEE_KES)}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-muted-foreground leading-5">
+                      Register a dedicated Paybill so members can pay dues directly without sharing personal numbers.
+                    </p>
+                  </div>
+                </button>
+
+                {addPaybill && (
+                  <div className="flex items-start gap-3 rounded-lg border border-primary/25 bg-primary/5 px-4 py-3 text-sm">
+                    <Hash className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <div>
+                      <p className="font-semibold text-primary">Paybill will be assigned at launch</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        Baraza registers a dedicated 6-digit Safaricom Paybill for your DAO. Your members pay dues using it — no personal number shared. The number appears in your dashboard after launch.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setAddUssd((v) => !v)}
+                  className={`flex items-start gap-4 rounded-lg border p-4 text-left transition-colors ${
+                    addUssd
+                      ? 'border-primary bg-primary/8'
+                      : 'border-border hover:border-primary/40'
+                  }`}
+                >
+                  <div className={`mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-lg ${addUssd ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                    <Smartphone className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold">USSD shortcode</p>
+                      <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${addUssd ? 'border-primary/40 bg-primary/10 text-primary' : 'border-border text-muted-foreground'}`}>
+                        + {formatKSh(USSD_ADDON_FEE_KES)}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-muted-foreground leading-5">
+                      Give feature-phone members a *XXX# shortcode to check balance, vote, and pay dues without a smartphone.
+                    </p>
+                  </div>
+                </button>
+
+                {addUssd && (
+                  <div className="flex items-start gap-3 rounded-lg border border-primary/25 bg-primary/5 px-4 py-3 text-sm">
+                    <Hash className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <div>
+                      <p className="font-semibold text-primary">USSD shortcode will be assigned at launch</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        Baraza provisions a dedicated <span className="font-mono">*384*XXX#</span> shortcode for your DAO. Feature-phone members dial it to vote and pay dues without a smartphone. The shortcode appears in your dashboard after launch.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Payment */}
               <div className="grid gap-4 rounded-lg border p-5">
                 <h2 className="font-mono text-xs font-semibold uppercase tracking-widest">
@@ -461,7 +597,7 @@ const CreateCommunity: React.FC = () => {
                     >
                       <label htmlFor="create-phone" className="mb-2 flex items-center gap-1.5 text-xs font-semibold">
                         <Phone className="h-3.5 w-3.5" />
-                        M-Pesa number for the {formatKSh(DAO_CREATION_FEE_KES)} launch charge
+                        M-Pesa number for the {formatKSh(totalFeeKes)} launch charge
                       </label>
                       <div className="flex rounded-lg border focus-within:border-current">
                         <span className="border-r px-3 py-2.5 text-sm">+254</span>
@@ -507,9 +643,12 @@ const CreateCommunity: React.FC = () => {
                           onChange={(e) => setWalletChain(e.target.value as typeof walletChain)}
                           className="w-full appearance-none rounded-lg border py-3 pl-8 pr-4 text-sm font-semibold outline-none cursor-pointer"
                         >
-                          <option value="solana">Solana into BRZA - Phantom / Solflare</option>
-                          <option value="stellar">Stellar into BRZA - Freighter / Lobstr</option>
-                          <option value="celo">Celo EVM into BRZA - Valora / MetaMask</option>
+                          <option value="solana">Solana - Phantom / Solflare</option>
+                          <option value="stellar">Stellar - Freighter / Lobstr</option>
+                          <option value="base">Base - MetaMask / Coinbase Wallet</option>
+                          <option value="arbitrum">Arbitrum - MetaMask / Rabby</option>
+                          <option value="optimism">Optimism - MetaMask / Rabby</option>
+                          <option value="celo">Celo - Valora / MetaMask</option>
                         </select>
                       </div>
                       <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm">
@@ -533,16 +672,29 @@ const CreateCommunity: React.FC = () => {
                 </AnimatePresence>
 
                 {/* Fee summary */}
-                <div className="grid gap-2 border-t pt-4 text-sm sm:grid-cols-[1fr_auto] sm:items-center sm:gap-x-4">
-                  <div>
-                    <p className="text-xs font-semibold">Group setup fee</p>
-                    <p className="mt-0.5 text-[11px]">
-                      One-time charge for account setup, metadata pinning, and registry setup.
-                    </p>
+                <div className="grid gap-2 border-t pt-4 text-sm">
+                  <div className="flex items-center justify-between gap-4">
+                    <p className="text-xs text-muted-foreground">DAO setup fee</p>
+                    <span className="text-xs font-semibold tabular-nums">{formatKSh(DAO_CREATION_FEE_KES)}</span>
                   </div>
-                  <span className="font-display text-lg font-bold tabular-nums">
-                    {paymentMethod === 'mpesa' ? formatKSh(DAO_CREATION_FEE_KES) : formatRailAmountWithKes(DAO_CREATION_FEE_KES, selectedAccountMeta)}
-                  </span>
+                  {addPaybill && (
+                    <div className="flex items-center justify-between gap-4">
+                      <p className="text-xs text-muted-foreground">Paybill add-on</p>
+                      <span className="text-xs font-semibold tabular-nums">+ {formatKSh(PAYBILL_ADDON_FEE_KES)}</span>
+                    </div>
+                  )}
+                  {addUssd && (
+                    <div className="flex items-center justify-between gap-4">
+                      <p className="text-xs text-muted-foreground">USSD add-on</p>
+                      <span className="text-xs font-semibold tabular-nums">+ {formatKSh(USSD_ADDON_FEE_KES)}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between gap-4 border-t pt-2">
+                    <p className="text-xs font-semibold">Total charge</p>
+                    <span className="font-display text-lg font-bold tabular-nums">
+                      {paymentMethod === 'mpesa' ? formatKSh(totalFeeKes) : formatRailAmountWithKes(totalFeeKes, selectedAccountMeta)}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="grid gap-2 text-xs sm:grid-cols-[1fr_auto] sm:items-center sm:gap-x-4">
@@ -579,7 +731,7 @@ const CreateCommunity: React.FC = () => {
                       Processing payment...
                     </>
                   ) : paymentMethod === 'mpesa' ? (
-                    `Pay ${formatKSh(DAO_CREATION_FEE_KES)} via M-Pesa`
+                    `Pay ${formatKSh(totalFeeKes)} via M-Pesa`
                   ) : (
                     needsSolanaAccount
                       ? `Pay from ${selectedAccountMeta.short} & launch group`

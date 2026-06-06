@@ -5,6 +5,7 @@ import WalletProviders from '@/components/WalletProviders';
 import ChainProvider from '@/components/ChainProvider';
 import PageLoader from '@/components/PageLoader';
 import { AshaChatProvider } from '@/contexts/AshaChatContext';
+import { OfflineProvider } from '@/contexts/OfflineContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import AshaChat from '@/components/chat/AshaChat';
 
@@ -22,6 +23,7 @@ const Profile = lazy(() => import('./pages/Profile'));
 const TreasuryDetail = lazy(() => import('./pages/TreasuryDetail'));
 const ProposalDetail = lazy(() => import('./pages/ProposalDetail'));
 const AdminReconciliation = lazy(() => import('./pages/AdminReconciliation'));
+const Onboarding = lazy(() => import('./pages/Onboarding'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 const App: React.FC = () => {
@@ -29,6 +31,7 @@ const App: React.FC = () => {
     <ThemeProvider>
       <ChainProvider>
         <WalletProviders>
+          <OfflineProvider>
           <AshaChatProvider>
             <Suspense fallback={<PageLoader />}>
             <Routes>
@@ -51,6 +54,7 @@ const App: React.FC = () => {
               <Route path="/profile" element={<Profile />} />
               <Route path="/dashboard/:id/treasury" element={<TreasuryDetail />} />
               <Route path="/dashboard/:id/decisions/:decisionId" element={<ProposalDetail />} />
+              <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/admin" element={<AdminReconciliation />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
@@ -58,6 +62,7 @@ const App: React.FC = () => {
             <AshaChat />
             <Toaster />
           </AshaChatProvider>
+          </OfflineProvider>
         </WalletProviders>
       </ChainProvider>
     </ThemeProvider>

@@ -24,6 +24,8 @@ export interface Community {
   approvalThresholdPct?: number;
   votingPeriodDays?: number;
   treasuryPolicy?: 'multisig-ready' | 'proposal-only' | 'manual-review';
+  paybillNumber?: string;
+  ussdShortcode?: string;
 }
 
 export const DEFAULT_GOVERNANCE = {
@@ -40,6 +42,12 @@ export const DEFAULT_GOVERNANCE = {
  */
 export const DAO_CREATION_FEE_KES = 6500;
 export const DAO_CREATION_FEE_USD = 50;
+
+/** Premium add-on: registered M-Pesa Paybill number for member dues. */
+export const PAYBILL_ADDON_FEE_KES = 2000;
+
+/** Premium add-on: USSD shortcode for feature-phone member access. */
+export const USSD_ADDON_FEE_KES = 3000;
 
 /**
  * Mirrors the on-chain `ProposalStatus` enum in

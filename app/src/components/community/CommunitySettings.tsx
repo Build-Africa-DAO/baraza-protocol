@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Coins, ExternalLink, Info, Lock, Settings, ShieldCheck } from 'lucide-react';
+import { Coins, ExternalLink, Info, Lock, Phone, Settings, ShieldCheck, Smartphone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Community } from '@/lib/constants';
-import { formatRailAmountFromKes, formatRailDate } from '@/lib/utils';
+import { PAYBILL_ADDON_FEE_KES, USSD_ADDON_FEE_KES } from '@/lib/constants';
+import { formatKSh, formatRailAmountFromKes, formatRailDate } from '@/lib/utils';
 import { useChain } from '@/hooks/useChain';
 
 interface Props {
@@ -107,6 +108,81 @@ export default function CommunitySettings({ community, isMember }: Props) {
         </div>
       </div>
 
+      {/* Payment channels */}
+      <div className="baraza-card p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <Phone className="h-4 w-4 text-muted-foreground" />
+          <h3 className="font-display text-base font-semibold">Payment channels</h3>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {/* Paybill */}
+          <div className={`rounded-lg border p-4 ${community.paybillNumber ? 'border-primary/30 bg-primary/5' : 'border-border/50'}`}>
+            <div className="flex items-center justify-between gap-3 mb-2">
+              <div className="flex items-center gap-2">
+                <div className={`grid h-7 w-7 place-items-center rounded-md ${community.paybillNumber ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                  <Phone className="h-3.5 w-3.5" />
+                </div>
+                <p className="text-sm font-semibold">M-Pesa Paybill</p>
+              </div>
+              {community.paybillNumber ? (
+                <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold text-primary">Active</span>
+              ) : (
+                <span className="rounded-full border border-border/50 px-2 py-0.5 text-[10px] text-muted-foreground">Not set</span>
+              )}
+            </div>
+            {community.paybillNumber ? (
+              <p className="font-mono text-base font-bold">{community.paybillNumber}</p>
+            ) : (
+              <>
+                <p className="text-[11px] text-muted-foreground leading-5 mb-3">
+                  Dedicated Paybill so members pay dues without sharing personal numbers.
+                </p>
+                <Link
+                  to="/create"
+                  className="inline-flex items-center gap-1 rounded border border-primary/40 bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary"
+                >
+                  Add for {formatKSh(PAYBILL_ADDON_FEE_KES)}
+                  <ExternalLink className="h-3 w-3" />
+                </Link>
+              </>
+            )}
+          </div>
+
+          {/* USSD */}
+          <div className={`rounded-lg border p-4 ${community.ussdShortcode ? 'border-primary/30 bg-primary/5' : 'border-border/50'}`}>
+            <div className="flex items-center justify-between gap-3 mb-2">
+              <div className="flex items-center gap-2">
+                <div className={`grid h-7 w-7 place-items-center rounded-md ${community.ussdShortcode ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                  <Smartphone className="h-3.5 w-3.5" />
+                </div>
+                <p className="text-sm font-semibold">USSD shortcode</p>
+              </div>
+              {community.ussdShortcode ? (
+                <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold text-primary">Active</span>
+              ) : (
+                <span className="rounded-full border border-border/50 px-2 py-0.5 text-[10px] text-muted-foreground">Not set</span>
+              )}
+            </div>
+            {community.ussdShortcode ? (
+              <p className="font-mono text-base font-bold">{community.ussdShortcode}</p>
+            ) : (
+              <>
+                <p className="text-[11px] text-muted-foreground leading-5 mb-3">
+                  *XXX# shortcode so feature-phone members can pay and vote without a smartphone.
+                </p>
+                <Link
+                  to="/create"
+                  className="inline-flex items-center gap-1 rounded border border-primary/40 bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary"
+                >
+                  Add for {formatKSh(USSD_ADDON_FEE_KES)}
+                  <ExternalLink className="h-3 w-3" />
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Admin actions */}
       <div className="baraza-card p-5">
         <div className="flex items-center gap-2 mb-4">
@@ -132,7 +208,7 @@ export default function CommunitySettings({ community, isMember }: Props) {
                 {ActionIcon && <ActionIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />}
                 <div>
                   <p className="text-sm font-semibold">{action.label}</p>
-                <p className="text-[11px] text-muted-foreground">{action.note}</p>
+                  <p className="text-[11px] text-muted-foreground">{action.note}</p>
                 </div>
               </div>
               {action.disabled ? (

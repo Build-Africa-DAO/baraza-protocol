@@ -82,7 +82,7 @@ export default function JoinDao() {
   const { community } = useCommunity(id);
   const { chainMeta } = useChain();
   useSeo({
-    title: community ? `Join ${community.name}` : "Join a DAO or community",
+    title: community ? `Join ${community.name}` : "Join a DAO",
     description: "Verify your phone, pay membership dues via M-Pesa, and activate your membership.",
     path: id ? `/join/${id}` : undefined,
     noIndex: true,
@@ -174,8 +174,6 @@ export default function JoinDao() {
     setIsVerifyingStellar(true);
 
     try {
-      // Get a server-signed intent that cryptographically binds communityId to this payment.
-      // Falls back gracefully when the intent service is not configured (testnet dev).
       let intentToken: string | null = null;
       try {
         const intentRes = await fetch("/api/stellar/create-payment-intent", {
@@ -192,7 +190,7 @@ export default function JoinDao() {
           intentToken = intentData.intentToken ?? null;
         }
       } catch {
-        // Intent service unavailable — verify-payment will use legacy path on testnet
+        // Intent service unavailable - verify-payment will use legacy path on testnet.
       }
 
       const res = await fetch("/api/stellar/verify-payment", {

@@ -4,6 +4,7 @@ import { Menu, Moon, PlayCircle, Search, Sparkles, Sun, X } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import ChainSelector from "@/components/ChainSelector";
 import EnvironmentSelector from "@/components/EnvironmentSelector";
+import { useAshaChat } from "@/hooks/useAshaChat";
 import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
 
@@ -16,7 +17,7 @@ const navLinks = [
   { path: "/profile", label: "Profile" },
 ];
 
-const quickSearches = ["DAO", "chama", "SACCO", "co-operative", "governance"];
+const quickSearches = ["DAO", "SACCO", "co-operative", "governance", "savings"];
 
 interface HeaderProps {
   walletSlot?: ReactNode;
@@ -29,6 +30,7 @@ export default function Header({ walletSlot }: HeaderProps) {
   const [query, setQuery] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
+  const { open: openAsha } = useAshaChat();
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -57,6 +59,11 @@ export default function Header({ walletSlot }: HeaderProps) {
     window.setTimeout(() => {
       document.getElementById("flow-walkthrough")?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 80);
+  };
+
+  const openAiGuide = () => {
+    openAsha("Help me use Baraza for my DAO");
+    setMobileOpen(false);
   };
 
   return (
@@ -108,15 +115,11 @@ export default function Header({ walletSlot }: HeaderProps) {
             </button>
             <button
               type="button"
-              disabled
-              title="Asha AI guide is coming soon"
-              className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-sm font-bold text-primary/75 opacity-80"
+              onClick={openAiGuide}
+              className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-sm font-bold text-primary transition-colors hover:bg-primary/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
             >
               <Sparkles className="h-4 w-4" />
               AI Guide
-              <span className="rounded-full border border-primary/25 px-1.5 py-0.5 text-[9px] uppercase tracking-wider text-primary/80">
-                Soon
-              </span>
             </button>
           </nav>
         </div>
@@ -236,15 +239,11 @@ export default function Header({ walletSlot }: HeaderProps) {
             </button>
             <button
               type="button"
-              disabled
-              title="Asha AI guide is coming soon"
-              className="inline-flex cursor-not-allowed items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm font-semibold text-primary/75 opacity-80"
+              onClick={openAiGuide}
+              className="inline-flex items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm font-semibold text-primary transition-all hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
             >
               <Sparkles className="h-4 w-4" />
               Ask Asha AI
-              <span className="ml-auto rounded-full border border-primary/25 px-1.5 py-0.5 text-[9px] uppercase tracking-wider text-primary/80">
-                Soon
-              </span>
             </button>
             <form
               className="relative mt-2"

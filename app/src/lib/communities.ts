@@ -14,6 +14,8 @@ type CommunityInsert = {
   approvalThresholdPct?: number;
   votingPeriodDays?: number;
   treasuryPolicy?: TreasuryPolicy;
+  paybillNumber?: string;
+  ussdShortcode?: string;
 };
 
 type CommunityRow = {
@@ -41,6 +43,10 @@ type CommunityRow = {
   votingPeriodDays?: number | null;
   treasury_policy?: string | null;
   treasuryPolicy?: string | null;
+  paybill_number?: string | null;
+  paybillNumber?: string | null;
+  ussd_shortcode?: string | null;
+  ussdShortcode?: string | null;
 };
 
 const VALID_TREASURY_POLICIES: TreasuryPolicy[] = ['multisig-ready', 'proposal-only', 'manual-review'];
@@ -127,6 +133,8 @@ function communityFromRow(row: CommunityRow): Community {
     votingPeriodDays:
       row.voting_period_days ?? row.votingPeriodDays ?? DEFAULT_GOVERNANCE.votingPeriodDays,
     treasuryPolicy: parseTreasuryPolicy(row.treasury_policy ?? row.treasuryPolicy ?? null),
+    paybillNumber: row.paybill_number ?? row.paybillNumber ?? undefined,
+    ussdShortcode: row.ussd_shortcode ?? row.ussdShortcode ?? undefined,
   };
 }
 
@@ -166,7 +174,7 @@ export async function listCommunities(): Promise<Community[]> {
   const { data, error } = await client
     .from('communities')
     .select(
-      'id,name,type,description,membership_fee,member_count,fund_balance,active_decisions,created_at,image,chain,quorum_pct,approval_threshold_pct,voting_period_days,treasury_policy',
+      'id,name,type,description,membership_fee,member_count,fund_balance,active_decisions,created_at,image,chain,quorum_pct,approval_threshold_pct,voting_period_days,treasury_policy,paybill_number,ussd_shortcode',
     )
     .order('created_at', { ascending: false });
 
@@ -184,7 +192,7 @@ export async function getCommunity(id: string): Promise<Community | null> {
   const { data, error } = await client
     .from('communities')
     .select(
-      'id,name,type,description,membership_fee,member_count,fund_balance,active_decisions,created_at,image,chain,quorum_pct,approval_threshold_pct,voting_period_days,treasury_policy',
+      'id,name,type,description,membership_fee,member_count,fund_balance,active_decisions,created_at,image,chain,quorum_pct,approval_threshold_pct,voting_period_days,treasury_policy,paybill_number,ussd_shortcode',
     )
     .eq('id', id)
     .maybeSingle();
@@ -218,6 +226,8 @@ export async function createCommunityRecord(input: CommunityInsert): Promise<Com
     approvalThresholdPct,
     votingPeriodDays,
     treasuryPolicy,
+    paybillNumber: input.paybillNumber || undefined,
+    ussdShortcode: input.ussdShortcode || undefined,
   };
 
   const client = getSupabase();
@@ -243,9 +253,11 @@ export async function createCommunityRecord(input: CommunityInsert): Promise<Com
       approval_threshold_pct: approvalThresholdPct,
       voting_period_days: votingPeriodDays,
       treasury_policy: treasuryPolicy,
+      paybill_number: input.paybillNumber || null,
+      ussd_shortcode: input.ussdShortcode || null,
     })
     .select(
-      'id,name,type,description,membership_fee,member_count,fund_balance,active_decisions,created_at,image,chain,quorum_pct,approval_threshold_pct,voting_period_days,treasury_policy',
+      'id,name,type,description,membership_fee,member_count,fund_balance,active_decisions,created_at,image,chain,quorum_pct,approval_threshold_pct,voting_period_days,treasury_policy,paybill_number,ussd_shortcode',
     )
     .single();
 

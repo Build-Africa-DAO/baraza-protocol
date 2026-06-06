@@ -37,6 +37,10 @@ export default tseslint.config(
       'eqeqeq': ['error', 'always'],
       'no-var': 'error',
       'prefer-const': 'error',
+
+      // Downgrade new v7 rule — setState-in-effect is a common React pattern
+      // for derived state resets; treat as advisory rather than blocking.
+      'react-hooks/set-state-in-effect': 'warn',
     },
   }
 );
