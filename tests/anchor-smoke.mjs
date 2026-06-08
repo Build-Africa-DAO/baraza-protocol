@@ -75,10 +75,11 @@ function extractStructFields(source, structName) {
 }
 
 function assertDriftGuards() {
-  const governanceSource = readFileSync(new URL('../programs/governance/src/lib.rs', import.meta.url), 'utf8');
-  const membershipSource = readFileSync(new URL('../programs/membership/src/lib.rs', import.meta.url), 'utf8');
-  const paymentSource = readFileSync(new URL('../programs/payment_attestation/src/lib.rs', import.meta.url), 'utf8');
-  const treasurySource = readFileSync(new URL('../programs/treasury_vault/src/lib.rs', import.meta.url), 'utf8');
+  const normalise = (s) => s.replace(/\r\n/g, '\n');
+  const governanceSource = normalise(readFileSync(new URL('../programs/governance/src/lib.rs', import.meta.url), 'utf8'));
+  const membershipSource = normalise(readFileSync(new URL('../programs/membership/src/lib.rs', import.meta.url), 'utf8'));
+  const paymentSource = normalise(readFileSync(new URL('../programs/payment_attestation/src/lib.rs', import.meta.url), 'utf8'));
+  const treasurySource = normalise(readFileSync(new URL('../programs/treasury_vault/src/lib.rs', import.meta.url), 'utf8'));
 
   const membershipProgramBytes = extractByteArray(governanceSource, 'MEMBERSHIP_PROGRAM_ID');
   if (!bytesEqual(membershipProgramBytes, [...programIds.membership.toBytes()])) {
