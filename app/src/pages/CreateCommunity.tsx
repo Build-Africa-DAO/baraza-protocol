@@ -17,6 +17,231 @@ import { useBarazaChain } from '@/hooks/useBarazaData';
 import { communityPda, toSlug } from '@/lib/programs';
 import { saveCommunityChainMapping } from '@/lib/chainMappings';
 
+type TreasuryPolicy = 'multisig-ready' | 'proposal-only' | 'manual-review';
+type ChecklistState = 'complete' | 'active' | 'pending';
+
+interface SetupChecklistItem {
+  label: string;
+  detail: string;
+  state: ChecklistState;
+}
+
+interface AnimatedSetupChecklistProps {
+  items: SetupChecklistItem[];
+  summary: string;
+}
+
+const checklistVariants = {
+  hidden: { opacity: 0, y: 14 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      staggerChildren: 0.12,
+      delayChildren: 0.08,
+    },
+  },
+};
+
+const checklistItemVariants = {
+  hidden: { opacity: 0, x: 18, filter: 'blur(4px)' },
+  show: { opacity: 1, x: 0, filter: 'blur(0px)' },
+};
+
+function AnimatedSetupChecklist({ items, summary }: AnimatedSetupChecklistProps) {
+  const completeCount = items.filter((item) => item.state === 'complete').length;
+  const progress = Math.max(8, Math.round((completeCount / items.length) * 100));
+
+  return (
+    <motion.div
+      className="baraza-card sticky top-24 overflow-hidden p-5"
+      initial={{ opacity: 0, y: 18, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+    >
+      <motion.div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent"
+        initial={{ x: '-80%' }}
+        animate={{ x: '80%' }}
+        transition={{ duration: 2.8, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut' }}
+      />
+      <div className="mb-5 flex items-start justify-between gap-4">
+        <div>
+          <h2 className="font-mono text-xs font-semibold uppercase tracking-widest">
+            Setup checklist
+          </h2>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Launch readiness updates as the form is completed.
+          </p>
+        </div>
+        <motion.span
+          className="inline-flex items-center gap-2 rounded-full border border-primary/30 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-primary"
+          animate={{ boxShadow: ['0 0 0 hsl(22 100% 52% / 0)', '0 0 18px hsl(22 100% 52% / 0.28)', '0 0 0 hsl(22 100% 52% / 0)'] }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+          Live
+        </motion.span>
+      </div>
+
+      <div className="mb-5 h-1.5 overflow-hidden rounded-full bg-border/60">
+        <motion.div
+          className="h-full rounded-full bg-gradient-to-r from-primary via-accent to-primary"
+          initial={{ width: 0 }}
+          animate={{ width: `${progress}%` }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        />
+      </div>
+
+      <motion.div className="space-y-4" variants={checklistVariants} initial="hidden" animate="show">
+        {items.map((item, index) => {
+          const isComplete = item.state === 'complete';
+          const isActive = item.state === 'active';
+          return (
+            <motion.div
+              key={item.label}
+              className="relative flex gap-3"
+              variants={checklistItemVariants}
+              transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {index < items.length - 1 && (
+                <span className="absolute left-2.5 top-7 h-[calc(100%-0.5rem)] w-px bg-border/60" aria-hidden />
+              )}
+              <motion.span
+                className={[
+                  'relative z-10 mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border',
+                  isComplete
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : isActive
+                      ? 'border-primary/70 bg-primary/10 text-primary'
+                      : 'border-border bg-background text-muted-foreground',
+                ].join(' ')}
+                animate={isActive ? { scale: [1, 1.12, 1] } : { scale: 1 }}
+                transition={{ duration: 1.2, repeat: isActive ? Infinity : 0, ease: 'easeInOut' }}
+              >
+                {isComplete ? (
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                ) : isActive ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                )}
+              </motion.span>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold">{item.label}</p>
+                <AnimatePresence mode="wait">
+                  <motion.p
+                    key={item.detail}
+                    className="mt-1 text-xs text-muted-foreground"
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.18 }}
+                  >
+                    {item.detail}
+                  </motion.p>
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          );
+        })}
+      </motion.div>
+
+      <motion.div
+        className="mt-6 rounded-lg border border-border/70 bg-background/45 p-4"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.45, duration: 0.3 }}
+      >
+        <p className="text-xs leading-5 text-muted-foreground">{summary}</p>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+const GOVERNANCE_PRESETS: Record<string, {
+  label: string;
+  summary: string;
+  quorum: string;
+  approvalThreshold: string;
+  votingPeriod: string;
+  treasuryPolicy: TreasuryPolicy;
+}> = {
+  savings: {
+    label: 'Chama / savings group',
+    summary: 'Simple member-majority voting for dues, welfare support, and small shared purchases.',
+    quorum: '51',
+    approvalThreshold: '60',
+    votingPeriod: '7',
+    treasuryPolicy: 'proposal-only',
+  },
+  cooperative: {
+    label: 'Cooperative',
+    summary: 'Board-aware member governance for procurement, operations, and collective bargaining.',
+    quorum: '50',
+    approvalThreshold: '66',
+    votingPeriod: '14',
+    treasuryPolicy: 'multisig-ready',
+  },
+  sacco: {
+    label: 'SACCO',
+    summary: 'Stronger approvals and manual review for member savings, loans, and regulated treasury actions.',
+    quorum: '60',
+    approvalThreshold: '75',
+    votingPeriod: '14',
+    treasuryPolicy: 'manual-review',
+  },
+  housing: {
+    label: 'Housing SACCO',
+    summary: 'Higher participation for land, housing, and long-horizon asset decisions.',
+    quorum: '60',
+    approvalThreshold: '75',
+    votingPeriod: '30',
+    treasuryPolicy: 'manual-review',
+  },
+  dao: {
+    label: 'DAO',
+    summary: 'Token-aware governance for proposals, bounties, grants, and treasury releases.',
+    quorum: '40',
+    approvalThreshold: '51',
+    votingPeriod: '7',
+    treasuryPolicy: 'multisig-ready',
+  },
+  organization: {
+    label: 'Organization',
+    summary: 'Admin-led workflow with transparent proposal records and controlled treasury review.',
+    quorum: '40',
+    approvalThreshold: '66',
+    votingPeriod: '7',
+    treasuryPolicy: 'manual-review',
+  },
+  professional: {
+    label: 'Professional network',
+    summary: 'Lightweight votes for events, sponsorships, membership programs, and shared projects.',
+    quorum: '35',
+    approvalThreshold: '60',
+    votingPeriod: '7',
+    treasuryPolicy: 'proposal-only',
+  },
+  welfare: {
+    label: 'Welfare group',
+    summary: 'Member-majority rules for emergency support and recurring benefit decisions.',
+    quorum: '51',
+    approvalThreshold: '66',
+    votingPeriod: '7',
+    treasuryPolicy: 'proposal-only',
+  },
+  investment: {
+    label: 'Investment club',
+    summary: 'Higher approvals for pooled investments, asset purchases, and risk-bearing decisions.',
+    quorum: '60',
+    approvalThreshold: '75',
+    votingPeriod: '14',
+    treasuryPolicy: 'multisig-ready',
+  },
+};
+
 function provisionPaybill(communityName: string): string {
   // Generates a deterministic-looking 6-digit Safaricom business paybill.
   const seed = Array.from(communityName).reduce((a, c) => a + c.charCodeAt(0), 0) + (Date.now() % 9000);
@@ -30,9 +255,9 @@ function provisionUssdShortcode(communityName: string): string {
 
 const CreateCommunity: React.FC = () => {
   useSeo({
-    title: "Launch a DAO",
+    title: "Launch a group treasury",
     description:
-      "Launch a DAO on Baraza. Set membership rules, dues, quorum, and M-Pesa contribution paths in a single guided flow.",
+      "Launch a group treasury on Baraza. Choose a governance model, set member dues, quorum rules, and payment paths in one guided flow.",
     path: "/create",
   });
   const navigate = useNavigate();
@@ -66,7 +291,24 @@ const CreateCommunity: React.FC = () => {
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === 'type') {
+      const preset = GOVERNANCE_PRESETS[value];
+      setForm((current) => ({
+        ...current,
+        type: value,
+        ...(preset
+          ? {
+              quorum: preset.quorum,
+              approvalThreshold: preset.approvalThreshold,
+              votingPeriod: preset.votingPeriod,
+              treasuryPolicy: preset.treasuryPolicy,
+            }
+          : {}),
+      }));
+      return;
+    }
+    setForm({ ...form, [name]: value });
   };
 
   const normalisedPhone = normaliseKenyanPhone(form.phone);
@@ -74,10 +316,11 @@ const CreateCommunity: React.FC = () => {
     DAO_CREATION_FEE_KES +
     (addPaybill ? PAYBILL_ADDON_FEE_KES : 0) +
     (addUssd ? USSD_ADDON_FEE_KES : 0);
-  const selectedCommunityChain = paymentMethod === 'wallet' ? walletChain : chain;
+  const selectedCommunityChain = walletChain;
   const selectedCommunityChainMeta = CHAINS[selectedCommunityChain];
   const selectedAccountMeta = CHAINS[walletChain];
-  const needsSolanaAccount = paymentMethod === 'wallet' && walletChain === 'solana';
+  const selectedPreset = form.type ? GOVERNANCE_PRESETS[form.type] : null;
+  const needsSolanaAccount = walletChain === 'solana';
   const isValid = !!(
     form.name.trim() &&
     form.type &&
@@ -85,6 +328,46 @@ const CreateCommunity: React.FC = () => {
     form.description.trim() &&
     (paymentMethod === 'wallet' || normalisedPhone !== null)
   );
+  const setupChecklistItems: SetupChecklistItem[] = [
+    {
+      label: 'Community account',
+      detail: form.name.trim() && form.type
+        ? `${form.name.trim()} is ready from form details`
+        : 'Add group name and setup model',
+      state: form.name.trim() && form.type ? 'complete' : form.name.trim() || form.type ? 'active' : 'pending',
+    },
+    {
+      label: 'Treasury account',
+      detail: needsSolanaAccount && !isReady
+        ? 'Import or connect a wallet to prepare the treasury'
+        : `${selectedAccountMeta.label} funding path selected`,
+      state: needsSolanaAccount ? (isReady ? 'complete' : 'active') : 'complete',
+    },
+    {
+      label: 'Membership tier',
+      detail: form.fee ? `${formatKSh(Number(form.fee) || 0)} monthly dues` : 'Set monthly member dues',
+      state: form.fee ? 'complete' : 'pending',
+    },
+    {
+      label: 'Governance model',
+      detail: selectedPreset ? selectedPreset.label : 'Choose chama, SACCO, cooperative, DAO, or organization',
+      state: selectedPreset ? 'complete' : 'pending',
+    },
+    {
+      label: 'Membership credential',
+      detail: paymentMethod === 'mpesa'
+        ? normalisedPhone
+          ? 'M-Pesa contact ready for payment attestation'
+          : 'Add member payment contact'
+        : isReady
+          ? 'Wallet ready for credential minting'
+          : 'Wallet import required before launch',
+      state: paymentMethod === 'mpesa' ? (normalisedPhone ? 'complete' : 'active') : (isReady ? 'complete' : 'active'),
+    },
+  ];
+  const setupChecklistSummary = isValid
+    ? 'Treasury setup, membership tiers, and credentials are ready to provision once your group is launched.'
+    : 'Complete the setup fields to preview the account, treasury, and credential provisioning flow.';
 
   React.useEffect(() => {
     if (chain === 'solana' || chain === 'stellar' || chain === 'base' || chain === 'arbitrum' || chain === 'optimism' || chain === 'celo') {
@@ -303,11 +586,11 @@ const CreateCommunity: React.FC = () => {
                   <Users className="w-5 h-5" />
                 </div>
                 <h1 className="font-display text-2xl font-black leading-tight text-foreground drop-shadow md:text-3xl">
-                  Launch a DAO
+                  Launch a group treasury
                 </h1>
               </div>
               <p className="max-w-xl text-sm font-semibold leading-6 text-foreground/92 drop-shadow md:text-base md:leading-7">
-                Launch a DAO where members can contribute, submit proposals, and manage a shared treasury with clear rules.
+                Choose the setup that matches your chama, SACCO, cooperative, DAO, or organization.
               </p>
             </div>
             </CommunityBanner>
@@ -320,14 +603,14 @@ const CreateCommunity: React.FC = () => {
               {/* Name */}
               <div>
                 <label className="block text-xs font-semibold mb-2">
-                  DAO Name
+                  Group name
                 </label>
                 <input
                   type="text"
                   name="name"
                   value={form.name}
                   onChange={handleChange}
-                  placeholder="e.g. Milele DAO"
+                  placeholder="e.g. Milele Chama"
                   className="w-full rounded-xl px-4 py-3 text-sm outline-none border"
                 />
               </div>
@@ -335,7 +618,7 @@ const CreateCommunity: React.FC = () => {
               {/* Type */}
               <div>
                 <label className="block text-xs font-semibold mb-2">
-                  Group Type
+                  Setup model
                 </label>
                 <select
                   name="type"
@@ -343,11 +626,16 @@ const CreateCommunity: React.FC = () => {
                   onChange={handleChange}
                   className="w-full rounded-xl px-4 py-3 text-sm outline-none border cursor-pointer appearance-none"
                 >
-                  <option value="" disabled>Select a type</option>
+                  <option value="" disabled>Select a setup model</option>
                   {COMMUNITY_TYPES.map((t) => (
                     <option key={t.value} value={t.value}>{t.label}</option>
                   ))}
                 </select>
+                {selectedPreset && (
+                  <p className="mt-1.5 text-xs text-muted-foreground">
+                    Preset applied: {selectedPreset.label}
+                  </p>
+                )}
               </div>
 
               {/* Fee */}
@@ -392,8 +680,13 @@ const CreateCommunity: React.FC = () => {
               <div className="grid gap-5 rounded-lg border p-5 md:grid-cols-3">
                 <div className="md:col-span-3">
                   <h2 className="font-mono text-xs font-semibold uppercase tracking-widest">
-                    Governance Rules
+                    Governance model
                   </h2>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {selectedPreset
+                      ? selectedPreset.summary
+                      : 'Select a group type to apply recommended quorum, approval, and treasury controls.'}
+                  </p>
                 </div>
 
                 <div>
@@ -674,7 +967,7 @@ const CreateCommunity: React.FC = () => {
                 {/* Fee summary */}
                 <div className="grid gap-2 border-t pt-4 text-sm">
                   <div className="flex items-center justify-between gap-4">
-                    <p className="text-xs text-muted-foreground">DAO setup fee</p>
+                    <p className="text-xs text-muted-foreground">Setup fee</p>
                     <span className="text-xs font-semibold tabular-nums">{formatKSh(DAO_CREATION_FEE_KES)}</span>
                   </div>
                   {addPaybill && (
@@ -743,33 +1036,7 @@ const CreateCommunity: React.FC = () => {
             </div>
 
             <aside className="lg:pt-14">
-              <div className="baraza-card sticky top-24 p-5">
-                <h2 className="font-mono text-xs font-semibold uppercase tracking-widest">
-                  Setup Checklist
-                </h2>
-                <div className="mt-5 space-y-4">
-                  {[
-                    ['CommunityAccount', 'Ready from form details'],
-                    ['TreasuryAccount', 'Pending shared record setup'],
-                    ['MembershipTier', 'Uses monthly dues'],
-                    ['Governance Rules', 'Quorum and approval thresholds'],
-                    ['Membership Credential', 'Minted after payment attestation'],
-                  ].map(([label, detail]) => (
-                    <div key={label} className="flex gap-3">
-                      <ShieldCheck className="mt-0.5 h-5 w-5" />
-                      <div>
-                        <p className="text-sm font-semibold">{label}</p>
-                        <p className="mt-1 text-xs">{detail}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-6 rounded-lg border p-4">
-                  <p className="text-xs leading-5">
-                    Treasury setup, membership tiers, and credentials are provisioned automatically once your DAO is launched.
-                  </p>
-                </div>
-              </div>
+              <AnimatedSetupChecklist items={setupChecklistItems} summary={setupChecklistSummary} />
             </aside>
           </div>
         </div>

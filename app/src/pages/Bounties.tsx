@@ -153,14 +153,10 @@ export default function Bounties() {
     const haystack = `${bounty.title} ${bounty.category} ${bounty.summary} ${bounty.skills.join(' ')} ${community?.name ?? ''}`.toLowerCase();
     const matchesSearch = haystack.includes(search.toLowerCase());
     const matchesStatus = status === 'all' || bounty.status === status;
-    const matchesChain = (community?.chain ?? 'solana') === chain;
-    return matchesSearch && matchesStatus && matchesChain;
+    return matchesSearch && matchesStatus;
   });
 
-  const activeChainBounties = bounties.filter((bounty) => {
-    const community = communityById.get(bounty.communityId);
-    return (community?.chain ?? 'solana') === chain;
-  });
+  const activeChainBounties = bounties;
 
   const visibleColumns = BOARD_COLUMNS
     .map((columnStatus) => ({
@@ -284,11 +280,11 @@ export default function Bounties() {
             <div className="relative grid gap-6 p-5 md:grid-cols-[minmax(0,1fr)_minmax(18rem,30rem)] md:items-center md:p-7">
               <div className="max-w-[38rem]">
                 <p className="mb-2 text-xs font-bold uppercase tracking-widest text-primary">
-                  Baraza marketplace
+                  Contributor workflow
                 </p>
-                <h1 className="font-display text-3xl font-black leading-tight md:text-4xl">Bounties</h1>
+                <h1 className="font-display text-3xl font-black leading-tight md:text-4xl">Bounty board</h1>
                 <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground md:text-base md:leading-7">
-                  Fund practical work for groups, then track open tasks, reviews, and approved payouts in one board.
+                  Post paid tasks, move work through review lanes, and keep approvals visible for every group.
                 </p>
               </div>
 
@@ -304,15 +300,15 @@ export default function Bounties() {
                 <div className="grid w-full gap-2 sm:grid-cols-3">
                   <div className="rounded-lg border border-border/70 bg-background/58 p-3 backdrop-blur">
                     <p className="font-display text-xl font-bold">{activeChainBounties.filter((b) => b.status === 'open').length}</p>
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Open</p>
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Open tasks</p>
                   </div>
                   <div className="rounded-lg border border-border/70 bg-background/58 p-3 backdrop-blur">
                     <p className="font-display text-xl font-bold text-primary">{formatRailAmountFromKes(openRewardPool, chainMeta)}</p>
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Reward pool</p>
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Open rewards</p>
                   </div>
                   <div className="rounded-lg border border-border/70 bg-background/58 p-3 backdrop-blur">
                     <p className="font-display text-xl font-bold">{chainMeta.label}</p>
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Rail</p>
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Active rail</p>
                   </div>
                 </div>
               </div>
@@ -488,11 +484,11 @@ export default function Bounties() {
             <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <h2 className="font-display text-xl font-bold">
-                  {status === 'all' ? 'All bounty classes' : SECTION_COPY[status].heading}
+                  {status === 'all' ? 'Workflow lanes' : SECTION_COPY[status].heading}
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {status === 'all'
-                    ? 'Bounties are grouped by where they are in the work and approval flow.'
+                    ? 'Drag bounty cards between lanes as work moves from open task to approved payout.'
                     : SECTION_COPY[status].detail}
                 </p>
               </div>

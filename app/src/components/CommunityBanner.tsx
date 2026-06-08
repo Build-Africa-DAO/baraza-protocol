@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRight } from "lucide-react";
-import { cn, formatRailAmountFromKes } from "@/lib/utils";
+import { cn, formatKSh } from "@/lib/utils";
 import { getCommunityBannerImage } from "@/lib/communityVisuals";
 import type { Community } from "@/lib/constants";
-import { useChain } from "@/hooks/useChain";
 
 interface CommunityBannerProps {
   type?: string | null;
@@ -30,7 +29,6 @@ export default function CommunityBanner({
   className,
   children,
 }: CommunityBannerProps) {
-  const { chainMeta } = useChain();
   const slides = useMemo(() => communities.filter(Boolean).slice(0, 8), [communities]);
   const [activeIndex, setActiveIndex] = useState(0);
   const activeCommunity = slides[activeIndex];
@@ -98,7 +96,7 @@ export default function CommunityBanner({
               <p className="text-muted-foreground">Votes</p>
             </div>
             <div>
-              <p className="font-display text-base font-bold">{formatRailAmountFromKes(activeCommunity.fundBalance, chainMeta)}</p>
+              <p className="font-display text-base font-bold">{formatKSh(activeCommunity.fundBalance)}</p>
               <p className="text-muted-foreground">Treasury</p>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Grid2X2, List, Search, PlusCircle, SlidersHorizontal } from "lucide-react";
 import Layout from "@/components/Layout";
@@ -7,85 +7,43 @@ import { COMMUNITY_TYPES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { useCommunities } from "@/hooks/useCommunities";
 import CommunityBanner from "@/components/CommunityBanner";
-import { CHAINS, type Chain } from "@/lib/chain";
 import { useSeo } from "@/lib/seo";
-import { useChain } from "@/hooks/useChain";
 
-type ChainFilter = "all" | Chain;
 
-const CHAIN_FILTERS: { value: ChainFilter; label: string; dot?: string }[] = [
-  { value: "all", label: "All rails" },
-  ...Object.values(CHAINS)
-    .filter((chain) => chain.enabled)
-    .map((chain) => ({ value: chain.id, label: chain.label, dot: chain.badgeBg })),
-];
-
-function emptyChainTitle(chainFilter: ChainFilter, search: string): string {
+function emptyResultTitle(search: string): string {
   const q = search.trim();
-  if (q) {
-    if (chainFilter === "all") return `No communities match "${q}"`;
-    const label = chainFilter === "solana" ? "Solana" : CHAINS[chainFilter].label;
-    return `No ${label} communities match "${q}"`;
-  }
-  if (chainFilter === "all") return "No DAOs yet";
-  if (chainFilter === "solana") return "No Solana DAOs yet";
-  return `No ${CHAINS[chainFilter].label} DAOs yet`;
+  if (q) return `No communities match "${q}"`;
+  return "No groups yet";
 }
 
-function emptyChainDescription(chainFilter: ChainFilter, search: string): string {
+function emptyResultDescription(search: string): string {
   const q = search.trim();
-  if (q) return "Try a different search term or clear the filters, or launch your own DAO.";
-  if (chainFilter === "stellar") {
-    return "No DAOs have selected Stellar as their settlement rail yet. Launch one and use XLM payment verification for member dues.";
-  }
-  if (chainFilter !== "all" && chainFilter !== "solana") {
-    return `No DAOs have selected ${CHAINS[chainFilter].label} yet. Launch one to track the governance contract rollout for that rail.`;
-  }
-  return "Be the first — launch your own DAO and start governing funds with Baraza.";
+  if (q) return "Try a different search term or clear the filters, or launch your own group.";
+  return "Be the first - launch your own group and start governing funds with Baraza.";
 }
 
 export default function Communities() {
   useSeo({
-    title: "Browse DAOs",
+    title: "Browse groups",
     description:
-      "Discover DAOs and communities on Baraza. Filter by community type and treasury rail to find a group to join or evaluate.",
+      "Discover groups and communities on Baraza. Filter by setup model to find a group to join or evaluate.",
     path: "/communities",
   });
   const { communities, isLoading, error } = useCommunities();
-  const { chain } = useChain();
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState(() => searchParams.get("q") ?? "");
   const [typeFilter, setTypeFilter] = useState("all");
-  const [chainFilter, setChainFilter] = useState<ChainFilter>(() => {
-    const rail = searchParams.get("rail");
-    if (rail === "all") return "all";
-    return rail && rail in CHAINS ? (rail as Chain) : chain;
-  });
   const [layout, setLayout] = useState<"grid" | "list">("grid");
-
-  useEffect(() => {
-    const rail = searchParams.get("rail");
-    if (!rail) setChainFilter(chain);
-  }, [chain, searchParams]);
-
-  const updateChainFilter = (next: ChainFilter) => {
-    setChainFilter(next);
-    const params = new URLSearchParams(searchParams);
-    params.set("rail", next);
-    setSearchParams(params, { replace: true });
-  };
 
   const filtered = communities.filter((c) => {
     const matchesSearch =
       c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.description.toLowerCase().includes(search.toLowerCase());
     const matchesType = typeFilter === "all" || c.type === typeFilter;
-    const communityChain = c.chain ?? "solana";
-    const matchesChain = chainFilter === "all" || communityChain === chainFilter;
-    return matchesSearch && matchesType && matchesChain;
+    return matchesSearch && matchesType;
   });
 
-  const hasActiveFilter = !!search || typeFilter !== "all" || chainFilter !== "all";
+  const hasActiveFilter = !!search || typeFilter !== "all";
 
   return (
     <Layout>
@@ -98,10 +56,10 @@ export default function Communities() {
               Discover
             </p>
             <h1 className="font-display text-3xl md:text-4xl font-bold mb-3">
-              DAOs &amp; Communities
+              Groups &amp; Communities
             </h1>
             <p>
-              Find a DAO to join, or explore how communities are governing KES funds with Baraza.
+              Find a group to join, or explore how communities are governing shared funds with Baraza.
             </p>
           </div>
           </CommunityBanner>
@@ -110,35 +68,18 @@ export default function Communities() {
 
       <section className="pb-16">
         <div className="container mx-auto px-4">
-          {/* Treasury rail filter */}
-          <div className="mb-4 flex flex-wrap items-center gap-2" role="group" aria-label="Filter by treasury rail">
-            <span className="text-xs font-semibold uppercase tracking-wider mr-1">
-              Treasury rail
-            </span>
-            {CHAIN_FILTERS.map((option) => {
-              const active = chainFilter === option.value;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => updateChainFilter(option.value)}
-                  aria-pressed={active}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2",
-                    active ? "border-primary bg-primary/10 text-primary" : "hover:border-primary/40",
-                  )}
-                >
-                  {option.dot && (
-                    <span aria-hidden className="h-1.5 w-1.5 rounded-full" style={{ background: option.dot }} />
-                  )}
-                  {option.label}
-                </button>
-              );
-            })}
+          <div className="mb-8 rounded-lg border border-border/70 bg-card/55 p-3 md:p-4">
+          <div className="mb-3">
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              Browse groups
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Payment rails are configured inside join, onramp, and offramp flows.
+            </p>
           </div>
 
           {/* Controls */}
-          <div className="mb-8 flex flex-col gap-3 lg:flex-row">
+          <div className="grid gap-3 lg:grid-cols-[1fr_auto_auto]">
             {/* Search — full width, always first */}
             <div className="relative flex-1">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" />
@@ -155,7 +96,7 @@ export default function Communities() {
                 }}
                 placeholder="Search by name"
                 className={cn(
-                  "w-full rounded-xl border",
+                  "w-full rounded-lg border border-border/70 bg-background/60",
                   "pl-10 pr-4 py-3 text-sm",
                   "outline-none",
                 )}
@@ -172,21 +113,21 @@ export default function Communities() {
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value)}
                   className={cn(
-                    "w-full appearance-none rounded-xl border",
+                    "w-full appearance-none rounded-lg border border-border/70 bg-background/60",
                     "pl-10 pr-8 py-3 text-sm",
                     "outline-none cursor-pointer",
-                    "lg:min-w-[160px]",
+                    "lg:min-w-[180px]",
                   )}
                   aria-label="Filter by type"
                 >
-                  <option value="all">All Types</option>
+                  <option value="all">All types</option>
                   {COMMUNITY_TYPES.map((t) => (
                     <option key={t.value} value={t.value}>{t.label}</option>
                   ))}
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 rounded-xl border p-1 shrink-0" aria-label="Choose layout">
+              <div className="grid grid-cols-2 rounded-lg border border-border/70 bg-background/60 p-1 shrink-0" aria-label="Choose layout">
                 {[
                   { value: "grid" as const, label: "Grid", icon: Grid2X2 },
                   { value: "list" as const, label: "List", icon: List },
@@ -199,7 +140,7 @@ export default function Communities() {
                       onClick={() => setLayout(value)}
                       aria-pressed={active}
                       className={cn(
-                        "inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-bold focus-visible:outline-none focus-visible:ring-2",
+                        "inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-bold focus-visible:outline-none focus-visible:ring-2",
                         active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground",
                       )}
                     >
@@ -214,11 +155,12 @@ export default function Communities() {
             {/* Launch CTA — full width on mobile */}
             <Link
               to="/create"
-              className="text-sm font-bold px-5 py-3 rounded-xl whitespace-nowrap inline-flex items-center justify-center gap-2 border border-border/70 hover:border-primary/50 transition-colors lg:justify-start"
+              className="text-sm font-bold px-5 py-3 rounded-lg whitespace-nowrap inline-flex items-center justify-center gap-2 border border-border/70 hover:border-primary/50 transition-colors lg:justify-start"
             >
               <PlusCircle className="w-4 h-4" />
-              Launch a DAO
+              Launch a group
             </Link>
+          </div>
           </div>
 
           {error && (
@@ -302,13 +244,13 @@ export default function Communities() {
                 <Search className="w-6 h-6" />
               </div>
               <p className="font-display text-base font-semibold mb-1">
-                {emptyChainTitle(chainFilter, search)}
+                {emptyResultTitle(search)}
               </p>
               <p className="text-sm mb-6">
-                {emptyChainDescription(chainFilter, search)}
+                {emptyResultDescription(search)}
               </p>
               <Link to="/create" className="btn-primary inline-flex items-center gap-2 text-sm">
-                <PlusCircle className="w-4 h-4" /> Launch a DAO
+                <PlusCircle className="w-4 h-4" /> Launch a group
               </Link>
             </div>
           )}
