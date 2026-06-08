@@ -31,17 +31,17 @@ function mainMenu(): MenuResult {
   };
 }
 
-function balanceMenu(path: string[], razaBalance?: number): MenuResult {
-  const raza = razaBalance ?? 0;
+function balanceMenu(path: string[], brzaBalance?: number): MenuResult {
+  const brza = brzaBalance ?? 0;
   if (path.length === 1) {
     return {
-      text: `Balance\nRAZA: ${raza}\n1. Refresh\n0. Back`,
+      text: `Balance\nBRZA: ${brza}\n1. Refresh\n0. Back`,
       action: 'CON',
     };
   }
   if (path[1] === '0') return mainMenu();
   return {
-    text: `Your RAZA: ${raza}\nVoting weight reflects your active memberships.\nVisit baraza.app for full details.`,
+    text: `Your BRZA: ${brza}\nVoting weight reflects your active memberships.\nVisit baraza.app for full details.`,
     action: 'END',
   };
 }
@@ -177,9 +177,9 @@ export function handleUssdInput(params: {
   session: UssdSession;
   text: string;
   phoneNumber: string;
-  razaBalance?: number;
+  brzaBalance?: number;
 }): MenuResult {
-  const { text, phoneNumber, razaBalance } = params;
+  const { text, phoneNumber, brzaBalance } = params;
 
   if (text === '') {
     return mainMenu();
@@ -190,7 +190,7 @@ export function handleUssdInput(params: {
 
   switch (root) {
     case '1':
-      return balanceMenu(path, razaBalance);
+      return balanceMenu(path, brzaBalance);
     case '2':
       return voteMenu(path);
     case '3':

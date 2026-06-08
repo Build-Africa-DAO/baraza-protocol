@@ -20,7 +20,7 @@ import Layout from "@/components/Layout";
 import { formatRailAmountFromKes, formatRailDate, truncateAddress } from "@/lib/utils";
 import CommunityBanner from "@/components/CommunityBanner";
 import { fetchMembershipsForWallet, listMembershipsForWallet } from "@/lib/memberships";
-import { fetchTotalRazaBalance } from "@/hooks/useRazaBalance";
+import { fetchTotalBrzaBalance } from "@/hooks/useBrzaBalance";
 import { useCommunities } from "@/hooks/useCommunities";
 import { CHAINS } from "@/lib/chain";
 import { useSeo } from "@/lib/seo";
@@ -58,7 +58,7 @@ export default function Profile() {
   const stellarConfig = useMemo(() => getStellarConfig(), []);
   const [stellarAccount, setStellarAccount] = useState<string | null>(null);
   const [stellarInput, setStellarInput] = useState("");
-  const [totalRaza, setTotalRaza] = useState<number | null>(null);
+  const [totalBrza, setTotalBrza] = useState<number | null>(null);
   const [stellarBalances, setStellarBalances] = useState<StellarBalance[]>([]);
   const [stellarMessage, setStellarMessage] = useState<string | null>(null);
   const [isLoadingStellar, setIsLoadingStellar] = useState(false);
@@ -96,8 +96,8 @@ export default function Profile() {
   }, [address, communities]);
 
   useEffect(() => {
-    if (!address) { setTotalRaza(null); return; }
-    fetchTotalRazaBalance(address).then(setTotalRaza).catch(() => setTotalRaza(null));
+    if (!address) { setTotalBrza(null); return; }
+    fetchTotalBrzaBalance(address).then(setTotalBrza).catch(() => setTotalBrza(null));
   }, [address]);
 
   const memberBounties = useMemo(
@@ -251,7 +251,7 @@ export default function Profile() {
                 <h2 className="mb-3 font-mono text-xs uppercase tracking-widest">RAZA balance</h2>
                 <div className="flex items-end gap-2">
                   <span className="font-display text-4xl font-black tabular-nums leading-none">
-                    {totalRaza === null ? '—' : totalRaza}
+                    {totalBrza === null ? '—' : totalBrza}
                   </span>
                   <span className="mb-1 text-sm font-semibold text-muted-foreground">RAZA</span>
                 </div>

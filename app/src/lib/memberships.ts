@@ -9,8 +9,8 @@ export interface MembershipRecord {
   walletAddress: string;
   status: MembershipStatus;
   joinedAt: string;
-  /** RAZA voting weight from MemberAccount. Default 1 for all active members. */
-  razaBalance: number;
+  /** BRZA voting weight from MemberAccount. Default 1 for all active members. */
+  brzaBalance: number;
 }
 
 function readMemberships(): MembershipRecord[] {
@@ -69,7 +69,7 @@ function rowToRecord(row: MembershipRow): MembershipRecord {
     walletAddress: row.wallet_address,
     status: row.status === 'ACTIVE' ? 'active' : row.status === 'PENDING' ? 'pending' : 'revoked',
     joinedAt: row.joined_at,
-    razaBalance: row.voting_weight ?? 1,
+    brzaBalance: row.voting_weight ?? 1,
   };
 }
 
@@ -130,7 +130,7 @@ export function recordActiveMembership(communityId: string, walletAddress: strin
     walletAddress,
     status: 'active',
     joinedAt: new Date().toISOString(),
-    razaBalance: 1,
+    brzaBalance: 1,
   };
 
   if (existingIndex >= 0) {
