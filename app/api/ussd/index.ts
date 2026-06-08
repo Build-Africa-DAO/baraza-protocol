@@ -1,5 +1,5 @@
-import { getOrCreateSession, destroySession, resolveCountryFromPhone } from '../../src/lib/ussd/session';
-import { handleUssdInput, type PendingPayOrder } from '../../src/lib/ussd/menu';
+import { getOrCreateSession, destroySession, resolveCountryFromPhone } from '../../src/lib/ussd/session.js';
+import { handleUssdInput, type PendingPayOrder } from '../../src/lib/ussd/menu.js';
 
 export const config = { runtime: 'edge' };
 
