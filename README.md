@@ -36,7 +36,7 @@ Create community (Stellar treasury account)
 |---|---|---|
 | **Stellar** | Primary. Treasury, BRZA token, payments | Active |
 | **Solana** | Governance programs (community registry, proposals, votes, treasury vault) | Devnet |
-| **Base** | EVM governance via Nouns-style Manager factory | Integrated |
+| **Base** | EVM governance via Aragon OSx Manager factory | Integrated |
 | Arbitrum, Optimism, Celo | EVM secondary rails | Config only |
 
 ---

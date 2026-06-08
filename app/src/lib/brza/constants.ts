@@ -34,32 +34,38 @@ export const BRZA_PHASES = {
 export const CURRENT_PHASE: BrzaPhase = 'phase0';
 
 // ── Token allocation ────────────────────────────────────────────────────────
+// Total: 1,000,000,000 BRZA
+// Products: Protocol (governance/treasury) · Baraza TV · IDO · DEX
 
 export const BRZA_ALLOCATION = {
-  communityRewards: 200_000_000,
-  founderA:          75_000_000,
-  founderB:          75_000_000,
-  operations:       150_000_000,
-  publicSale:       120_000_000,
-  reserve:          100_000_000,
-  liquidityPool:     80_000_000,
-  referral:          80_000_000,
-  grants:            70_000_000,
-  events:            50_000_000,
+  communityRewards:  200_000_000,  // 20% — emission over 5yr, 2M/month cap
+  founderA:           75_000_000,  //  7.5% — 1yr cliff, 3yr vest
+  founderB:           75_000_000,  //  7.5% — 1yr cliff, 3yr vest
+  operations:        150_000_000,  // 15% — milestone-gated tranches (30M each)
+  publicSale:        120_000_000,  // 12% — Phase 0: 20M @ $0.02 · IDO: 100M @ $0.10
+  reserve:           100_000_000,  // 10% — 1yr cliff, 3yr vest, protocol insurance
+  liquidityPool:      80_000_000,  //  8% — unlock at IDO, locked 12 months
+  grants:             80_000_000,  //  8% — ecosystem builders, 6mo cliff, 2yr vest
+  referral:           50_000_000,  //  5% — per referral event, no cliff
+  events:             40_000_000,  //  4% — hackathons, buildathons, community events
+  barazaTvCreators:   30_000_000,  //  3% — Baraza TV creator fund, per content milestone
 } as const;
 
 // ── Vesting schedule ────────────────────────────────────────────────────────
 // cliffDays: tokens locked until this many days post-TGE
-// vestingDays: linear release period after cliff
+// vestingDays: linear release period after cliff (4-year total for founders)
 
 export const BRZA_VESTING = {
-  founderA:   { cliffDays: 365, vestingDays: 730,  tokens: BRZA_ALLOCATION.founderA },
-  founderB:   { cliffDays: 365, vestingDays: 730,  tokens: BRZA_ALLOCATION.founderB },
+  founderA:   { cliffDays: 365, vestingDays: 1095, tokens: BRZA_ALLOCATION.founderA },
+  founderB:   { cliffDays: 365, vestingDays: 1095, tokens: BRZA_ALLOCATION.founderB },
   operations: { cliffDays:   0, vestingDays: 1095, tokens: BRZA_ALLOCATION.operations },
-  reserve:    { cliffDays: 180, vestingDays: 1095, tokens: BRZA_ALLOCATION.reserve },
+  reserve:    { cliffDays: 365, vestingDays: 1095, tokens: BRZA_ALLOCATION.reserve },
+  grants:     { cliffDays: 180, vestingDays:  730, tokens: BRZA_ALLOCATION.grants },
 } as const;
 
 // ── Community reward emission ───────────────────────────────────────────────
+// Source: communityRewards pool (200M)
+// Flows: join reward · vote reward · proposal reward · bounty payout · referral
 
 export const BRZA_EMISSION = {
   total:               BRZA_ALLOCATION.communityRewards,
@@ -68,6 +74,16 @@ export const BRZA_EMISSION = {
   membershipRewardPct: 0.30,
   governanceRewardPct: 0.20,
   referralPct:         0.10,
+} as const;
+
+// ── Baraza TV creator economics ─────────────────────────────────────────────
+// Source: barazaTvCreators pool (30M) + subscription/tip revenue
+
+export const BARAZA_TV = {
+  creatorRevSharePct:   0.70,  // 70% of subscription revenue to creator
+  communityRevSharePct: 0.20,  // 20% back to community DAO treasury
+  protocolFeePct:       0.10,  // 10% to protocol reserve vault
+  membershipRequired:   true,  // creator must hold active community membership
 } as const;
 
 // ── Fees ────────────────────────────────────────────────────────────────────
