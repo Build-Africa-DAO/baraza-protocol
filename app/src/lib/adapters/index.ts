@@ -8,6 +8,9 @@ import * as stellarFns from '@/lib/adapters/stellar';
 import * as kotani from '@/lib/adapters/kotani';
 import * as minisend from '@/lib/adapters/minisend';
 import { convertToBrza } from '@/lib/brza/constants';
+import { getOnRampQuote, executeOnRamp } from '@/lib/brza/onramp';
+import { getOffRampQuote, executeOffRamp } from '@/lib/brza/offramp';
+import { getPoolStats, getBrzaUsdcPoolId } from '@/lib/brza/liquidity';
 
 export interface GovernanceAdapter {
   vote(input: { proposalId: string; option: VoteOption; memberAddress: string }): Promise<ChainActionResult>;
@@ -79,6 +82,17 @@ export const adapter = {
     mpesaOut:    kotani.brzaToMpesa,
     usdcOut:     minisend.usdcToMpesa,
     checkStatus: kotani.checkStatus,
+  },
+  stablecoin: {
+    getOnRampQuote,
+    executeOnRamp,
+    getOffRampQuote,
+    executeOffRamp,
+    getSwapQuote: stellarFns.getSwapQuote,
+    swap:         stellarFns.swapExactSend,
+    getPoolStats,
+    getPoolId:    getBrzaUsdcPoolId,
+    getAllBalances: stellarFns.getAllBalances,
   },
 };
 
