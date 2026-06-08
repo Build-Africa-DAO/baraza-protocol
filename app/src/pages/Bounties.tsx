@@ -4,13 +4,13 @@ import { ArrowRight, BriefcaseBusiness, CalendarDays, CheckCircle2, Clock, Colum
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import Layout from '@/components/Layout';
-import CommunityBanner from '@/components/CommunityBanner';
 import {
   createBountyRecordAsync,
   listBounties,
   listBountiesAsync,
   listBountySubmissionsAsync,
   submitBountyWorkAsync,
+  updateBountyStatus,
   type BountySubmission,
   type BountyStatus,
 } from '@/lib/bounties';
@@ -94,6 +94,8 @@ export default function Bounties() {
   const [status, setStatus] = useState<BountyStatus | 'all'>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('board');
   const [bounties, setBounties] = useState(() => listBounties());
+  const [draggedBountyId, setDraggedBountyId] = useState<string | null>(null);
+  const [dropStatus, setDropStatus] = useState<BountyStatus | null>(null);
   const [submissionCounts, setSubmissionCounts] = useState<Record<string, number>>({});
   const [showPostForm, setShowPostForm] = useState(false);
   const [submitFor, setSubmitFor] = useState<string | null>(null);
@@ -244,40 +246,77 @@ export default function Bounties() {
     }
   };
 
+  const handleDropBounty = (nextStatus: BountyStatus) => {
+    if (!draggedBountyId) return;
+
+    const current = bounties.find((bounty) => bounty.id === draggedBountyId);
+    setDraggedBountyId(null);
+    setDropStatus(null);
+
+    if (!current || current.status === nextStatus) return;
+
+    const updated = updateBountyStatus(current.id, nextStatus, current.assignee);
+    if (!updated) {
+      setFormMessage('Could not move that bounty.');
+      return;
+    }
+
+    setBounties(listBounties());
+    setSubmitFor(null);
+    setFormMessage(`${updated.title} moved to ${statusLabel[nextStatus]}.`);
+  };
+
   return (
     <Layout>
-      <section className="relative pt-28 pb-12">
-        <div className="container mx-auto px-4">
-          <CommunityBanner
-            className="mb-8 min-h-[18rem] p-6 md:p-8"
-            imageUrl="https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=1400&q=80"
-          >
-            <div className="max-w-2xl">
-              <p className="mb-2 font-mono text-xs uppercase tracking-widest">Baraza marketplace</p>
-              <h1 className="font-display text-3xl font-bold md:text-5xl">Bounty board</h1>
-              <p className="mt-3 max-w-xl text-sm leading-6">
-                Paid community work settled in BRZA across events, integrations, creative tasks, research, and operations.
-              </p>
-              <button
-                type="button"
-                onClick={handlePostBountyClick}
-                className="btn-warm mt-5 inline-flex items-center gap-2 text-sm"
-              >
-                <PlusCircle className="h-4 w-4" />
-                Post bounty
-              </button>
-              <div className="mt-5 grid max-w-md grid-cols-2 gap-3">
-                <div className="rounded-lg border bg-background/40 p-3">
-                  <p className="font-display text-2xl font-bold">{activeChainBounties.filter((b) => b.status === 'open').length}</p>
-                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Open bounties</p>
-                </div>
-                <div className="rounded-lg border bg-background/40 p-3">
-                  <p className="font-display text-2xl font-bold text-accent">{formatRailAmountFromKes(openRewardPool, chainMeta)}</p>
-                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Reward pool</p>
+      <section className="relative pt-24 pb-10 sm:pt-28">
+        <div className="container mx-auto max-w-6xl px-4">
+          <div className="relative mb-8 overflow-hidden rounded-lg border border-border/70 bg-card shadow-[var(--shadow-card)]">
+            <img
+              src="https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=1400&q=80"
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover opacity-35"
+              loading="lazy"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-background via-background/88 to-background/35" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background/88 via-transparent to-transparent" />
+
+            <div className="relative grid gap-6 p-5 md:grid-cols-[minmax(0,1fr)_minmax(18rem,30rem)] md:items-center md:p-7">
+              <div className="max-w-[38rem]">
+                <p className="mb-2 text-xs font-bold uppercase tracking-widest text-primary">
+                  Baraza marketplace
+                </p>
+                <h1 className="font-display text-3xl font-black leading-tight md:text-4xl">Bounties</h1>
+                <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground md:text-base md:leading-7">
+                  Fund practical work for groups, then track open tasks, reviews, and approved payouts in one board.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <button
+                  type="button"
+                  onClick={handlePostBountyClick}
+                  className="btn-warm inline-flex w-full items-center justify-center gap-2 text-sm sm:w-auto md:self-end"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  Post bounty
+                </button>
+                <div className="grid w-full gap-2 sm:grid-cols-3">
+                  <div className="rounded-lg border border-border/70 bg-background/58 p-3 backdrop-blur">
+                    <p className="font-display text-xl font-bold">{activeChainBounties.filter((b) => b.status === 'open').length}</p>
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Open</p>
+                  </div>
+                  <div className="rounded-lg border border-border/70 bg-background/58 p-3 backdrop-blur">
+                    <p className="font-display text-xl font-bold text-primary">{formatRailAmountFromKes(openRewardPool, chainMeta)}</p>
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Reward pool</p>
+                  </div>
+                  <div className="rounded-lg border border-border/70 bg-background/58 p-3 backdrop-blur">
+                    <p className="font-display text-xl font-bold">{chainMeta.label}</p>
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Rail</p>
+                  </div>
                 </div>
               </div>
             </div>
-          </CommunityBanner>
+          </div>
 
           {showPostForm && (
             <div className="baraza-card mb-6 p-5">
@@ -475,7 +514,27 @@ export default function Bounties() {
                   }[column.status];
 
                   return (
-                    <section key={column.status} className={cn('flex w-[min(18rem,80vw)] flex-col rounded-xl border-t-2 border border-border/60 bg-card/70', colBorderColor)}>
+                    <section
+                      key={column.status}
+                      onDragOver={(event) => {
+                        event.preventDefault();
+                        setDropStatus(column.status);
+                      }}
+                      onDragLeave={(event) => {
+                        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                          setDropStatus(null);
+                        }
+                      }}
+                      onDrop={(event) => {
+                        event.preventDefault();
+                        handleDropBounty(column.status);
+                      }}
+                      className={cn(
+                        'flex w-[min(18rem,80vw)] flex-col rounded-xl border-t-2 border border-border/60 bg-card/70 transition-colors',
+                        colBorderColor,
+                        dropStatus === column.status && draggedBountyId && 'border-primary/60 bg-primary/5',
+                      )}
+                    >
                       {/* Sticky column header */}
                       <div className="sticky top-0 z-10 flex items-center gap-2 rounded-t-[10px] border-b border-border/50 bg-card/95 px-3 py-2.5 backdrop-blur">
                         <span className={cn('rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', statusClass[column.status])}>
@@ -500,7 +559,20 @@ export default function Bounties() {
                           return (
                             <article
                               key={bounty.id}
-                              className="rounded-lg border border-border/50 bg-background/60 p-3 transition-colors hover:border-primary/30 hover:bg-background/80"
+                              draggable
+                              onDragStart={(event) => {
+                                event.dataTransfer.effectAllowed = 'move';
+                                event.dataTransfer.setData('text/plain', bounty.id);
+                                setDraggedBountyId(bounty.id);
+                              }}
+                              onDragEnd={() => {
+                                setDraggedBountyId(null);
+                                setDropStatus(null);
+                              }}
+                              className={cn(
+                                'cursor-grab rounded-lg border border-border/50 bg-background/60 p-3 transition-colors hover:border-primary/30 hover:bg-background/80 active:cursor-grabbing',
+                                draggedBountyId === bounty.id && 'opacity-55 ring-2 ring-primary/35',
+                              )}
                             >
                               {/* Badge row */}
                               <div className="mb-2 flex flex-wrap items-center gap-1.5">

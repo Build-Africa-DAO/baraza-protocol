@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, Moon, PlayCircle, Search, Sparkles, Sun, X } from "lucide-react";
+import { Menu, Moon, MoreHorizontal, PlayCircle, Search, Sparkles, Sun, X } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import ChainSelector from "@/components/ChainSelector";
 import EnvironmentSelector from "@/components/EnvironmentSelector";
@@ -17,6 +17,9 @@ const navLinks = [
   { path: "/profile", label: "Profile" },
 ];
 
+const primaryNavLinks = navLinks.filter((link) => ["/", "/communities", "/create"].includes(link.path));
+const overflowNavLinks = navLinks.filter((link) => !primaryNavLinks.includes(link));
+
 const quickSearches = ["DAO", "SACCO", "co-operative", "governance", "savings"];
 
 interface HeaderProps {
@@ -25,6 +28,7 @@ interface HeaderProps {
 
 export default function Header({ walletSlot }: HeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -40,7 +44,10 @@ export default function Header({ walletSlot }: HeaderProps) {
   }, []);
 
   // Close mobile menu on route change
-  useEffect(() => setMobileOpen(false), [location.pathname]);
+  useEffect(() => {
+    setMobileOpen(false);
+    setMoreOpen(false);
+  }, [location.pathname]);
 
   const submitSearch = (value = query) => {
     const trimmed = value.trim();
@@ -75,14 +82,14 @@ export default function Header({ walletSlot }: HeaderProps) {
           : "border-border/35 bg-background/82 backdrop-blur-xl",
       )}
     >
-      <div className="flex h-14 w-full items-center justify-between gap-4 px-4 sm:px-6">
-        <div className="flex min-w-0 items-center gap-8">
+      <div className="flex h-14 w-full items-center justify-between gap-3 px-4 sm:px-6">
+        <div className="flex min-w-0 items-center gap-5">
           <Link to="/" className="flex shrink-0 items-center" aria-label="Baraza home">
             <BrandLogo size="sm" />
           </Link>
 
-          <nav className="hidden items-center gap-5 md:flex" aria-label="Main navigation">
-            {navLinks.map((link) => {
+          <nav className="hidden items-center gap-4 md:flex" aria-label="Main navigation">
+            {primaryNavLinks.map((link) => {
               const isActive =
                 location.pathname === link.path ||
                 (link.path !== "/" && location.pathname.startsWith(link.path));
@@ -105,45 +112,129 @@ export default function Header({ walletSlot }: HeaderProps) {
                 </Link>
               );
             })}
-            <button
-              type="button"
-              onClick={openTutorial}
-              className="inline-flex items-center gap-1.5 py-1 text-sm font-semibold text-foreground/80 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
-            >
-              <PlayCircle className="h-4 w-4" />
-              Tutorial
-            </button>
-            <button
-              type="button"
-              onClick={openAiGuide}
-              className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-sm font-bold text-primary transition-colors hover:bg-primary/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
-            >
-              <Sparkles className="h-4 w-4" />
-              AI Guide
-            </button>
+            <div className="hidden items-center gap-4 2xl:flex">
+              {overflowNavLinks.map((link) => {
+                const isActive =
+                  location.pathname === link.path ||
+                  (link.path !== "/" && location.pathname.startsWith(link.path));
+                return (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    aria-current={isActive ? "page" : undefined}
+                    className={cn(
+                      "relative py-1 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70",
+                      isActive
+                        ? "text-foreground"
+                        : "text-foreground/80 hover:text-foreground",
+                    )}
+                  >
+                    {link.label}
+                    {isActive && (
+                      <span className="absolute inset-x-0 -bottom-1 h-0.5 rounded-full bg-primary" />
+                    )}
+                  </Link>
+                );
+              })}
+              <button
+                type="button"
+                onClick={openTutorial}
+                className="inline-flex items-center gap-1.5 py-1 text-sm font-semibold text-foreground/80 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+              >
+                <PlayCircle className="h-4 w-4" />
+                Tutorial
+              </button>
+              <button
+                type="button"
+                onClick={openAiGuide}
+                className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-sm font-bold text-primary transition-colors hover:bg-primary/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+              >
+                <Sparkles className="h-4 w-4" />
+                AI Guide
+              </button>
+            </div>
           </nav>
         </div>
 
-        <div className="relative flex items-center gap-3">
+        <div className="relative flex shrink-0 items-center gap-2">
+          <div className="relative hidden md:block 2xl:hidden">
+            <button
+              type="button"
+              onClick={() => setMoreOpen((open) => !open)}
+              className="inline-flex h-10 items-center gap-1.5 rounded-md border border-border/70 bg-surface/70 px-3 text-sm font-semibold text-muted-foreground transition-colors hover:border-primary/45 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+              aria-expanded={moreOpen}
+              aria-controls="header-more-menu"
+            >
+              <MoreHorizontal className="h-4 w-4" />
+              More
+            </button>
+
+            {moreOpen && (
+              <div
+                id="header-more-menu"
+                className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-56 rounded-xl border border-border/70 bg-card p-2 shadow-[var(--shadow-deep)]"
+              >
+                {overflowNavLinks.map((link) => {
+                  const isActive =
+                    location.pathname === link.path ||
+                    (link.path !== "/" && location.pathname.startsWith(link.path));
+                  return (
+                    <Link
+                      key={link.path}
+                      to={link.path}
+                      aria-current={isActive ? "page" : undefined}
+                      className={cn(
+                        "block rounded-lg px-3 py-2 text-sm font-semibold transition-colors",
+                        isActive
+                          ? "bg-primary/10 text-foreground"
+                          : "text-foreground/80 hover:bg-surface hover:text-foreground",
+                      )}
+                    >
+                      {link.label}
+                    </Link>
+                  );
+                })}
+                <div className="my-1 border-t border-border/50" />
+                <button
+                  type="button"
+                  onClick={openTutorial}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold text-foreground/80 transition-colors hover:bg-surface hover:text-foreground"
+                >
+                  <PlayCircle className="h-4 w-4" />
+                  Tutorial
+                </button>
+                <button
+                  type="button"
+                  onClick={openAiGuide}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold text-primary transition-colors hover:bg-primary/10"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  AI Guide
+                </button>
+              </div>
+            )}
+          </div>
+
           <button
             type="button"
             onClick={() => setSearchOpen((open) => !open)}
-            className="hidden items-center gap-2 rounded-md border border-border/70 bg-surface/70 px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:border-primary/45 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 lg:inline-flex"
+            className="hidden h-10 w-10 items-center justify-center rounded-md border border-border/70 bg-surface/70 text-muted-foreground transition-colors hover:border-primary/45 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 lg:inline-flex"
             aria-expanded={searchOpen}
             aria-controls="header-search-panel"
+            aria-label="Search Baraza"
+            title="Search Baraza"
           >
             <Search className="h-4 w-4" />
-            Search
           </button>
 
           <div className="hidden sm:block">
             <ChainSelector />
           </div>
-          <div className="hidden lg:block">
+          <div className="hidden 2xl:block">
             <EnvironmentSelector />
           </div>
 
-          {walletSlot && <div className="hidden sm:block">{walletSlot}</div>}
+          {walletSlot && <div className="hidden 2xl:block">{walletSlot}</div>}
 
           <button
             type="button"

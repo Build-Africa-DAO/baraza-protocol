@@ -7,31 +7,33 @@ interface BrandLogoProps {
 }
 
 const sizes = {
-  sm: { icon: 30, font: "text-base" },
-  md: { icon: 38, font: "text-xl" },
-  lg: { icon: 48, font: "text-3xl" },
+  sm: { icon: 26, font: "text-sm" },
+  md: { icon: 34, font: "text-lg" },
+  lg: { icon: 44, font: "text-2xl" },
 };
 
 export function BrandLogo({ className, iconOnly = false, size = "md" }: BrandLogoProps) {
   const { icon, font } = sizes[size];
 
   return (
-    <div className={cn("flex items-center gap-1.5 leading-none", className)}>
-      <img
-        src="/baraza-logo-v2.svg"
-        alt={iconOnly ? "Baraza logo" : ""}
-        width={icon}
-        height={icon}
-        className="shrink-0 rounded-[9px]"
-      />
+    <div className={cn("flex items-center gap-2 leading-none", className)}>
+      {iconOnly && (
+        <img
+          src="/baraza-logo-v2.svg"
+          alt="Baraza logo"
+          width={icon}
+          height={icon}
+          className="shrink-0"
+        />
+      )}
 
       {!iconOnly && (
         <span
-          className={cn("font-display tracking-tight", font)}
-          style={{ letterSpacing: "-0.05em" }}
+          className={cn("font-display font-black", font)}
+          style={{ letterSpacing: "0" }}
         >
-          <span className="font-semibold text-foreground">bara</span>
-          <span className="font-extrabold" style={{ color: "#FFB300" }}>za</span>
+          <span className="text-foreground">bara</span>
+          <span className="text-primary">za</span>
         </span>
       )}
     </div>
