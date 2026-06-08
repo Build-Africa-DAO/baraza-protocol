@@ -96,9 +96,9 @@ Stellar launches first. Never treat EVM or Solana as launch blockers.
 
 1. `ANTHROPIC_API_KEY` → Vercel + GitHub secrets
 2. Supabase env vars → Vercel (URL, anon key, service role key)
-3. `supabase db push` — run migrations 001–010
-4. Implement `persistOrder()` in `verify-payment.ts` (currently returns `persisted: false`)
-5. Wire `CreateCommunity.tsx` → `POST /api/communities` → Supabase
+3. `supabase db push` — run migrations 001–012
+4. Fund Stellar testnet treasury G-account + run XLM payment verification smoke
+5. Replace demo cron promoter with real BRZA mint submission logic
 
 ---
 
