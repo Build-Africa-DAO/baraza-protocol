@@ -230,37 +230,37 @@ export async function createCommunityRecord(input: CommunityInsert): Promise<Com
     ussdShortcode: input.ussdShortcode || undefined,
   };
 
-  const client = getSupabase();
-  if (!client) {
-    const communities = readLocalCommunities();
-    writeLocalCommunities([localCommunity, ...communities]);
-    return localCommunity;
+  try {
+    const res = await fetch('/api/communities', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        name: input.name,
+        type: input.type,
+        description: input.description,
+        membershipFee: input.membershipFee,
+        chain,
+        quorumPct,
+        approvalThresholdPct,
+        votingPeriodDays,
+        treasuryPolicy,
+        paybillNumber: input.paybillNumber,
+        ussdShortcode: input.ussdShortcode,
+      }),
+    });
+
+    if (res.ok) {
+      const payload = await res.json() as { persisted: boolean; community?: CommunityRow };
+      if (payload.persisted && payload.community) {
+        return communityFromRow(payload.community);
+      }
+      // Server not configured (persisted: false) — fall through to localStorage
+    }
+  } catch {
+    // Network/CORS/local-dev without vercel dev — fall through to localStorage
   }
 
-  const { data, error } = await client
-    .from('communities')
-    .insert({
-      name: localCommunity.name,
-      type: localCommunity.type,
-      description: localCommunity.description,
-      membership_fee: localCommunity.membershipFee,
-      member_count: 0,
-      fund_balance: 0,
-      active_decisions: 0,
-      image: localCommunity.image,
-      chain,
-      quorum_pct: quorumPct,
-      approval_threshold_pct: approvalThresholdPct,
-      voting_period_days: votingPeriodDays,
-      treasury_policy: treasuryPolicy,
-      paybill_number: input.paybillNumber || null,
-      ussd_shortcode: input.ussdShortcode || null,
-    })
-    .select(
-      'id,name,type,description,membership_fee,member_count,fund_balance,active_decisions,created_at,image,chain,quorum_pct,approval_threshold_pct,voting_period_days,treasury_policy,paybill_number,ussd_shortcode',
-    )
-    .single();
-
-  if (error) throw error;
-  return communityFromRow(data);
+  const communities = readLocalCommunities();
+  writeLocalCommunities([localCommunity, ...communities]);
+  return localCommunity;
 }
