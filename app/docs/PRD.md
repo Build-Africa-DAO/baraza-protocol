@@ -1202,6 +1202,88 @@ Compliance requirements:
 - Private data remains off-chain.
 - Custodial wallet flows require explicit user terms.
 
+### 18.1 Kenya Regulatory Compliance
+
+**SASRA (Sacco Societies Regulatory Authority):**
+
+Applies to all community types with value `sacco`. The compliance module must include:
+
+- Member register (names, ID numbers, share capital)
+- Loan book report (outstanding loans, repayment status, defaults)
+- Share capital summary
+- Annual returns filing support
+- Deposit Guarantee Fund hook (SACCO Amendment Bill 2025 — build compliance hook, do not activate until bill passes)
+
+**Cooperative Societies Act (Kenya):**
+
+Applies to community types `cooperative` and `supply_chain`. Compliance path is separate from the SACCO Act:
+
+- Registered society number field on community profile
+- Annual general meeting (AGM) vote record
+- Audited accounts attachment support
+
+**Kenya VASP Act 2025 (Virtual Asset Service Providers Act):**
+
+- TODO: VASP registration required before BRZA token issuance on mainnet. The Act is live as of 2025. Consult legal counsel before token launch.
+- All BRZA issuance, distribution, and treasury operations on Stellar mainnet may require VASP license.
+- Do not launch BRZA on mainnet without completing this registration.
+
+### 18.2 Governance Architecture
+
+**Two-track governance (Membranic Governance Spaces pattern):**
+
+*Community track:*
+
+- 1 member 1 vote — egalitarian by design
+- All active members in good standing may vote
+- Voting options: For / Against / Abstain (Abstain enables participation for USSD-only members who cannot read a long proposal)
+- Quorum default: 51% of active members
+- Approval default: 66% of votes cast
+- Voting period default: 7 days
+
+*Protocol track:*
+
+- BRZA-weighted voting
+- Eligible voters: community admins with verified membership and minimum BRZA stake
+- Scope: fee parameter changes, reserve policy, Baraza protocol upgrades
+- Quorum: 10% of circulating BRZA supply
+- Approval: 66% of votes cast
+- Voting period: 14 days
+
+**Governance roles (adapted from BAD DAO framework):**
+
+| Role | Voting weight | Can propose | Treasury access |
+|---|---|---|---|
+| Protocol steward (admin) | BRZA-weighted | Yes | Up to 1% without full vote |
+| Community admin | 1 vote (community track) | Yes | Proposal-only |
+| Member | 1 vote | Yes (funded proposals require stake) | No |
+| Delegate | Accumulated from delegators | Yes | No |
+| AI agent (Asha) | Non-voting — advise and flag only | Draft only | No |
+
+**Proposal lifecycle:**
+
+1. Draft — member creates proposal (on-chain or off-chain pre-submission)
+2. Discussion — anonymous chat board active (IPFS/Arweave); structured dialogue before vote opens
+3. Active — voting period open
+4. Succeeded / Defeated / Expired — based on quorum + threshold
+5. Queued — timelock period for treasury actions
+6. Executed — CPI dispatch to treasury vault
+7. Canceled / Vetoed — admin emergency action
+
+**Anonymous proposal chat board:**
+
+- Per-proposal discussion space with randomized display names
+- Stored on IPFS or Arweave (not Supabase — censorship resistant)
+- Opens when proposal moves to Active; closes when voting ends
+- Research finding: proposals without prior structured dialogue are 90% more likely to fail (source: governance research synthesis, 2026-06-08)
+
+**AI governance agent capabilities (Asha):**
+
+- Proposal Analyzer: flag duplicate, overspend, personal benefit, unmeasurable criteria, irreversible actions
+- Voting Recommendation: generate rationale based on community treasury health and past proposals
+- Treasury Oversight: monitor community treasury balance and flag anomalous movements
+- Constraints: Asha never votes, never signs, never holds keys. Advisory only.
+
 ## 19. Success Metrics
 
 Acquisition:

@@ -177,6 +177,10 @@ Anchor.toml             Cluster: localnet (change to devnet for deployment)
 - **No fallback program IDs in production.** `app/src/lib/programs/pda.ts` uses `PLACEHOLDER_CONTRACT_ADDRESS` as a dev fallback — replace with real Vercel env vars before production.
 - **intentToken is required for Stellar mainnet.** Legacy `communityId` + `amountXlm` fields in `verify-payment` are testnet-only. Do not relax this gate.
 - **Activation secret must be kept client-side** from the moment the payment order is created until membership activation. It is never re-exposed by the server.
+- **Chain names must NOT appear in UI** except on the onboarding screen and withdrawal screen. Everywhere else users see KES balance, a pay button, and a vote button — never "Stellar", "Solana", "Base", or any other chain name.
+- **GOODDOLLAR_ENABLED must remain false** in all committed code. GoodDollar/Celo is a scaffold for later. Do not set it to true or make it configurable from the frontend.
+- **`/lib/adapters/index.ts` is the only permitted entry point** for chain interactions. No component, hook, or API route may import Stellar SDK, Solana web3.js, or viem directly — always through the adapter layer.
+- **Loan terms are hardcoded** — 50% LTV, 5% APR, 12-month term. These values are in `app/src/lib/brza/constants.ts` (`LOAN_TERMS`) and must never be made configurable or overridden.
 
 ---
 

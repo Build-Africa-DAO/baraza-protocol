@@ -1,4 +1,21 @@
-# BARAZA PROTOCOL — PHASE 1 FULL AUDIT
+# BARAZA PROTOCOL — AUDIT LOG
+
+---
+
+## Security Finding — 2026-06-08
+
+**Source:** Governance research synthesis (NotebookLM export)
+**Severity:** Informational / Product Design
+
+**Finding:** Governance proposals submitted without prior structured community dialogue are 90% more likely to fail.
+
+**Implication:** The anonymous per-proposal chat board (discussion phase before voting opens) is validated as essential to governance health — not just a UX nicety. Proposals should not be voteable without a mandatory discussion window.
+
+**Action taken:** Added discussion phase to proposal lifecycle in `app/docs/PRD.md` section 18.2. Governance program must enforce a minimum discussion period before `Active` state transition.
+
+---
+
+## Phase 1 Full Audit — 2026-05-26
 
 Branch: `feat/gooddollar-buildathon`
 

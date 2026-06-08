@@ -1,5 +1,48 @@
 # Baraza Open Tasks and Research Update
 
+Last updated: 2026-06-08
+Repo: `Azizudinly/baraza-protocol`
+
+---
+
+## New Open Items — 2026-06-08 (from Notion + NotebookLM pull)
+
+### Critical / Blocking
+
+1. **Token allocation discrepancy** — The Notion product spec allocation table sums to 1,100,000,000 (110% of supply), not 1,000,000,000. This must be reconciled before any allocation is changed in `app/src/lib/brza/constants.ts`. Current constants remain authoritative until resolved. Buckets in conflict: Ecosystem & Grants 17%, Community Rewards 18%, Events 5%, Reserve 5%, Liquidity Pool 10%.
+
+2. **VASP registration (Kenya Virtual Asset Service Providers Act 2025)** — The Kenya VASP Act is live. BRZA token issuance on Stellar mainnet likely requires VASP registration. TODO: engage legal counsel before mainnet token launch. Do not issue BRZA on mainnet without completing this.
+
+3. **Privy vs Web3Auth** — MPC wallet provider decision blocks Sprint 1 wallet implementation. Both embed a wallet into phone-number onboarding. Decision owner: Aziz. Privy has better Stellar support; Web3Auth has stronger East Africa coverage.
+
+4. **Stellar issuer keypair** — Not yet created. Required before testnet BRZA issuance. Create via `stellar-sdk` Keypair.random(), fund on testnet via Friendbot, then set `VITE_BRZA_ISSUER_ADDRESS` + `VITE_BRZA_DISTRIBUTOR_ADDRESS` in Vercel.
+
+### High Priority
+
+5. **Safaricom Daraja API business account** — Business account not yet applied for. Required for production M-Pesa (Paybill number issuance). In the interim, Kotani Pay handles M-Pesa → XLM. Daraja application must be started at least 4–6 weeks before intended launch.
+
+6. **Smart contract audit** — Sec3 recommended ($20K–$30K, 6-week queue). Not yet booked. Required before mainnet token issuance and treasury operations. Action: book Sec3 engagement immediately.
+
+### Regulatory / Compliance
+
+7. **SASRA compliance module** — Required for all `sacco` community types. Must include: member register, loan book, share capital report, annual returns filing, Deposit Guarantee Fund hook. See `app/docs/PRD.md` section 18.1.
+
+8. **Cooperative Societies Act compliance** — Applies to `cooperative` and `supply_chain` community types. Registered society number field + AGM vote record + audited accounts attachment.
+
+9. **SACCO Amendment Bill 2025 (Deposit Guarantee Fund)** — Bill in progress. Build compliance hook but do not activate until bill passes. See `app/docs/PRD.md` section 18.1.
+
+### Research / Architecture
+
+10. **BuilderOSS reference** — `C:\Users\USER\Downloads\BAD-reference\BuilderOSS` does not exist locally. Clone manually if DAO tooling or contract interfaces are needed. No live GitHub fetch.
+
+11. **M-Pesa Paybill model** — Baraza owns one M-Pesa paybill number; communities identified by account code (not separate paybills). Architecture implication: `community_code` must be unique, indexed, and collision-resistant. Verify this is enforced in Supabase schema.
+
+12. **Allbridge integration threshold** — BRZA bridge to Solana via Allbridge activates at $200K TVL in Stellar pool. No action until that milestone.
+
+---
+
+## Previous Open Items — 2026-06-06 (original state)
+
 Date: 2026-06-06
 Repo: `Azizudinly/baraza-protocol`
 Branch: `fix/app-vercel-config`
