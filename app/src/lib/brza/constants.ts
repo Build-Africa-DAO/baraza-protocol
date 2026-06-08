@@ -85,12 +85,41 @@ export const BRZA_TVL_TARGETS = {
   ido:         500_000,
 } as const;
 
+// ── Stellar stablecoin assets ───────────────────────────────────────────────
+
+export const STELLAR_ASSETS = {
+  XLM: {
+    code: 'XLM',
+    issuer: null as null,
+    decimals: 7,
+  },
+  USDC: {
+    code: 'USDC',
+    issuer: STELLAR_NETWORK === 'mainnet'
+      ? 'GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN'
+      : 'GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5',
+    decimals: 7,
+  },
+  USDT: {
+    code: 'USDT',
+    issuer: STELLAR_NETWORK === 'mainnet'
+      ? 'GCQTGZQQ5G4PTM2GL7CDIFKUBIPEC52BROAQIAPW53XBRJVN6ZJVTG6V'
+      : null as null,
+    decimals: 7,
+  },
+} as const;
+
+export type StablecoinCode = 'USDC' | 'USDT';
+export type SupportedAsset = 'BRZA' | 'XLM' | 'USDC' | 'USDT';
+
 // ── Fiat conversion ─────────────────────────────────────────────────────────
 
 export const FIAT_RATES: Record<string, number> = {
   KES: 0.0077,  UGX: 0.00027, TZS: 0.00039,
   NGN: 0.00063, GHS: 0.067,   ZAR: 0.054,
   ETB: 0.0091,  USD: 1.0,     EUR: 1.08,   GBP: 1.27,
+  // Crypto rails treated as USD-denominated for quote purposes
+  USDC: 1.0,    USDT: 1.0,    XLM: 0.11,
 };
 
 export function convertToBrza(
