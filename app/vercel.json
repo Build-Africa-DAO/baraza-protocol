@@ -1,5 +1,7 @@
 {
-  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }],
+  "rewrites": [
+    { "source": "/((?!api/)(?!_vercel/).*)", "destination": "/index.html" }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",
@@ -8,17 +10,39 @@
       ]
     },
     {
-      "source": "/api/(.*)",
+      "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "DENY" }
+        { "key": "X-Content-Type-Options",  "value": "nosniff" },
+        { "key": "X-Frame-Options",          "value": "DENY" },
+        { "key": "Referrer-Policy",          "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy",       "value": "camera=(), microphone=(), geolocation=()" }
       ]
     }
   ],
+  "functions": {
+    "api/ussd/index.ts": {
+      "maxDuration": 5
+    },
+    "api/mpesa/simulate.ts": {
+      "maxDuration": 15
+    },
+    "api/membership/activate.ts": {
+      "maxDuration": 30
+    },
+    "api/stellar/verify-payment.ts": {
+      "maxDuration": 30
+    },
+    "api/payment-orders/status.ts": {
+      "maxDuration": 10
+    },
+    "api/cron/promote-orders.ts": {
+      "maxDuration": 60
+    }
+  },
   "crons": [
     {
       "path": "/api/cron/promote-orders",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }
