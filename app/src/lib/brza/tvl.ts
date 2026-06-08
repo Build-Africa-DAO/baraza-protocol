@@ -1,5 +1,6 @@
 import { getBrzaBalance } from '@/lib/adapters/stellar';
 import { BRZA_TVL_TARGETS, CURRENT_PHASE, formatLocal, getBrzaPriceUsd, type BrzaPhase } from '@/lib/brza/constants';
+import { getPoolStats } from './liquidity';
 
 export type TvlPhase = 'building' | 'stellar_pool_ready' | 'solana_pool_ready' | 'ido_ready';
 
@@ -11,6 +12,7 @@ export interface TvlSnapshot {
   phase: TvlPhase;
   nextTarget: { label: string; usd: number; remaining: number; pct: number };
   displayLocal: string;
+  breakdown: { communityTreasuries: number; liquidityPool: number };
   updatedAt: number;
 }
 
@@ -53,8 +55,13 @@ export async function fetchPlatformTvl(
       if (Number.isFinite(balance)) totalBrza += balance;
     }
   }
+  const poolStats = await getPoolStats();
+  const poolTvlUsd = poolStats.tvlUsdc ?? 0;
+
   const priceUsd = getBrzaPriceUsd(brzaPhase);
-  const totalUsd = totalBrza * priceUsd;
+  const communityTvlUsd = totalBrza * priceUsd;
+  const totalUsd = communityTvlUsd + poolTvlUsd;
+
   return {
     totalBrza,
     totalUsd,
@@ -63,6 +70,7 @@ export async function fetchPlatformTvl(
     phase: getPhase(totalUsd),
     nextTarget: getNextTarget(totalUsd),
     displayLocal: formatLocal(totalUsd, 'KES'),
+    breakdown: { communityTreasuries: communityTvlUsd, liquidityPool: poolTvlUsd },
     updatedAt: Date.now(),
   };
 }
