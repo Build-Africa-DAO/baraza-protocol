@@ -37,6 +37,9 @@
     },
     "api/cron/promote-orders.ts": {
       "maxDuration": 60
+    },
+    "api/agent/chat.ts": {
+      "maxDuration": 30
     }
   },
   "crons": [

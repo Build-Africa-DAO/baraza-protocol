@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X, Send, Sparkles } from 'lucide-react';
 import { useAshaChat } from '@/hooks/useAshaChat';
 import { useChain } from '@/hooks/useChain';
+import { useLocation } from 'react-router-dom';
 import type { ChainMeta } from '@/lib/chain';
 
 interface Message {
@@ -107,13 +108,49 @@ const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
   },
 ];
 
-const getAshaResponse = (input: string): string => {
+const getStaticResponse = (input: string): string => {
   const lower = input.toLowerCase();
   for (const { keywords, reply } of RESPONSES) {
     if (keywords.some((kw) => lower.includes(kw))) return reply;
   }
   return 'Great question! Baraza helps DAOs and communities manage KES funds and make decisions together. Try asking me about launching a DAO, how voting works, the shared fund, or how to join an existing group.';
 };
+
+async function streamAshaResponse(
+  message: string,
+  communityId: string | null,
+  history: Array<{ role: 'user' | 'assistant'; content: string }>,
+  onChunk: (text: string) => void,
+): Promise<void> {
+  const res = await fetch('/api/agent/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message, communityId: communityId ?? undefined, history }),
+  });
+
+  if (!res.ok || !res.body) throw new Error('unavailable');
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    const lines = buf.split('\n');
+    buf = lines.pop() ?? '';
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue;
+      const payload = line.slice(6);
+      if (payload === '[DONE]') return;
+      try {
+        const parsed = JSON.parse(payload) as { text?: string; error?: string };
+        if (parsed.text) onChunk(parsed.text);
+      } catch { /* ignore malformed */ }
+    }
+  }
+}
 
 const TypingDots: React.FC = () => (
   <div className="flex items-center gap-1 px-3.5 py-2.5">
@@ -131,13 +168,16 @@ const TypingDots: React.FC = () => (
 const AshaChat: React.FC = () => {
   const { isOpen, open, close, pendingMessage, clearPending } = useAshaChat();
   const { chainMeta } = useChain();
+  const location = useLocation();
   const [messages, setMessages] = useState<Message[]>(() => [initialMessage(chainMeta)]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const responseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const focusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Extract communityId from /dashboard/:id routes
+  const communityId = location.pathname.match(/^\/dashboard\/([^/]+)/)?.[1] ?? null;
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -152,8 +192,8 @@ const AshaChat: React.FC = () => {
     };
   }, [isOpen]);
 
-  const sendMessage = useCallback((text: string) => {
-    if (!text.trim()) return;
+  const sendMessage = useCallback(async (text: string) => {
+    if (!text.trim() || isTyping) return;
 
     const userMsg: Message = {
       id: Date.now().toString(),
@@ -161,22 +201,42 @@ const AshaChat: React.FC = () => {
       text: text.trim(),
       time: timestamp(chainMeta),
     };
+
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setIsTyping(true);
 
-    if (responseTimerRef.current !== null) clearTimeout(responseTimerRef.current);
-    responseTimerRef.current = setTimeout(() => {
+    const ashaId = String(Date.now() + 1);
+
+    // Build history from last 8 messages (excluding initial greeting)
+    const history = messages.slice(1, -0).slice(-8).map((m) => ({
+      role: (m.role === 'user' ? 'user' : 'assistant') as 'user' | 'assistant',
+      content: m.text,
+    }));
+
+    try {
+      // Add empty Asha message that we'll stream into
       setIsTyping(false);
-      const ashaMsg: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'asha',
-        text: getAshaResponse(text),
-        time: timestamp(chainMeta),
-      };
-      setMessages((prev) => [...prev, ashaMsg]);
-    }, 900 + Math.random() * 400);
-  }, [chainMeta]);
+      setMessages((prev) => [
+        ...prev,
+        { id: ashaId, role: 'asha', text: '', time: timestamp(chainMeta) },
+      ]);
+
+      await streamAshaResponse(text.trim(), communityId, history, (chunk) => {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === ashaId ? { ...m, text: m.text + chunk } : m))
+        );
+      });
+    } catch {
+      // Fall back to static responses when API is unavailable
+      setIsTyping(false);
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === ashaId ? { ...m, text: getStaticResponse(text) } : m
+        )
+      );
+    }
+  }, [chainMeta, communityId, isTyping, messages]);
 
   // Send pending message from hero search bar
   useEffect(() => {
