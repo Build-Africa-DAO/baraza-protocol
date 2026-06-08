@@ -3,7 +3,7 @@
 export async function usdcToMpesa(_params: {
   phone: string;
   usdcAmount: string;
-  chain: 'base' | 'polygon' | 'celo';
+  chain: 'base' | 'polygon' | 'celo' | 'stellar';
 }): Promise<{ reference: string; kesAmount: number; error?: string }> {
   return {
     reference: '',
