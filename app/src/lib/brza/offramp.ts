@@ -1,4 +1,5 @@
 import { swapExactSend } from '@/lib/adapters/stellar';
+import { usdcToMpesa } from '@/lib/adapters/minisend';
 import { BRZA_FEES, getBrzaPriceUsd, FIAT_RATES } from './constants';
 
 export type OffRampDestination = 'mpesa' | 'usdc_wallet' | 'usdt_wallet' | 'xlm_wallet';
@@ -69,7 +70,6 @@ export async function executeOffRamp(params: {
     if (swapResult.error) return { success: false, outputAmount: 0, error: swapResult.error };
 
     if (params.destination === 'mpesa' && params.phone) {
-      const { usdcToMpesa } = await import('@/lib/adapters/minisend');
       const mpesaResult = await usdcToMpesa({
         phone: params.phone,
         usdcAmount: quote.outputAmount.toFixed(7),

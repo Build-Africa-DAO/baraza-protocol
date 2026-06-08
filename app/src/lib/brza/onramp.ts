@@ -1,4 +1,5 @@
 import { swapExactSend } from '@/lib/adapters/stellar';
+import * as kotaniAdapter from '@/lib/adapters/kotani';
 import { convertToBrza, BRZA_FEES } from './constants';
 
 export type OnRampCurrency = 'KES' | 'UGX' | 'NGN' | 'GHS' | 'ZAR' | 'USDC' | 'USDT' | 'XLM';
@@ -80,8 +81,7 @@ export async function executeOnRamp(params: {
     return { success: false, brzaDelivered: 0, error: 'Phone number required for M-Pesa payment' };
   }
 
-  const kotani = await import('@/lib/adapters/kotani');
-  const kotaniResult = await kotani.mpesaToBrza({
+  const kotaniResult = await kotaniAdapter.mpesaToBrza({
     phone: params.phone,
     kesAmount: params.amount,
     destinationAddress: params.communityTreasuryAddress,
