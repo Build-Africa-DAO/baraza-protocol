@@ -39,3 +39,6 @@ Thumbs.db
 
 # Higgsfield render output (binary mp4s)
 scripts/higgsfield/output/
+
+# Codex dev server logs
+.codex-vite.*.log

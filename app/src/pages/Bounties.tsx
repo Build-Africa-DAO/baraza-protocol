@@ -246,10 +246,11 @@ export default function Bounties() {
     }
   };
 
-  const handleDropBounty = (nextStatus: BountyStatus) => {
-    if (!draggedBountyId) return;
+  const handleDropBounty = (nextStatus: BountyStatus, bountyId?: string) => {
+    const movedBountyId = bountyId || draggedBountyId;
+    if (!movedBountyId) return;
 
-    const current = bounties.find((bounty) => bounty.id === draggedBountyId);
+    const current = bounties.find((bounty) => bounty.id === movedBountyId);
     setDraggedBountyId(null);
     setDropStatus(null);
 
@@ -527,7 +528,7 @@ export default function Bounties() {
                       }}
                       onDrop={(event) => {
                         event.preventDefault();
-                        handleDropBounty(column.status);
+                        handleDropBounty(column.status, event.dataTransfer.getData('text/plain'));
                       }}
                       className={cn(
                         'flex w-[min(18rem,80vw)] flex-col rounded-xl border-t-2 border border-border/60 bg-card/70 transition-colors',
