@@ -242,7 +242,7 @@ const AshaChat: React.FC = () => {
   useEffect(() => {
     if (isOpen && pendingMessage) {
       clearPending();
-      sendMessage(pendingMessage);
+      void sendMessage(pendingMessage);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, pendingMessage]);
@@ -257,7 +257,7 @@ const AshaChat: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    sendMessage(input);
+    void sendMessage(input);
   };
 
   const showQuickReplies = messages.length <= 2 && !isTyping;
