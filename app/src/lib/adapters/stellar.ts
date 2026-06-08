@@ -2,7 +2,7 @@ import {
   Horizon, Asset, Keypair, TransactionBuilder,
   Operation, Networks, BASE_FEE, Memo,
 } from '@stellar/stellar-sdk';
-import { BRZA_ASSET } from '@/lib/brza/constants';
+import { BRZA_ASSET, STELLAR_ASSETS, type SupportedAsset } from '@/lib/brza/constants';
 import type { ChainActionResult } from '@/types';
 import type { ChainAdapter } from '@/lib/adapters';
 
@@ -213,6 +213,178 @@ export async function createBrzaTrustline(params: {
     return { txHash: result.hash };
   } catch (e) {
     return { txHash: '', error: String(e) };
+  }
+}
+
+// ── DEX helpers ────────────────────────────────────────────────────────────
+
+function buildAsset(code: SupportedAsset): Asset {
+  if (code === 'XLM') return Asset.native();
+  if (code === 'BRZA') return new Asset(BRZA_ASSET.code, BRZA_ASSET.issuerAddress);
+  const asset = STELLAR_ASSETS[code];
+  return new Asset(asset.code, asset.issuer as string);
+}
+
+function horizonAssetParams(code: SupportedAsset): Record<string, string> {
+  if (code === 'XLM') return { asset_type: 'native' };
+  if (code === 'BRZA') return { asset_type: 'credit_alphanum4', asset_code: BRZA_ASSET.code, asset_issuer: BRZA_ASSET.issuerAddress };
+  const asset = STELLAR_ASSETS[code];
+  const type = asset.code.length > 4 ? 'credit_alphanum12' : 'credit_alphanum4';
+  return { asset_type: type, asset_code: asset.code, asset_issuer: asset.issuer as string };
+}
+
+export async function swapExactSend(params: {
+  fromSecret: string;
+  sendAsset: SupportedAsset;
+  sendAmount: string;
+  receiveAsset: SupportedAsset;
+  minReceive: string;
+  destinationAddress?: string;
+}): Promise<{ txHash: string; explorerUrl: string; error?: string }> {
+  try {
+    const kp = Keypair.fromSecret(params.fromSecret);
+    const account = await server.loadAccount(kp.publicKey());
+    const destination = params.destinationAddress ?? kp.publicKey();
+
+    const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: NETWORK })
+      .addOperation(Operation.pathPaymentStrictSend({
+        sendAsset: buildAsset(params.sendAsset),
+        sendAmount: params.sendAmount,
+        destination,
+        destAsset: buildAsset(params.receiveAsset),
+        destMin: params.minReceive,
+        path: [],
+      }))
+      .setTimeout(30)
+      .build();
+
+    tx.sign(kp);
+    const result = await server.submitTransaction(tx);
+    const base = BRZA_ASSET.network === 'mainnet'
+      ? 'https://stellar.expert/explorer/public/tx'
+      : 'https://stellar.expert/explorer/testnet/tx';
+    return { txHash: result.hash, explorerUrl: `${base}/${result.hash}` };
+  } catch (e) {
+    return { txHash: '', explorerUrl: '', error: String(e) };
+  }
+}
+
+export async function swapExactReceive(params: {
+  fromSecret: string;
+  sendAsset: SupportedAsset;
+  maxSend: string;
+  receiveAsset: SupportedAsset;
+  receiveAmount: string;
+  destinationAddress?: string;
+}): Promise<{ txHash: string; explorerUrl: string; error?: string }> {
+  try {
+    const kp = Keypair.fromSecret(params.fromSecret);
+    const account = await server.loadAccount(kp.publicKey());
+    const destination = params.destinationAddress ?? kp.publicKey();
+
+    const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: NETWORK })
+      .addOperation(Operation.pathPaymentStrictReceive({
+        sendAsset: buildAsset(params.sendAsset),
+        sendMax: params.maxSend,
+        destination,
+        destAsset: buildAsset(params.receiveAsset),
+        destAmount: params.receiveAmount,
+        path: [],
+      }))
+      .setTimeout(30)
+      .build();
+
+    tx.sign(kp);
+    const result = await server.submitTransaction(tx);
+    const base = BRZA_ASSET.network === 'mainnet'
+      ? 'https://stellar.expert/explorer/public/tx'
+      : 'https://stellar.expert/explorer/testnet/tx';
+    return { txHash: result.hash, explorerUrl: `${base}/${result.hash}` };
+  } catch (e) {
+    return { txHash: '', explorerUrl: '', error: String(e) };
+  }
+}
+
+export async function getSwapQuote(params: {
+  sendAsset: SupportedAsset;
+  sendAmount: string;
+  receiveAsset: SupportedAsset;
+}): Promise<{ receiveAmount: string; rate: number; priceImpact: string; error?: string }> {
+  try {
+    const srcParams = horizonAssetParams(params.sendAsset);
+    const dstParams = horizonAssetParams(params.receiveAsset);
+
+    const dstAssetStr = dstParams.asset_type === 'native'
+      ? 'native'
+      : `${dstParams.asset_code}:${dstParams.asset_issuer}`;
+
+    const qs = new URLSearchParams({
+      source_asset_type: srcParams.asset_type,
+      ...(srcParams.asset_code ? { source_asset_code: srcParams.asset_code } : {}),
+      ...(srcParams.asset_issuer ? { source_asset_issuer: srcParams.asset_issuer } : {}),
+      source_amount: params.sendAmount,
+      destination_assets: dstAssetStr,
+    });
+
+    const res = await fetch(`${BRZA_ASSET.horizonUrl}/paths/strict-send?${qs}`);
+    const data = await res.json() as { _embedded?: { records?: Array<{ destination_amount: string }> } };
+
+    if (!data._embedded?.records?.length) {
+      return { receiveAmount: '0', rate: 0, priceImpact: 'N/A', error: 'No liquidity path found' };
+    }
+
+    const receiveAmount = data._embedded.records[0].destination_amount;
+    const rate = parseFloat(receiveAmount) / parseFloat(params.sendAmount);
+    return { receiveAmount, rate, priceImpact: '<1%' };
+  } catch (e) {
+    return { receiveAmount: '0', rate: 0, priceImpact: 'N/A', error: String(e) };
+  }
+}
+
+export async function addUsdcTrustline(
+  accountSecret: string
+): Promise<{ txHash: string; error?: string }> {
+  try {
+    const kp = Keypair.fromSecret(accountSecret);
+    const account = await server.loadAccount(kp.publicKey());
+
+    const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: NETWORK })
+      .addOperation(Operation.changeTrust({ asset: buildAsset('USDC') }))
+      .setTimeout(30)
+      .build();
+
+    tx.sign(kp);
+    const result = await server.submitTransaction(tx);
+    return { txHash: result.hash };
+  } catch (e) {
+    return { txHash: '', error: String(e) };
+  }
+}
+
+export async function getAllBalances(
+  address: string
+): Promise<{ xlm: string; brza: string; usdc: string; usdt: string; error?: string }> {
+  try {
+    const account = await server.loadAccount(address);
+    const find = (code: string, issuer: string | null): string => {
+      if (issuer === null) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return (account.balances as any[]).find((b) => b.asset_type === 'native')?.balance ?? '0';
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (account.balances as any[]).find(
+        (b) => b.asset_code === code && b.asset_issuer === issuer
+      )?.balance ?? '0';
+    };
+
+    return {
+      xlm:  find('XLM', null),
+      brza: find(BRZA_ASSET.code, BRZA_ASSET.issuerAddress),
+      usdc: find('USDC', STELLAR_ASSETS.USDC.issuer),
+      usdt: find('USDT', STELLAR_ASSETS.USDT.issuer ?? ''),
+    };
+  } catch (e) {
+    return { xlm: '0', brza: '0', usdc: '0', usdt: '0', error: String(e) };
   }
 }
 
