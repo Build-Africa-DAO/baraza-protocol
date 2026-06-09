@@ -1,7 +1,28 @@
 # Baraza Open Tasks and Research Update
 
-Last updated: 2026-06-08
+Last updated: 2026-06-09
 Repo: `Azizudinly/baraza-protocol`
+
+---
+
+## New Open Items — 2026-06-09 (Source 4 repo audit + BAD governance extraction)
+
+### Architecture
+
+13. **`app/api/agent/chat.ts` does not exist** — Asha is currently a client-side keyword-matcher in `AshaChat.tsx`. No backend API route routes to Claude or any LLM. To wire Asha to a real Claude backend, create `app/api/agent/chat.ts` as a Vercel Function using `@anthropic-ai/sdk` with a Baraza governance system prompt. Akili agent definitions (pending Notion paste — see item 14) should go into that system prompt.
+
+14. **Akili AI agent definitions (Notion-blocked)** — User's Notion page at `https://app.notion.com/p/3797722eef3b81efb1e3f71dbc30b2d8` contains "different AIs agents of akili" definitions that could not be fetched (private Notion, auth required). Action: export the page to markdown and paste it into a PULL_PROMPT session, or grant Firecrawl access via Notion integration.
+
+15. **`docs/CONTRACT_INTEGRATION.md` does not exist** — This file was a target for BuilderOSS DAO tooling extraction (PULL_PROMPT Source 3B). BuilderOSS was not available locally. Action: clone `BuilderOSS` repo manually if DAO SDK contract interfaces are needed, then create this file from the extract.
+
+16. **Delegation APY source** — PRD §18.2 now specifies 0.5–2% delegation APY sourced from `communityRewards` pool. The emission mechanics for this are not yet coded. Requires: (a) decision on exact APY rate, (b) Solana program or off-chain distribution cron to calculate and distribute rewards to delegates.
+
+17. **Time-weighted voting multiplier implementation** — PRD §18.2 now specifies snapshot-based 30/90/180-day hold multipliers for protocol-track voting. This requires an on-chain or indexer-backed balance history lookup. Decide: Stellar Horizon account history polling vs Solana program account state vs off-chain snapshot cron.
+
+### Stale / Reconciled
+
+- `supabase/migrations/011_fix_payment_orders_rls.sql` header comment previously said `010_fix_payment_orders_rls.sql` — **fixed directly** on 2026-06-09.
+- `app/docs/NEXT_STEPS.md` Open Questions item 3 stated no `/api/ussd` handler exists — **fixed directly**; `app/api/ussd/index.ts` now correctly noted as existing.
 
 ---
 
