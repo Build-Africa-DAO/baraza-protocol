@@ -2,7 +2,7 @@ export const CACHE_TTL = {
   community_data: 5 * 60 * 1000,
   member_list: 10 * 60 * 1000,
   proposal_list: 2 * 60 * 1000,
-  raza_balance: 60 * 1000,
+  brza_balance: 60 * 1000,
   oracle_price: 60 * 1000,
   blackbook: 30 * 60 * 1000,
 } as const;

@@ -246,14 +246,14 @@ export default function Profile() {
 
           <div className="grid gap-6 lg:grid-cols-[0.34fr_0.66fr]">
             <aside className="space-y-6">
-              {/* RAZA balance summary */}
+              {/* BRZA balance summary */}
               <div className="baraza-card p-5">
-                <h2 className="mb-3 font-mono text-xs uppercase tracking-widest">RAZA balance</h2>
+                <h2 className="mb-3 font-mono text-xs uppercase tracking-widest">BRZA balance</h2>
                 <div className="flex items-end gap-2">
                   <span className="font-display text-4xl font-black tabular-nums leading-none">
                     {totalBrza === null ? '—' : totalBrza}
                   </span>
-                  <span className="mb-1 text-sm font-semibold text-muted-foreground">RAZA</span>
+                  <span className="mb-1 text-sm font-semibold text-muted-foreground">BRZA</span>
                 </div>
                 <p className="mt-2 text-xs text-muted-foreground">
                   Voting weight across all active memberships. Increases with governance participation.
@@ -486,7 +486,7 @@ export default function Profile() {
                               <span>Joined {formatRailDate(record.joinedAt, chainMeta, { month: 'short', year: 'numeric' })}</span>
                               <span>{formatRailAmountFromKes(community.membershipFee, chainMeta)}/mo</span>
                               <span className="font-semibold text-primary">
-                                {record.razaBalance} RAZA
+                                {record.brzaBalance} BRZA
                               </span>
                             </div>
                           </div>

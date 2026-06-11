@@ -65,7 +65,7 @@ async function createPaymentOrder(pending: PendingPayOrder, baseUrl: string): Pr
   return orderId;
 }
 
-async function fetchRazaBalanceForPhone(phoneNumber: string): Promise<number> {
+async function fetchBrzaBalanceForPhone(phoneNumber: string): Promise<number> {
   const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/$/, '');
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!supabaseUrl || !serviceKey) return 0;
@@ -146,11 +146,11 @@ export default async function handler(req: Request): Promise<Response> {
   const countryCode = resolveCountryFromPhone(phoneNumber);
   const session = getOrCreateSession({ sessionId, phoneNumber, serviceCode, countryCode });
 
-  // Prefetch RAZA balance when the user navigates to the balance menu (root '1').
+  // Prefetch BRZA balance when the user navigates to the balance menu (root '1').
   const isBalanceMenu = text === '1' || text.startsWith('1*');
-  const razaBalance = isBalanceMenu ? await fetchRazaBalanceForPhone(phoneNumber) : undefined;
+  const brzaBalance = isBalanceMenu ? await fetchBrzaBalanceForPhone(phoneNumber) : undefined;
 
-  const result = handleUssdInput({ session, text, phoneNumber, razaBalance });
+  const result = handleUssdInput({ session, text, phoneNumber, brzaBalance });
 
   if (result.action === 'END') {
     destroySession(sessionId);

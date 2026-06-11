@@ -392,6 +392,7 @@ function membershipFromRow(row: MembershipRow): MembershipRecord {
     walletAddress: row.wallet_address ?? 'unknown-account',
     status: row.status === 'active' || row.status === 'pending' || row.status === 'revoked' ? row.status : 'pending',
     joinedAt: row.joined_at ?? row.created_at ?? new Date().toISOString(),
+    brzaBalance: 1,
   };
 }
 

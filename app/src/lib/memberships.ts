@@ -19,7 +19,12 @@ function readMemberships(): MembershipRecord[] {
   try {
     const raw = window.localStorage.getItem(LOCAL_MEMBERSHIP_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    // Records persisted before the BRZA rename carry `razaBalance`.
+    return parsed.map((r: MembershipRecord & { razaBalance?: number }) => ({
+      ...r,
+      brzaBalance: r.brzaBalance ?? r.razaBalance ?? 1,
+    }));
   } catch {
     return [];
   }

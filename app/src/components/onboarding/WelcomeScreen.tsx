@@ -13,7 +13,7 @@ function maskPhone(phone: string): string {
 const VALUE_PROPS = [
   { icon: Vote,       text: 'Vote on group decisions' },
   { icon: CreditCard, text: 'Pay dues via M-Pesa' },
-  { icon: Award,      text: 'Earn RAZA for participation' },
+  { icon: Award,      text: 'Earn BRZA for participation' },
 ] as const;
 
 export default function WelcomeScreen({ phone, onContinue }: WelcomeScreenProps) {
