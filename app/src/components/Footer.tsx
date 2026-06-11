@@ -5,7 +5,9 @@ import { useChain } from "@/hooks/useChain";
 
 type FooterLink =
   | { label: string; to: string }
-  | { label: string; href: string; external: true };
+  | { label: string; href: string; external: true }
+  // Label-only entries render as disabled "Soon" placeholders.
+  | { label: string };
 
 const links: Record<string, FooterLink[]> = {
   Product: [

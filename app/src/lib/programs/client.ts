@@ -42,29 +42,27 @@ export class BarazaChainClient {
   private treasuryVault: Program<TreasuryVault>;
 
   constructor(provider: Provider) {
+    // Anchor 0.30+ takes the program id from `idl.address` instead of a
+    // positional argument. The program ids are env-overridable (see pda.ts),
+    // so spread the resolved id into each IDL to preserve that behavior.
     this.registry = new Program<CommunityRegistry>(
-      COMMUNITY_REGISTRY_IDL,
-      COMMUNITY_REGISTRY_PROGRAM_ID,
+      { ...COMMUNITY_REGISTRY_IDL, address: COMMUNITY_REGISTRY_PROGRAM_ID.toBase58() } as CommunityRegistry,
       provider,
     );
     this.governance = new Program<Governance>(
-      GOVERNANCE_IDL,
-      GOVERNANCE_PROGRAM_ID,
+      { ...GOVERNANCE_IDL, address: GOVERNANCE_PROGRAM_ID.toBase58() } as Governance,
       provider,
     );
     this.membership = new Program<Membership>(
-      MEMBERSHIP_IDL,
-      MEMBERSHIP_PROGRAM_ID,
+      { ...MEMBERSHIP_IDL, address: MEMBERSHIP_PROGRAM_ID.toBase58() } as Membership,
       provider,
     );
     this.paymentAttestation = new Program<PaymentAttestation>(
-      PAYMENT_ATTESTATION_IDL,
-      PAYMENT_ATTESTATION_PROGRAM_ID,
+      { ...PAYMENT_ATTESTATION_IDL, address: PAYMENT_ATTESTATION_PROGRAM_ID.toBase58() } as PaymentAttestation,
       provider,
     );
     this.treasuryVault = new Program<TreasuryVault>(
-      TREASURY_VAULT_IDL,
-      TREASURY_VAULT_PROGRAM_ID,
+      { ...TREASURY_VAULT_IDL, address: TREASURY_VAULT_PROGRAM_ID.toBase58() } as TreasuryVault,
       provider,
     );
   }
@@ -124,7 +122,7 @@ export class BarazaChainClient {
     const [communityKey] = communityPda(slug);
     const sig = await this.registry.methods
       .createCommunity(slug, name, metadataUri)
-      .accounts({
+      .accountsPartial({
         community: communityKey,
         admin: this.registry.provider.publicKey!,
         systemProgram: SystemProgram.programId,
@@ -137,7 +135,7 @@ export class BarazaChainClient {
     const [configKey] = govConfigPda(communityKey);
     const sig = await this.governance.methods
       .initializeConfig(DEFAULT_GOV_PARAMS)
-      .accounts({
+      .accountsPartial({
         community: communityKey,
         config: configKey,
         admin: this.governance.provider.publicKey!,
@@ -169,7 +167,7 @@ export class BarazaChainClient {
     const kindArg: Record<string, Record<string, never>> = { [kind]: {} };
     const sig = await this.governance.methods
       .createProposal(new BN(proposalId), kindArg as never, metadataUri)
-      .accounts({
+      .accountsPartial({
         community: communityKey,
         config: configKey,
         creatorMember: creatorMemberKey,
@@ -190,7 +188,7 @@ export class BarazaChainClient {
     const supportArg: Record<string, Record<string, never>> = { [support]: {} };
     const sig = await this.governance.methods
       .castVote(supportArg as never, null)
-      .accounts({
+      .accountsPartial({
         proposal: proposalKey,
         voterMember: voterMemberKey,
         receipt: receiptKey,

@@ -96,7 +96,10 @@ function initials(name: string): string {
     .join('') || 'BR';
 }
 
-const VALID_CHAINS: Chain[] = [
+// Chains a community can live on — `Chain` minus 'mpesa' (a payment rail, not a chain).
+type CommunityChain = NonNullable<Community['chain']>;
+
+const VALID_CHAINS: readonly CommunityChain[] = [
   'solana',
   'stellar',
   'ethereum',
@@ -109,8 +112,8 @@ const VALID_CHAINS: Chain[] = [
   'xdc',
 ];
 
-function parseChain(raw: string | null | undefined): Chain {
-  return VALID_CHAINS.includes(raw as Chain) ? (raw as Chain) : 'solana';
+function parseChain(raw: string | null | undefined): CommunityChain {
+  return VALID_CHAINS.includes(raw as CommunityChain) ? (raw as CommunityChain) : 'solana';
 }
 
 function communityFromRow(row: CommunityRow): Community {
@@ -204,7 +207,9 @@ export async function getCommunity(id: string): Promise<Community | null> {
 
 export async function createCommunityRecord(input: CommunityInsert): Promise<Community> {
   const now = new Date().toISOString();
-  const chain: Chain = input.chain ?? 'solana';
+  // parseChain maps non-community chains (e.g. 'mpesa') to 'solana', matching
+  // how the same value would be read back from a stored row.
+  const chain: CommunityChain = parseChain(input.chain);
   const quorumPct = input.quorumPct ?? DEFAULT_GOVERNANCE.quorumPct;
   const approvalThresholdPct = input.approvalThresholdPct ?? DEFAULT_GOVERNANCE.approvalThresholdPct;
   const votingPeriodDays = input.votingPeriodDays ?? DEFAULT_GOVERNANCE.votingPeriodDays;

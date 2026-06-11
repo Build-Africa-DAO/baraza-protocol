@@ -89,7 +89,7 @@ export default function ProposalDetail() {
     ? Math.round((proposal.fundingAmount / community.fundBalance) * 1000) / 10
     : null;
   const quorumRequiredPct = community?.quorumPct ?? DEFAULT_GOVERNANCE.quorumPct;
-  const securityReview = reviewProposal(proposal, community);
+  const securityReview = reviewProposal(proposal, community ?? undefined);
 
   const handleVote = (vote: VoteOption) => async () => {
     await requireWallet(async () => {

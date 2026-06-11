@@ -227,7 +227,7 @@ export function useBarazaContract(): UseBarazaContractResult {
 
       try {
         const communityKey = resolveCommunityKey(communityId);
-        const memberIdHash = hashToBytes32(`wallet:${walletAddress}`);
+        const memberIdHash = await hashToBytes32(`wallet:${walletAddress}`);
         const [memberKey] = memberPda(communityKey, memberIdHash);
         const member = await readClient.fetchMember(memberKey);
         const weight = member ? member.votingWeight.toNumber() : 0;

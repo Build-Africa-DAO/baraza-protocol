@@ -176,7 +176,9 @@ const CreateCommunity: React.FC = () => {
         if (chainResult) {
           saveCommunityChainMapping({
             localId: community.id,
-            chain: selectedCommunityChain,
+            // chainResult is only set in the `selectedCommunityChain === 'solana'`
+            // branch above, but TS cannot carry that narrowing here.
+            chain: 'solana',
             slug: chainResult.slug,
             communityAddress: chainResult.communityAddress,
             createTxSignature: chainResult.signature,
