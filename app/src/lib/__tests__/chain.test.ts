@@ -54,7 +54,7 @@ describe('CHAINS metadata', () => {
     expect(CHAINS.solana.label).toBe('Solana');
     expect(CHAINS.solana.currency.code).toBe('BRZA');
     expect(CHAINS.celo.railType).toBe('EVM rail');
-    expect(CHAINS.mpesa.railType).toBe('Mobile money rail');
+    expect(CHAINS.mpesa.railType).toBe('Mobile money onramp');
   });
 
   it('defines testnet metadata for every chain', () => {

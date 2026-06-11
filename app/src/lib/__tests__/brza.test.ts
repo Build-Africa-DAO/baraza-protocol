@@ -48,9 +48,10 @@ describe('BRZA pricing', () => {
 
 describe('BRZA vesting', () => {
   it('honors cliffs and caps the vested amount', () => {
-    expect(vestedAmount('founderA', 364)).toBe(0);
-    expect(vestedAmount('founderA', 365)).toBe(0);
-    expect(vestedAmount('founderA', 1095)).toBe(75_000_000);
+    // founderA: 365-day cliff + 1095-day vest = full vesting at day 1460
+    expect(vestedAmount('founderA', 364)).toBe(0);   // just before cliff
+    expect(vestedAmount('founderA', 365)).toBe(0);   // cliff day — 0 days elapsed in vest period
+    expect(vestedAmount('founderA', 1460)).toBe(75_000_000);  // cliff (365) + vestingDays (1095) = full
   });
 
   it('rejects negative elapsed time', () => {

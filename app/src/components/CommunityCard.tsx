@@ -1,9 +1,8 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, BriefcaseBusiness, UserPlus, Users, TrendingUp, MessageSquare } from "lucide-react";
 import { MagicCard } from "@/components/ui/magic-card";
-import { formatRailAmountFromKes, cn } from "@/lib/utils";
+import { formatKSh, cn } from "@/lib/utils";
 import { getCommunityBannerImage } from "@/lib/communityVisuals";
-import { CHAINS, type Chain } from "@/lib/chain";
 import { getBountyStatsForCommunity } from "@/lib/bounties";
 
 interface CommunityCardProps {
@@ -16,7 +15,6 @@ interface CommunityCardProps {
   fundBalance: number;
   activeDecisions: number;
   image: string;
-  chain?: Chain;
   layout?: "grid" | "list";
 }
 
@@ -31,10 +29,9 @@ const typeConfig: Record<string, { bg: string; text: string; dot: string }> = {
 };
 
 export default function CommunityCard({
-  id, name, type, description, membershipFee, memberCount, fundBalance, activeDecisions, image, chain = "solana", layout = "grid",
+  id, name, type, description, membershipFee, memberCount, fundBalance, activeDecisions, image, layout = "grid",
 }: CommunityCardProps) {
   const tc = typeConfig[type] ?? typeConfig.other;
-  const chainMeta = CHAINS[chain];
   const isList = layout === "list";
   const bountyStats = getBountyStatsForCommunity(id);
 
@@ -57,17 +54,6 @@ export default function CommunityCard({
               onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-card via-card/45 to-transparent" />
-            <span
-              aria-label={`Treasury rail: ${chainMeta.label}`}
-              className="absolute top-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-background/75 px-2 py-1 text-[10px] font-semibold text-foreground backdrop-blur"
-            >
-              <span
-                aria-hidden
-                className="h-1.5 w-1.5 rounded-full"
-                style={{ background: chainMeta.badgeBg }}
-              />
-              {chainMeta.label}
-            </span>
             <div className="absolute bottom-4 left-4 flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-background/80 font-display text-lg font-black text-primary shadow-lg backdrop-blur">
                 {image}
@@ -93,7 +79,7 @@ export default function CommunityCard({
               <div className={cn("mt-4 flex items-center justify-between gap-3 sm:mt-0", !isList && "hidden")}>
                 <div>
                   <p className="text-[10px] text-muted-foreground">Monthly fee</p>
-                  <p className="text-sm font-bold text-accent tabular-nums">{formatRailAmountFromKes(membershipFee, chainMeta)}</p>
+                  <p className="text-sm font-bold text-accent tabular-nums">{formatKSh(membershipFee)}</p>
                 </div>
               </div>
             </div>
@@ -105,7 +91,7 @@ export default function CommunityCard({
                   <BriefcaseBusiness className="h-3.5 w-3.5" />
                   {bountyStats.open} open {bountyStats.open === 1 ? "bounty" : "bounties"}
                 </span>
-                <span className="text-[10px] font-bold text-accent">{formatRailAmountFromKes(bountyStats.totalRewardKes, chainMeta)}</span>
+                <span className="text-[10px] font-bold text-accent">{formatKSh(bountyStats.totalRewardKes)}</span>
               </div>
               <p className="truncate text-xs font-semibold text-foreground">{bountyStats.featured.title}</p>
             </div>
@@ -120,7 +106,7 @@ export default function CommunityCard({
             <div className="flex flex-col items-center text-center gap-0.5">
               <TrendingUp className="w-3.5 h-3.5 text-accent" />
               <span className="text-[11px] font-semibold text-foreground tabular-nums truncate w-full text-center">
-                {formatRailAmountFromKes(fundBalance, chainMeta)}
+                {formatKSh(fundBalance)}
               </span>
               <span className="text-[9px] text-muted-foreground">Treasury</span>
             </div>
@@ -133,7 +119,7 @@ export default function CommunityCard({
 
           <div className={cn("mt-3.5 flex items-center justify-between", isList && "sm:hidden")}>
             <span className="text-[10px] text-muted-foreground">Monthly fee</span>
-            <span className="text-xs font-bold text-accent tabular-nums">{formatRailAmountFromKes(membershipFee, chainMeta)}</span>
+            <span className="text-xs font-bold text-accent tabular-nums">{formatKSh(membershipFee)}</span>
           </div>
 
             <div className="mt-5 grid gap-2 sm:grid-cols-2">

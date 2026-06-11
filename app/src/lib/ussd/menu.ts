@@ -1,4 +1,4 @@
-import type { UssdSession } from './session';
+import type { UssdSession } from './session.js';
 
 export interface PendingPayOrder {
   communityCode: string;
