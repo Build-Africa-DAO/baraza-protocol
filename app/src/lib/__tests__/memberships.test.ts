@@ -117,6 +117,74 @@ describe('listMembershipsForWallet', () => {
   });
 });
 
+describe('legacy record normalisation (RAZA→BRZA rename)', () => {
+  const KEY = 'baraza.memberships.v1';
+
+  function seed(records: unknown[]): void {
+    window.localStorage.setItem(KEY, JSON.stringify(records));
+  }
+
+  it('maps a legacy razaBalance onto brzaBalance', () => {
+    seed([
+      {
+        communityId: 'c1',
+        walletAddress: 'wallet1',
+        status: 'active',
+        joinedAt: '2026-01-01T00:00:00.000Z',
+        razaBalance: 5,
+      },
+    ]);
+
+    const [record] = listMembershipsForWallet('wallet1');
+    expect(record.brzaBalance).toBe(5);
+    expect(typeof record.brzaBalance).toBe('number');
+  });
+
+  it('defaults brzaBalance to 1 when a record has neither balance field', () => {
+    seed([
+      {
+        communityId: 'c1',
+        walletAddress: 'wallet1',
+        status: 'active',
+        joinedAt: '2026-01-01T00:00:00.000Z',
+      },
+    ]);
+
+    const [record] = listMembershipsForWallet('wallet1');
+    expect(record.brzaBalance).toBe(1);
+  });
+
+  it('preserves a modern brzaBalance, even when a stale razaBalance is present', () => {
+    seed([
+      {
+        communityId: 'c1',
+        walletAddress: 'wallet1',
+        status: 'active',
+        joinedAt: '2026-01-01T00:00:00.000Z',
+        brzaBalance: 3,
+        razaBalance: 9,
+      },
+    ]);
+
+    const [record] = listMembershipsForWallet('wallet1');
+    expect(record.brzaBalance).toBe(3);
+  });
+
+  it('normalises legacy records surfaced via getActiveMembership', () => {
+    seed([
+      {
+        communityId: 'c1',
+        walletAddress: 'wallet1',
+        status: 'active',
+        joinedAt: '2026-01-01T00:00:00.000Z',
+        razaBalance: 2,
+      },
+    ]);
+
+    expect(getActiveMembership('c1', 'wallet1')?.brzaBalance).toBe(2);
+  });
+});
+
 describe('listMembershipsForCommunity', () => {
   it('returns an empty array when no records exist', () => {
     expect(listMembershipsForCommunity('c1')).toEqual([]);
