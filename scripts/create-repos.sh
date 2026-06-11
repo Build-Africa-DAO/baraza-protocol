@@ -8,8 +8,8 @@
 
 set -e
 
-GITHUB_USER="Azizudinly"
-REPOS_DIR="$HOME/baraza-repos"
+GITHUB_USER="${GITHUB_USER:-Azizudinly}"
+REPOS_DIR="${HOME:?HOME must be set}/baraza-repos"
 mkdir -p "$REPOS_DIR"
 
 # ──────────────────────────────────────────────────────────────
@@ -21,15 +21,13 @@ create_repo() {
   local desc="$2"
   echo ""
   echo ">>> Creating $name ..."
-  gh repo create "$GITHUB_USER/$name" \
-    --public \
-    --description "$desc" \
-    --confirm 2>/dev/null || \
-  gh repo create "$name" \
-    --public \
-    --description "$desc" \
-    --confirm 2>/dev/null || \
-  echo "    Repo may already exist — skipping create step"
+  if gh repo view "$GITHUB_USER/$name" >/dev/null 2>&1; then
+    echo "    Repo already exists — skipping create step"
+  else
+    gh repo create "$GITHUB_USER/$name" \
+      --public \
+      --description "$desc"
+  fi
 }
 
 init_repo() {

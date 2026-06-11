@@ -26,7 +26,7 @@ Baraza gives any group a shared treasury, governed by its members. Members pay d
 
 | Layer | Technology |
 |---|---|
-| Frontend | Next.js 14, TypeScript, Tailwind CSS |
+| Frontend | Vite + React, TypeScript, Tailwind CSS (in `app/`) |
 | Database | Supabase (PostgreSQL + RLS) |
 | Primary chain | Stellar (BRZA token, XLM treasury, M-Pesa via Kotani Pay) |
 | Secondary chain | Solana (NFT membership, Realms governance, Squads v4) |
@@ -72,29 +72,40 @@ These are non-negotiable. Every contributor must follow them.
 
 ## Local Setup
 
+**Prerequisites:** Node 24, npm
+
 ```bash
 git clone https://github.com/Azizudinly/baraza-protocol.git
 cd baraza-protocol
-npm install
-cp .env.example .env.local
-# Fill in your env vars — see .env.example for required keys
-npm run dev
+npm --prefix app install --legacy-peer-deps
+cp app/.env.local.example app/.env.local
+# For basic UI: only VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY needed
+npm --prefix app run dev
 ```
 
-Open http://localhost:3000
+Open http://localhost:5173
+
+Other commands:
+
+```bash
+npm --prefix app run typecheck   # TypeScript strict check
+npm --prefix app run lint        # ESLint
+npm --prefix app run test        # unit tests (vitest)
+npm --prefix app run build       # Production build → app/dist
+```
 
 ---
 
 ## Environment Variables
 
-See `.env.example` for the full list. Required to run:
+See `.env.example` and `app/.env.local.example` for the full list. Required for the basic UI:
 
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `ANTHROPIC_API_KEY`
-- `STELLAR_SECRET_KEY` (testnet only during development)
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
 
-Never commit real keys. Use `.env.local` which is gitignored.
+Server-side (API routes / Vercel): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `STELLAR_NETWORK`, `STELLAR_HORIZON_URL`, `STELLAR_TREASURY_ACCOUNT`, `STELLAR_INTENT_SECRET` (generate: `openssl rand -hex 32`), Kotani Pay keys.
+
+Never commit real keys. Use `app/.env.local` which is gitignored. Never expose `SUPABASE_SERVICE_ROLE_KEY`, `STELLAR_INTENT_SECRET`, `PAYMENT_ADAPTER_PROXY_SECRET`, `PAYMENT_PHONE_HASH_PEPPER`, `KOTANI_PAY_API_KEY`, or any private keys in frontend code — only `VITE_*` variables reach the browser.
 
 ---
 
