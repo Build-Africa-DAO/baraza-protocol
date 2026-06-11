@@ -57,9 +57,9 @@ communities
   token_address text       -- on-chain token
   quorum_pct int
   approval_threshold_pct int
-  membership_fee_kes numeric
+  membership_fee numeric   -- canonical fee column (migration 010 deliberately does NOT add membership_fee_kes)
   created_at timestamptz
-  created_by uuid REFERENCES users
+  created_by text          -- wallet address of the creator (matches proposals.created_by)
 
 memberships
   id uuid PK
@@ -85,7 +85,7 @@ payment_orders
   amount_xlm numeric
   brza_allocated numeric
   activation_secret_hash text
-  intent_token text
+  intent_token_hash text   -- sha256 of the HMAC intent token; the raw bearer is never stored (migration 010)
   user_id_hash text        -- HMAC of wallet address
   created_at timestamptz
   updated_at timestamptz
@@ -99,7 +99,7 @@ proposals
   status text              -- 'draft' | 'pending' | 'active' | 'passed' | 'failed' | 'queued' | 'executed' | 'cancelled'
   on_chain_proposal_id text  -- bytes32 (Base) or Soroban key (Stellar)
   chain text
-  created_by uuid
+  created_by text            -- wallet address of the proposer (migration 010)
   starts_at timestamptz
   ends_at timestamptz
   for_votes int DEFAULT 0
