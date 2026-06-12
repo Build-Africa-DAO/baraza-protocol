@@ -26,6 +26,13 @@ Noticed on: feat/brza-core (data-migration review, 2026-06-11)
 `app/src/lib/knowledgeGraph.ts:425` selects `created_at` from `memberships`, but no migration defines that column — the query fails with 42703 (and the new column-level GRANT correctly omits it). Drop `created_at` from the select and the `row.joined_at ?? row.created_at` fallback, or add the column.
 Noticed on: feat/brza-core (delta review, 2026-06-11)
 
+## Design
+
+### Make the landing vibrant — phase 2 (deferred from /design-review 2026-06-12)
+**Priority:** P2
+Fixed in phase 1: hero entrance stagger, brand-black CTA band, hero gradient intensity, tactile CTAs, chain-name copy leak. Still deferred: (a) swap Inter body font for a characterful sans (Geist/Satoshi) — both installed taste skills ban Inter; (b) break the symmetric identical card grids in FeaturesSection/FlowWalkthrough into asymmetric layouts; (c) extend framer-motion `whileInView` reveals (pattern exists in CTASection) to all landing sections; (d) consider a more committed color strategy mid-page (cream near-white base is the flagged AI default).
+Noticed on: feat/brza-core (/design-review, 2026-06-12)
+
 ## Performance
 
 ### Profile page double-fetches memberships
