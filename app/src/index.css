@@ -65,10 +65,10 @@
     --gradient-warm: linear-gradient(135deg, hsl(22 90% 42%) 0%, hsl(18 88% 35%) 100%);
     --gradient-dao: linear-gradient(135deg, hsl(22 90% 35%) 0%, hsl(30 80% 40%) 100%);
     --gradient-surface: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(0 0% 98%) 100%);
-    --gradient-hero: radial-gradient(ellipse 48% 38% at 78% 8%, hsl(22 90% 42% / 0.16) 0%, transparent 62%),
-                     radial-gradient(ellipse 42% 34% at 18% 18%, hsl(18 88% 36% / 0.08) 0%, transparent 64%),
-                     radial-gradient(ellipse 30% 24% at 55% 0%, hsl(30 80% 40% / 0.07) 0%, transparent 70%),
-                     linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(0 0% 98%) 55%, hsl(22 10% 95%) 100%);
+    --gradient-hero: radial-gradient(ellipse 52% 42% at 78% 6%, hsl(22 90% 46% / 0.34) 0%, transparent 64%),
+                     radial-gradient(ellipse 44% 36% at 14% 16%, hsl(18 88% 38% / 0.18) 0%, transparent 66%),
+                     radial-gradient(ellipse 34% 26% at 55% 0%, hsl(30 84% 44% / 0.14) 0%, transparent 72%),
+                     linear-gradient(150deg, hsl(0 0% 100%) 0%, hsl(24 28% 96%) 48%, hsl(22 36% 91%) 100%);
 
     /* Shadows */
     --shadow-card:  0 16px 42px -28px hsl(0 0% 0% / 0.24);
