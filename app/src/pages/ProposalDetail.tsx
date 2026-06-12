@@ -3,10 +3,9 @@ import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, CircleMinus, Loader2, MessageCircle, ThumbsDown, ThumbsUp } from "lucide-react";
 import Layout from "@/components/Layout";
 import { DEFAULT_GOVERNANCE } from "@/lib/constants";
-import { useDecision } from "@/hooks/useBarazaData";
+import { useCastVote, useDecision, useVoteStatus } from "@/hooks/useBarazaData";
 import { daysRemaining, formatRailAmountFromKes, formatRailDate } from "@/lib/utils";
 import { useWalletGuard } from "@/hooks/useWalletGuard";
-import { useBarazaContract } from "@/hooks/useBarazaContract";
 import { useCommunity } from "@/hooks/useCommunities";
 import { useToast } from "@/hooks/use-toast";
 import { STAGE_META, inferStage } from "@/lib/proposalStatus";
@@ -27,8 +26,9 @@ export default function ProposalDetail() {
   const { id, decisionId } = useParams<{ id: string; decisionId: string }>();
   const proposal = useDecision(decisionId ?? '');
   const { community } = useCommunity(proposal?.communityId);
-  const { requireWallet } = useWalletGuard({ action: "vote on this proposal" });
-  const { castVote, isPending } = useBarazaContract();
+  const { requireWallet, address } = useWalletGuard({ action: "vote on this proposal" });
+  const { vote: submitVote, isLoading: isPending } = useCastVote();
+  const existingVote = useVoteStatus(decisionId ?? '', address);
   const { toast } = useToast();
   const { chainMeta } = useChain();
   const [commentBody, setCommentBody] = useState("");
@@ -67,11 +67,16 @@ export default function ProposalDetail() {
     );
   }
 
-  const totalVotes = proposal.votesFor + proposal.votesAgainst;
-  const support = totalVotes > 0
-    ? Math.round((proposal.votesFor / totalVotes) * 100)
+  const abstainVotes = proposal.votesAbstain ?? 0;
+  const decidedVotes = proposal.votesFor + proposal.votesAgainst;
+  // Abstaining counts toward quorum (participation) but not toward approval.
+  const totalVotes = decidedVotes + abstainVotes;
+  const support = decidedVotes > 0
+    ? Math.round((proposal.votesFor / decidedVotes) * 100)
     : 0;
-  const object = totalVotes > 0 ? 100 - support : 0;
+  const forPct = totalVotes > 0 ? Math.round((proposal.votesFor / totalVotes) * 100) : 0;
+  const againstPct = totalVotes > 0 ? Math.round((proposal.votesAgainst / totalVotes) * 100) : 0;
+  const abstainPct = totalVotes > 0 ? Math.max(0, 100 - forPct - againstPct) : 0;
   const quorum = proposal.totalMembers > 0
     ? Math.round((totalVotes / proposal.totalMembers) * 100)
     : 0;
@@ -93,16 +98,22 @@ export default function ProposalDetail() {
 
   const handleVote = (vote: VoteOption) => async () => {
     await requireWallet(async () => {
-      const success = await castVote(proposal.id, proposal.communityId, vote);
+      // requireWallet only runs the callback when connected, so address is set.
+      const voterKey = address;
+      if (!voterKey) return;
+      const voteType = vote === 'yes' ? 'for' : vote === 'no' ? 'against' : 'abstain';
+      const success = await submitVote(proposal.id, voterKey, voteType);
       if (success) {
         toast({
           title: `${voteOptionLabel(vote)} vote recorded`,
-          description: "Your signed vote is queued for the next governance tally.",
+          description: "Your vote is in the shared record and counted in the tally.",
         });
       } else {
         toast({
           title: "Vote could not be cast",
-          description: "Voting is in preview mode until the governance program is deployed.",
+          description: existingVote
+            ? "You already voted on this proposal."
+            : "This proposal is not open for voting.",
           variant: "destructive",
         });
       }
@@ -173,13 +184,15 @@ export default function ProposalDetail() {
                   <span className="text-sm">{endsLabel}</span>
                 </div>
                 <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
+                  <div className="flex flex-wrap justify-between gap-x-3 text-sm">
                     <span>Support ({proposal.votesFor})</span>
                     <span>Object ({proposal.votesAgainst})</span>
+                    <span className="text-muted-foreground">Abstain ({abstainVotes})</span>
                   </div>
                   <div className="flex h-4 overflow-hidden rounded-full bg-muted">
-                    <div className="bg-primary transition-all" style={{ width: `${support}%` }} />
-                    <div className="bg-destructive/70 transition-all" style={{ width: `${object}%` }} />
+                    <div className="bg-primary transition-all" style={{ width: `${forPct}%` }} />
+                    <div className="bg-destructive/70 transition-all" style={{ width: `${againstPct}%` }} />
+                    <div className="bg-muted-foreground/35 transition-all" style={{ width: `${abstainPct}%` }} />
                   </div>
                   <div className="flex justify-between font-mono text-xs">
                     <span>{support}% support</span>
@@ -191,7 +204,7 @@ export default function ProposalDetail() {
                   <button
                     type="button"
                     onClick={handleVote("yes")}
-                    disabled={isPending || !isVotable}
+                    disabled={isPending || !isVotable || !!existingVote}
                     className="btn-warm justify-center gap-2 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ThumbsUp className="h-4 w-4" />}
@@ -200,7 +213,7 @@ export default function ProposalDetail() {
                   <button
                     type="button"
                     onClick={handleVote("no")}
-                    disabled={isPending || !isVotable}
+                    disabled={isPending || !isVotable || !!existingVote}
                     className="btn-ghost justify-center gap-2 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ThumbsDown className="h-4 w-4" />}
@@ -209,7 +222,7 @@ export default function ProposalDetail() {
                   <button
                     type="button"
                     onClick={handleVote("abstain")}
-                    disabled={isPending || !isVotable}
+                    disabled={isPending || !isVotable || !!existingVote}
                     className="btn-ghost justify-center gap-2 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CircleMinus className="h-4 w-4" />}
@@ -217,7 +230,9 @@ export default function ProposalDetail() {
                   </button>
                 </div>
                 <p className="mt-3 text-xs">
-                  Your vote is recorded after account approval.
+                  {existingVote
+                    ? `You voted ${existingVote === 'for' ? 'yes' : existingVote === 'against' ? 'no' : 'abstain'} on this proposal.`
+                    : "One vote per member. Your vote is recorded in the shared ledger."}
                 </p>
               </div>
 

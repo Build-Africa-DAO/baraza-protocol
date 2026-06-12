@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { CircleMinus, Loader2, ThumbsDown, ThumbsUp, User } from 'lucide-react';
 import { formatRailAmountFromKes, daysRemaining } from '@/lib/utils';
 import { useWalletGuard } from '@/hooks/useWalletGuard';
-import { useBarazaContract } from '@/hooks/useBarazaContract';
+import { useCastVote, useVoteStatus } from '@/hooks/useBarazaData';
 import type { ProposalLifecycleStage } from '@/lib/constants';
 import { STAGE_META, inferStage } from '@/lib/proposalStatus';
 import { CHAINS, type ChainMeta } from '@/lib/chain';
@@ -27,7 +27,6 @@ interface DecisionCardProps {
 
 const DecisionCard: React.FC<DecisionCardProps> = ({
   id,
-  communityId,
   title,
   description,
   fundingAmount,
@@ -40,13 +39,15 @@ const DecisionCard: React.FC<DecisionCardProps> = ({
   endsAt,
   chainMeta = CHAINS.solana,
 }) => {
-  const { requireWallet, isReady } = useWalletGuard({ action: 'vote on decisions' });
-  const { castVote } = useBarazaContract();
+  const { requireWallet, isReady, address } = useWalletGuard({ action: 'vote on decisions' });
+  const { vote: submitVote } = useCastVote();
+  const storedVote = useVoteStatus(id, address);
 
   // Optimistic vote state
   const [votesFor, setVotesFor] = useState(initialVotesFor);
   const [votesAgainst, setVotesAgainst] = useState(initialVotesAgainst);
-  const [userVote, setUserVote] = useState<'for' | 'against' | 'abstain' | null>(null);
+  const [localVote, setLocalVote] = useState<'for' | 'against' | 'abstain' | null>(null);
+  const userVote = storedVote ?? localVote;
   const [isVoting, setIsVoting] = useState(false);
   const hasVotedRef = useRef(false);
 
@@ -65,20 +66,20 @@ const DecisionCard: React.FC<DecisionCardProps> = ({
     if (!isActive || hasVotedRef.current || isVoting) return;
 
     await requireWallet(async () => {
-      if (hasVotedRef.current) return;
+      if (hasVotedRef.current || !address) return;
       hasVotedRef.current = true;
       setIsVoting(true);
 
       // Optimistic update
-      setUserVote(vote);
+      setLocalVote(vote);
       if (vote === 'for') setVotesFor((v) => v + 1);
       else if (vote === 'against') setVotesAgainst((v) => v + 1);
 
       try {
-        const success = await castVote(id, communityId, vote === 'for' ? 'yes' : vote === 'against' ? 'no' : 'abstain');
+        const success = await submitVote(id, address, vote);
         if (!success) {
           // Rollback on failure
-          setUserVote(null);
+          setLocalVote(null);
           if (vote === 'for') setVotesFor((v) => v - 1);
           else if (vote === 'against') setVotesAgainst((v) => v - 1);
           hasVotedRef.current = false;

@@ -16,11 +16,12 @@ vi.mock('@/hooks/useWalletGuard', () => ({
   }),
 }));
 
-vi.mock('@/hooks/useBarazaContract', () => ({
-  useBarazaContract: () => ({
-    castVote: mockCastVote,
-    isPending: false,
+vi.mock('@/hooks/useBarazaData', () => ({
+  useCastVote: () => ({
+    vote: mockCastVote,
+    isLoading: false,
   }),
+  useVoteStatus: () => null,
 }));
 
 // framer-motion's `motion.div` works in jsdom out of the box; no mock needed.
@@ -121,18 +122,25 @@ describe('DecisionCard — vote button visibility', () => {
 // ─── Voting interaction ──────────────────────────────────────────────────────
 
 describe('DecisionCard — voting', () => {
-  it('calls castVote with vote=true when Support clicked', async () => {
+  it('records a for vote when Support clicked', async () => {
     render(<DecisionCard {...defaults({ lifecycleStage: 'active' })} />);
     fireEvent.click(screen.getByRole('button', { name: /support/i }));
     await waitFor(() => expect(mockCastVote).toHaveBeenCalledTimes(1));
-    expect(mockCastVote).toHaveBeenCalledWith('d1', 'c1', 'yes');
+    expect(mockCastVote).toHaveBeenCalledWith('d1', 'MockWallet11111111111111111111111111111111', 'for');
   });
 
-  it('calls castVote with vote=false when Object clicked', async () => {
+  it('records an against vote when Object clicked', async () => {
     render(<DecisionCard {...defaults({ lifecycleStage: 'active' })} />);
     fireEvent.click(screen.getByRole('button', { name: /object/i }));
     await waitFor(() => expect(mockCastVote).toHaveBeenCalledTimes(1));
-    expect(mockCastVote).toHaveBeenCalledWith('d1', 'c1', 'no');
+    expect(mockCastVote).toHaveBeenCalledWith('d1', 'MockWallet11111111111111111111111111111111', 'against');
+  });
+
+  it('records an abstain vote when Abstain clicked', async () => {
+    render(<DecisionCard {...defaults({ lifecycleStage: 'active' })} />);
+    fireEvent.click(screen.getByRole('button', { name: /abstain/i }));
+    await waitFor(() => expect(mockCastVote).toHaveBeenCalledTimes(1));
+    expect(mockCastVote).toHaveBeenCalledWith('d1', 'MockWallet11111111111111111111111111111111', 'abstain');
   });
 
   it('prevents double-voting (second click is a no-op)', async () => {

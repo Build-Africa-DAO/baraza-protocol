@@ -260,7 +260,7 @@ export function useCastVote() {
   const vote = useCallback(async (
     decisionId: string,
     walletKey: string,
-    voteType: 'for' | 'against',
+    voteType: 'for' | 'against' | 'abstain',
     /** On-chain member account for the voter (Phase 2: from membership program) */
     voterMemberKey?: string,
   ) => {
@@ -270,7 +270,7 @@ export function useCastVote() {
       if (client && voterMemberKey) {
         const decisionMapping = getDecisionChainMapping(decisionId);
         if (decisionMapping) {
-          const support: VoteSupportArg = voteType === 'for' ? 'for' : 'against';
+          const support: VoteSupportArg = voteType;
           try {
             await client.castVote(
               new PublicKey(decisionMapping.proposalAddress),
