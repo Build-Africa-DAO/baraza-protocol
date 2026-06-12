@@ -5,7 +5,7 @@
  * Components re-render only when the store emits a change.
  */
 
-import { type DependencyList, useEffect, useLayoutEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { type DependencyList, useEffect, useMemo, useReducer, useState, useCallback } from 'react';
 import { useAnchorWallet, useConnection } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
 
@@ -20,19 +20,14 @@ import {
 
 // ---------- Low-level subscription ----------
 
-function useStoreSnapshot<T>(selector: () => T, deps: DependencyList = []): T {
-  const selectorRef = useRef(selector);
-  useLayoutEffect(() => { selectorRef.current = selector; });
-  const [snapshot, setSnapshot] = useState(selector);
-
-  useEffect(() => {
-    setSnapshot(selectorRef.current());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps);
-
-  useEffect(() => dataStore.subscribe(() => setSnapshot(selectorRef.current())), []);
-
-  return snapshot;
+function useStoreSnapshot<T>(selector: () => T, _deps: DependencyList = []): T {
+  // dataStore mutates objects in place, so selectors often return the SAME
+  // reference after a change — setState with an identical reference bails out
+  // and the UI never refreshes. Force a re-render on every notify and run the
+  // selector during render instead of caching it in state.
+  const [, force] = useReducer((c: number) => c + 1, 0);
+  useEffect(() => dataStore.subscribe(force), []);
+  return selector();
 }
 
 // ---------- Chain client ----------

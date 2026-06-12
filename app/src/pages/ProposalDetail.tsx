@@ -74,9 +74,10 @@ export default function ProposalDetail() {
   const support = decidedVotes > 0
     ? Math.round((proposal.votesFor / decidedVotes) * 100)
     : 0;
-  const forPct = totalVotes > 0 ? Math.round((proposal.votesFor / totalVotes) * 100) : 0;
-  const againstPct = totalVotes > 0 ? Math.round((proposal.votesAgainst / totalVotes) * 100) : 0;
-  const abstainPct = totalVotes > 0 ? Math.max(0, 100 - forPct - againstPct) : 0;
+  // Unrounded: segment widths must sum to exactly 100.
+  const forPct = totalVotes > 0 ? (proposal.votesFor / totalVotes) * 100 : 0;
+  const againstPct = totalVotes > 0 ? (proposal.votesAgainst / totalVotes) * 100 : 0;
+  const abstainPct = totalVotes > 0 ? 100 - forPct - againstPct : 0;
   const quorum = proposal.totalMembers > 0
     ? Math.round((totalVotes / proposal.totalMembers) * 100)
     : 0;
@@ -106,7 +107,7 @@ export default function ProposalDetail() {
       if (success) {
         toast({
           title: `${voteOptionLabel(vote)} vote recorded`,
-          description: "Your vote is in the shared record and counted in the tally.",
+          description: "Your vote has been counted in this group's tally.",
         });
       } else {
         toast({
@@ -195,7 +196,7 @@ export default function ProposalDetail() {
                     <div className="bg-muted-foreground/35 transition-all" style={{ width: `${abstainPct}%` }} />
                   </div>
                   <div className="flex justify-between font-mono text-xs">
-                    <span>{support}% support</span>
+                    <span>{support}% approval of decided votes</span>
                     <span>{quorum}% quorum progress</span>
                   </div>
                 </div>

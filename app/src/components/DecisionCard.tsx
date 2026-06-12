@@ -43,18 +43,22 @@ const DecisionCard: React.FC<DecisionCardProps> = ({
   const { vote: submitVote } = useCastVote();
   const storedVote = useVoteStatus(id, address);
 
-  // Optimistic vote state
-  const [votesFor, setVotesFor] = useState(initialVotesFor);
-  const [votesAgainst, setVotesAgainst] = useState(initialVotesAgainst);
+  // Optimistic vote state: counts derive from props (kept fresh by the store
+  // subscription in the parent); pendingVote bridges the gap while the cast
+  // is in flight, then clears so the store-backed props take over.
+  const [pendingVote, setPendingVote] = useState<'for' | 'against' | 'abstain' | null>(null);
   const [localVote, setLocalVote] = useState<'for' | 'against' | 'abstain' | null>(null);
   const userVote = storedVote ?? localVote;
   const [isVoting, setIsVoting] = useState(false);
   const hasVotedRef = useRef(false);
 
-  const totalVotes = votesFor + votesAgainst;
-  const forPct = totalVotes > 0 ? Math.round((votesFor / totalVotes) * 100) : 0;
-  const againstPct = totalVotes > 0 ? 100 - forPct : 0;
-  const participationPct = Math.round((totalVotes / totalMembers) * 100);
+  const votesFor = initialVotesFor + (pendingVote === 'for' ? 1 : 0);
+  const votesAgainst = initialVotesAgainst + (pendingVote === 'against' ? 1 : 0);
+  const totalVotes = votesFor + votesAgainst + (pendingVote === 'abstain' ? 1 : 0);
+  const decidedVotes = votesFor + votesAgainst;
+  const forPct = decidedVotes > 0 ? Math.round((votesFor / decidedVotes) * 100) : 0;
+  const againstPct = decidedVotes > 0 ? 100 - forPct : 0;
+  const participationPct = totalMembers > 0 ? Math.round((totalVotes / totalMembers) * 100) : 0;
 
   const stage: ProposalLifecycleStage = lifecycleStage ?? inferStage(status);
   const stageMeta = STAGE_META[stage];
@@ -72,18 +76,17 @@ const DecisionCard: React.FC<DecisionCardProps> = ({
 
       // Optimistic update
       setLocalVote(vote);
-      if (vote === 'for') setVotesFor((v) => v + 1);
-      else if (vote === 'against') setVotesAgainst((v) => v + 1);
+      setPendingVote(vote);
 
       try {
         const success = await submitVote(id, address, vote);
         if (!success) {
           // Rollback on failure
           setLocalVote(null);
-          if (vote === 'for') setVotesFor((v) => v - 1);
-          else if (vote === 'against') setVotesAgainst((v) => v - 1);
           hasVotedRef.current = false;
         }
+        // Success or failure, the store now holds the truth — drop the delta.
+        setPendingVote(null);
       } finally {
         setIsVoting(false);
       }
