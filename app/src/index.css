@@ -189,11 +189,10 @@
     cursor: pointer;
   }
   .btn-primary:hover {
-    opacity: 0.92;
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-glow);
+    transform: translateY(-2px);
+    box-shadow: 0 14px 34px hsl(22 90% 42% / 0.38);
   }
-  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:active { transform: translateY(0) scale(0.98); }
 
   .btn-warm {
     display: inline-flex;
@@ -209,11 +208,10 @@
     cursor: pointer;
   }
   .btn-warm:hover {
-    opacity: 0.92;
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-warm);
+    transform: translateY(-2px);
+    box-shadow: 0 14px 34px hsl(22 90% 42% / 0.38);
   }
-  .btn-warm:active { transform: translateY(0); }
+  .btn-warm:active { transform: translateY(0) scale(0.98); }
 
   .btn-ghost {
     display: inline-flex;
