@@ -25,7 +25,7 @@ export default function CTASection() {
           whileInView={{ y: 0 }}
           viewport={{ once: true, amount: 0 }}
           transition={{ duration: 0.5 }}
-          className="grid overflow-hidden rounded-2xl border border-border/70 bg-card/75 shadow-[var(--shadow-deep)] lg:grid-cols-[0.9fr_1.1fr]"
+          className="dark grid overflow-hidden rounded-2xl border border-border/70 bg-[image:var(--gradient-hero)] text-foreground shadow-[var(--shadow-deep)] lg:grid-cols-[0.9fr_1.1fr]"
         >
           <div className="border-b border-border/70 p-5 sm:p-8 md:p-10 lg:border-b-0 lg:border-r">
             <p className="text-xs font-semibold uppercase tracking-widest text-accent">Launch a treasury</p>
