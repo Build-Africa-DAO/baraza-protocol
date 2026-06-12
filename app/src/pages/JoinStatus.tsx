@@ -87,7 +87,8 @@ export default function JoinStatus() {
     noIndex: true,
   });
 
-  const isLocalOrder = orderId.startsWith("ord_local_") || !orderId;
+  // ord_wallet_ ids predate the local prefix and never had a server-side order.
+  const isLocalOrder = orderId.startsWith("ord_local_") || orderId.startsWith("ord_wallet_") || !orderId;
   const hasSupabase = isSupabaseConfigured();
 
   const [status, setStatus] = useState<PaymentOrderStatus>(
