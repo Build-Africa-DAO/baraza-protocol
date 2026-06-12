@@ -107,7 +107,7 @@ function HeroPreview() {
   };
 
   return (
-    <div className="mt-4 block min-[860px]:mt-0">
+    <div className="rise rise-4 mt-4 block min-[860px]:mt-0">
       <div className="relative mx-auto max-w-md min-[860px]:ml-auto">
         <a
           href="#flow-walkthrough"
@@ -182,22 +182,22 @@ export default function HeroSection() {
       <div className="container relative z-10 mx-auto max-w-7xl px-4">
         <div className="min-[860px]:grid min-[860px]:grid-cols-[minmax(0,1fr)_minmax(18rem,0.62fr)] min-[860px]:items-center min-[860px]:gap-10">
           <div className="max-w-2xl">
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-border/50 bg-muted/60 px-3.5 py-1.5 text-xs font-semibold text-muted-foreground sm:mb-6">
+            <div className="rise rise-1 mb-5 inline-flex items-center gap-2 rounded-full border border-border/50 bg-muted/60 px-3.5 py-1.5 text-xs font-semibold text-muted-foreground sm:mb-6">
               <ShieldCheck className="h-3.5 w-3.5" />
               Transparent community treasury
             </div>
             <h1
-              className="font-display text-[clamp(3.1rem,11vw,4.7rem)] font-black leading-[0.9] tracking-tight sm:text-[clamp(4rem,6.5vw,5.35rem)]"
+              className="rise rise-2 font-display text-[clamp(3.1rem,11vw,4.7rem)] font-black leading-[0.9] tracking-tight sm:text-[clamp(4rem,6.5vw,5.35rem)]"
               aria-live="polite"
             >
               <HeroHeadline />
             </h1>
 
-            <p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
+            <p className="rise rise-3 mt-5 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
               Collect dues in KES, vote on proposals, and keep the treasury visible to every member.
             </p>
 
-            <div className="mt-6 flex flex-col gap-2 sm:mt-8 sm:flex-row sm:gap-3 min-[860px]:flex-col min-[1040px]:flex-row">
+            <div className="rise rise-4 mt-6 flex flex-col gap-2 sm:mt-8 sm:flex-row sm:gap-3 min-[860px]:flex-col min-[1040px]:flex-row">
               <Link
                 to="/communities"
                 className="btn-warm inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-4 text-base font-extrabold uppercase tracking-wide sm:w-auto min-[860px]:w-full min-[1040px]:w-auto"
@@ -210,7 +210,7 @@ export default function HeroSection() {
               </Link>
             </div>
 
-            <div className="mt-6 grid max-w-xl grid-cols-3 gap-2 sm:gap-3">
+            <div className="rise rise-5 mt-6 grid max-w-xl grid-cols-3 gap-2 sm:gap-3">
               {stats.map((stat) => (
                 <div key={stat.label} className="rounded-xl border border-border/60 bg-card/55 p-3">
                   <p className="font-display text-base font-bold sm:text-lg">{stat.value}</p>
