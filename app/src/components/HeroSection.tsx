@@ -210,7 +210,8 @@ export default function HeroSection() {
               </Link>
             </div>
 
-            <div className="rise rise-5 mt-6 grid max-w-xl grid-cols-3 gap-2 sm:gap-3">
+            {/* Label chips add noise on small screens — desktop only */}
+            <div className="rise rise-5 mt-6 hidden max-w-xl grid-cols-3 gap-2 sm:grid sm:gap-3">
               {stats.map((stat) => (
                 <div key={stat.label} className="rounded-xl border border-border/60 bg-card/55 p-3">
                   <p className="font-display text-base font-bold sm:text-lg">{stat.value}</p>

@@ -88,7 +88,7 @@ const flows: Record<FlowKey, { label: string; title: string; steps: FlowStep[] }
 function FlowPoint({ step, index }: { step: FlowStep; index: number }) {
   const Icon = step.icon;
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-border/50 bg-surface p-4 md:p-5">
+    <div className="flex min-w-[78%] snap-start flex-col gap-3 rounded-xl border border-border/50 bg-surface p-4 md:min-w-0 md:p-5">
       <div className="flex items-start justify-between gap-2">
         <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-primary/25 bg-primary/10 text-primary">
           <Icon className="h-5 w-5" />
@@ -157,7 +157,8 @@ export default function FlowWalkthrough() {
                   {flow.title}
                 </p>
 
-                <div className="grid gap-3 md:grid-cols-4 md:gap-4">
+                {/* Mobile: swipeable steps instead of a 4-card stack */}
+                <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-4 md:gap-4 md:overflow-visible md:px-0 md:pb-0">
                   {flow.steps.map((step, index) => (
                     <FlowPoint key={step.title} step={step} index={index} />
                   ))}

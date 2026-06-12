@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { ArrowRight, Bot, Compass, LayoutDashboard, Sparkles, WalletCards } from "lucide-react";
 import { useAshaChat } from "@/hooks/useAshaChat";
 
@@ -32,7 +33,13 @@ export default function AIPlatformSection() {
   return (
     <section className="relative py-8 md:py-12" id="ai-platform">
       <div className="container mx-auto max-w-7xl px-4">
-        <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr] lg:items-stretch">
+        <motion.div
+          initial={{ y: 18, opacity: 0 }}
+          whileInView={{ y: 0, opacity: 1 }}
+          viewport={{ once: true, amount: 0 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr] lg:items-stretch"
+        >
           <div className="rounded-2xl border border-primary/20 bg-card p-5 shadow-[var(--shadow-card)] md:p-6">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-primary">
               <Sparkles className="h-3.5 w-3.5" />
@@ -65,14 +72,15 @@ export default function AIPlatformSection() {
             </div>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-3">
+          {/* Mobile: one card per swipe instead of a long stack */}
+          <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 md:pb-0">
             {platformLinks.map((item) => {
               const Icon = item.icon;
               return (
                 <Link
                   key={item.label}
                   to={item.to}
-                  className="group rounded-2xl border border-border/70 bg-card/70 p-4 transition-all hover:border-primary/40 hover:bg-surface"
+                  className="group min-w-[78%] snap-start rounded-2xl border border-border/70 bg-card/70 p-4 transition-all hover:border-primary/40 hover:bg-surface md:min-w-0"
                 >
                   <div className="mb-4 flex items-center justify-between">
                     <div className="grid h-10 w-10 place-items-center rounded-xl border border-primary/20 bg-primary/10 text-primary">
@@ -89,7 +97,7 @@ export default function AIPlatformSection() {
               );
             })}
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
