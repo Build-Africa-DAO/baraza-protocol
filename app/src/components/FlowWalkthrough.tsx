@@ -116,9 +116,9 @@ export default function FlowWalkthrough() {
     <section id="flow-walkthrough" className="relative scroll-mt-16 py-10 md:py-12">
       <div className="container mx-auto max-w-7xl px-4">
         <div className="mx-auto">
-          <div className="mb-6 text-center">
+          <div className="mb-6">
             <p className="text-xs font-semibold uppercase tracking-widest">Flow walkthrough</p>
-            <h2 className="mx-auto mt-3 max-w-2xl font-display text-3xl font-bold leading-tight md:text-4xl">
+            <h2 className="mt-3 max-w-2xl font-display text-3xl font-bold leading-tight md:text-4xl">
               Two paths, one shared source of truth
             </h2>
           </div>
