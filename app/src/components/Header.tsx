@@ -334,7 +334,7 @@ export default function Header({ walletSlot }: HeaderProps) {
               className="inline-flex items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm font-semibold text-primary transition-all hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
             >
               <Sparkles className="h-4 w-4" />
-              Ask Asha AI
+              Ask Akili
             </button>
             <form
               className="relative mt-2"

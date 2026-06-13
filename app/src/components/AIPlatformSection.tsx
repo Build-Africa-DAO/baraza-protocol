@@ -59,7 +59,7 @@ export default function AIPlatformSection() {
                 onClick={() => open("Help me set up my DAO on Baraza")}
                 className="btn-warm inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-extrabold"
               >
-                Ask Asha AI
+                Ask Akili
                 <Bot className="h-4 w-4" />
               </button>
               <Link
