@@ -21,8 +21,8 @@ export default function CTASection() {
     <section className="py-20">
       <div className="container mx-auto px-4">
         <motion.div
-          initial={{ y: 24 }}
-          whileInView={{ y: 0 }}
+          initial={{ y: 24, opacity: 0 }}
+          whileInView={{ y: 0, opacity: 1 }}
           viewport={{ once: true, amount: 0 }}
           transition={{ duration: 0.5 }}
           className="dark grid overflow-hidden rounded-2xl border border-border/70 bg-[image:var(--gradient-hero)] text-foreground shadow-[var(--shadow-deep)] lg:grid-cols-[0.9fr_1.1fr]"

@@ -103,16 +103,16 @@ export default function FeaturesSection() {
         <div className="mb-10 grid gap-6 lg:grid-cols-[0.78fr_1fr] lg:items-end">
           <div>
             <motion.p
-              initial={{ y: 14 }}
-              whileInView={{ y: 0 }}
+              initial={{ y: 14, opacity: 0 }}
+              whileInView={{ y: 0, opacity: 1 }}
               viewport={{ once: true, amount: 0 }}
               className="text-xs font-semibold uppercase tracking-widest text-primary"
             >
               Product workflow
             </motion.p>
             <motion.h2
-              initial={{ y: 14 }}
-              whileInView={{ y: 0 }}
+              initial={{ y: 14, opacity: 0 }}
+              whileInView={{ y: 0, opacity: 1 }}
               viewport={{ once: true, amount: 0 }}
               transition={{ delay: 0.05 }}
               className="mt-3 max-w-2xl font-display text-3xl font-bold leading-tight text-foreground md:text-4xl"
@@ -121,8 +121,8 @@ export default function FeaturesSection() {
             </motion.h2>
           </div>
           <motion.p
-            initial={{ y: 14 }}
-            whileInView={{ y: 0 }}
+            initial={{ y: 14, opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
             viewport={{ once: true, amount: 0 }}
             transition={{ delay: 0.1 }}
             className="max-w-2xl text-base leading-relaxed text-muted-foreground lg:justify-self-end"
