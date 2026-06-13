@@ -45,6 +45,14 @@ vscode-themes/
 .agents/
 .claude/
 builder-template-app/
+claude-mem/
+.planning/
+skills-lock.json
+DESIGN-IS-*/
+
+# Research / briefing documents (keep out of git)
+*.pdf
 
 # Anchor / Rust build output
 target/
+.gstack/
