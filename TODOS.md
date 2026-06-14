@@ -2,13 +2,6 @@
 
 ## Governance
 
-## Design
-
-### Make the landing vibrant — phase 2 (deferred from /design-review 2026-06-12)
-**Priority:** P2
-Fixed in phase 1: hero entrance stagger, brand-black CTA band, hero gradient intensity, tactile CTAs, chain-name copy leak. Still deferred: (a) swap Inter body font for a characterful sans (Geist/Satoshi) — both installed taste skills ban Inter; (b) break the symmetric identical card grids in FeaturesSection/FlowWalkthrough into asymmetric layouts; (c) extend framer-motion `whileInView` reveals (pattern exists in CTASection) to all landing sections; (d) consider a more committed color strategy mid-page (cream near-white base is the flagged AI default).
-Noticed on: feat/brza-core (/design-review, 2026-06-12)
-
 ## Performance
 
 ### Profile page double-fetches memberships
@@ -17,6 +10,12 @@ Noticed on: feat/brza-core (/design-review, 2026-06-12)
 Noticed on: feat/brza-core (performance review, 2026-06-11)
 
 ## Completed
+
+### 2026-06-14 — Landing vibrancy phase 2 (a/b/c/d)
+- (a) Body font Inter → Public Sans (USWDS-derived humanist sans). Display stays Hanken Grotesk.
+- (b) Editorial offset on the symmetric card grids: FeaturesSection's 2×2 workflow grid and FlowWalkthrough's 4-col flow row now drop every other card by a half-step on desktop. Breaks AI-grid symmetry without changing semantics.
+- (c) Extended `whileInView` reveals to FlowWalkthrough (was the only landing section without an on-scroll reveal).
+- (d) Light surfaces shifted from neutral cream (`hsl(0 0% 98%)`) to brand-hue warm (`hsl(22 30% 97%)` background, `hsl(22 20% 99%)` card). Matches the existing warm `--muted`/`--surface` tokens; whole palette now reads as intentional.
 
 ### 2026-06-14 — knowledgeGraph stopped selecting nonexistent memberships.created_at
 - Dropped `created_at` from the Supabase select at `app/src/lib/knowledgeGraph.ts:425`, the optional field on `MembershipRow`, and the `row.joined_at ?? row.created_at` fallback in `membershipFromRow`.

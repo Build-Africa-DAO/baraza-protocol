@@ -68,6 +68,9 @@ function WorkflowCard({ step, index }: { step: (typeof workflow)[number]; index:
       className={cn(
         "group relative min-w-[82%] snap-start rounded-xl border border-border/70 bg-card/78 p-5 shadow-[var(--shadow-card)] sm:min-w-0",
         "transition-all duration-200 hover:border-primary/40 hover:bg-surface",
+        // Editorial offset: cards 2 and 4 drop down so the 2x2 grid breaks
+        // the uniform-AI-grid symmetry without changing card semantics.
+        index % 2 === 1 && "sm:mt-10",
       )}
     >
       <div className="mb-5 flex items-center justify-between">

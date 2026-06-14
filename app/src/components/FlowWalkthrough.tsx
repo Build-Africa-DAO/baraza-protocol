@@ -88,7 +88,14 @@ const flows: Record<FlowKey, { label: string; title: string; steps: FlowStep[] }
 function FlowPoint({ step, index }: { step: FlowStep; index: number }) {
   const Icon = step.icon;
   return (
-    <div className="flex min-w-[78%] snap-start flex-col gap-3 rounded-xl border border-border/50 bg-surface p-4 md:min-w-0 md:p-5">
+    <div
+      className={cn(
+        "flex min-w-[78%] snap-start flex-col gap-3 rounded-xl border border-border/50 bg-surface p-4 md:min-w-0 md:p-5",
+        // Editorial wave: cards 2 and 4 drop down a half-step on desktop so
+        // the 4-col flow row reads as a rhythm rather than identical tiles.
+        index % 2 === 1 && "md:translate-y-6",
+      )}
+    >
       <div className="flex items-start justify-between gap-2">
         <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-primary/25 bg-primary/10 text-primary">
           <Icon className="h-5 w-5" />
