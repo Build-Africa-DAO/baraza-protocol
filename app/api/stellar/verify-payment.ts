@@ -101,6 +101,33 @@ async function hashActivationSecret(secret: string): Promise<string> {
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
+// sha256(intentToken). Stored in payment_orders.intent_token_hash so the
+// migration-010 unique index (`payment_orders_intent_token_unique`) actually
+// blocks replay of the same signed intent — we must never store the raw
+// bearer token, since the column is part of column-level GRANTs (010).
+async function hashIntentToken(token: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+// HMAC(payer-address, PAYMENT_PHONE_HASH_PEPPER) — pepper-derived identity
+// hash matching membership/activate.ts so payment_orders.user_id_hash joins
+// to memberships.user_id_hash later in reconciliation. Falls back to a
+// labelled prefix when the pepper isn't set (dev/test).
+async function hashUserId(identity: string): Promise<string> {
+  const pepper = process.env.PAYMENT_PHONE_HASH_PEPPER?.trim();
+  if (!pepper) return `wallet:${identity}`;
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(pepper),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const digest = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(identity));
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
 async function verifyIntentToken(
   token: string,
 ): Promise<{ communityId: string; amountXlm: number } | null> {
@@ -198,10 +225,15 @@ async function persistOrder(input: {
   txHash: string;
   amountXlm: number;
   environment?: 'test' | 'live';
+  intentToken?: string;
+  payerAddress: string | null;
 }): Promise<PersistOrderResult> {
   const url = process.env.SUPABASE_URL?.replace(/\/$/, '');
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceKey) return { status: 'not_configured' };
+
+  const intentTokenHash = input.intentToken ? await hashIntentToken(input.intentToken) : null;
+  const userIdHash = input.payerAddress ? await hashUserId(input.payerAddress) : null;
 
   const res = await fetch(`${url}/rest/v1/payment_orders`, {
     method: 'POST',
@@ -220,6 +252,11 @@ async function persistOrder(input: {
       activation_secret_hash: await hashActivationSecret(input.activationSecret),
       amount_expected: input.amountXlm,
       amount_received: input.amountXlm,
+      // Migration 010 columns — populate so the intent-token unique index and
+      // identity correlation actually guard something on this rail.
+      amount_xlm: input.amountXlm,
+      intent_token_hash: intentTokenHash,
+      user_id_hash: userIdHash,
       currency: 'XLM',
       status: 'PAYMENT_CONFIRMED',
       confirmed_at: new Date().toISOString(),
@@ -229,7 +266,10 @@ async function persistOrder(input: {
   if (!res.ok) {
     const detail = await res.text().catch(() => '');
     console.warn('[stellar-verify-payment] Supabase insert failed:', res.status, detail);
-    if (res.status === 409 || /duplicate key|23505|payment_orders_provider_reference_unique/i.test(detail)) {
+    if (
+      res.status === 409 ||
+      /duplicate key|23505|payment_orders_provider_reference_unique|payment_orders_intent_token_unique/i.test(detail)
+    ) {
       return { status: 'duplicate', detail };
     }
     return { status: 'failed', detail };
@@ -299,12 +339,21 @@ export default async function handler(req: Request): Promise<Response> {
       txHash,
       amountXlm: proof.amount,
       environment: requestedEnvironment,
+      intentToken: body.intentToken,
+      payerAddress: proof.payer,
     });
 
     if (persistResult.status === 'duplicate') {
+      // Two distinct unique constraints can fire here:
+      //   - payment_orders_provider_reference_unique → same txHash reused
+      //   - payment_orders_intent_token_unique → same signed intent reused
+      // We collapse both to a single 409 since either is a replay attempt.
+      const isIntentReplay = /payment_orders_intent_token_unique/i.test(persistResult.detail);
       return json({
-        error: 'stellar_payment_reused',
-        message: 'This Stellar transaction hash is already attached to a Baraza payment order.',
+        error: isIntentReplay ? 'stellar_intent_reused' : 'stellar_payment_reused',
+        message: isIntentReplay
+          ? 'This payment intent token has already been used to record a Baraza payment order.'
+          : 'This Stellar transaction hash is already attached to a Baraza payment order.',
       }, { status: 409 });
     }
 

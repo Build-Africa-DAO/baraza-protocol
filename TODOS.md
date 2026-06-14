@@ -9,16 +9,6 @@ Noticed on: feat/brza-core (review, 2026-06-11)
 
 ## Governance
 
-### Wallet-migration double-vote check in the vote-casting API
-**Priority:** P1
-`votes_member_proposal_unique` is per `member_id`, but migration 004 supports wallet migration (`migrated_from`/`migrated_to`) — one human can hold two member_ids and vote twice on one proposal. The vote-casting API must walk the migration chain before accepting a vote.
-Noticed on: feat/brza-core (adversarial review, 2026-06-11)
-
-### Wire payment code to the new payment_orders columns
-**Priority:** P2
-Migration 010 added `intent_token_hash`, `user_id_hash`, `amount_xlm`, `amount_kes`, `brza_allocated`, but verify-payment.ts/activate.ts don't write them yet — the intent token stays in the request body only. Store sha256(intentToken) into `intent_token_hash` so the unique index and replay protection actually guard something.
-Noticed on: feat/brza-core (data-migration review, 2026-06-11)
-
 ## Data
 
 ### knowledgeGraph selects a memberships column that doesn't exist
@@ -45,3 +35,7 @@ Noticed on: feat/brza-core (performance review, 2026-06-11)
 ### 2026-06-14 — Phone/email-identity voter gate + USSD vote menu honesty (443f9dc)
 - `useWalletGuard` now accepts phone/email session as a fallback identity (`phone:<num>` / `email:<x>`), matching USSD membership key shape.
 - USSD vote menu replaced misleading "Vote queued. Will broadcast when online." with honest copy, and added Abstain to match web's three-way vote.
+
+### 2026-06-14 — Wallet-migration double-vote guard + payment_orders hash columns
+- Migration 013 adds a BEFORE INSERT trigger on `votes` that walks the `migrated_from` / `migrated_to` chain and rejects a vote if any chain member already voted on the same proposal. DB-level backstop so the future vote-casting API can't bypass it by forgetting to walk.
+- `stellar/verify-payment.ts` now writes `intent_token_hash` (sha256 of the signed intent), `user_id_hash` (HMAC-peppered payer address), and `amount_xlm` when persisting orders, activating migration 010's intent-token unique index. Intent-replay attempts now surface as a distinct `stellar_intent_reused` 409.
