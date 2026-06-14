@@ -18,7 +18,7 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				sans: ['Inter', 'system-ui', 'sans-serif'],
+				sans: ['Public Sans', 'system-ui', 'sans-serif'],
 				display: ['Hanken Grotesk', 'system-ui', 'sans-serif'],
 				mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
 			},

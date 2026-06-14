@@ -5,11 +5,13 @@
 @layer base {
   :root {
     /* Baraza Design System v7: Black + Dark Orange + White */
+    /* Light surfaces use the brand hue 22 at low saturation so the page
+       reads as warm/intentional, not the AI-default cream-on-cream. */
 
-    --background: 0 0% 98%;
+    --background: 22 30% 97%;
     --foreground: 0 0% 7%;
 
-    --card: 0 0% 100%;
+    --card: 22 20% 99%;
     --card-foreground: 0 0% 7%;
 
     --popover: 0 0% 100%;
@@ -164,7 +166,7 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Public Sans', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -305,7 +307,7 @@
     background: var(--gradient-primary) !important;
     color: hsl(var(--primary-foreground)) !important;
     border-radius: var(--radius) !important;
-    font-family: 'Inter', system-ui, sans-serif !important;
+    font-family: 'Public Sans', system-ui, sans-serif !important;
     font-weight: 600 !important;
     font-size: 0.875rem !important;
     height: 2.5rem !important;
@@ -324,7 +326,7 @@
     background: hsl(var(--card)) !important;
     border: 1px solid hsl(var(--border)) !important;
     border-radius: 1rem !important;
-    font-family: 'Inter', system-ui, sans-serif !important;
+    font-family: 'Public Sans', system-ui, sans-serif !important;
   }
   .wallet-adapter-modal-title {
     font-family: 'Hanken Grotesk', system-ui, sans-serif !important;
@@ -351,7 +353,7 @@
   }
   .wallet-adapter-dropdown-list-item {
     color: hsl(var(--foreground)) !important;
-    font-family: 'Inter', system-ui, sans-serif !important;
+    font-family: 'Public Sans', system-ui, sans-serif !important;
   }
   .wallet-adapter-dropdown-list-item:hover {
     background: hsl(var(--surface)) !important;
