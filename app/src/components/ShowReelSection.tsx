@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, X, ChevronRight } from "lucide-react";
+import { Play, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ReelVideo {
@@ -102,7 +102,7 @@ function VideoPlayer({ video }: { video: ReelVideo }) {
       {playing ? (
         <iframe
           key={video.youtubeId}
-          src={`https://www.youtube.com/embed/${video.youtubeId}?autoplay=1&rel=0&modestbranding=1`}
+          src={`https://www.youtube-nocookie.com/embed/${video.youtubeId}?autoplay=1&rel=0&modestbranding=1`}
           title={video.title}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
@@ -113,6 +113,7 @@ function VideoPlayer({ video }: { video: ReelVideo }) {
           <img
             src={`https://img.youtube.com/vi/${video.youtubeId}/maxresdefault.jpg`}
             alt={video.title}
+            loading="lazy"
             className="h-full w-full object-cover opacity-80"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
