@@ -9,16 +9,6 @@ Noticed on: feat/brza-core (review, 2026-06-11)
 
 ## Governance
 
-### Phone/email-identity members cannot vote
-**Priority:** P1
-`useWalletGuard.requireWallet` only checks the Solana adapter — phone/email session users (WalletStatus phone identity) tap a vote button and get a wallet modal they can't satisfy. Decide: allow voting with the phone identity as the voter key (`phone:<hash>`, matching USSD membership identity), or disable vote buttons with a clear "connect an account to vote" state.
-Noticed on: feat/brza-core (logic/flow review, 2026-06-12)
-
-### USSD vote menu is display-only but says "Vote queued"
-**Priority:** P1
-`ussd/menu.ts` voteMenu returns 'Vote queued. Will broadcast when online.' but records nothing (unlike payDuesMenu which returns a pendingPayOrder for the API to act on). Either wire it to a vote-recording path (now that votes persist via migration 010) or change the copy to be honest. Also missing an abstain option, diverging from web.
-Noticed on: feat/brza-core (logic/flow review, 2026-06-12)
-
 ### Wallet-migration double-vote check in the vote-casting API
 **Priority:** P1
 `votes_member_proposal_unique` is per `member_id`, but migration 004 supports wallet migration (`migrated_from`/`migrated_to`) — one human can hold two member_ids and vote twice on one proposal. The vote-casting API must walk the migration chain before accepting a vote.
@@ -51,3 +41,7 @@ Noticed on: feat/brza-core (/design-review, 2026-06-12)
 Noticed on: feat/brza-core (performance review, 2026-06-11)
 
 ## Completed
+
+### 2026-06-14 — Phone/email-identity voter gate + USSD vote menu honesty (443f9dc)
+- `useWalletGuard` now accepts phone/email session as a fallback identity (`phone:<num>` / `email:<x>`), matching USSD membership key shape.
+- USSD vote menu replaced misleading "Vote queued. Will broadcast when online." with honest copy, and added Abstain to match web's three-way vote.
