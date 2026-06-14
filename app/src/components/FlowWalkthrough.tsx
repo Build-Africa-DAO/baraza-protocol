@@ -116,14 +116,26 @@ export default function FlowWalkthrough() {
     <section id="flow-walkthrough" className="relative scroll-mt-16 py-10 md:py-12">
       <div className="container mx-auto max-w-7xl px-4">
         <div className="mx-auto">
-          <div className="mb-6">
+          <motion.div
+            className="mb-6"
+            initial={{ y: 24, opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
+            viewport={{ once: true, amount: 0.4 }}
+            transition={{ duration: 0.5 }}
+          >
             <p className="text-xs font-semibold uppercase tracking-widest">Flow walkthrough</p>
             <h2 className="mt-3 max-w-2xl font-display text-3xl font-bold leading-tight md:text-4xl">
               Two paths, one shared source of truth
             </h2>
-          </div>
+          </motion.div>
 
-          <div className="overflow-hidden rounded-2xl border border-border/60 bg-card p-4 md:p-7">
+          <motion.div
+            className="overflow-hidden rounded-2xl border border-border/60 bg-card p-4 md:p-7"
+            initial={{ y: 24, opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.55, delay: 0.1 }}
+          >
             {/* Tab toggle */}
             <div className="relative mx-auto mb-8 grid w-full max-w-xl grid-cols-2 rounded-2xl bg-muted p-1.5">
               {(Object.keys(flows) as FlowKey[]).map((key) => (
@@ -165,7 +177,7 @@ export default function FlowWalkthrough() {
                 </div>
               </motion.div>
             </AnimatePresence>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>
