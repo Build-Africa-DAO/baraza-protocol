@@ -1,12 +1,5 @@
 # TODOS
 
-## Architecture
-
-### Make the chain-adapter boundary real or drop the rule
-**Priority:** P1
-The PR template requires "all chain calls go through `/lib/adapters/index.ts`", but the root `lib/adapters/*` files are empty stubs outside the Vite module graph — every real chain call lives in `app/src` (hooks/useBarazaContract.ts, lib/stellar, lib/programs). Either move the adapter boundary into `app/src/lib/adapters` and refactor chain calls behind it, or remove the root scaffold and the checklist rule until the migration actually happens.
-Noticed on: feat/brza-core (review, 2026-06-11)
-
 ## Governance
 
 ## Data
@@ -31,6 +24,10 @@ Noticed on: feat/brza-core (/design-review, 2026-06-12)
 Noticed on: feat/brza-core (performance review, 2026-06-11)
 
 ## Completed
+
+### 2026-06-14 — Chain-adapter boundary cleanup
+- Deleted empty root `lib/adapters/` scaffold. Real chain code already lives in `app/src/lib/adapters/`.
+- Updated `.github/PULL_REQUEST_TEMPLATE.md` checklist to reference `app/src/lib/adapters/index.ts`.
 
 ### 2026-06-14 — Phone/email-identity voter gate + USSD vote menu honesty (443f9dc)
 - `useWalletGuard` now accepts phone/email session as a fallback identity (`phone:<num>` / `email:<x>`), matching USSD membership key shape.

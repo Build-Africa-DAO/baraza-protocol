@@ -19,7 +19,7 @@
 ## Checklist
 
 - [ ] No chain names in UI (except onboarding/withdrawal screens)
-- [ ] All chain calls go through `/lib/adapters/index.ts`
+- [ ] All chain calls go through `app/src/lib/adapters/index.ts`
 - [ ] No secrets committed
 - [ ] `withdrawals_enabled` is still `false`
 - [ ] `.env.example` updated if new env vars added
