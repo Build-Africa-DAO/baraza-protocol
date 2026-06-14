@@ -2,13 +2,6 @@
 
 ## Governance
 
-## Data
-
-### knowledgeGraph selects a memberships column that doesn't exist
-**Priority:** P2
-`app/src/lib/knowledgeGraph.ts:425` selects `created_at` from `memberships`, but no migration defines that column — the query fails with 42703 (and the new column-level GRANT correctly omits it). Drop `created_at` from the select and the `row.joined_at ?? row.created_at` fallback, or add the column.
-Noticed on: feat/brza-core (delta review, 2026-06-11)
-
 ## Design
 
 ### Make the landing vibrant — phase 2 (deferred from /design-review 2026-06-12)
@@ -24,6 +17,10 @@ Noticed on: feat/brza-core (/design-review, 2026-06-12)
 Noticed on: feat/brza-core (performance review, 2026-06-11)
 
 ## Completed
+
+### 2026-06-14 — knowledgeGraph stopped selecting nonexistent memberships.created_at
+- Dropped `created_at` from the Supabase select at `app/src/lib/knowledgeGraph.ts:425`, the optional field on `MembershipRow`, and the `row.joined_at ?? row.created_at` fallback in `membershipFromRow`.
+- Migration 004 only defines `joined_at`; the query was failing with PostgREST 42703 and the column-level GRANT correctly omits the missing column.
 
 ### 2026-06-14 — Chain-adapter boundary cleanup
 - Deleted empty root `lib/adapters/` scaffold. Real chain code already lives in `app/src/lib/adapters/`.

@@ -82,7 +82,6 @@ interface MembershipRow {
   wallet_address: string | null;
   status: 'active' | 'pending' | 'revoked' | string;
   joined_at: string | null;
-  created_at?: string | null;
 }
 
 const READINESS_TASKS: KnowledgeNode[] = [
@@ -391,7 +390,7 @@ function membershipFromRow(row: MembershipRow): MembershipRecord {
     communityId: row.community_id,
     walletAddress: row.wallet_address ?? 'unknown-account',
     status: row.status === 'active' || row.status === 'pending' || row.status === 'revoked' ? row.status : 'pending',
-    joinedAt: row.joined_at ?? row.created_at ?? new Date().toISOString(),
+    joinedAt: row.joined_at ?? new Date().toISOString(),
     brzaBalance: 1,
   };
 }
@@ -422,7 +421,7 @@ export async function buildLiveKnowledgeGraph(): Promise<KnowledgeGraph & { sour
     listBountiesAsync(),
     client
       .from('memberships')
-      .select('community_id,wallet_address,status,joined_at,created_at')
+      .select('community_id,wallet_address,status,joined_at')
       .limit(500),
     client
       .from('payment_orders')
