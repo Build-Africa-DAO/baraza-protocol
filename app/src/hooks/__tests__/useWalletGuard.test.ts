@@ -24,10 +24,22 @@ vi.mock('@solana/wallet-adapter-react', () => ({
   useWallet: () => walletState,
 }));
 
+// Mutable phone/email auth state — mirrors the localStorage-backed session.
+const phoneAuthState = {
+  phone: null as string | null,
+  email: null as string | null,
+};
+
+vi.mock('@/lib/phoneAuth', () => ({
+  getPhoneAuthSession: () => ({ phone: phoneAuthState.phone, email: phoneAuthState.email }),
+}));
+
 beforeEach(() => {
   walletState.connected = false;
   walletState.connecting = false;
   walletState.publicKey = null;
+  phoneAuthState.phone = null;
+  phoneAuthState.email = null;
   vi.clearAllMocks();
 });
 
@@ -61,6 +73,28 @@ describe('useWalletGuard - address', () => {
   it('returns base58 address when connected', () => {
     walletState.connected = true;
     walletState.publicKey = { toBase58: () => 'PUBKEY123' };
+    const { result } = renderHook(() => useWalletGuard());
+    expect(result.current.address).toBe('PUBKEY123');
+  });
+
+  it('falls back to phone identity when no Solana account', () => {
+    phoneAuthState.phone = '+254712345678';
+    const { result } = renderHook(() => useWalletGuard());
+    expect(result.current.isReady).toBe(true);
+    expect(result.current.address).toBe('phone:+254712345678');
+  });
+
+  it('falls back to email identity when no Solana account or phone', () => {
+    phoneAuthState.email = 'aziz@example.com';
+    const { result } = renderHook(() => useWalletGuard());
+    expect(result.current.isReady).toBe(true);
+    expect(result.current.address).toBe('email:aziz@example.com');
+  });
+
+  it('prefers Solana publicKey over phone identity when both are present', () => {
+    walletState.connected = true;
+    walletState.publicKey = { toBase58: () => 'PUBKEY123' };
+    phoneAuthState.phone = '+254712345678';
     const { result } = renderHook(() => useWalletGuard());
     expect(result.current.address).toBe('PUBKEY123');
   });
@@ -101,6 +135,18 @@ describe('useWalletGuard - requireWallet', () => {
       outcome = await result.current.requireWallet(() => Promise.resolve(42));
     });
     expect(outcome).toBe(42);
+    expect(mockToast).not.toHaveBeenCalled();
+  });
+
+  it('executes fn without opening the wallet modal when only phone identity is present', async () => {
+    phoneAuthState.phone = '+254712345678';
+    const { result } = renderHook(() => useWalletGuard());
+    let outcome: unknown;
+    await act(async () => {
+      outcome = await result.current.requireWallet(() => Promise.resolve('voted'));
+    });
+    expect(outcome).toBe('voted');
+    expect(mockSetVisible).not.toHaveBeenCalled();
     expect(mockToast).not.toHaveBeenCalled();
   });
 

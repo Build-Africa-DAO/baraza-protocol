@@ -56,6 +56,42 @@ describe('handleUssdInput balance menu (BRZA)', () => {
   });
 });
 
+describe('handleUssdInput vote menu', () => {
+  it('shows for/against/abstain choices on a selected proposal', () => {
+    const result = input('2*1');
+    expect(result.action).toBe('CON');
+    expect(result.text).toContain('1. For');
+    expect(result.text).toContain('2. Against');
+    expect(result.text).toContain('3. Abstain');
+  });
+
+  it('accepts abstain at the confirmation step', () => {
+    const result = input('2*1*3');
+    expect(result.action).toBe('CON');
+    expect(result.text).toContain('Confirm vote ABSTAIN?');
+  });
+
+  it('rejects an unknown vote choice', () => {
+    const result = input('2*1*4');
+    expect(result.action).toBe('END');
+    expect(result.text).toContain('Invalid vote choice');
+  });
+
+  it('tells the user USSD voting is not broadcasting yet on confirm', () => {
+    const result = input('2*1*1*1');
+    expect(result.action).toBe('END');
+    expect(result.text).toMatch(/USSD voting opens soon/);
+    expect(result.text).not.toMatch(/queued/i);
+    expect(result.text).not.toMatch(/broadcast/i);
+  });
+
+  it('cancels when the user declines confirmation', () => {
+    const result = input('2*1*1*2');
+    expect(result.action).toBe('END');
+    expect(result.text).toContain('Vote cancelled');
+  });
+});
+
 describe('handleUssdInput root routing', () => {
   it('returns the main menu for empty input', () => {
     const result = input('');

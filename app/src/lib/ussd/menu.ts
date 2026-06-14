@@ -64,7 +64,7 @@ function voteMenu(path: string[]): MenuResult {
 
   if (path.length === 2) {
     return {
-      text: `Vote on: ${proposal.title}\n1. For\n2. Against\n0. Back`,
+      text: `Vote on: ${proposal.title}\n1. For\n2. Against\n3. Abstain\n0. Back`,
       action: 'CON',
     };
   }
@@ -77,11 +77,11 @@ function voteMenu(path: string[]): MenuResult {
     return { text: lines.join('\n'), action: 'CON' };
   }
 
-  if (choice !== '1' && choice !== '2') {
+  if (choice !== '1' && choice !== '2' && choice !== '3') {
     return { text: 'Invalid vote choice.', action: 'END' };
   }
 
-  const voteLabel = choice === '1' ? 'FOR' : 'AGAINST';
+  const voteLabel = choice === '1' ? 'FOR' : choice === '2' ? 'AGAINST' : 'ABSTAIN';
 
   if (path.length === 3) {
     return {
@@ -95,8 +95,10 @@ function voteMenu(path: string[]): MenuResult {
     return { text: 'Vote cancelled.', action: 'END' };
   }
   if (confirm === '1') {
+    // USSD voting is preview-only — votes are not persisted yet. Tell the user
+    // the truth instead of claiming the vote was queued for broadcast.
     return {
-      text: 'Vote queued. Will broadcast when online.',
+      text: 'USSD voting opens soon. For now, vote on baraza.app or ask your community admin.',
       action: 'END',
     };
   }
