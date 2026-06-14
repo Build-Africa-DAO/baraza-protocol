@@ -2,14 +2,12 @@
 
 ## Governance
 
-## Performance
-
-### Profile page double-fetches memberships
-**Priority:** P3
-`fetchTotalBrzaBalance(address)` queries the same memberships rows as `fetchMembershipsForWallet(address)` in the adjacent effect. Compute the total from the already-fetched records (sum of `brzaBalance`) and drop the second round trip. Also: `useBrzaBalance`'s module-level cache never evicts expired entries.
-Noticed on: feat/brza-core (performance review, 2026-06-11)
-
 ## Completed
+
+### 2026-06-14 — Profile double-fetch + useBrzaBalance cache eviction
+- Profile.tsx dropped the `fetchTotalBrzaBalance(address)` round trip — it queried the same memberships rows as the adjacent `fetchMembershipsForWallet` effect. `totalBrza` is now a `useMemo` summing `record.brzaBalance` across `myMemberships` (which already carries `voting_weight` via rowToRecord).
+- `fetchTotalBrzaBalance` removed from useBrzaBalance.ts (Profile.tsx was the only caller).
+- Added `sweepExpiredCache()` invoked on every cache lookup so the module-level Map drops entries past TTL instead of growing forever.
 
 ### 2026-06-14 — Landing vibrancy phase 2 (a/b/c/d)
 - (a) Body font Inter → Public Sans (USWDS-derived humanist sans). Display stays Hanken Grotesk.

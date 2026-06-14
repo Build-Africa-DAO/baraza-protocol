@@ -29,6 +29,16 @@ export interface BrzaBalance {
 const CACHE_TTL_MS = 60_000;
 const cache = new Map<string, { balance: number; source: BrzaBalance['source']; ts: number }>();
 
+// Opportunistic eviction: drop entries older than the TTL whenever we touch
+// the cache. Without this, entries stay forever — the existing TTL check
+// only stops stale reads, it never frees the Map slot.
+function sweepExpiredCache(): void {
+  const now = Date.now();
+  for (const [key, entry] of cache) {
+    if (now - entry.ts >= CACHE_TTL_MS) cache.delete(key);
+  }
+}
+
 async function fetchFromSupabase(communityId: string, walletAddress: string): Promise<number | null> {
   const client = getSupabaseClient();
   if (!client) return null;
@@ -58,6 +68,7 @@ export function useBrzaBalance(
     }
 
     const cacheKey = `${communityId}:${walletAddress}`;
+    sweepExpiredCache();
     const cached = cache.get(cacheKey);
     if (cached && Date.now() - cached.ts < CACHE_TTL_MS) {
       setState({ balance: cached.balance, loading: false, source: cached.source });
@@ -96,21 +107,3 @@ export function useBrzaBalance(
   return state;
 }
 
-/**
- * Total BRZA balance across all communities for a wallet.
- * Sums voting_weight from all active/pending memberships.
- */
-export async function fetchTotalBrzaBalance(walletAddress: string): Promise<number> {
-  const client = getSupabaseClient();
-  if (!client) return 0;
-
-  const { data, error } = await client
-    .from('memberships')
-    .select('voting_weight')
-    .eq('wallet_address', walletAddress)
-    .in('status', ['ACTIVE', 'PENDING']);
-
-  if (error || !data) return 0;
-  return (data as Array<{ voting_weight?: number | null }>)
-    .reduce((sum, row) => sum + (row.voting_weight ?? 1), 0);
-}

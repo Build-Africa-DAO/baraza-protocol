@@ -20,7 +20,6 @@ import Layout from "@/components/Layout";
 import { formatRailAmountFromKes, formatRailDate, truncateAddress } from "@/lib/utils";
 import CommunityBanner from "@/components/CommunityBanner";
 import { fetchMembershipsForWallet, listMembershipsForWallet } from "@/lib/memberships";
-import { fetchTotalBrzaBalance } from "@/hooks/useBrzaBalance";
 import { useCommunities } from "@/hooks/useCommunities";
 import { CHAINS } from "@/lib/chain";
 import { useSeo } from "@/lib/seo";
@@ -58,7 +57,6 @@ export default function Profile() {
   const stellarConfig = useMemo(() => getStellarConfig(), []);
   const [stellarAccount, setStellarAccount] = useState<string | null>(null);
   const [stellarInput, setStellarInput] = useState("");
-  const [totalBrza, setTotalBrza] = useState<number | null>(null);
   const [stellarBalances, setStellarBalances] = useState<StellarBalance[]>([]);
   const [stellarMessage, setStellarMessage] = useState<string | null>(null);
   const [isLoadingStellar, setIsLoadingStellar] = useState(false);
@@ -95,10 +93,13 @@ export default function Profile() {
     }).catch(() => undefined);
   }, [address, communities]);
 
-  useEffect(() => {
-    if (!address) { setTotalBrza(null); return; }
-    fetchTotalBrzaBalance(address).then(setTotalBrza).catch(() => setTotalBrza(null));
-  }, [address]);
+  // Total BRZA across all memberships — derived from `myMemberships` so we
+  // don't double-fetch the same rows the membership effect already loaded.
+  // `MembershipRecord.brzaBalance` is set from row.voting_weight in rowToRecord.
+  const totalBrza = useMemo(
+    () => myMemberships.reduce((sum, m) => sum + m.record.brzaBalance, 0),
+    [myMemberships],
+  );
 
   const memberBounties = useMemo(
     () => myMemberships.flatMap(({ community }) =>
@@ -251,7 +252,7 @@ export default function Profile() {
                 <h2 className="mb-3 font-mono text-xs uppercase tracking-widest">BRZA balance</h2>
                 <div className="flex items-end gap-2">
                   <span className="font-display text-4xl font-black tabular-nums leading-none">
-                    {totalBrza === null ? '—' : totalBrza}
+                    {address ? totalBrza : '—'}
                   </span>
                   <span className="mb-1 text-sm font-semibold text-muted-foreground">BRZA</span>
                 </div>
