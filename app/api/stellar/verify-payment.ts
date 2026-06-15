@@ -25,11 +25,22 @@ interface HorizonOperation {
   to?: string;
 }
 
+type DuplicateConstraint = 'intent_token' | 'provider_reference' | 'other';
+
 type PersistOrderResult =
   | { status: 'persisted' }
   | { status: 'not_configured' }
-  | { status: 'duplicate'; detail: string }
+  | { status: 'duplicate'; constraint: DuplicateConstraint; detail: string }
   | { status: 'failed'; detail: string };
+
+// Map a Supabase 409 response body to which unique constraint fired. Falls
+// back to 'other' when the body is empty (text() failed) or doesn't name
+// either index — the caller treats 'other' as a generic 409.
+function classifyDuplicate(detail: string): DuplicateConstraint {
+  if (/payment_orders_intent_token_unique/i.test(detail)) return 'intent_token';
+  if (/payment_orders_provider_reference_unique/i.test(detail)) return 'provider_reference';
+  return 'other';
+}
 
 const DEFAULT_TESTNET_HORIZON = 'https://horizon-testnet.stellar.org';
 const DEFAULT_MAINNET_HORIZON = 'https://horizon.stellar.org';
@@ -270,7 +281,7 @@ async function persistOrder(input: {
       res.status === 409 ||
       /duplicate key|23505|payment_orders_provider_reference_unique|payment_orders_intent_token_unique/i.test(detail)
     ) {
-      return { status: 'duplicate', detail };
+      return { status: 'duplicate', constraint: classifyDuplicate(detail), detail };
     }
     return { status: 'failed', detail };
   }
@@ -347,8 +358,9 @@ export default async function handler(req: Request): Promise<Response> {
       // Two distinct unique constraints can fire here:
       //   - payment_orders_provider_reference_unique → same txHash reused
       //   - payment_orders_intent_token_unique → same signed intent reused
-      // We collapse both to a single 409 since either is a replay attempt.
-      const isIntentReplay = /payment_orders_intent_token_unique/i.test(persistResult.detail);
+      // persistOrder classifies via the structured `constraint` field so we
+      // do not re-regex the body here (it can be empty when text() throws).
+      const isIntentReplay = persistResult.constraint === 'intent_token';
       return json({
         error: isIntentReplay ? 'stellar_intent_reused' : 'stellar_payment_reused',
         message: isIntentReplay
