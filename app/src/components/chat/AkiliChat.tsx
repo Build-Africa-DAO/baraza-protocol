@@ -1,14 +1,14 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X, Send, Sparkles } from 'lucide-react';
-import { useAshaChat } from '@/hooks/useAshaChat';
+import { useAkiliChat } from '@/hooks/useAkiliChat';
 import { useChain } from '@/hooks/useChain';
 import { useLocation } from 'react-router-dom';
 import type { ChainMeta } from '@/lib/chain';
 
 interface Message {
   id: string;
-  role: 'asha' | 'user';
+  role: 'akili' | 'user';
   text: string;
   time: string;
 }
@@ -85,7 +85,7 @@ const GREETING_BY_ROUTE: Record<RouteContext, string> = {
 
 const initialMessage = (chainMeta: ChainMeta, route: RouteContext): Message => ({
   id: '1',
-  role: 'asha',
+  role: 'akili',
   text: GREETING_BY_ROUTE[route],
   time: timestamp(chainMeta),
 });
@@ -249,7 +249,7 @@ const getStaticResponse = (input: string): string => {
   return 'Great question! Baraza helps DAOs and communities manage KES funds and make decisions together. Try asking me about launching a DAO, how voting works, the shared fund, or how to join an existing group.';
 };
 
-async function streamAshaResponse(
+async function streamAkiliResponse(
   message: string,
   communityId: string | null,
   history: Array<{ role: 'user' | 'assistant'; content: string }>,
@@ -298,8 +298,8 @@ const TypingDots: React.FC = () => (
   </div>
 );
 
-const AshaChat: React.FC = () => {
-  const { isOpen, open, close, pendingMessage, clearPending } = useAshaChat();
+const AkiliChat: React.FC = () => {
+  const { isOpen, open, close, pendingMessage, clearPending } = useAkiliChat();
   const { chainMeta } = useChain();
   const location = useLocation();
   const routeContext = classifyRoute(location.pathname);
@@ -362,7 +362,7 @@ const AshaChat: React.FC = () => {
     setInput('');
     setIsTyping(true);
 
-    const ashaId = String(Date.now() + 1);
+    const akiliId = String(Date.now() + 1);
 
     // Build history from last 8 messages (excluding initial greeting)
     const history = messages.slice(1, -0).slice(-8).map((m) => ({
@@ -371,16 +371,16 @@ const AshaChat: React.FC = () => {
     }));
 
     try {
-      // Add empty Asha message that we'll stream into
+      // Add empty Akili message that we'll stream into
       setIsTyping(false);
       setMessages((prev) => [
         ...prev,
-        { id: ashaId, role: 'asha', text: '', time: timestamp(chainMeta) },
+        { id: akiliId, role: 'akili', text: '', time: timestamp(chainMeta) },
       ]);
 
-      await streamAshaResponse(text.trim(), communityId, history, (chunk) => {
+      await streamAkiliResponse(text.trim(), communityId, history, (chunk) => {
         setMessages((prev) =>
-          prev.map((m) => (m.id === ashaId ? { ...m, text: m.text + chunk } : m))
+          prev.map((m) => (m.id === akiliId ? { ...m, text: m.text + chunk } : m))
         );
       });
     } catch {
@@ -388,7 +388,7 @@ const AshaChat: React.FC = () => {
       setIsTyping(false);
       setMessages((prev) =>
         prev.map((m) =>
-          m.id === ashaId ? { ...m, text: getStaticResponse(text) } : m
+          m.id === akiliId ? { ...m, text: getStaticResponse(text) } : m
         )
       );
     }
@@ -566,4 +566,4 @@ const AshaChat: React.FC = () => {
   );
 };
 
-export default AshaChat;
+export default AkiliChat;

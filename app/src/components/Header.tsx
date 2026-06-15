@@ -4,7 +4,7 @@ import { Menu, Moon, MoreHorizontal, PlayCircle, Search, Sparkles, Sun, X } from
 import { BrandLogo } from "@/components/BrandLogo";
 import ChainSelector from "@/components/ChainSelector";
 import EnvironmentSelector from "@/components/EnvironmentSelector";
-import { useAshaChat } from "@/hooks/useAshaChat";
+import { useAkiliChat } from "@/hooks/useAkiliChat";
 import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
 
@@ -34,7 +34,7 @@ export default function Header({ walletSlot }: HeaderProps) {
   const [query, setQuery] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
-  const { open: openAsha } = useAshaChat();
+  const { open: openAkili } = useAkiliChat();
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -69,7 +69,7 @@ export default function Header({ walletSlot }: HeaderProps) {
   };
 
   const openAiGuide = () => {
-    openAsha("Help me use Baraza for my DAO");
+    openAkili("Help me use Baraza for my DAO");
     setMobileOpen(false);
   };
 

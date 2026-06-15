@@ -1,5 +1,5 @@
 import { Sparkles } from 'lucide-react';
-import { useAshaChat } from '@/hooks/useAshaChat';
+import { useAkiliChat } from '@/hooks/useAkiliChat';
 import { cn } from '@/lib/utils';
 
 interface AskAkiliProps {
@@ -35,7 +35,7 @@ export function AskAkili({
   variant = 'pill',
   className,
 }: AskAkiliProps) {
-  const { open } = useAshaChat();
+  const { open } = useAkiliChat();
 
   const base = 'inline-flex items-center gap-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60';
 

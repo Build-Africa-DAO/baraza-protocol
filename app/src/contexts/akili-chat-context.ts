@@ -1,6 +1,6 @@
 import { createContext } from 'react';
 
-export interface AshaChatContextType {
+export interface AkiliChatContextType {
   isOpen: boolean;
   open: (message?: string) => void;
   close: () => void;
@@ -8,4 +8,4 @@ export interface AshaChatContextType {
   clearPending: () => void;
 }
 
-export const AshaChatContext = createContext<AshaChatContextType | null>(null);
+export const AkiliChatContext = createContext<AkiliChatContextType | null>(null);

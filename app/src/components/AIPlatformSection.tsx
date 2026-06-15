@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Bot, Compass, LayoutDashboard, Sparkles, WalletCards } from "lucide-react";
-import { useAshaChat } from "@/hooks/useAshaChat";
+import { useAkiliChat } from "@/hooks/useAkiliChat";
 
 const platformLinks = [
   {
@@ -28,7 +28,7 @@ const platformLinks = [
 ];
 
 export default function AIPlatformSection() {
-  const { open } = useAshaChat();
+  const { open } = useAkiliChat();
 
   return (
     <section className="relative py-8 md:py-12" id="ai-platform">

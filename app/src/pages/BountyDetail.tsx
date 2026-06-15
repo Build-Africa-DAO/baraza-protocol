@@ -26,7 +26,7 @@ import {
 import { useCommunities } from '@/hooks/useCommunities';
 import { cn, formatRailAmountFromKes, formatRailDate } from '@/lib/utils';
 import { useSeo } from '@/lib/seo';
-import AshaSecurityReview from '@/components/security/AshaSecurityReview';
+import AkiliSecurityReview from '@/components/security/AkiliSecurityReview';
 import { reviewBounty } from '@/lib/securityReview';
 import { useChain } from '@/hooks/useChain';
 
@@ -309,7 +309,7 @@ export default function BountyDetail() {
               </main>
 
               <aside className="space-y-6">
-                {securityReview && <AshaSecurityReview review={securityReview} />}
+                {securityReview && <AkiliSecurityReview review={securityReview} />}
 
                 <section className="baraza-card p-5">
                   <h2 className="font-display text-lg font-semibold">Bounty details</h2>

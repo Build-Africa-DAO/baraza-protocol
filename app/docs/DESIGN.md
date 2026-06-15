@@ -365,7 +365,7 @@ The current React app already includes the main public and protected routes. Des
 - `WalletStatus`
 - `PublicWalletSlot`
 - `WalletProviders`
-- `AshaChat`
+- `AkiliChat`
 
 ### Screens Needed For Complete DAO Flow
 

@@ -30,7 +30,7 @@ import BountyBoard from '@/components/BountyBoard';
 import { CHAINS } from '@/lib/chain';
 import { useSeo } from '@/lib/seo';
 import { getBountyStatsForCommunity } from '@/lib/bounties';
-import AshaSecurityReview from '@/components/security/AshaSecurityReview';
+import AkiliSecurityReview from '@/components/security/AkiliSecurityReview';
 import { reviewCommunity } from '@/lib/securityReview';
 import { useChain } from '@/hooks/useChain';
 import { getTokenGateStatus } from '@/lib/tokenGate';
@@ -448,7 +448,7 @@ const CommunityDashboard: React.FC = () => {
                     </div>
                   </div>
 
-                  <AshaSecurityReview review={securityReview} compact />
+                  <AkiliSecurityReview review={securityReview} compact />
 
                   <div className="premium-glass rounded-xl p-5">
                     <div className="mb-4 flex flex-wrap items-start justify-between gap-3">

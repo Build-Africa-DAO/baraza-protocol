@@ -18,13 +18,13 @@ const levelIcon = {
   risk: AlertTriangle,
 };
 
-interface AshaSecurityReviewProps {
+interface AkiliSecurityReviewProps {
   review: SecurityReview;
   compact?: boolean;
   className?: string;
 }
 
-export default function AshaSecurityReview({ review, compact = false, className }: AshaSecurityReviewProps) {
+export default function AkiliSecurityReview({ review, compact = false, className }: AkiliSecurityReviewProps) {
   const Icon = levelIcon[review.level];
   const visibleChecks = compact ? review.checks.slice(0, 3) : review.checks;
 

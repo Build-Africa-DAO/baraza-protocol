@@ -214,7 +214,7 @@ export default function AdminReconciliation() {
               <p className="font-mono text-xs font-bold uppercase tracking-widest text-primary">Admin dashboard</p>
               <h1 className="mt-2 font-display text-3xl font-bold">Baraza operator console</h1>
               <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-                Review group health, bounty workflow, payment reconciliation, mint jobs, and Asha security flags from one place.
+                Review group health, bounty workflow, payment reconciliation, mint jobs, and Akili security flags from one place.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">

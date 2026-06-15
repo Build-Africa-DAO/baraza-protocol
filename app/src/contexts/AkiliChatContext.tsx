@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
-import { AshaChatContext } from '@/contexts/asha-chat-context';
+import { AkiliChatContext } from '@/contexts/akili-chat-context';
 
-export const AshaChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AkiliChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [pendingMessage, setPendingMessage] = useState('');
 
@@ -14,8 +14,8 @@ export const AshaChatProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const clearPending = useCallback(() => setPendingMessage(''), []);
 
   return (
-    <AshaChatContext.Provider value={{ isOpen, open, close, pendingMessage, clearPending }}>
+    <AkiliChatContext.Provider value={{ isOpen, open, close, pendingMessage, clearPending }}>
       {children}
-    </AshaChatContext.Provider>
+    </AkiliChatContext.Provider>
   );
 };

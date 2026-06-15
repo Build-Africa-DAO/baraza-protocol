@@ -91,7 +91,6 @@ Stellar launches first. Never treat EVM or Solana as launch blockers.
 - **Akili brain** (`/api/agent/chat`) — Claude claude-sonnet-4-6 streaming. Drafts proposals, flags bad ones, answers community questions. Falls back to static when `ANTHROPIC_API_KEY` unset.
 - **Akili Council** (`app/src/lib/akili/`) — 5 specialised one-shot agents: Amara (community intel), Kofi (governance), Zara (compliance), Nia (research), Seku (content). Invoke via `invokeCouncilAgent(name, message)`.
 - **Dev swarm** (`.github/workflows/agent-swarm.yml`) — 4 parallel agents on every PR: SEO · Design · Security · Code. Requires `ANTHROPIC_API_KEY` in GitHub secrets.
-- React internals (`AshaChat`, `useAshaChat`, `AshaChatContext`) still carry the legacy Asha names — rename pending; user-facing copy already says "Akili".
 
 ---
 
