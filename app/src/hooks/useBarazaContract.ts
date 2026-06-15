@@ -78,8 +78,8 @@ interface UseBarazaContractResult {
   fetchMembership: (communityId: string, walletAddress: string) => Promise<OnChainMembership | null>;
   fetchTreasuryBalance: (communityId: string) => Promise<number>;
   fetchVoteState: (proposalId: string) => Promise<VoteState | null>;
-  /** Returns the member's RAZA voting weight (0 = not a member or account not found). */
-  fetchRazaBalance: (communityId: string, walletAddress: string) => Promise<number>;
+  /** Returns the member's BRZA voting weight (0 = not a member or account not found). */
+  fetchBrzaBalance: (communityId: string, walletAddress: string) => Promise<number>;
   // Write
   castVote: (proposalId: string, communityId: string, support: boolean | VoteOption) => Promise<boolean>;
   /** feeKES is the membership fee in KES. KES→lamports conversion happens on the program/backend side. */
@@ -219,21 +219,21 @@ export function useBarazaContract(): UseBarazaContractResult {
     [readClient]
   );
 
-  const fetchRazaBalance = useCallback(
+  const fetchBrzaBalance = useCallback(
     async (communityId: string, walletAddress: string): Promise<number> => {
-      const cacheKey = `raza:${communityId}:${walletAddress}`;
+      const cacheKey = `brza:${communityId}:${walletAddress}`;
       const cached = fromCache<number>(cacheKey);
       if (cached !== null) return cached;
 
       try {
         const communityKey = resolveCommunityKey(communityId);
-        const memberIdHash = hashToBytes32(`wallet:${walletAddress}`);
+        const memberIdHash = await hashToBytes32(`wallet:${walletAddress}`);
         const [memberKey] = memberPda(communityKey, memberIdHash);
         const member = await readClient.fetchMember(memberKey);
         const weight = member ? member.votingWeight.toNumber() : 0;
         return setCache(cacheKey, weight);
       } catch (error) {
-        console.warn('[baraza] fetchRazaBalance on-chain read failed:', error);
+        console.warn('[baraza] fetchBrzaBalance on-chain read failed:', error);
         return 0;
       }
     },
@@ -301,7 +301,7 @@ export function useBarazaContract(): UseBarazaContractResult {
     fetchMembership,
     fetchTreasuryBalance,
     fetchVoteState,
-    fetchRazaBalance,
+    fetchBrzaBalance,
     castVote,
     joinCommunity,
     createCommunity,

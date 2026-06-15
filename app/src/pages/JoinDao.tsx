@@ -87,7 +87,7 @@ export default function JoinDao() {
     path: id ? `/join/${id}` : undefined,
     noIndex: true,
   });
-  const { setVisible } = useWalletModal();
+  const { setVisible, visible: walletModalVisible } = useWalletModal();
   const { connected, publicKey, connecting } = useWallet();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -107,7 +107,10 @@ export default function JoinDao() {
 
   function startWalletJoin(walletAddress: string) {
     if (!id || amount <= 0) return;
-    const orderId = `ord_wallet_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    // ord_local_ prefix: there is no server-side order for the wallet rail yet,
+    // so JoinStatus must run its local progression instead of polling Supabase
+    // for an order that doesn't exist.
+    const orderId = `ord_local_wallet_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     toast({
       title: "Account payment started",
       description: `Membership dues will be signed from ${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}.`,
@@ -121,6 +124,14 @@ export default function JoinDao() {
     startWalletJoin(publicKey.toBase58());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connected, pendingWalletJoin, publicKey]);
+
+  // Dismissing the wallet modal abandons the join intent — otherwise a later
+  // connection (e.g. from the header) would silently restart the flow.
+  useEffect(() => {
+    if (!walletModalVisible && !connected && pendingWalletJoin) {
+      setPendingWalletJoin(false);
+    }
+  }, [walletModalVisible, connected, pendingWalletJoin]);
 
   async function handleMpesaSubmit() {
     if (!canSubmit || !id || !normalisedPhone) return;
@@ -266,7 +277,7 @@ export default function JoinDao() {
                   <div className="w-full rounded-lg border px-4 py-3 md:w-auto md:text-right">
                     <p className="text-xs">Monthly Dues</p>
                     <p className="font-display text-lg font-bold">
-                      {formatRailAmountWithKes(community?.membershipFee ?? 5000, chainMeta)}
+                      {amount > 0 ? formatRailAmountWithKes(amount, chainMeta) : "—"}
                     </p>
                   </div>
                 </div>

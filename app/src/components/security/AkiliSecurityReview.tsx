@@ -18,13 +18,13 @@ const levelIcon = {
   risk: AlertTriangle,
 };
 
-interface AshaSecurityReviewProps {
+interface AkiliSecurityReviewProps {
   review: SecurityReview;
   compact?: boolean;
   className?: string;
 }
 
-export default function AshaSecurityReview({ review, compact = false, className }: AshaSecurityReviewProps) {
+export default function AkiliSecurityReview({ review, compact = false, className }: AkiliSecurityReviewProps) {
   const Icon = levelIcon[review.level];
   const visibleChecks = compact ? review.checks.slice(0, 3) : review.checks;
 
@@ -34,7 +34,7 @@ export default function AshaSecurityReview({ review, compact = false, className 
         <div>
           <div className="mb-2 inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider">
             <Sparkles className="h-3 w-3" />
-            Asha AI security layer
+            Akili AI security layer
           </div>
           <h2 className="font-display text-lg font-semibold">{compact ? 'Security review' : `Security review: ${review.subject}`}</h2>
           <p className="mt-1 text-sm leading-6 text-muted-foreground">{review.summary}</p>

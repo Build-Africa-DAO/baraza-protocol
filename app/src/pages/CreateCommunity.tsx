@@ -13,6 +13,7 @@ import CommunityBanner from '@/components/CommunityBanner';
 import { useChain } from '@/hooks/useChain';
 import { useSeo } from '@/lib/seo';
 import { CHAINS, type Chain } from '@/lib/chain';
+import { AskAkili } from '@/components/chat/AskAkili';
 import { useBarazaChain } from '@/hooks/useBarazaData';
 import { communityPda, toSlug } from '@/lib/programs';
 import { saveCommunityChainMapping } from '@/lib/chainMappings';
@@ -459,7 +460,9 @@ const CreateCommunity: React.FC = () => {
         if (chainResult) {
           saveCommunityChainMapping({
             localId: community.id,
-            chain: selectedCommunityChain,
+            // chainResult is only set in the `selectedCommunityChain === 'solana'`
+            // branch above, but TS cannot carry that narrowing here.
+            chain: 'solana',
             slug: chainResult.slug,
             communityAddress: chainResult.communityAddress,
             createTxSignature: chainResult.signature,
@@ -592,6 +595,18 @@ const CreateCommunity: React.FC = () => {
               <p className="max-w-xl text-sm font-semibold leading-6 text-foreground/92 drop-shadow md:text-base md:leading-7">
                 Choose the setup that matches your chama, SACCO, cooperative, DAO, or organization.
               </p>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <AskAkili
+                  prompt="Suggest quorum, approval threshold, and dues for a 20-member chama meeting monthly"
+                  label="Suggest a setup"
+                  variant="chip"
+                />
+                <AskAkili
+                  prompt="Walk me through each field on this Create form, top to bottom"
+                  label="Walk me through it"
+                  variant="chip"
+                />
+              </div>
             </div>
             </CommunityBanner>
 
@@ -690,9 +705,12 @@ const CreateCommunity: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold mb-2">
+                  <label className="block text-xs font-semibold mb-1">
                     Quorum Threshold
                   </label>
+                  <p className="mb-2 text-[11px] leading-relaxed text-muted-foreground">
+                    Minimum share of members who must vote for a decision to count. Most Kenyan chamas pick 51% — high enough to avoid surprise decisions, low enough that busy members don't block the group.
+                  </p>
                   <div className="relative">
                     <input
                       type="number"
@@ -708,9 +726,12 @@ const CreateCommunity: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold mb-2">
+                  <label className="block text-xs font-semibold mb-1">
                     Approval Threshold
                   </label>
+                  <p className="mb-2 text-[11px] leading-relaxed text-muted-foreground">
+                    Of the votes that come in, share that must say Yes for the decision to pass. 51% is simple majority. 66%+ means the group really has to agree — set this higher for treasury spend.
+                  </p>
                   <div className="relative">
                     <input
                       type="number"
@@ -726,9 +747,12 @@ const CreateCommunity: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold mb-2">
+                  <label className="block text-xs font-semibold mb-1">
                     Default Voting Period
                   </label>
+                  <p className="mb-2 text-[11px] leading-relaxed text-muted-foreground">
+                    How long a proposal stays open before the result is final. Shorter for urgent operational calls; longer when members need to think or consult outside the app.
+                  </p>
                   <select
                     name="votingPeriod"
                     value={form.votingPeriod}
@@ -743,9 +767,12 @@ const CreateCommunity: React.FC = () => {
                 </div>
 
                 <div className="md:col-span-3">
-                  <label className="block text-xs font-semibold mb-2">
+                  <label className="block text-xs font-semibold mb-1">
                     Treasury Policy
                   </label>
+                  <p className="mb-2 text-[11px] leading-relaxed text-muted-foreground">
+                    How money actually leaves the shared fund once members agree. Multisig-ready requires 2+ trusted members to co-sign each release. Proposal-approved sends as soon as a vote passes. Manual review means an admin checks before money moves — safer for large amounts, slower for routine ones.
+                  </p>
                   <select
                     name="treasuryPolicy"
                     value={form.treasuryPolicy}

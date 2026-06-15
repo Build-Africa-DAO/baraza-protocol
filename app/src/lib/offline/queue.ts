@@ -3,7 +3,7 @@ export type ActionType =
   | 'pay_dues'
   | 'create_proposal'
   | 'claim_bounty'
-  | 'transfer_raza';
+  | 'transfer_brza';
 
 export interface QueuedAction {
   id: string;

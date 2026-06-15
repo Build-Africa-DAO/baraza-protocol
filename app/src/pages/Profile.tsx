@@ -20,7 +20,9 @@ import Layout from "@/components/Layout";
 import { formatRailAmountFromKes, formatRailDate, truncateAddress } from "@/lib/utils";
 import CommunityBanner from "@/components/CommunityBanner";
 import { fetchMembershipsForWallet, listMembershipsForWallet } from "@/lib/memberships";
-import { fetchTotalRazaBalance } from "@/hooks/useRazaBalance";
+import { AskAkili } from "@/components/chat/AskAkili";
+import { MemberBadges } from "@/components/MemberBadges";
+import { deriveBadges } from "@/lib/badges";
 import { useCommunities } from "@/hooks/useCommunities";
 import { CHAINS } from "@/lib/chain";
 import { useSeo } from "@/lib/seo";
@@ -58,7 +60,6 @@ export default function Profile() {
   const stellarConfig = useMemo(() => getStellarConfig(), []);
   const [stellarAccount, setStellarAccount] = useState<string | null>(null);
   const [stellarInput, setStellarInput] = useState("");
-  const [totalRaza, setTotalRaza] = useState<number | null>(null);
   const [stellarBalances, setStellarBalances] = useState<StellarBalance[]>([]);
   const [stellarMessage, setStellarMessage] = useState<string | null>(null);
   const [isLoadingStellar, setIsLoadingStellar] = useState(false);
@@ -95,10 +96,25 @@ export default function Profile() {
     }).catch(() => undefined);
   }, [address, communities]);
 
-  useEffect(() => {
-    if (!address) { setTotalRaza(null); return; }
-    fetchTotalRazaBalance(address).then(setTotalRaza).catch(() => setTotalRaza(null));
-  }, [address]);
+  // Total BRZA across all memberships — derived from `myMemberships` so we
+  // don't double-fetch the same rows the membership effect already loaded.
+  // `MembershipRecord.brzaBalance` is set from row.voting_weight in rowToRecord.
+  const totalBrza = useMemo(
+    () => myMemberships.reduce((sum, m) => sum + m.record.brzaBalance, 0),
+    [myMemberships],
+  );
+
+  // Badges derive from already-loaded membership data — no extra fetches.
+  const badgeResult = useMemo(() => {
+    const joinedTimes = myMemberships
+      .map((m) => new Date(m.record.joinedAt).getTime())
+      .filter((t) => Number.isFinite(t));
+    const earliest = joinedTimes.length > 0 ? new Date(Math.min(...joinedTimes)).toISOString() : null;
+    return deriveBadges({
+      activeMembershipCount: myMemberships.length,
+      earliestJoinedAt: earliest,
+    });
+  }, [myMemberships]);
 
   const memberBounties = useMemo(
     () => myMemberships.flatMap(({ community }) =>
@@ -246,17 +262,32 @@ export default function Profile() {
 
           <div className="grid gap-6 lg:grid-cols-[0.34fr_0.66fr]">
             <aside className="space-y-6">
-              {/* RAZA balance summary */}
+              {/* BRZA balance summary */}
               <div className="baraza-card p-5">
-                <h2 className="mb-3 font-mono text-xs uppercase tracking-widest">RAZA balance</h2>
+                <h2 className="mb-3 font-mono text-xs uppercase tracking-widest">BRZA balance</h2>
                 <div className="flex items-end gap-2">
                   <span className="font-display text-4xl font-black tabular-nums leading-none">
-                    {totalRaza === null ? '—' : totalRaza}
+                    {address ? totalBrza : '—'}
                   </span>
-                  <span className="mb-1 text-sm font-semibold text-muted-foreground">RAZA</span>
+                  <span className="mb-1 text-sm font-semibold text-muted-foreground">BRZA</span>
                 </div>
                 <p className="mt-2 text-xs text-muted-foreground">
                   Voting weight across all active memberships. Increases with governance participation.
+                </p>
+              </div>
+
+              {/* Member badges — derived from membership history. Earned chips
+                  render in full color, in-progress and locked render dimmed. */}
+              <div className="baraza-card p-5">
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="font-mono text-xs uppercase tracking-widest">Badges</h2>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    {badgeResult.earned.length} earned
+                  </span>
+                </div>
+                <MemberBadges result={badgeResult} variant="compact" />
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Badges show what you've done in Baraza communities. Locked badges show what's still possible.
                 </p>
               </div>
 
@@ -486,7 +517,7 @@ export default function Profile() {
                               <span>Joined {formatRailDate(record.joinedAt, chainMeta, { month: 'short', year: 'numeric' })}</span>
                               <span>{formatRailAmountFromKes(community.membershipFee, chainMeta)}/mo</span>
                               <span className="font-semibold text-primary">
-                                {record.razaBalance} RAZA
+                                {record.brzaBalance} BRZA
                               </span>
                             </div>
                           </div>
@@ -511,6 +542,14 @@ export default function Profile() {
                         <PlusCircle className="h-4 w-4" />
                         Launch a DAO
                       </Link>
+                    </div>
+                    <div className="mt-4 flex items-center justify-center gap-2">
+                      <span className="text-[11px] text-muted-foreground">Not sure which?</span>
+                      <AskAkili
+                        prompt="Help me pick a DAO that fits a youth savings group of around 15 members"
+                        label="Ask Akili to suggest one"
+                        variant="chip"
+                      />
                     </div>
                   </div>
                 )}

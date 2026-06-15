@@ -29,6 +29,7 @@ export const CHAIN_TESTNET_NAMES: Record<Chain, string> = {
   polygon: 'Polygon Amoy',
   bnb: 'BNB Smart Chain Testnet',
   celo: 'Celo Alfajores',
+  xdc: 'XDC Apothem',
 };
 
 export const PLANNED_EXTERNAL_CHAINS = [

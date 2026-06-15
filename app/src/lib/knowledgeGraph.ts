@@ -82,7 +82,6 @@ interface MembershipRow {
   wallet_address: string | null;
   status: 'active' | 'pending' | 'revoked' | string;
   joined_at: string | null;
-  created_at?: string | null;
 }
 
 const READINESS_TASKS: KnowledgeNode[] = [
@@ -297,7 +296,7 @@ export function buildKnowledgeGraph(input?: {
     addNode(communityNode(community));
     addNode(reviewNode(communityId, review));
     addEdge(communityId, chainId, 'uses-chain', 'uses');
-    addEdge(communityId, reviewId, 'has-review', 'Asha review');
+    addEdge(communityId, reviewId, 'has-review', 'Akili review');
 
     if (review.level !== 'pass') addEdge(reviewId, 'task:vercel-env', 'needs-task', 'needs review before launch');
   });
@@ -311,7 +310,7 @@ export function buildKnowledgeGraph(input?: {
     addNode(proposalNode(proposal));
     addNode(reviewNode(proposalId, review));
     addEdge(communityId, proposalId, 'has-proposal', 'proposal');
-    addEdge(proposalId, reviewId, 'has-review', 'Asha review');
+    addEdge(proposalId, reviewId, 'has-review', 'Akili review');
   });
 
   bounties.forEach((bounty) => {
@@ -323,7 +322,7 @@ export function buildKnowledgeGraph(input?: {
     addNode(bountyNode(bounty));
     addNode(reviewNode(bountyId, review));
     addEdge(communityId, bountyId, 'has-bounty', 'bounty');
-    addEdge(bountyId, reviewId, 'has-review', 'Asha review');
+    addEdge(bountyId, reviewId, 'has-review', 'Akili review');
 
     if (bounty.rewardToken === 'G$') addEdge(bountyId, nodeId('chain', 'celo'), 'settles-on', 'G$ reward');
     if (bounty.rewardToken === 'XLM') addEdge(bountyId, nodeId('chain', 'stellar'), 'settles-on', 'XLM reward');
@@ -391,7 +390,8 @@ function membershipFromRow(row: MembershipRow): MembershipRecord {
     communityId: row.community_id,
     walletAddress: row.wallet_address ?? 'unknown-account',
     status: row.status === 'active' || row.status === 'pending' || row.status === 'revoked' ? row.status : 'pending',
-    joinedAt: row.joined_at ?? row.created_at ?? new Date().toISOString(),
+    joinedAt: row.joined_at ?? new Date().toISOString(),
+    brzaBalance: 1,
   };
 }
 
@@ -421,7 +421,7 @@ export async function buildLiveKnowledgeGraph(): Promise<KnowledgeGraph & { sour
     listBountiesAsync(),
     client
       .from('memberships')
-      .select('community_id,wallet_address,status,joined_at,created_at')
+      .select('community_id,wallet_address,status,joined_at')
       .limit(500),
     client
       .from('payment_orders')

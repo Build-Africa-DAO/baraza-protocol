@@ -39,18 +39,18 @@ function createReview(subject: string, checks: SecurityReviewCheck[], nextSteps:
   const score = weightedTotal > 0 ? Math.round((weightedPassed / weightedTotal) * 100) : 100;
   const level: SecurityReviewLevel = criticalFailures > 0 ? 'risk' : warningFailures > 0 ? 'watch' : 'pass';
   const summary = level === 'pass'
-    ? 'Asha found the core safety checks in place.'
+    ? 'Akili found the core safety checks in place.'
     : level === 'watch'
-      ? 'Asha found items members should review before acting.'
-      : 'Asha found a risk that should be fixed before money or votes move.';
+      ? 'Akili found items members should review before acting.'
+      : 'Akili found a risk that should be fixed before money or votes move.';
 
   return { subject, score, level, summary, checks, nextSteps };
 }
 
 export function getSecurityReviewLabel(level: SecurityReviewLevel): string {
-  if (level === 'pass') return 'Asha cleared';
-  if (level === 'watch') return 'Asha review';
-  return 'Asha risk flag';
+  if (level === 'pass') return 'Akili cleared';
+  if (level === 'watch') return 'Akili review';
+  return 'Akili risk flag';
 }
 
 export function reviewBounty(bounty: Bounty): SecurityReview {

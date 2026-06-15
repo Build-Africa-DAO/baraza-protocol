@@ -5,11 +5,13 @@
 @layer base {
   :root {
     /* Baraza Design System v7: Black + Dark Orange + White */
+    /* Light surfaces use the brand hue 22 at low saturation so the page
+       reads as warm/intentional, not the AI-default cream-on-cream. */
 
-    --background: 0 0% 98%;
+    --background: 22 30% 97%;
     --foreground: 0 0% 7%;
 
-    --card: 0 0% 100%;
+    --card: 22 20% 99%;
     --card-foreground: 0 0% 7%;
 
     --popover: 0 0% 100%;
@@ -65,10 +67,10 @@
     --gradient-warm: linear-gradient(135deg, hsl(22 90% 42%) 0%, hsl(18 88% 35%) 100%);
     --gradient-dao: linear-gradient(135deg, hsl(22 90% 35%) 0%, hsl(30 80% 40%) 100%);
     --gradient-surface: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(0 0% 98%) 100%);
-    --gradient-hero: radial-gradient(ellipse 48% 38% at 78% 8%, hsl(22 90% 42% / 0.16) 0%, transparent 62%),
-                     radial-gradient(ellipse 42% 34% at 18% 18%, hsl(18 88% 36% / 0.08) 0%, transparent 64%),
-                     radial-gradient(ellipse 30% 24% at 55% 0%, hsl(30 80% 40% / 0.07) 0%, transparent 70%),
-                     linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(0 0% 98%) 55%, hsl(22 10% 95%) 100%);
+    --gradient-hero: radial-gradient(ellipse 52% 42% at 78% 6%, hsl(22 90% 46% / 0.34) 0%, transparent 64%),
+                     radial-gradient(ellipse 44% 36% at 14% 16%, hsl(18 88% 38% / 0.18) 0%, transparent 66%),
+                     radial-gradient(ellipse 34% 26% at 55% 0%, hsl(30 84% 44% / 0.14) 0%, transparent 72%),
+                     linear-gradient(150deg, hsl(0 0% 100%) 0%, hsl(24 28% 96%) 48%, hsl(22 36% 91%) 100%);
 
     /* Shadows */
     --shadow-card:  0 16px 42px -28px hsl(0 0% 0% / 0.24);
@@ -164,7 +166,7 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Public Sans', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -189,11 +191,10 @@
     cursor: pointer;
   }
   .btn-primary:hover {
-    opacity: 0.92;
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-glow);
+    transform: translateY(-2px);
+    box-shadow: 0 14px 34px hsl(22 90% 42% / 0.38);
   }
-  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:active { transform: translateY(0) scale(0.98); }
 
   .btn-warm {
     display: inline-flex;
@@ -209,11 +210,10 @@
     cursor: pointer;
   }
   .btn-warm:hover {
-    opacity: 0.92;
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-warm);
+    transform: translateY(-2px);
+    box-shadow: 0 14px 34px hsl(22 90% 42% / 0.38);
   }
-  .btn-warm:active { transform: translateY(0); }
+  .btn-warm:active { transform: translateY(0) scale(0.98); }
 
   .btn-ghost {
     display: inline-flex;
@@ -307,7 +307,7 @@
     background: var(--gradient-primary) !important;
     color: hsl(var(--primary-foreground)) !important;
     border-radius: var(--radius) !important;
-    font-family: 'Inter', system-ui, sans-serif !important;
+    font-family: 'Public Sans', system-ui, sans-serif !important;
     font-weight: 600 !important;
     font-size: 0.875rem !important;
     height: 2.5rem !important;
@@ -326,7 +326,7 @@
     background: hsl(var(--card)) !important;
     border: 1px solid hsl(var(--border)) !important;
     border-radius: 1rem !important;
-    font-family: 'Inter', system-ui, sans-serif !important;
+    font-family: 'Public Sans', system-ui, sans-serif !important;
   }
   .wallet-adapter-modal-title {
     font-family: 'Hanken Grotesk', system-ui, sans-serif !important;
@@ -353,7 +353,7 @@
   }
   .wallet-adapter-dropdown-list-item {
     color: hsl(var(--foreground)) !important;
-    font-family: 'Inter', system-ui, sans-serif !important;
+    font-family: 'Public Sans', system-ui, sans-serif !important;
   }
   .wallet-adapter-dropdown-list-item:hover {
     background: hsl(var(--surface)) !important;
@@ -427,8 +427,30 @@
   animation: community-banner-slide 0.72s ease-out both;
 }
 
+/* Entrance: staggered rise for hero / above-the-fold content */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rise {
+  animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.rise-1 { animation-delay: 0.05s; }
+.rise-2 { animation-delay: 0.14s; }
+.rise-3 { animation-delay: 0.23s; }
+.rise-4 { animation-delay: 0.32s; }
+.rise-5 { animation-delay: 0.45s; }
+
 @media (prefers-reduced-motion: reduce) {
-  .community-banner-slide {
+  .community-banner-slide,
+  .rise {
     animation: none;
   }
 }

@@ -42,11 +42,5 @@
     "app/api/cron/promote-orders.ts": {
       "maxDuration": 60
     }
-  },
-  "crons": [
-    {
-      "path": "/api/cron/promote-orders",
-      "schedule": "0 0 * * *"
-    }
-  ]
+  }
 }

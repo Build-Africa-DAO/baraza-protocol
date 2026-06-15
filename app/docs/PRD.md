@@ -1258,7 +1258,7 @@ Applies to community types `cooperative` and `supply_chain`. Compliance path is 
 | Community admin | 1 vote (community track) | Yes | Proposal-only |
 | Member | 1 vote | Yes (funded proposals require stake) | No |
 | Delegate | Accumulated from delegators | Yes | No |
-| AI agent (Asha) | Non-voting — advise and flag only | Draft only | No |
+| AI agent (Akili) | Non-voting — advise and flag only | Draft only | No |
 
 **Proposal lifecycle:**
 
@@ -1277,12 +1277,12 @@ Applies to community types `cooperative` and `supply_chain`. Compliance path is 
 - Opens when proposal moves to Active; closes when voting ends
 - Research finding: proposals without prior structured dialogue are 90% more likely to fail (source: governance research synthesis, 2026-06-08)
 
-**AI governance agent capabilities (Asha):**
+**AI governance agent capabilities (Akili):**
 
 - Proposal Analyzer: flag duplicate, overspend, personal benefit, unmeasurable criteria, irreversible actions
 - Voting Recommendation: generate rationale based on community treasury health and past proposals
 - Treasury Oversight: monitor community treasury balance and flag anomalous movements
-- Constraints: Asha never votes, never signs, never holds keys. Advisory only.
+- Constraints: Akili never votes, never signs, never holds keys. Advisory only.
 
 **AI decision tiers (protocol track only):**
 

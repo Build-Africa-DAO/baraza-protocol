@@ -1,14 +1,14 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X, Send, Sparkles } from 'lucide-react';
-import { useAshaChat } from '@/hooks/useAshaChat';
+import { useAkiliChat } from '@/hooks/useAkiliChat';
 import { useChain } from '@/hooks/useChain';
 import { useLocation } from 'react-router-dom';
 import type { ChainMeta } from '@/lib/chain';
 
 interface Message {
   id: string;
-  role: 'asha' | 'user';
+  role: 'akili' | 'user';
   text: string;
   time: string;
 }
@@ -20,26 +20,159 @@ const timestamp = (chainMeta: ChainMeta) =>
     timeZone: chainMeta.timeZone,
   });
 
-const initialMessage = (chainMeta: ChainMeta): Message => ({
-    id: '1',
-    role: 'asha',
-    text: "Habari! I'm Asha, your Baraza guide. I can help you understand the website, launch a DAO, manage members, or plan a vote.",
-    time: timestamp(chainMeta),
+// Route context — Akili tailors its first message and its suggested follow-ups
+// to where the member is on the site. The classifier reads location.pathname
+// against the route table in App.tsx and falls back to 'landing' for anything
+// it doesn't recognise.
+type RouteContext =
+  | 'profile'
+  | 'create'
+  | 'join'
+  | 'join-status'
+  | 'proposal'
+  | 'community'
+  | 'communities'
+  | 'bounties'
+  | 'evaluate'
+  | 'admin'
+  | 'onboarding'
+  | 'landing';
+
+function classifyRoute(pathname: string): RouteContext {
+  if (pathname === '/' || pathname === '/home') return 'landing';
+  if (pathname.startsWith('/profile')) return 'profile';
+  if (pathname.startsWith('/create')) return 'create';
+  if (/^\/join\/[^/]+\/status/.test(pathname)) return 'join-status';
+  if (pathname.startsWith('/join/')) return 'join';
+  if (/^\/(dashboard|dao)\/[^/]+\/(decisions|proposals)\/[^/]+/.test(pathname)) return 'proposal';
+  if (/^\/(dashboard|dao)\/[^/]+/.test(pathname)) return 'community';
+  if (pathname.startsWith('/communities')) return 'communities';
+  if (pathname.startsWith('/bounties')) return 'bounties';
+  if (pathname.startsWith('/evaluate')) return 'evaluate';
+  if (pathname.startsWith('/admin')) return 'admin';
+  if (pathname.startsWith('/onboarding')) return 'onboarding';
+  return 'landing';
+}
+
+// First-message copy, keyed by route. Voice is consistent — "Habari" opener,
+// short, names what Akili can do FROM THIS PAGE specifically, not in general.
+const GREETING_BY_ROUTE: Record<RouteContext, string> = {
+  landing:
+    "Habari! I'm Akili, your Baraza guide. Ask me how chamas, DAOs, or SACCOs work on Baraza — or how to launch one.",
+  profile:
+    "Habari! I'm Akili. Want help joining your first community, increasing your voting weight, or understanding what your BRZA balance means? Just ask.",
+  create:
+    "Habari! I'm Akili. Setting up a community? I can suggest quorum and approval thresholds, dues amounts, and a voting period that fits your group size.",
+  join:
+    "Habari! I'm Akili. Want me to walk you through M-Pesa vs account payment, or explain what activation means? Just ask.",
+  'join-status':
+    "Habari! I'm Akili. Watching a payment confirm? Ask me what each step does, or what to do if confirmation takes longer than expected.",
+  proposal:
+    "Habari! I'm Akili. Want me to summarise this proposal, explain the security review, or help you decide between Support, Object, and Abstain?",
+  community:
+    "Habari! I'm Akili. Ask me anything about this community — treasury, members, active votes, or how to draft your own proposal.",
+  communities:
+    "Habari! I'm Akili. I can help you compare DAOs, decide which one to join, or describe how each group is structured.",
+  bounties:
+    "Habari! I'm Akili. Browsing bounties? I can explain rewards in KES vs BRZA, what verifiers check, and how to start a submission.",
+  evaluate:
+    "Habari! I'm Akili. Use the checklist on this page; ask me whenever a question deserves a longer answer than a checkbox.",
+  admin:
+    "Habari! I'm Akili. Reconciliation tools sit on this page. Ask me what a flag means or what to investigate first.",
+  onboarding:
+    "Habari! I'm Akili. New here? Ask me anything — how votes work, how dues flow, how membership activates after payment.",
+};
+
+const initialMessage = (chainMeta: ChainMeta, route: RouteContext): Message => ({
+  id: '1',
+  role: 'akili',
+  text: GREETING_BY_ROUTE[route],
+  time: timestamp(chainMeta),
 });
 
-const QUICK_REPLIES = [
-  'How do I create a group?',
-  'Help me set up my DAO',
-  'Run a security review',
-  'How does voting work?',
-  'How are funds managed?',
-];
+// Suggested next-asks per route. 4 chips max so the row never wraps awkwardly
+// on a 320-wide mobile drawer. The first chip is the highest-intent action
+// for that route.
+const QUICK_REPLIES_BY_ROUTE: Record<RouteContext, string[]> = {
+  landing: [
+    'How do I create a group?',
+    'How does voting work?',
+    'What is a chama?',
+    'How are funds managed?',
+  ],
+  profile: [
+    'How do I increase my BRZA balance?',
+    'How do I join a community?',
+    'What does voting weight mean?',
+    'How do referrals work?',
+  ],
+  create: [
+    'Suggest quorum and approval for a 20-member chama',
+    'What is a fair monthly dues amount?',
+    'How long should the voting period be?',
+    'Run a security review on my setup',
+  ],
+  join: [
+    'M-Pesa or account — which should I pick?',
+    'What is the activation secret?',
+    'How long does payment confirmation take?',
+    'What happens after I pay?',
+  ],
+  'join-status': [
+    'My payment is stuck — what now?',
+    'What does each step in this tracker do?',
+    'Can I cancel and retry?',
+    'When will my membership activate?',
+  ],
+  proposal: [
+    'Summarise this proposal',
+    'What does the security review flag?',
+    'How is quorum calculated here?',
+    'Should I Support, Object, or Abstain?',
+  ],
+  community: [
+    'How do I propose a treasury spend?',
+    'How is the BRZA balance distributed here?',
+    'What recent decisions did this group make?',
+    'Run a security review on this community',
+  ],
+  communities: [
+    'Which community fits a youth savings group?',
+    'How do I compare quorum rules?',
+    'What does "active" vs "draft" mean?',
+    'How do I join one?',
+  ],
+  bounties: [
+    'Which bounties pay in KES vs BRZA?',
+    'How do I submit work for review?',
+    'What do verifiers check?',
+    'How are disputes resolved?',
+  ],
+  evaluate: [
+    'Walk me through this checklist',
+    'What is the security score?',
+    'What are the highest-risk items?',
+    'How do I fix a flagged issue?',
+  ],
+  admin: [
+    'What does this flag mean?',
+    'How do I reconcile a mismatch?',
+    'What should I investigate first?',
+    'How do payouts get reviewed?',
+  ],
+  onboarding: [
+    'How do I create a community?',
+    'How do dues work?',
+    'How does voting work?',
+    'What is BRZA?',
+  ],
+};
 
 const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
   {
-    keywords: ['ai', 'asha', 'guide', 'copilot', 'assistant', 'platform', 'use baraza'],
+    keywords: ['ai', 'asha', 'akili', 'guide', 'copilot', 'assistant', 'platform', 'use baraza'],
     reply:
-      'Baraza combines the website, the operating platform, and Asha AI in one flow. Use the website to understand the model, Explore to find DAOs, Launch to create one, dashboards to manage KES treasury and votes, and ask me when you need help choosing settings or explaining the next action.',
+      'Baraza combines the website, the operating platform, and Akili AI in one flow. Use the website to understand the model, Explore to find DAOs, Launch to create one, dashboards to manage KES treasury and votes, and ask me when you need help choosing settings or explaining the next action.',
   },
   {
     keywords: ['plan', 'setup', 'best setup', 'rules', 'quorum', 'threshold'],
@@ -94,7 +227,7 @@ const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
   {
     keywords: ['security', 'safe', 'trust', 'secure', 'hack', 'vet', 'review', 'risk'],
     reply:
-      'Asha runs an AI-assisted security review on group rules, bounties, proposals, and treasury releases. It checks for unclear dues, weak voting rules, expired tasks, large fund requests, and missing member records. Asha can flag risk, but members and admins still make the final decision.',
+      'Akili runs an AI-assisted security review on group rules, bounties, proposals, and treasury releases. It checks for unclear dues, weak voting rules, expired tasks, large fund requests, and missing member records. Akili can flag risk, but members and admins still make the final decision.',
   },
   {
     keywords: ['hello', 'hi', 'habari', 'hey', 'hola', 'sasa'],
@@ -116,7 +249,7 @@ const getStaticResponse = (input: string): string => {
   return 'Great question! Baraza helps DAOs and communities manage KES funds and make decisions together. Try asking me about launching a DAO, how voting works, the shared fund, or how to join an existing group.';
 };
 
-async function streamAshaResponse(
+async function streamAkiliResponse(
   message: string,
   communityId: string | null,
   history: Array<{ role: 'user' | 'assistant'; content: string }>,
@@ -165,11 +298,15 @@ const TypingDots: React.FC = () => (
   </div>
 );
 
-const AshaChat: React.FC = () => {
-  const { isOpen, open, close, pendingMessage, clearPending } = useAshaChat();
+const AkiliChat: React.FC = () => {
+  const { isOpen, open, close, pendingMessage, clearPending } = useAkiliChat();
   const { chainMeta } = useChain();
   const location = useLocation();
-  const [messages, setMessages] = useState<Message[]>(() => [initialMessage(chainMeta)]);
+  const routeContext = classifyRoute(location.pathname);
+  const [messages, setMessages] = useState<Message[]>(() => [initialMessage(chainMeta, routeContext)]);
+  // Quick replies are derived during render so they update when the route changes
+  // (e.g. user opens Akili on Profile, then navigates to a proposal without closing).
+  const QUICK_REPLIES = QUICK_REPLIES_BY_ROUTE[routeContext];
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -192,6 +329,25 @@ const AshaChat: React.FC = () => {
     };
   }, [isOpen]);
 
+  // Refresh the greeting on each open IF the conversation hasn't started yet.
+  // Lets a member navigate from Profile → ProposalDetail and see the proposal-
+  // specific greeting next time they open Akili. Once they send a message,
+  // we leave the history alone.
+  //
+  // Deps intentionally exclude `chainMeta` and `messages`:
+  //  - `chainMeta` only feeds the greeting timestamp; rebuilding the greeting
+  //    every time the chain meta object identity changes would clobber any
+  //    in-flight conversation the user is having.
+  //  - `messages` is the state we're conditionally writing to — including it
+  //    would loop. The `messages.length === 1 && id === '1'` guard inside
+  //    the effect is the real check against overwriting user history.
+  useEffect(() => {
+    if (isOpen && messages.length === 1 && messages[0].id === '1') {
+      setMessages([initialMessage(chainMeta, routeContext)]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, routeContext]);
+
   const sendMessage = useCallback(async (text: string) => {
     if (!text.trim() || isTyping) return;
 
@@ -206,7 +362,7 @@ const AshaChat: React.FC = () => {
     setInput('');
     setIsTyping(true);
 
-    const ashaId = String(Date.now() + 1);
+    const akiliId = String(Date.now() + 1);
 
     // Build history from last 8 messages (excluding initial greeting)
     const history = messages.slice(1, -0).slice(-8).map((m) => ({
@@ -215,16 +371,16 @@ const AshaChat: React.FC = () => {
     }));
 
     try {
-      // Add empty Asha message that we'll stream into
+      // Add empty Akili message that we'll stream into
       setIsTyping(false);
       setMessages((prev) => [
         ...prev,
-        { id: ashaId, role: 'asha', text: '', time: timestamp(chainMeta) },
+        { id: akiliId, role: 'akili', text: '', time: timestamp(chainMeta) },
       ]);
 
-      await streamAshaResponse(text.trim(), communityId, history, (chunk) => {
+      await streamAkiliResponse(text.trim(), communityId, history, (chunk) => {
         setMessages((prev) =>
-          prev.map((m) => (m.id === ashaId ? { ...m, text: m.text + chunk } : m))
+          prev.map((m) => (m.id === akiliId ? { ...m, text: m.text + chunk } : m))
         );
       });
     } catch {
@@ -232,7 +388,7 @@ const AshaChat: React.FC = () => {
       setIsTyping(false);
       setMessages((prev) =>
         prev.map((m) =>
-          m.id === ashaId ? { ...m, text: getStaticResponse(text) } : m
+          m.id === akiliId ? { ...m, text: getStaticResponse(text) } : m
         )
       );
     }
@@ -272,7 +428,7 @@ const AshaChat: React.FC = () => {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
             onClick={() => open()}
-            aria-label="Open Asha chat"
+            aria-label="Open Akili chat"
             className="fixed bottom-5 right-5 z-50 hidden w-14 h-14 rounded-full md:flex items-center justify-center shadow-lg animate-pulse-glow transition-transform hover:scale-110 active:scale-95"
             style={{ background: 'var(--gradient-warm)' }}
           >
@@ -289,7 +445,7 @@ const AshaChat: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.95 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="fixed bottom-5 right-5 z-50 hidden w-[340px] max-w-[calc(100vw-1.25rem)] h-[500px] max-h-[calc(100vh-5rem)] md:flex flex-col rounded-2xl border border-border overflow-hidden shadow-2xl"
+            className="fixed inset-x-2 bottom-20 z-50 flex h-[72vh] flex-col overflow-hidden rounded-2xl border border-border shadow-2xl md:inset-x-auto md:bottom-5 md:right-5 md:h-[500px] md:max-h-[calc(100vh-5rem)] md:w-[340px]"
             style={{ background: 'hsl(var(--card))' }}
           >
             {/* Header */}
@@ -302,7 +458,7 @@ const AshaChat: React.FC = () => {
                   <Sparkles className="w-4 h-4 text-primary-foreground" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-primary-foreground leading-none">Asha</h4>
+                  <h4 className="text-sm font-semibold text-primary-foreground leading-none">Akili</h4>
                   <p className="text-[10px] text-primary-foreground/70 mt-0.5">Your Baraza guide</p>
                 </div>
               </div>
@@ -386,7 +542,7 @@ const AshaChat: React.FC = () => {
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask Asha anything…"
+                placeholder="Ask Akili anything…"
                 className="flex-1 bg-surface rounded-xl px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary/50 transition-all"
               />
               <button
@@ -410,4 +566,4 @@ const AshaChat: React.FC = () => {
   );
 };
 
-export default AshaChat;
+export default AkiliChat;

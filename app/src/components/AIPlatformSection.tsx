@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { ArrowRight, Bot, Compass, LayoutDashboard, Sparkles, WalletCards } from "lucide-react";
-import { useAshaChat } from "@/hooks/useAshaChat";
+import { useAkiliChat } from "@/hooks/useAkiliChat";
 
 const platformLinks = [
   {
@@ -27,12 +28,18 @@ const platformLinks = [
 ];
 
 export default function AIPlatformSection() {
-  const { open } = useAshaChat();
+  const { open } = useAkiliChat();
 
   return (
     <section className="relative py-8 md:py-12" id="ai-platform">
       <div className="container mx-auto max-w-7xl px-4">
-        <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr] lg:items-stretch">
+        <motion.div
+          initial={{ y: 18, opacity: 0 }}
+          whileInView={{ y: 0, opacity: 1 }}
+          viewport={{ once: true, amount: 0 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr] lg:items-stretch"
+        >
           <div className="rounded-2xl border border-primary/20 bg-card p-5 shadow-[var(--shadow-card)] md:p-6">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-primary">
               <Sparkles className="h-3.5 w-3.5" />
@@ -43,7 +50,7 @@ export default function AIPlatformSection() {
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground md:text-base md:leading-7">
               Visitors can understand the model, organisers can launch a DAO, and members can
-              vote and track funds — Asha is available when someone needs a next step.
+              vote and track funds — Akili is available when someone needs a next step.
             </p>
 
             <div className="mt-5 flex flex-col gap-2 sm:flex-row">
@@ -52,7 +59,7 @@ export default function AIPlatformSection() {
                 onClick={() => open("Help me set up my DAO on Baraza")}
                 className="btn-warm inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-extrabold"
               >
-                Ask Asha AI
+                Ask Akili
                 <Bot className="h-4 w-4" />
               </button>
               <Link
@@ -65,14 +72,15 @@ export default function AIPlatformSection() {
             </div>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-3">
+          {/* Mobile: one card per swipe instead of a long stack */}
+          <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 md:pb-0">
             {platformLinks.map((item) => {
               const Icon = item.icon;
               return (
                 <Link
                   key={item.label}
                   to={item.to}
-                  className="group rounded-2xl border border-border/70 bg-card/70 p-4 transition-all hover:border-primary/40 hover:bg-surface"
+                  className="group min-w-[78%] snap-start rounded-2xl border border-border/70 bg-card/70 p-4 transition-all hover:border-primary/40 hover:bg-surface md:min-w-0"
                 >
                   <div className="mb-4 flex items-center justify-between">
                     <div className="grid h-10 w-10 place-items-center rounded-xl border border-primary/20 bg-primary/10 text-primary">
@@ -89,7 +97,7 @@ export default function AIPlatformSection() {
               );
             })}
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

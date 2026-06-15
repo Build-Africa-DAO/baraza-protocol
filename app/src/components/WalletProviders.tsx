@@ -1,6 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
+import {
+  ConnectionProvider as SolanaConnectionProvider,
+  WalletProvider,
+  type ConnectionProviderProps,
+} from '@solana/wallet-adapter-react';
 import type { Adapter } from '@solana/wallet-adapter-base';
+
+// @solana/wallet-adapter-react was compiled against React 18 types; under
+// React 19's stricter JSX types its FC return type no longer matches.
+// Re-type locally — no runtime change. Do not upgrade packages.
+const ConnectionProvider =
+  SolanaConnectionProvider as unknown as React.FC<ConnectionProviderProps>;
 import { RPC_ENDPOINT, WALLET_ADAPTER_NETWORK } from '@/lib/network';
 import BarazaWalletModalProvider from '@/components/BarazaWalletModalProvider';
 

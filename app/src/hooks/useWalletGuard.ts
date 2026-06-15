@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { useToast } from '@/hooks/use-toast';
+import { getPhoneAuthSession } from '@/lib/phoneAuth';
 
 interface WalletGuardOptions {
   /** Action name shown in toasts e.g. "vote", "join community" */
@@ -9,22 +10,36 @@ interface WalletGuardOptions {
 }
 
 interface WalletGuardResult {
-  /** Wraps an async action with Solana account connection check */
+  /** Wraps an async action with an identity check (Solana account, or phone/email session) */
   requireWallet: <T>(fn: () => Promise<T>) => Promise<T | undefined>;
-  /** Whether the Solana account is ready (connected + public key present) */
+  /** Whether an identity is ready — Solana publicKey OR phone/email session */
   isReady: boolean;
-  /** The connected account's public key string */
+  /** Identity key — Solana base58 publicKey, or `phone:<number>` / `email:<address>` */
   address: string | null;
 }
 
+// Phone/email identity uses the same shape as USSD memberships (`phone:${phoneNumber}`)
+// so the local datastore and Supabase rows line up across rails.
+function phoneIdentityKey(): string | null {
+  const session = getPhoneAuthSession();
+  if (session.phone) return `phone:${session.phone}`;
+  if (session.email) return `email:${session.email}`;
+  return null;
+}
+
 /**
- * Provides a gated wrapper that requires Solana account connection before executing.
- * Automatically opens the account modal if not connected, shows helpful toasts.
+ * Provides a gated wrapper that requires a member identity before executing.
+ * Accepts a connected Solana account OR a saved phone/email session. Opens the
+ * Solana modal only when neither identity is available.
  */
 export function useWalletGuard(options: WalletGuardOptions = {}): WalletGuardResult {
   const { connected, publicKey, connecting } = useWallet();
   const { setVisible } = useWalletModal();
   const { toast } = useToast();
+
+  const walletAddress = connected && publicKey ? publicKey.toBase58() : null;
+  const phoneIdentity = walletAddress ? null : phoneIdentityKey();
+  const identity = walletAddress ?? phoneIdentity;
 
   const requireWallet = useCallback(
     async <T>(fn: () => Promise<T>): Promise<T | undefined> => {
@@ -36,9 +51,9 @@ export function useWalletGuard(options: WalletGuardOptions = {}): WalletGuardRes
         return undefined;
       }
 
-      if (!connected || !publicKey) {
-        // Opening the account modal already tells the member what to do.
-        // a parallel toast just competes with it.
+      if (!walletAddress && !phoneIdentity) {
+        // No identity at all — open the account modal. The modal itself tells the
+        // member what to do, so we skip a parallel toast that would just compete.
         setVisible(true);
         return undefined;
       }
@@ -65,12 +80,12 @@ export function useWalletGuard(options: WalletGuardOptions = {}): WalletGuardRes
         return undefined;
       }
     },
-    [connected, connecting, publicKey, setVisible, toast, options.action]
+    [walletAddress, phoneIdentity, connecting, setVisible, toast, options.action]
   );
 
   return {
     requireWallet,
-    isReady: connected && !!publicKey,
-    address: publicKey?.toBase58() ?? null,
+    isReady: identity !== null,
+    address: identity,
   };
 }

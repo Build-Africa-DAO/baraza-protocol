@@ -4,10 +4,10 @@ import { Toaster } from '@/components/ui/toaster';
 import WalletProviders from '@/components/WalletProviders';
 import ChainProvider from '@/components/ChainProvider';
 import PageLoader from '@/components/PageLoader';
-import { AshaChatProvider } from '@/contexts/AshaChatContext';
+import { AkiliChatProvider } from '@/contexts/AkiliChatContext';
 import { OfflineProvider } from '@/contexts/OfflineContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
-import AshaChat from '@/components/chat/AshaChat';
+import AkiliChat from '@/components/chat/AkiliChat';
 
 const Index = lazy(() => import('./pages/Index'));
 const Communities = lazy(() => import('./pages/Communities'));
@@ -32,7 +32,7 @@ const App: React.FC = () => {
       <ChainProvider>
         <WalletProviders>
           <OfflineProvider>
-          <AshaChatProvider>
+          <AkiliChatProvider>
             <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<Index />} />
@@ -59,9 +59,9 @@ const App: React.FC = () => {
               <Route path="*" element={<NotFound />} />
             </Routes>
             </Suspense>
-            <AshaChat />
+            <AkiliChat />
             <Toaster />
-          </AshaChatProvider>
+          </AkiliChatProvider>
           </OfflineProvider>
         </WalletProviders>
       </ChainProvider>

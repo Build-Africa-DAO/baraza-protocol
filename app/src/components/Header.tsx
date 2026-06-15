@@ -4,7 +4,7 @@ import { Menu, Moon, MoreHorizontal, PlayCircle, Search, Sparkles, Sun, X } from
 import { BrandLogo } from "@/components/BrandLogo";
 import ChainSelector from "@/components/ChainSelector";
 import EnvironmentSelector from "@/components/EnvironmentSelector";
-import { useAshaChat } from "@/hooks/useAshaChat";
+import { useAkiliChat } from "@/hooks/useAkiliChat";
 import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
 
@@ -34,7 +34,7 @@ export default function Header({ walletSlot }: HeaderProps) {
   const [query, setQuery] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
-  const { open: openAsha } = useAshaChat();
+  const { open: openAkili } = useAkiliChat();
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -69,7 +69,7 @@ export default function Header({ walletSlot }: HeaderProps) {
   };
 
   const openAiGuide = () => {
-    openAsha("Help me use Baraza for my DAO");
+    openAkili("Help me use Baraza for my DAO");
     setMobileOpen(false);
   };
 
@@ -334,7 +334,7 @@ export default function Header({ walletSlot }: HeaderProps) {
               className="inline-flex items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm font-semibold text-primary transition-all hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
             >
               <Sparkles className="h-4 w-4" />
-              Ask Asha AI
+              Ask Akili
             </button>
             <form
               className="relative mt-2"

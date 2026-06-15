@@ -1,7 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  BARAZA_TV,
+  BRZA_ALLOCATION,
   BRZA_ASSET,
+  BRZA_EMISSION,
+  BRZA_VESTING,
+  XLM_USD_RATE_MVP,
   convertToBrza,
+  convertXlmToBrza,
   formatLocal,
   getBrzaPriceUsd,
   vestedAmount,
@@ -43,6 +49,108 @@ describe('BRZA pricing', () => {
   it('rejects market valuation until a market price source is configured', () => {
     expect(() => getBrzaPriceUsd('market')).toThrow(/market price is not configured/i);
     expect(() => convertToBrza(1000, 'KES', 'market')).toThrow(/market price is not configured/i);
+  });
+});
+
+describe('BRZA allocation invariants', () => {
+  // The file flags a Notion product spec discrepancy (Notion sums to 110%).
+  // These tests lock the in-file allocation as authoritative until that is
+  // reconciled, and surface any silent drift if a bucket is edited.
+
+  it('BRZA_ALLOCATION sums to BRZA_ASSET.totalSupply (1B)', () => {
+    const sum = Object.values(BRZA_ALLOCATION).reduce((acc, n) => acc + n, 0);
+    expect(sum).toBe(BRZA_ASSET.totalSupply);
+    expect(sum).toBe(1_000_000_000);
+  });
+
+  it('every BRZA_VESTING bucket tracks its BRZA_ALLOCATION counterpart', () => {
+    for (const [bucket, vest] of Object.entries(BRZA_VESTING)) {
+      const allocated = BRZA_ALLOCATION[bucket as keyof typeof BRZA_ALLOCATION];
+      expect(vest.tokens, `vesting tokens for ${bucket} must equal allocation`).toBe(allocated);
+    }
+  });
+
+  it('BRZA_EMISSION sub-pool percentages sum to 1.0', () => {
+    const sum =
+      BRZA_EMISSION.bountyPoolPct +
+      BRZA_EMISSION.membershipRewardPct +
+      BRZA_EMISSION.governanceRewardPct +
+      BRZA_EMISSION.referralPct;
+    expect(sum).toBeCloseTo(1.0, 10);
+  });
+
+  it('BRZA_EMISSION total equals the communityRewards bucket', () => {
+    expect(BRZA_EMISSION.total).toBe(BRZA_ALLOCATION.communityRewards);
+  });
+
+  it('BARAZA_TV revenue share percentages sum to 1.0', () => {
+    const sum =
+      BARAZA_TV.creatorRevSharePct +
+      BARAZA_TV.communityRevSharePct +
+      BARAZA_TV.protocolFeePct;
+    expect(sum).toBeCloseTo(1.0, 10);
+  });
+
+  it('founder buckets are symmetric (A === B)', () => {
+    expect(BRZA_ALLOCATION.founderA).toBe(BRZA_ALLOCATION.founderB);
+  });
+
+  it('public sale bucket covers Phase 0 (20M) + IDO (100M)', () => {
+    // Source-of-truth check: README + CLAUDE.md document this split.
+    expect(BRZA_ALLOCATION.publicSale).toBe(20_000_000 + 100_000_000);
+  });
+});
+
+describe('convertXlmToBrza', () => {
+  // Source-of-truth check for the verify-payment derivation. Same inputs
+  // must always produce same brza_allocated (reproducibility from pinned
+  // intent rates is the whole reason both rates live in the intent payload).
+
+  it('derives BRZA from XLM amount, XLM/USD rate, and BRZA price', () => {
+    // 100 XLM × $0.10/XLM = $10 USD ÷ $0.02/BRZA (Phase 0) = 500 BRZA
+    expect(convertXlmToBrza(100, 0.10, 0.02)).toBe(500);
+  });
+
+  it('rounds to 7 decimals to match BRZA_ASSET.decimals', () => {
+    // 1.23456789 XLM × $0.10 = $0.123456789 ÷ $0.02 = 6.17283945
+    // 7-decimal round: 6.1728395 (1e7 precision)
+    const result = convertXlmToBrza(1.23456789, 0.10, 0.02);
+    expect(result).toBeCloseTo(6.1728395, 7);
+    // Confirm rounding actually happens (no 8th-decimal precision leak)
+    expect(result.toString().split('.')[1]?.length ?? 0).toBeLessThanOrEqual(7);
+  });
+
+  it('scales linearly with XLM amount', () => {
+    expect(convertXlmToBrza(50, 0.10, 0.02)).toBe(250);
+    expect(convertXlmToBrza(200, 0.10, 0.02)).toBe(1000);
+  });
+
+  it('respects different phase prices', () => {
+    // Same 100 XLM × $0.10 = $10 USD at IDO price $0.10 = 100 BRZA
+    expect(convertXlmToBrza(100, 0.10, 0.10)).toBe(100);
+  });
+
+  it('rejects non-positive XLM amount', () => {
+    expect(() => convertXlmToBrza(0, 0.10, 0.02)).toThrow(/amountXlm/);
+    expect(() => convertXlmToBrza(-1, 0.10, 0.02)).toThrow(/amountXlm/);
+    expect(() => convertXlmToBrza(NaN, 0.10, 0.02)).toThrow(/amountXlm/);
+  });
+
+  it('rejects non-positive XLM/USD rate', () => {
+    expect(() => convertXlmToBrza(100, 0, 0.02)).toThrow(/xlmUsdRate/);
+    expect(() => convertXlmToBrza(100, -0.1, 0.02)).toThrow(/xlmUsdRate/);
+  });
+
+  it('rejects non-positive BRZA price', () => {
+    expect(() => convertXlmToBrza(100, 0.10, 0)).toThrow(/brzaPriceUsd/);
+    expect(() => convertXlmToBrza(100, 0.10, -0.02)).toThrow(/brzaPriceUsd/);
+  });
+
+  it('XLM_USD_RATE_MVP placeholder is the documented 0.10', () => {
+    // CLAUDE.md and the intent handler both assume 0.10 as the MVP rate.
+    // Pin the value so silent drift between this constant and the edge
+    // handler's hardcoded fallback becomes a test failure.
+    expect(XLM_USD_RATE_MVP).toBe(0.10);
   });
 });
 

@@ -61,13 +61,16 @@ function WorkflowCard({ step, index }: { step: (typeof workflow)[number]; index:
 
   return (
     <motion.div
-      initial={{ y: 18 }}
-      whileInView={{ y: 0 }}
+      initial={{ y: 18, opacity: 0 }}
+      whileInView={{ y: 0, opacity: 1 }}
       viewport={{ once: true, amount: 0 }}
-      transition={{ delay: index * 0.05 }}
+      transition={{ delay: index * 0.07, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       className={cn(
-        "group relative rounded-xl border border-border/70 bg-card/78 p-5 shadow-[var(--shadow-card)]",
+        "group relative min-w-[82%] snap-start rounded-xl border border-border/70 bg-card/78 p-5 shadow-[var(--shadow-card)] sm:min-w-0",
         "transition-all duration-200 hover:border-primary/40 hover:bg-surface",
+        // Editorial offset: cards 2 and 4 drop down so the 2x2 grid breaks
+        // the uniform-AI-grid symmetry without changing card semantics.
+        index % 2 === 1 && "sm:mt-10",
       )}
     >
       <div className="mb-5 flex items-center justify-between">
@@ -103,16 +106,16 @@ export default function FeaturesSection() {
         <div className="mb-10 grid gap-6 lg:grid-cols-[0.78fr_1fr] lg:items-end">
           <div>
             <motion.p
-              initial={{ y: 14 }}
-              whileInView={{ y: 0 }}
+              initial={{ y: 14, opacity: 0 }}
+              whileInView={{ y: 0, opacity: 1 }}
               viewport={{ once: true, amount: 0 }}
               className="text-xs font-semibold uppercase tracking-widest text-primary"
             >
               Product workflow
             </motion.p>
             <motion.h2
-              initial={{ y: 14 }}
-              whileInView={{ y: 0 }}
+              initial={{ y: 14, opacity: 0 }}
+              whileInView={{ y: 0, opacity: 1 }}
               viewport={{ once: true, amount: 0 }}
               transition={{ delay: 0.05 }}
               className="mt-3 max-w-2xl font-display text-3xl font-bold leading-tight text-foreground md:text-4xl"
@@ -121,8 +124,8 @@ export default function FeaturesSection() {
             </motion.h2>
           </div>
           <motion.p
-            initial={{ y: 14 }}
-            whileInView={{ y: 0 }}
+            initial={{ y: 14, opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
             viewport={{ once: true, amount: 0 }}
             transition={{ delay: 0.1 }}
             className="max-w-2xl text-base leading-relaxed text-muted-foreground lg:justify-self-end"
@@ -133,16 +136,18 @@ export default function FeaturesSection() {
         </div>
 
         <div className="grid gap-4 lg:grid-cols-[1fr_0.78fr]">
-          <div className="grid gap-4 sm:grid-cols-2">
+          {/* Mobile: swipeable workflow cards instead of a tall stack */}
+          <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0">
             {workflow.map((step, index) => (
               <WorkflowCard key={step.label} step={step} index={index} />
             ))}
           </div>
 
           <motion.div
-            initial={{ y: 18 }}
-            whileInView={{ y: 0 }}
+            initial={{ y: 18, opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
             viewport={{ once: true, amount: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             className="rounded-xl border border-border/70 bg-surface/70 p-5 shadow-[var(--shadow-card)]"
           >
             <div className="mb-5 flex items-center justify-between">

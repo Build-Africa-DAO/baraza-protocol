@@ -4,7 +4,7 @@ import { ArrowRight, Coins, Link2, ShieldCheck, Users } from "lucide-react";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 
 const steps = [
-  { icon: Link2, title: "Choose the right account", desc: "Solana uses Phantom or Solflare. Stellar uses Freighter or Lobstr. Base, Arbitrum, and Optimism use MetaMask, Coinbase Wallet, or Rabby." },
+  { icon: Link2, title: "Choose how you sign in", desc: "Use your phone number for M-Pesa flows, or connect a supported account. No seed phrases needed to join." },
   { icon: ShieldCheck, title: "Set basics & rules", desc: "Name your DAO, pick a community type, set monthly dues in KES, and define quorum, approval, and voting period." },
   { icon: Users, title: "Invite members", desc: "Share the join link. Members can join with M-Pesa or a connected account." },
   { icon: Coins, title: "Govern transparently", desc: "Members propose, vote, and release funds. Every action stays visible in one shared record." },
@@ -21,11 +21,11 @@ export default function CTASection() {
     <section className="py-20">
       <div className="container mx-auto px-4">
         <motion.div
-          initial={{ y: 24 }}
-          whileInView={{ y: 0 }}
+          initial={{ y: 24, opacity: 0 }}
+          whileInView={{ y: 0, opacity: 1 }}
           viewport={{ once: true, amount: 0 }}
           transition={{ duration: 0.5 }}
-          className="grid overflow-hidden rounded-2xl border border-border/70 bg-card/75 shadow-[var(--shadow-deep)] lg:grid-cols-[0.9fr_1.1fr]"
+          className="dark grid overflow-hidden rounded-2xl border border-border/70 bg-[image:var(--gradient-hero)] text-foreground shadow-[var(--shadow-deep)] lg:grid-cols-[0.9fr_1.1fr]"
         >
           <div className="border-b border-border/70 p-5 sm:p-8 md:p-10 lg:border-b-0 lg:border-r">
             <p className="text-xs font-semibold uppercase tracking-widest text-accent">Launch a treasury</p>

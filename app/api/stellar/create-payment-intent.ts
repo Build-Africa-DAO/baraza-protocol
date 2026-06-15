@@ -5,6 +5,25 @@ interface CreateIntentRequest {
   amountXlm: number;
 }
 
+// MVP rate pinned at intent creation so verify-payment derives a reproducible
+// brza_allocated regardless of price drift. Replace with a live oracle call
+// when one is wired in. Override via XLM_USD_RATE_MVP env var for staging.
+const XLM_USD_RATE_DEFAULT = 0.10;
+
+// Phase 0 price per CLAUDE.md / brza/constants.ts. Duplicated here (not
+// imported) because this edge handler must stay free of Vite-only
+// import.meta.env modules. Update both call sites when phase rolls over.
+const BRZA_PHASE0_PRICE_USD = 0.02;
+
+function resolveXlmUsdRate(): number {
+  const fromEnv = process.env.XLM_USD_RATE_MVP;
+  if (fromEnv) {
+    const parsed = Number(fromEnv);
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  }
+  return XLM_USD_RATE_DEFAULT;
+}
+
 function json(body: unknown, init?: ResponseInit): Response {
   return new Response(JSON.stringify(body), {
     ...init,
@@ -76,9 +95,16 @@ export default async function handler(req: Request): Promise<Response> {
 
   const nonce = base64url(crypto.getRandomValues(new Uint8Array(12)));
   const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+  // Pin both rates in the signed payload. verify-payment uses these to derive
+  // brza_allocated from the actual amountXlm Horizon settled (may differ from
+  // body.amountXlm if the user overpaid).
+  const xlmUsdRate = resolveXlmUsdRate();
+  const brzaPriceUsd = BRZA_PHASE0_PRICE_USD;
   const payload = JSON.stringify({
     communityId: body.communityId.trim(),
     amountXlm: body.amountXlm,
+    xlmUsdRate,
+    brzaPriceUsd,
     expiresAt,
     nonce,
   });
@@ -88,6 +114,8 @@ export default async function handler(req: Request): Promise<Response> {
   return json({
     intentToken: `${encodedPayload}.${sig}`,
     amountXlm: body.amountXlm,
+    xlmUsdRate,
+    brzaPriceUsd,
     expiresAt,
   }, { status: 201 });
 }

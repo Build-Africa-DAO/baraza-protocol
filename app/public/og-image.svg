@@ -35,18 +35,18 @@
       <circle cx="29" cy="27.5" r="2" fill="#FFB300" opacity="0.65"/>
       <rect x="27" y="30" width="4" height="4" rx="1" fill="#FFB300" opacity="0.65"/>
     </g>
-    <text x="76" y="38" font-family="'Hanken Grotesk', 'Inter', sans-serif" font-size="26" font-weight="700" fill="#F4D06F" letter-spacing="0.5">Baraza Protocol</text>
+    <text x="76" y="38" font-family="'Hanken Grotesk', 'Public Sans', sans-serif" font-size="26" font-weight="700" fill="#F4D06F" letter-spacing="0.5">Baraza Protocol</text>
   </g>
 
   <g transform="translate(72 220)">
-    <text font-family="'Hanken Grotesk', 'Inter', sans-serif" font-weight="800" font-size="92" fill="#f5f1e6" letter-spacing="-2">
+    <text font-family="'Hanken Grotesk', 'Public Sans', sans-serif" font-weight="800" font-size="92" fill="#f5f1e6" letter-spacing="-2">
       <tspan x="0" y="0">Launch your</tspan>
       <tspan x="0" y="108" fill="url(#warm)">chama</tspan>
     </text>
   </g>
 
   <g transform="translate(72 470)">
-    <text font-family="'Hanken Grotesk', 'Inter', sans-serif" font-size="30" font-weight="500" fill="#bfb9a8">
+    <text font-family="'Hanken Grotesk', 'Public Sans', sans-serif" font-size="30" font-weight="500" fill="#bfb9a8">
       <tspan x="0" y="0">Phone-first KES treasury and governance for chamas,</tspan>
       <tspan x="0" y="42">SACCOs, welfare groups, and co-operatives.</tspan>
     </text>
@@ -60,6 +60,6 @@
   <g transform="translate(900 88)" opacity="0.85">
     <rect x="0" y="0" width="228" height="60" rx="30" fill="#F4D06F" fill-opacity="0.10" stroke="#F4D06F" stroke-opacity="0.35"/>
     <circle cx="32" cy="30" r="7" fill="#F4D06F"/>
-    <text x="54" y="38" font-family="'Hanken Grotesk', 'Inter', sans-serif" font-size="20" font-weight="700" fill="#F4D06F" letter-spacing="0.4">M-Pesa - BRZA</text>
+    <text x="54" y="38" font-family="'Hanken Grotesk', 'Public Sans', sans-serif" font-size="20" font-weight="700" fill="#F4D06F" letter-spacing="0.4">M-Pesa - BRZA</text>
   </g>
 </svg>

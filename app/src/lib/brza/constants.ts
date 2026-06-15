@@ -169,6 +169,55 @@ export function getBrzaPriceUsd(phase: BrzaPhase = CURRENT_PHASE): number {
   return priceUsd;
 }
 
+// ── XLM/USD reference rate (MVP placeholder) ────────────────────────────────
+// Pinned at payment-intent creation time so brza_allocated is reproducible:
+// the same intent token always derives the same BRZA amount regardless of
+// rate drift between intent creation and Horizon verification.
+//
+// Replace with a live oracle (Stellar SDB pool, CoinGecko, Chainlink CCIP)
+// at intent creation when one is wired in. The verify step never re-fetches —
+// it trusts the signed value from the intent payload.
+
+export const XLM_USD_RATE_MVP = 0.10;
+
+/**
+ * Resolve the XLM/USD rate for browser-side display. Edge functions should
+ * read `process.env.XLM_USD_RATE_MVP` directly instead of importing this,
+ * since this module pulls in Vite-only `import.meta.env`.
+ */
+export function getXlmUsdRate(): number {
+  const fromEnv = import.meta.env.VITE_XLM_USD_RATE_MVP;
+  if (fromEnv) {
+    const parsed = Number(fromEnv);
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  }
+  return XLM_USD_RATE_MVP;
+}
+
+/**
+ * Pure conversion: XLM amount × XLM/USD rate ÷ BRZA price (USD) = BRZA amount.
+ * Both rates must be passed explicitly so the caller controls source-of-truth
+ * (signed intent payload at verify time, live oracle at intent-creation time).
+ * Rounds to 7 decimals to match BRZA_ASSET.decimals.
+ */
+export function convertXlmToBrza(
+  amountXlm: number,
+  xlmUsdRate: number,
+  brzaPriceUsd: number,
+): number {
+  if (!Number.isFinite(amountXlm) || amountXlm <= 0) {
+    throw new Error('amountXlm must be a positive number');
+  }
+  if (!Number.isFinite(xlmUsdRate) || xlmUsdRate <= 0) {
+    throw new Error('xlmUsdRate must be a positive number');
+  }
+  if (!Number.isFinite(brzaPriceUsd) || brzaPriceUsd <= 0) {
+    throw new Error('brzaPriceUsd must be a positive number');
+  }
+  const usdValue = amountXlm * xlmUsdRate;
+  return Math.round((usdValue / brzaPriceUsd) * 1e7) / 1e7;
+}
+
 export function vestedAmount(
   bucket: keyof typeof BRZA_VESTING,
   daysSinceTge: number,

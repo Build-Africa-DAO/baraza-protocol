@@ -73,7 +73,7 @@ export default function Evaluate() {
             <p className="mt-5 max-w-2xl text-base leading-7 md:text-lg md:leading-8">
               Use this checklist to compare communities, prepare a new group, or decide what
               needs to be fixed before treasury deposits, votes, and membership activation go live.
-              Asha adds an AI-assisted security review on top of the same rules inside the app.
+              Akili adds an AI-assisted security review on top of the same rules inside the app.
             </p>
           </div>
 
@@ -129,7 +129,7 @@ export default function Evaluate() {
               <div>
                 <div className="mb-2 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wider">
                   <Sparkles className="h-3.5 w-3.5" />
-                  Asha AI security layer
+                  Akili AI security layer
                 </div>
                 <h2 className="font-display text-2xl font-bold">Vetting before members trust a decision</h2>
               </div>

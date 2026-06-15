@@ -25,11 +25,22 @@ interface HorizonOperation {
   to?: string;
 }
 
+type DuplicateConstraint = 'intent_token' | 'provider_reference' | 'other';
+
 type PersistOrderResult =
   | { status: 'persisted' }
   | { status: 'not_configured' }
-  | { status: 'duplicate'; detail: string }
+  | { status: 'duplicate'; constraint: DuplicateConstraint; detail: string }
   | { status: 'failed'; detail: string };
+
+// Map a Supabase 409 response body to which unique constraint fired. Falls
+// back to 'other' when the body is empty (text() failed) or doesn't name
+// either index — the caller treats 'other' as a generic 409.
+function classifyDuplicate(detail: string): DuplicateConstraint {
+  if (/payment_orders_intent_token_unique/i.test(detail)) return 'intent_token';
+  if (/payment_orders_provider_reference_unique/i.test(detail)) return 'provider_reference';
+  return 'other';
+}
 
 const DEFAULT_TESTNET_HORIZON = 'https://horizon-testnet.stellar.org';
 const DEFAULT_MAINNET_HORIZON = 'https://horizon.stellar.org';
@@ -101,9 +112,47 @@ async function hashActivationSecret(secret: string): Promise<string> {
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
+// sha256(intentToken). Stored in payment_orders.intent_token_hash so the
+// migration-010 unique index (`payment_orders_intent_token_unique`) actually
+// blocks replay of the same signed intent — we must never store the raw
+// bearer token, since the column is part of column-level GRANTs (010).
+async function hashIntentToken(token: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+// HMAC(payer-address, PAYMENT_PHONE_HASH_PEPPER) — pepper-derived identity
+// hash matching membership/activate.ts so payment_orders.user_id_hash joins
+// to memberships.user_id_hash later in reconciliation.
+async function hashUserId(identity: string): Promise<string> {
+  const pepper = process.env.PAYMENT_PHONE_HASH_PEPPER?.trim();
+  if (!pepper) throw new Error('PAYMENT_PHONE_HASH_PEPPER is required — set it in your environment variables');
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(pepper),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const digest = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(identity));
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+// Compute BRZA allocation from the actual settled XLM amount and rates pinned
+// at intent creation. Mirror of brza/constants.ts:convertXlmToBrza, duplicated
+// here so this edge handler stays free of Vite-only import.meta.env modules.
+function computeBrzaAllocated(
+  amountXlm: number,
+  xlmUsdRate: number,
+  brzaPriceUsd: number,
+): number {
+  const usdValue = amountXlm * xlmUsdRate;
+  return Math.round((usdValue / brzaPriceUsd) * 1e7) / 1e7;
+}
+
 async function verifyIntentToken(
   token: string,
-): Promise<{ communityId: string; amountXlm: number } | null> {
+): Promise<{ communityId: string; amountXlm: number; xlmUsdRate?: number; brzaPriceUsd?: number } | null> {
   const secret = process.env.STELLAR_INTENT_SECRET;
   if (!secret) return null;
 
@@ -143,11 +192,20 @@ async function verifyIntentToken(
     const parsed = JSON.parse(new TextDecoder().decode(payBytes)) as {
       communityId: string;
       amountXlm: number;
+      xlmUsdRate?: number;
+      brzaPriceUsd?: number;
       expiresAt: string;
     };
     if (new Date(parsed.expiresAt) < new Date()) return null;
     if (!parsed.communityId || !Number.isFinite(parsed.amountXlm) || parsed.amountXlm <= 0) return null;
-    return { communityId: parsed.communityId, amountXlm: parsed.amountXlm };
+    // Backwards-compat: intents minted before xlmUsdRate/brzaPriceUsd were
+    // added carry neither field. Verification still succeeds; brza_allocated
+    // stays NULL for those orders (cron handles them as legacy).
+    const xlmUsdRate =
+      typeof parsed.xlmUsdRate === 'number' && parsed.xlmUsdRate > 0 ? parsed.xlmUsdRate : undefined;
+    const brzaPriceUsd =
+      typeof parsed.brzaPriceUsd === 'number' && parsed.brzaPriceUsd > 0 ? parsed.brzaPriceUsd : undefined;
+    return { communityId: parsed.communityId, amountXlm: parsed.amountXlm, xlmUsdRate, brzaPriceUsd };
   } catch {
     return null;
   }
@@ -198,10 +256,25 @@ async function persistOrder(input: {
   txHash: string;
   amountXlm: number;
   environment?: 'test' | 'live';
+  intentToken?: string;
+  payerAddress: string | null;
+  xlmUsdRate?: number;
+  brzaPriceUsd?: number;
 }): Promise<PersistOrderResult> {
   const url = process.env.SUPABASE_URL?.replace(/\/$/, '');
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceKey) return { status: 'not_configured' };
+
+  const intentTokenHash = input.intentToken ? await hashIntentToken(input.intentToken) : null;
+  const userIdHash = input.payerAddress ? await hashUserId(input.payerAddress) : null;
+  // brza_allocated is derived from the ACTUAL settled XLM amount (may exceed
+  // body.amountXlm if user overpaid) × pinned intent-time rates. Stays NULL
+  // for legacy intents that lack the pinned rates — cron treats those as a
+  // separate cohort needing manual reconciliation.
+  const brzaAllocated =
+    input.xlmUsdRate && input.brzaPriceUsd
+      ? computeBrzaAllocated(input.amountXlm, input.xlmUsdRate, input.brzaPriceUsd)
+      : null;
 
   const res = await fetch(`${url}/rest/v1/payment_orders`, {
     method: 'POST',
@@ -220,6 +293,12 @@ async function persistOrder(input: {
       activation_secret_hash: await hashActivationSecret(input.activationSecret),
       amount_expected: input.amountXlm,
       amount_received: input.amountXlm,
+      // Migration 010 columns — populate so the intent-token unique index and
+      // identity correlation actually guard something on this rail.
+      amount_xlm: input.amountXlm,
+      intent_token_hash: intentTokenHash,
+      user_id_hash: userIdHash,
+      brza_allocated: brzaAllocated,
       currency: 'XLM',
       status: 'PAYMENT_CONFIRMED',
       confirmed_at: new Date().toISOString(),
@@ -229,8 +308,11 @@ async function persistOrder(input: {
   if (!res.ok) {
     const detail = await res.text().catch(() => '');
     console.warn('[stellar-verify-payment] Supabase insert failed:', res.status, detail);
-    if (res.status === 409 || /duplicate key|23505|payment_orders_provider_reference_unique/i.test(detail)) {
-      return { status: 'duplicate', detail };
+    if (
+      res.status === 409 ||
+      /duplicate key|23505|payment_orders_provider_reference_unique|payment_orders_intent_token_unique/i.test(detail)
+    ) {
+      return { status: 'duplicate', constraint: classifyDuplicate(detail), detail };
     }
     return { status: 'failed', detail };
   }
@@ -263,12 +345,19 @@ export default async function handler(req: Request): Promise<Response> {
   // Resolve communityId and amountXlm from the signed intent (preferred) or legacy fields (testnet only).
   let communityId: string;
   let amountXlm: number;
+  // Pinned-at-intent rates used to derive brza_allocated. Undefined for the
+  // dev-only legacy fields path and for old intents minted before the rates
+  // were added — persistOrder stores NULL in those cases.
+  let xlmUsdRate: number | undefined;
+  let brzaPriceUsd: number | undefined;
 
   if (body.intentToken) {
     const claim = await verifyIntentToken(body.intentToken);
     if (!claim) return bad('Payment intent token is invalid or expired.');
     communityId = claim.communityId;
     amountXlm = claim.amountXlm;
+    xlmUsdRate = claim.xlmUsdRate;
+    brzaPriceUsd = claim.brzaPriceUsd;
   } else if (stellarNetwork(requestedEnvironment) !== 'mainnet' && process.env.NODE_ENV === 'development') {
     if (!body.communityId) return bad('communityId is required');
     if (!Number.isFinite(body.amountXlm) || (body.amountXlm ?? 0) <= 0) return bad('amountXlm must be greater than zero.');
@@ -299,12 +388,24 @@ export default async function handler(req: Request): Promise<Response> {
       txHash,
       amountXlm: proof.amount,
       environment: requestedEnvironment,
+      intentToken: body.intentToken,
+      payerAddress: proof.payer,
+      xlmUsdRate,
+      brzaPriceUsd,
     });
 
     if (persistResult.status === 'duplicate') {
+      // Two distinct unique constraints can fire here:
+      //   - payment_orders_provider_reference_unique → same txHash reused
+      //   - payment_orders_intent_token_unique → same signed intent reused
+      // persistOrder classifies via the structured `constraint` field so we
+      // do not re-regex the body here (it can be empty when text() throws).
+      const isIntentReplay = persistResult.constraint === 'intent_token';
       return json({
-        error: 'stellar_payment_reused',
-        message: 'This Stellar transaction hash is already attached to a Baraza payment order.',
+        error: isIntentReplay ? 'stellar_intent_reused' : 'stellar_payment_reused',
+        message: isIntentReplay
+          ? 'This payment intent token has already been used to record a Baraza payment order.'
+          : 'This Stellar transaction hash is already attached to a Baraza payment order.',
       }, { status: 409 });
     }
 
