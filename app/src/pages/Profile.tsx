@@ -20,6 +20,7 @@ import Layout from "@/components/Layout";
 import { formatRailAmountFromKes, formatRailDate, truncateAddress } from "@/lib/utils";
 import CommunityBanner from "@/components/CommunityBanner";
 import { fetchMembershipsForWallet, listMembershipsForWallet } from "@/lib/memberships";
+import { AskAkili } from "@/components/chat/AskAkili";
 import { useCommunities } from "@/hooks/useCommunities";
 import { CHAINS } from "@/lib/chain";
 import { useSeo } from "@/lib/seo";
@@ -512,6 +513,14 @@ export default function Profile() {
                         <PlusCircle className="h-4 w-4" />
                         Launch a DAO
                       </Link>
+                    </div>
+                    <div className="mt-4 flex items-center justify-center gap-2">
+                      <span className="text-[11px] text-muted-foreground">Not sure which?</span>
+                      <AskAkili
+                        prompt="Help me pick a DAO that fits a youth savings group of around 15 members"
+                        label="Ask Akili to suggest one"
+                        variant="chip"
+                      />
                     </div>
                   </div>
                 )}

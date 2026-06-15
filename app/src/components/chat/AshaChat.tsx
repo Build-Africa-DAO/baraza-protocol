@@ -20,20 +20,153 @@ const timestamp = (chainMeta: ChainMeta) =>
     timeZone: chainMeta.timeZone,
   });
 
-const initialMessage = (chainMeta: ChainMeta): Message => ({
-    id: '1',
-    role: 'asha',
-    text: "Habari! I'm Akili, your Baraza guide. I can help you understand the website, launch a DAO, manage members, or plan a vote.",
-    time: timestamp(chainMeta),
+// Route context — Akili tailors its first message and its suggested follow-ups
+// to where the member is on the site. The classifier reads location.pathname
+// against the route table in App.tsx and falls back to 'landing' for anything
+// it doesn't recognise.
+type RouteContext =
+  | 'profile'
+  | 'create'
+  | 'join'
+  | 'join-status'
+  | 'proposal'
+  | 'community'
+  | 'communities'
+  | 'bounties'
+  | 'evaluate'
+  | 'admin'
+  | 'onboarding'
+  | 'landing';
+
+function classifyRoute(pathname: string): RouteContext {
+  if (pathname === '/' || pathname === '/home') return 'landing';
+  if (pathname.startsWith('/profile')) return 'profile';
+  if (pathname.startsWith('/create')) return 'create';
+  if (/^\/join\/[^/]+\/status/.test(pathname)) return 'join-status';
+  if (pathname.startsWith('/join/')) return 'join';
+  if (/^\/(dashboard|dao)\/[^/]+\/(decisions|proposals)\/[^/]+/.test(pathname)) return 'proposal';
+  if (/^\/(dashboard|dao)\/[^/]+/.test(pathname)) return 'community';
+  if (pathname.startsWith('/communities')) return 'communities';
+  if (pathname.startsWith('/bounties')) return 'bounties';
+  if (pathname.startsWith('/evaluate')) return 'evaluate';
+  if (pathname.startsWith('/admin')) return 'admin';
+  if (pathname.startsWith('/onboarding')) return 'onboarding';
+  return 'landing';
+}
+
+// First-message copy, keyed by route. Voice is consistent — "Habari" opener,
+// short, names what Akili can do FROM THIS PAGE specifically, not in general.
+const GREETING_BY_ROUTE: Record<RouteContext, string> = {
+  landing:
+    "Habari! I'm Akili, your Baraza guide. Ask me how chamas, DAOs, or SACCOs work on Baraza — or how to launch one.",
+  profile:
+    "Habari! I'm Akili. Want help joining your first community, increasing your voting weight, or understanding what your BRZA balance means? Just ask.",
+  create:
+    "Habari! I'm Akili. Setting up a community? I can suggest quorum and approval thresholds, dues amounts, and a voting period that fits your group size.",
+  join:
+    "Habari! I'm Akili. Want me to walk you through M-Pesa vs account payment, or explain what activation means? Just ask.",
+  'join-status':
+    "Habari! I'm Akili. Watching a payment confirm? Ask me what each step does, or what to do if confirmation takes longer than expected.",
+  proposal:
+    "Habari! I'm Akili. Want me to summarise this proposal, explain the security review, or help you decide between Support, Object, and Abstain?",
+  community:
+    "Habari! I'm Akili. Ask me anything about this community — treasury, members, active votes, or how to draft your own proposal.",
+  communities:
+    "Habari! I'm Akili. I can help you compare DAOs, decide which one to join, or describe how each group is structured.",
+  bounties:
+    "Habari! I'm Akili. Browsing bounties? I can explain rewards in KES vs BRZA, what verifiers check, and how to start a submission.",
+  evaluate:
+    "Habari! I'm Akili. Use the checklist on this page; ask me whenever a question deserves a longer answer than a checkbox.",
+  admin:
+    "Habari! I'm Akili. Reconciliation tools sit on this page. Ask me what a flag means or what to investigate first.",
+  onboarding:
+    "Habari! I'm Akili. New here? Ask me anything — how votes work, how dues flow, how membership activates after payment.",
+};
+
+const initialMessage = (chainMeta: ChainMeta, route: RouteContext): Message => ({
+  id: '1',
+  role: 'asha',
+  text: GREETING_BY_ROUTE[route],
+  time: timestamp(chainMeta),
 });
 
-const QUICK_REPLIES = [
-  'How do I create a group?',
-  'Help me set up my DAO',
-  'Run a security review',
-  'How does voting work?',
-  'How are funds managed?',
-];
+// Suggested next-asks per route. 4 chips max so the row never wraps awkwardly
+// on a 320-wide mobile drawer. The first chip is the highest-intent action
+// for that route.
+const QUICK_REPLIES_BY_ROUTE: Record<RouteContext, string[]> = {
+  landing: [
+    'How do I create a group?',
+    'How does voting work?',
+    'What is a chama?',
+    'How are funds managed?',
+  ],
+  profile: [
+    'How do I increase my BRZA balance?',
+    'How do I join a community?',
+    'What does voting weight mean?',
+    'How do referrals work?',
+  ],
+  create: [
+    'Suggest quorum and approval for a 20-member chama',
+    'What is a fair monthly dues amount?',
+    'How long should the voting period be?',
+    'Run a security review on my setup',
+  ],
+  join: [
+    'M-Pesa or account — which should I pick?',
+    'What is the activation secret?',
+    'How long does payment confirmation take?',
+    'What happens after I pay?',
+  ],
+  'join-status': [
+    'My payment is stuck — what now?',
+    'What does each step in this tracker do?',
+    'Can I cancel and retry?',
+    'When will my membership activate?',
+  ],
+  proposal: [
+    'Summarise this proposal',
+    'What does the security review flag?',
+    'How is quorum calculated here?',
+    'Should I Support, Object, or Abstain?',
+  ],
+  community: [
+    'How do I propose a treasury spend?',
+    'How is the BRZA balance distributed here?',
+    'What recent decisions did this group make?',
+    'Run a security review on this community',
+  ],
+  communities: [
+    'Which community fits a youth savings group?',
+    'How do I compare quorum rules?',
+    'What does "active" vs "draft" mean?',
+    'How do I join one?',
+  ],
+  bounties: [
+    'Which bounties pay in KES vs BRZA?',
+    'How do I submit work for review?',
+    'What do verifiers check?',
+    'How are disputes resolved?',
+  ],
+  evaluate: [
+    'Walk me through this checklist',
+    'What is the security score?',
+    'What are the highest-risk items?',
+    'How do I fix a flagged issue?',
+  ],
+  admin: [
+    'What does this flag mean?',
+    'How do I reconcile a mismatch?',
+    'What should I investigate first?',
+    'How do payouts get reviewed?',
+  ],
+  onboarding: [
+    'How do I create a community?',
+    'How do dues work?',
+    'How does voting work?',
+    'What is BRZA?',
+  ],
+};
 
 const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
   {
@@ -169,7 +302,11 @@ const AshaChat: React.FC = () => {
   const { isOpen, open, close, pendingMessage, clearPending } = useAshaChat();
   const { chainMeta } = useChain();
   const location = useLocation();
-  const [messages, setMessages] = useState<Message[]>(() => [initialMessage(chainMeta)]);
+  const routeContext = classifyRoute(location.pathname);
+  const [messages, setMessages] = useState<Message[]>(() => [initialMessage(chainMeta, routeContext)]);
+  // Quick replies are derived during render so they update when the route changes
+  // (e.g. user opens Akili on Profile, then navigates to a proposal without closing).
+  const QUICK_REPLIES = QUICK_REPLIES_BY_ROUTE[routeContext];
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -191,6 +328,17 @@ const AshaChat: React.FC = () => {
       if (focusTimerRef.current !== null) clearTimeout(focusTimerRef.current);
     };
   }, [isOpen]);
+
+  // Refresh the greeting on each open IF the conversation hasn't started yet.
+  // Lets a member navigate from Profile → ProposalDetail and see the proposal-
+  // specific greeting next time they open Akili. Once they send a message,
+  // we leave the history alone.
+  useEffect(() => {
+    if (isOpen && messages.length === 1 && messages[0].id === '1') {
+      setMessages([initialMessage(chainMeta, routeContext)]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, routeContext]);
 
   const sendMessage = useCallback(async (text: string) => {
     if (!text.trim() || isTyping) return;

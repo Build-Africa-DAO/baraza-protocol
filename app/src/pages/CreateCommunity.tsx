@@ -13,6 +13,7 @@ import CommunityBanner from '@/components/CommunityBanner';
 import { useChain } from '@/hooks/useChain';
 import { useSeo } from '@/lib/seo';
 import { CHAINS, type Chain } from '@/lib/chain';
+import { AskAkili } from '@/components/chat/AskAkili';
 import { useBarazaChain } from '@/hooks/useBarazaData';
 import { communityPda, toSlug } from '@/lib/programs';
 import { saveCommunityChainMapping } from '@/lib/chainMappings';
@@ -594,6 +595,18 @@ const CreateCommunity: React.FC = () => {
               <p className="max-w-xl text-sm font-semibold leading-6 text-foreground/92 drop-shadow md:text-base md:leading-7">
                 Choose the setup that matches your chama, SACCO, cooperative, DAO, or organization.
               </p>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <AskAkili
+                  prompt="Suggest quorum, approval threshold, and dues for a 20-member chama meeting monthly"
+                  label="Suggest a setup"
+                  variant="chip"
+                />
+                <AskAkili
+                  prompt="Walk me through each field on this Create form, top to bottom"
+                  label="Walk me through it"
+                  variant="chip"
+                />
+              </div>
             </div>
             </CommunityBanner>
 
