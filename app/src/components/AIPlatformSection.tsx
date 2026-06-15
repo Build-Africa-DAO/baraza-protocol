@@ -50,7 +50,7 @@ export default function AIPlatformSection() {
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground md:text-base md:leading-7">
               Visitors can understand the model, organisers can launch a DAO, and members can
-              vote and track funds — Asha is available when someone needs a next step.
+              vote and track funds — Akili is available when someone needs a next step.
             </p>
 
             <div className="mt-5 flex flex-col gap-2 sm:flex-row">

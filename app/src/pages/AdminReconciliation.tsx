@@ -248,7 +248,7 @@ export default function AdminReconciliation() {
               <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2 className="font-display text-xl font-semibold">Community review queue</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">Asha security checks for treasury, dues, quorum, and governance rules.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Akili security checks for treasury, dues, quorum, and governance rules.</p>
                 </div>
                 <Link to="/communities" className="btn-ghost inline-flex items-center gap-2 text-sm">
                   Explore
@@ -283,7 +283,7 @@ export default function AdminReconciliation() {
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
                   <h2 className="font-display text-xl font-semibold">Security flags</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">Items Asha recommends reviewing before members act.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Items Akili recommends reviewing before members act.</p>
                 </div>
                 <Sparkles className="h-5 w-5 text-primary" />
               </div>
@@ -291,7 +291,7 @@ export default function AdminReconciliation() {
                 <div className="rounded-lg border border-dashed p-8 text-center">
                   <CheckCircle2 className="mx-auto mb-3 h-8 w-8 text-confirmed" />
                   <p className="font-display text-sm font-semibold">No community security flags</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Asha has cleared the current community rules.</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Akili has cleared the current community rules.</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -444,7 +444,7 @@ export default function AdminReconciliation() {
                 </div>
                 <h2 className="font-display text-xl font-semibold">Shared source of truth</h2>
                 <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                  Communities, proposals, bounties, chain rails, Asha checks, and readiness tasks are linked so admins can see what still blocks testnet.
+                  Communities, proposals, bounties, chain rails, Akili checks, and readiness tasks are linked so admins can see what still blocks testnet.
                 </p>
                 {graphError && (
                   <p className="mt-2 text-xs text-accent">

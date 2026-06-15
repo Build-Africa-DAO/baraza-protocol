@@ -23,7 +23,7 @@ const timestamp = (chainMeta: ChainMeta) =>
 const initialMessage = (chainMeta: ChainMeta): Message => ({
     id: '1',
     role: 'asha',
-    text: "Habari! I'm Asha, your Baraza guide. I can help you understand the website, launch a DAO, manage members, or plan a vote.",
+    text: "Habari! I'm Akili, your Baraza guide. I can help you understand the website, launch a DAO, manage members, or plan a vote.",
     time: timestamp(chainMeta),
 });
 
@@ -37,9 +37,9 @@ const QUICK_REPLIES = [
 
 const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
   {
-    keywords: ['ai', 'asha', 'guide', 'copilot', 'assistant', 'platform', 'use baraza'],
+    keywords: ['ai', 'asha', 'akili', 'guide', 'copilot', 'assistant', 'platform', 'use baraza'],
     reply:
-      'Baraza combines the website, the operating platform, and Asha AI in one flow. Use the website to understand the model, Explore to find DAOs, Launch to create one, dashboards to manage KES treasury and votes, and ask me when you need help choosing settings or explaining the next action.',
+      'Baraza combines the website, the operating platform, and Akili AI in one flow. Use the website to understand the model, Explore to find DAOs, Launch to create one, dashboards to manage KES treasury and votes, and ask me when you need help choosing settings or explaining the next action.',
   },
   {
     keywords: ['plan', 'setup', 'best setup', 'rules', 'quorum', 'threshold'],
@@ -94,7 +94,7 @@ const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
   {
     keywords: ['security', 'safe', 'trust', 'secure', 'hack', 'vet', 'review', 'risk'],
     reply:
-      'Asha runs an AI-assisted security review on group rules, bounties, proposals, and treasury releases. It checks for unclear dues, weak voting rules, expired tasks, large fund requests, and missing member records. Asha can flag risk, but members and admins still make the final decision.',
+      'Akili runs an AI-assisted security review on group rules, bounties, proposals, and treasury releases. It checks for unclear dues, weak voting rules, expired tasks, large fund requests, and missing member records. Akili can flag risk, but members and admins still make the final decision.',
   },
   {
     keywords: ['hello', 'hi', 'habari', 'hey', 'hola', 'sasa'],
@@ -272,7 +272,7 @@ const AshaChat: React.FC = () => {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
             onClick={() => open()}
-            aria-label="Open Asha chat"
+            aria-label="Open Akili chat"
             className="fixed bottom-5 right-5 z-50 hidden w-14 h-14 rounded-full md:flex items-center justify-center shadow-lg animate-pulse-glow transition-transform hover:scale-110 active:scale-95"
             style={{ background: 'var(--gradient-warm)' }}
           >
@@ -289,7 +289,7 @@ const AshaChat: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.95 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="fixed bottom-5 right-5 z-50 hidden w-[340px] max-w-[calc(100vw-1.25rem)] h-[500px] max-h-[calc(100vh-5rem)] md:flex flex-col rounded-2xl border border-border overflow-hidden shadow-2xl"
+            className="fixed inset-x-2 bottom-20 z-50 flex h-[72vh] flex-col overflow-hidden rounded-2xl border border-border shadow-2xl md:inset-x-auto md:bottom-5 md:right-5 md:h-[500px] md:max-h-[calc(100vh-5rem)] md:w-[340px]"
             style={{ background: 'hsl(var(--card))' }}
           >
             {/* Header */}
@@ -302,7 +302,7 @@ const AshaChat: React.FC = () => {
                   <Sparkles className="w-4 h-4 text-primary-foreground" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-primary-foreground leading-none">Asha</h4>
+                  <h4 className="text-sm font-semibold text-primary-foreground leading-none">Akili</h4>
                   <p className="text-[10px] text-primary-foreground/70 mt-0.5">Your Baraza guide</p>
                 </div>
               </div>
@@ -386,7 +386,7 @@ const AshaChat: React.FC = () => {
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask Asha anything…"
+                placeholder="Ask Akili anything…"
                 className="flex-1 bg-surface rounded-xl px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary/50 transition-all"
               />
               <button
