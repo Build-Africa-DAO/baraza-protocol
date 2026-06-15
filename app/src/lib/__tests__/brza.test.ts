@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  BARAZA_TV,
+  BRZA_ALLOCATION,
   BRZA_ASSET,
+  BRZA_EMISSION,
+  BRZA_VESTING,
   convertToBrza,
   formatLocal,
   getBrzaPriceUsd,
@@ -43,6 +47,55 @@ describe('BRZA pricing', () => {
   it('rejects market valuation until a market price source is configured', () => {
     expect(() => getBrzaPriceUsd('market')).toThrow(/market price is not configured/i);
     expect(() => convertToBrza(1000, 'KES', 'market')).toThrow(/market price is not configured/i);
+  });
+});
+
+describe('BRZA allocation invariants', () => {
+  // The file flags a Notion product spec discrepancy (Notion sums to 110%).
+  // These tests lock the in-file allocation as authoritative until that is
+  // reconciled, and surface any silent drift if a bucket is edited.
+
+  it('BRZA_ALLOCATION sums to BRZA_ASSET.totalSupply (1B)', () => {
+    const sum = Object.values(BRZA_ALLOCATION).reduce((acc, n) => acc + n, 0);
+    expect(sum).toBe(BRZA_ASSET.totalSupply);
+    expect(sum).toBe(1_000_000_000);
+  });
+
+  it('every BRZA_VESTING bucket tracks its BRZA_ALLOCATION counterpart', () => {
+    for (const [bucket, vest] of Object.entries(BRZA_VESTING)) {
+      const allocated = BRZA_ALLOCATION[bucket as keyof typeof BRZA_ALLOCATION];
+      expect(vest.tokens, `vesting tokens for ${bucket} must equal allocation`).toBe(allocated);
+    }
+  });
+
+  it('BRZA_EMISSION sub-pool percentages sum to 1.0', () => {
+    const sum =
+      BRZA_EMISSION.bountyPoolPct +
+      BRZA_EMISSION.membershipRewardPct +
+      BRZA_EMISSION.governanceRewardPct +
+      BRZA_EMISSION.referralPct;
+    expect(sum).toBeCloseTo(1.0, 10);
+  });
+
+  it('BRZA_EMISSION total equals the communityRewards bucket', () => {
+    expect(BRZA_EMISSION.total).toBe(BRZA_ALLOCATION.communityRewards);
+  });
+
+  it('BARAZA_TV revenue share percentages sum to 1.0', () => {
+    const sum =
+      BARAZA_TV.creatorRevSharePct +
+      BARAZA_TV.communityRevSharePct +
+      BARAZA_TV.protocolFeePct;
+    expect(sum).toBeCloseTo(1.0, 10);
+  });
+
+  it('founder buckets are symmetric (A === B)', () => {
+    expect(BRZA_ALLOCATION.founderA).toBe(BRZA_ALLOCATION.founderB);
+  });
+
+  it('public sale bucket covers Phase 0 (20M) + IDO (100M)', () => {
+    // Source-of-truth check: README + CLAUDE.md document this split.
+    expect(BRZA_ALLOCATION.publicSale).toBe(20_000_000 + 100_000_000);
   });
 });
 
