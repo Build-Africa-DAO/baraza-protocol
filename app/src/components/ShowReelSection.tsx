@@ -134,6 +134,7 @@ function VideoPlayer({ video }: { video: ReelVideo }) {
                 setThumbMissing(true);
               }
             }}
+            onError={() => setThumbMissing(true)}
             className={cn(
               "h-full w-full object-cover transition-all duration-500",
               // Art direction: subtle desaturation on the still so it feels
@@ -314,6 +315,7 @@ function FilmstripFrame({
               setThumbMissing(true);
             }
           }}
+          onError={() => setThumbMissing(true)}
           className={cn(
             "h-full w-full object-cover transition-all duration-500",
             active ? "saturate-100" : "saturate-0 brightness-75 group-hover:saturate-50",

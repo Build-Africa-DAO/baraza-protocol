@@ -20,11 +20,12 @@ function readMemberships(): MembershipRecord[] {
     const raw = window.localStorage.getItem(LOCAL_MEMBERSHIP_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
     if (!Array.isArray(parsed)) return [];
-    // Records persisted before the BRZA rename carry `razaBalance`.
-    return parsed.map((r: MembershipRecord & { razaBalance?: number }) => ({
-      ...r,
-      brzaBalance: r.brzaBalance ?? r.razaBalance ?? 1,
-    }));
+    // Records persisted before the BRZA rename carry `razaBalance`. Strip it
+    // off the result so legacy installs don't accumulate the dead key forever.
+    return parsed.map((r: MembershipRecord & { razaBalance?: number }) => {
+      const { razaBalance, ...rest } = r;
+      return { ...rest, brzaBalance: rest.brzaBalance ?? razaBalance ?? 1 };
+    });
   } catch {
     return [];
   }
