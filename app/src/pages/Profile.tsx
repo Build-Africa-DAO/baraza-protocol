@@ -21,6 +21,8 @@ import { formatRailAmountFromKes, formatRailDate, truncateAddress } from "@/lib/
 import CommunityBanner from "@/components/CommunityBanner";
 import { fetchMembershipsForWallet, listMembershipsForWallet } from "@/lib/memberships";
 import { AskAkili } from "@/components/chat/AskAkili";
+import { MemberBadges } from "@/components/MemberBadges";
+import { deriveBadges } from "@/lib/badges";
 import { useCommunities } from "@/hooks/useCommunities";
 import { CHAINS } from "@/lib/chain";
 import { useSeo } from "@/lib/seo";
@@ -101,6 +103,18 @@ export default function Profile() {
     () => myMemberships.reduce((sum, m) => sum + m.record.brzaBalance, 0),
     [myMemberships],
   );
+
+  // Badges derive from already-loaded membership data — no extra fetches.
+  const badgeResult = useMemo(() => {
+    const joinedTimes = myMemberships
+      .map((m) => new Date(m.record.joinedAt).getTime())
+      .filter((t) => Number.isFinite(t));
+    const earliest = joinedTimes.length > 0 ? new Date(Math.min(...joinedTimes)).toISOString() : null;
+    return deriveBadges({
+      activeMembershipCount: myMemberships.length,
+      earliestJoinedAt: earliest,
+    });
+  }, [myMemberships]);
 
   const memberBounties = useMemo(
     () => myMemberships.flatMap(({ community }) =>
@@ -259,6 +273,21 @@ export default function Profile() {
                 </div>
                 <p className="mt-2 text-xs text-muted-foreground">
                   Voting weight across all active memberships. Increases with governance participation.
+                </p>
+              </div>
+
+              {/* Member badges — derived from membership history. Earned chips
+                  render in full color, in-progress and locked render dimmed. */}
+              <div className="baraza-card p-5">
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="font-mono text-xs uppercase tracking-widest">Badges</h2>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    {badgeResult.earned.length} earned
+                  </span>
+                </div>
+                <MemberBadges result={badgeResult} variant="compact" />
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Badges show what you've done in Baraza communities. Locked badges show what's still possible.
                 </p>
               </div>
 
