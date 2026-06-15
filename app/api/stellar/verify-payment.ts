@@ -123,11 +123,10 @@ async function hashIntentToken(token: string): Promise<string> {
 
 // HMAC(payer-address, PAYMENT_PHONE_HASH_PEPPER) — pepper-derived identity
 // hash matching membership/activate.ts so payment_orders.user_id_hash joins
-// to memberships.user_id_hash later in reconciliation. Falls back to a
-// labelled prefix when the pepper isn't set (dev/test).
+// to memberships.user_id_hash later in reconciliation.
 async function hashUserId(identity: string): Promise<string> {
   const pepper = process.env.PAYMENT_PHONE_HASH_PEPPER?.trim();
-  if (!pepper) return `wallet:${identity}`;
+  if (!pepper) throw new Error('PAYMENT_PHONE_HASH_PEPPER is required — set it in your environment variables');
   const key = await crypto.subtle.importKey(
     'raw',
     new TextEncoder().encode(pepper),
