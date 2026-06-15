@@ -333,6 +333,14 @@ const AshaChat: React.FC = () => {
   // Lets a member navigate from Profile → ProposalDetail and see the proposal-
   // specific greeting next time they open Akili. Once they send a message,
   // we leave the history alone.
+  //
+  // Deps intentionally exclude `chainMeta` and `messages`:
+  //  - `chainMeta` only feeds the greeting timestamp; rebuilding the greeting
+  //    every time the chain meta object identity changes would clobber any
+  //    in-flight conversation the user is having.
+  //  - `messages` is the state we're conditionally writing to — including it
+  //    would loop. The `messages.length === 1 && id === '1'` guard inside
+  //    the effect is the real check against overwriting user history.
   useEffect(() => {
     if (isOpen && messages.length === 1 && messages[0].id === '1') {
       setMessages([initialMessage(chainMeta, routeContext)]);

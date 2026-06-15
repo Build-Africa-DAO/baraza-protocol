@@ -90,9 +90,12 @@ export function useBrzaBalance(
         cache.set(cacheKey, { balance: weight, source: 'supabase', ts: Date.now() });
         setState({ balance: weight, loading: false, source: 'supabase' });
       } else {
+        // Supabase has no row yet (member just paid, write still propagating,
+        // or simply not a member). Do NOT cache the fallback — caching it
+        // would pin a stale 0 for up to CACHE_TTL_MS after the membership
+        // row finally lands. Next remount re-fetches from Supabase.
         const fallback = local?.brzaBalance ?? 0;
         const src: BrzaBalance['source'] = fallback > 0 ? 'local' : 'none';
-        cache.set(cacheKey, { balance: fallback, source: src, ts: Date.now() });
         setState({ balance: fallback, loading: false, source: src });
       }
     }).catch(() => {
