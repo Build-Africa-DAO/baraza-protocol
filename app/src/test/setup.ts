@@ -13,7 +13,11 @@ const localStorageMock = {
   key: (i: number) => Object.keys(store)[i] ?? null,
 };
 
-Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+// Per-file `@vitest-environment node` overrides have no `window` global;
+// only patch localStorage when one exists (the jsdom default).
+if (typeof window !== 'undefined') {
+  Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+}
 
 beforeEach(() => localStorageMock.clear());
 afterEach(() => vi.clearAllMocks());
