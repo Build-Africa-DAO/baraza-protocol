@@ -5,7 +5,7 @@
  * Components re-render only when the store emits a change.
  */
 
-import { type DependencyList, useEffect, useMemo, useReducer, useState, useCallback } from 'react';
+import { useEffect, useMemo, useReducer, useState, useCallback } from 'react';
 import { useAnchorWallet, useConnection } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
 
@@ -20,11 +20,12 @@ import {
 
 // ---------- Low-level subscription ----------
 
-function useStoreSnapshot<T>(selector: () => T, _deps: DependencyList = []): T {
-  // dataStore mutates objects in place, so selectors often return the SAME
-  // reference after a change — setState with an identical reference bails out
-  // and the UI never refreshes. Force a re-render on every notify and run the
-  // selector during render instead of caching it in state.
+// Selector closes over caller scope, so it always reads current values during
+// render. No dep list is required — every dataStore.notify forces a re-render
+// (in-place mutations defeat reference-equality bailouts), and the selector
+// runs fresh each time. Previous signature took a deps array, but it was a
+// no-op kept for backwards compat; dropped now that nothing relies on it.
+function useStoreSnapshot<T>(selector: () => T): T {
   const [, force] = useReducer((c: number) => c + 1, 0);
   useEffect(() => dataStore.subscribe(force), []);
   return selector();
@@ -56,27 +57,27 @@ export function useCommunities() {
 }
 
 export function useCommunity(id: string) {
-  const community = useStoreSnapshot(() => dataStore.getCommunity(id), [id]);
+  const community = useStoreSnapshot(() => dataStore.getCommunity(id));
   return community;
 }
 
 // ---------- Decisions ----------
 
 export function useDecisions(communityId: string) {
-  const all = useStoreSnapshot(() => dataStore.getDecisionsForCommunity(communityId), [communityId]);
+  const all = useStoreSnapshot(() => dataStore.getDecisionsForCommunity(communityId));
   const active = all.filter((d) => d.status === 'active');
   const past = all.filter((d) => d.status === 'completed');
   return { all, active, past };
 }
 
 export function useDecision(id: string) {
-  return useStoreSnapshot(() => dataStore.getDecision(id), [id]);
+  return useStoreSnapshot(() => dataStore.getDecision(id));
 }
 
 // ---------- Activities ----------
 
 export function useActivities(communityId: string) {
-  return useStoreSnapshot(() => dataStore.getActivities(communityId), [communityId]);
+  return useStoreSnapshot(() => dataStore.getActivities(communityId));
 }
 
 // ---------- Membership ----------
@@ -84,7 +85,6 @@ export function useActivities(communityId: string) {
 export function useMembership(communityId: string, walletKey: string | null) {
   const isMember = useStoreSnapshot(
     () => (walletKey ? dataStore.isMember(communityId, walletKey) : false),
-    [communityId, walletKey],
   );
   return isMember;
 }
@@ -92,11 +92,11 @@ export function useMembership(communityId: string, walletKey: string | null) {
 // ---------- Members ----------
 
 export function useMembers(communityId: string) {
-  return useStoreSnapshot(() => dataStore.getMembersForCommunity(communityId), [communityId]);
+  return useStoreSnapshot(() => dataStore.getMembersForCommunity(communityId));
 }
 
 export function useMember(communityId: string, memberId: string) {
-  return useStoreSnapshot(() => dataStore.getMember(communityId, memberId), [communityId, memberId]);
+  return useStoreSnapshot(() => dataStore.getMember(communityId, memberId));
 }
 
 // ---------- Voting ----------
@@ -104,7 +104,6 @@ export function useMember(communityId: string, memberId: string) {
 export function useVoteStatus(decisionId: string, walletKey: string | null) {
   return useStoreSnapshot(
     () => (walletKey ? dataStore.hasVoted(decisionId, walletKey) : null),
-    [decisionId, walletKey],
   );
 }
 
