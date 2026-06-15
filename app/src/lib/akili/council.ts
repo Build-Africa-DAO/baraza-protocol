@@ -156,6 +156,21 @@ function buildSystemBlocks(
  * Used when the caller does not specify which agent to consult. It is a
  * heuristic, not a classifier: when the signal is weak, fall back to Kofi
  * (governance) since that is the most common Baraza ask.
+ *
+ * NOTE on bible-vs-router split: the character bibles in
+ * `docs/akili-council/` describe each agent's *editorial* domain (Amara
+ * = Content & Media, Nia = People, etc.). The router below is the
+ * *functional* dispatch layer Aziz curated — it intentionally diverges
+ * from a strict bible-domain match. The tests in
+ * `app/src/lib/__tests__/akili.test.ts` encode the router as product
+ * contract: change the router only when you change the tests too.
+ *
+ * Current routing intent (from the tests):
+ *   - amara — community telemetry (turnout, churn, growth, engagement)
+ *   - kofi  — proposals, quorum, treasury impact, default
+ *   - zara  — compliance scope (KYC, tax, AML, VASP)
+ *   - nia   — external comparison + cross-community research
+ *   - seku  — outbound copy (announcements, WhatsApp, SMS, reminders)
  */
 export function routeToCouncilAgent(message: string): CouncilAgentName {
   const m = message.toLowerCase();
