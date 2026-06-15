@@ -1,3 +1,4 @@
+// SERVER ONLY — never import this module in browser code. It accepts raw Stellar secret keys.
 import { swapExactSend } from '@/lib/adapters/stellar';
 import * as kotaniAdapter from '@/lib/adapters/kotani';
 import { convertToBrza, BRZA_FEES } from './constants';
@@ -75,6 +76,11 @@ export async function executeOnRamp(params: {
 
     if (result.error) return { success: false, brzaDelivered: 0, error: result.error };
     return { success: true, brzaDelivered: quote.netBrza, txHash: result.txHash };
+  }
+
+  const UNIMPLEMENTED_FIAT: OnRampCurrency[] = ['UGX', 'NGN', 'GHS'];
+  if (UNIMPLEMENTED_FIAT.includes(params.currency)) {
+    return { success: false, brzaDelivered: 0, error: `${params.currency} fiat rail not yet implemented` };
   }
 
   if (!params.phone) {

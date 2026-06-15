@@ -233,6 +233,74 @@ function horizonAssetParams(code: SupportedAsset): Record<string, string> {
   return { asset_type: type, asset_code: asset.code, asset_issuer: asset.issuer as string };
 }
 
+interface HorizonAsset {
+  asset_type: string;
+  asset_code?: string;
+  asset_issuer?: string;
+}
+
+interface HorizonPathRecord {
+  destination_amount: string;
+  source_amount?: string;
+  path: HorizonAsset[];
+}
+
+function horizonAssetToSdk(a: HorizonAsset): Asset {
+  if (a.asset_type === 'native') return Asset.native();
+  return new Asset(a.asset_code!, a.asset_issuer!);
+}
+
+async function resolvePathSend(
+  sendAsset: SupportedAsset,
+  sendAmount: string,
+  receiveAsset: SupportedAsset,
+): Promise<Asset[]> {
+  const srcParams = horizonAssetParams(sendAsset);
+  const dstParams = horizonAssetParams(receiveAsset);
+  const dstAssetStr = dstParams.asset_type === 'native'
+    ? 'native'
+    : `${dstParams.asset_code}:${dstParams.asset_issuer}`;
+
+  const qs = new URLSearchParams({
+    source_asset_type: srcParams.asset_type,
+    ...(srcParams.asset_code ? { source_asset_code: srcParams.asset_code } : {}),
+    ...(srcParams.asset_issuer ? { source_asset_issuer: srcParams.asset_issuer } : {}),
+    source_amount: sendAmount,
+    destination_assets: dstAssetStr,
+  });
+
+  const res = await fetch(`${BRZA_ASSET.horizonUrl}/paths/strict-send?${qs}`);
+  const data = await res.json() as { _embedded?: { records?: HorizonPathRecord[] } };
+  const record = data._embedded?.records?.[0];
+  return record?.path?.map(horizonAssetToSdk) ?? [];
+}
+
+async function resolvePathReceive(
+  sendAsset: SupportedAsset,
+  receiveAmount: string,
+  receiveAsset: SupportedAsset,
+): Promise<Asset[]> {
+  const srcParams = horizonAssetParams(sendAsset);
+  const dstParams = horizonAssetParams(receiveAsset);
+
+  const srcAssetStr = srcParams.asset_type === 'native'
+    ? 'native'
+    : `${srcParams.asset_code}:${srcParams.asset_issuer}`;
+
+  const qs = new URLSearchParams({
+    destination_asset_type: dstParams.asset_type,
+    ...(dstParams.asset_code ? { destination_asset_code: dstParams.asset_code } : {}),
+    ...(dstParams.asset_issuer ? { destination_asset_issuer: dstParams.asset_issuer } : {}),
+    destination_amount: receiveAmount,
+    source_assets: srcAssetStr,
+  });
+
+  const res = await fetch(`${BRZA_ASSET.horizonUrl}/paths/strict-receive?${qs}`);
+  const data = await res.json() as { _embedded?: { records?: HorizonPathRecord[] } };
+  const record = data._embedded?.records?.[0];
+  return record?.path?.map(horizonAssetToSdk) ?? [];
+}
+
 export async function swapExactSend(params: {
   fromSecret: string;
   sendAsset: SupportedAsset;
@@ -246,6 +314,8 @@ export async function swapExactSend(params: {
     const account = await server.loadAccount(kp.publicKey());
     const destination = params.destinationAddress ?? kp.publicKey();
 
+    const path = await resolvePathSend(params.sendAsset, params.sendAmount, params.receiveAsset);
+
     const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: NETWORK })
       .addOperation(Operation.pathPaymentStrictSend({
         sendAsset: buildAsset(params.sendAsset),
@@ -253,7 +323,7 @@ export async function swapExactSend(params: {
         destination,
         destAsset: buildAsset(params.receiveAsset),
         destMin: params.minReceive,
-        path: [],
+        path,
       }))
       .setTimeout(30)
       .build();
@@ -282,6 +352,8 @@ export async function swapExactReceive(params: {
     const account = await server.loadAccount(kp.publicKey());
     const destination = params.destinationAddress ?? kp.publicKey();
 
+    const path = await resolvePathReceive(params.sendAsset, params.receiveAmount, params.receiveAsset);
+
     const tx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: NETWORK })
       .addOperation(Operation.pathPaymentStrictReceive({
         sendAsset: buildAsset(params.sendAsset),
@@ -289,7 +361,7 @@ export async function swapExactReceive(params: {
         destination,
         destAsset: buildAsset(params.receiveAsset),
         destAmount: params.receiveAmount,
-        path: [],
+        path,
       }))
       .setTimeout(30)
       .build();
@@ -309,7 +381,7 @@ export async function getSwapQuote(params: {
   sendAsset: SupportedAsset;
   sendAmount: string;
   receiveAsset: SupportedAsset;
-}): Promise<{ receiveAmount: string; rate: number; priceImpact: string; error?: string }> {
+}): Promise<{ receiveAmount: string; rate: number; priceImpact: string | null; error?: string }> {
   try {
     const srcParams = horizonAssetParams(params.sendAsset);
     const dstParams = horizonAssetParams(params.receiveAsset);
@@ -327,17 +399,17 @@ export async function getSwapQuote(params: {
     });
 
     const res = await fetch(`${BRZA_ASSET.horizonUrl}/paths/strict-send?${qs}`);
-    const data = await res.json() as { _embedded?: { records?: Array<{ destination_amount: string }> } };
+    const data = await res.json() as { _embedded?: { records?: HorizonPathRecord[] } };
 
     if (!data._embedded?.records?.length) {
-      return { receiveAmount: '0', rate: 0, priceImpact: 'N/A', error: 'No liquidity path found' };
+      return { receiveAmount: '0', rate: 0, priceImpact: null, error: 'No liquidity path found' };
     }
 
     const receiveAmount = data._embedded.records[0].destination_amount;
     const rate = parseFloat(receiveAmount) / parseFloat(params.sendAmount);
-    return { receiveAmount, rate, priceImpact: '<1%' };
+    return { receiveAmount, rate, priceImpact: null };
   } catch (e) {
-    return { receiveAmount: '0', rate: 0, priceImpact: 'N/A', error: String(e) };
+    return { receiveAmount: '0', rate: 0, priceImpact: null, error: String(e) };
   }
 }
 
@@ -381,7 +453,7 @@ export async function getAllBalances(
       xlm:  find('XLM', null),
       brza: find(BRZA_ASSET.code, BRZA_ASSET.issuerAddress),
       usdc: find('USDC', STELLAR_ASSETS.USDC.issuer),
-      usdt: find('USDT', STELLAR_ASSETS.USDT.issuer ?? ''),
+      usdt: STELLAR_ASSETS.USDT.issuer ? find('USDT', STELLAR_ASSETS.USDT.issuer) : '0',
     };
   } catch (e) {
     return { xlm: '0', brza: '0', usdc: '0', usdt: '0', error: String(e) };

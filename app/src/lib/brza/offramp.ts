@@ -1,3 +1,4 @@
+// SERVER ONLY — never import this module in browser code. It accepts raw Stellar secret keys.
 import { swapExactSend } from '@/lib/adapters/stellar';
 import { usdcToMpesa } from '@/lib/adapters/minisend';
 import { BRZA_FEES, getBrzaPriceUsd, FIAT_RATES } from './constants';
