@@ -744,210 +744,12 @@ printf '%s' "$GITIGNORE" > "$DIR/.gitignore"
 push_repo "baraza-ussd"
 
 # ──────────────────────────────────────────────────────────────
-# REPO 4 — baraza-ai
+# NOTE — baraza-ai (Akili Council) is no longer scaffolded here.
+# The council was consolidated into baraza-protocol on 2026-06-15
+# and now lives at app/src/lib/akili/ alongside the chat brain.
+# Baraza TV voice profiles will land in their own dedicated repo
+# when that work starts.
 # ──────────────────────────────────────────────────────────────
-
-create_repo "baraza-ai" \
-  "Akili AI Council — 5 autonomous agents powering Baraza Protocol. Research, governance, compliance, community intelligence, and content."
-
-init_repo "baraza-ai"
-DIR="$REPOS_DIR/baraza-ai"
-
-mkdir -p \
-  agents/amara \
-  agents/kofi \
-  agents/zara \
-  agents/nia \
-  agents/seku \
-  orchestrator \
-  baraza-tv/amina-wanjiru/scripts \
-  baraza-tv/jabari-adeyemi/scripts \
-  research
-
-for agent in amara kofi zara nia seku; do
-  cat > "$DIR/agents/$agent/prompts.ts" << TS
-// Prompts for agent: $agent
-export const SYSTEM_PROMPT = \`You are $agent, an AI agent for Baraza Protocol.
-
-Role: TODO — define $agent's role and responsibilities.
-
-You always respond in plain English.
-You never mention blockchain or crypto jargon without explaining it.
-You are Africa-first in your framing.
-\`;
-TS
-
-  cat > "$DIR/agents/$agent/index.ts" << TS
-import Anthropic from '@anthropic-ai/sdk';
-import { SYSTEM_PROMPT } from './prompts';
-
-const client = new Anthropic();
-
-export async function run(userMessage: string): Promise<string> {
-  const message = await client.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 1024,
-    system: SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: userMessage }],
-  });
-  const block = message.content[0];
-  return block.type === 'text' ? block.text : '';
-}
-TS
-done
-
-cat > "$DIR/orchestrator/index.ts" << 'TS'
-// Akili Council orchestrator — routes tasks to the correct agent
-import { run as amara } from '../agents/amara';
-import { run as kofi } from '../agents/kofi';
-import { run as zara } from '../agents/zara';
-import { run as nia } from '../agents/nia';
-import { run as seku } from '../agents/seku';
-
-type AgentName = 'amara' | 'kofi' | 'zara' | 'nia' | 'seku';
-
-const agents: Record<AgentName, (msg: string) => Promise<string>> = {
-  amara,
-  kofi,
-  zara,
-  nia,
-  seku,
-};
-
-export async function dispatch(agent: AgentName, message: string): Promise<string> {
-  return agents[agent](message);
-}
-TS
-
-cat > "$DIR/baraza-tv/amina-wanjiru/voice-profile.ts" << 'TS'
-// Amina Wanjiru — Lead anchor, Baraza TV
-export const voiceProfile = {
-  name: 'Amina Wanjiru',
-  role: 'Lead anchor',
-  provider: 'elevenlabs',
-  voiceId: '',
-  model: 'eleven_turbo_v2',
-  stability: 0.5,
-  similarityBoost: 0.75,
-  style: 0.4,
-};
-TS
-touch "$DIR/baraza-tv/amina-wanjiru/scripts/.gitkeep"
-
-cat > "$DIR/baraza-tv/jabari-adeyemi/voice-profile.ts" << 'TS'
-// Jabari Adeyemi — Co-anchor, Baraza TV
-export const voiceProfile = {
-  name: 'Jabari Adeyemi',
-  role: 'Co-anchor',
-  provider: 'elevenlabs',
-  voiceId: '',
-  model: 'eleven_turbo_v2',
-  stability: 0.5,
-  similarityBoost: 0.75,
-  style: 0.3,
-};
-TS
-touch "$DIR/baraza-tv/jabari-adeyemi/scripts/.gitkeep"
-
-cat > "$DIR/research/notebooklm-bridge.ts" << 'TS'
-// NotebookLM research bridge — pulls structured research into agent context
-export interface ResearchDoc {
-  title: string;
-  url: string;
-  summary: string;
-}
-
-export async function fetchResearch(_query: string): Promise<ResearchDoc[]> {
-  // TODO: implement NotebookLM or web research integration
-  return [];
-}
-TS
-
-cat > "$DIR/.env.example" << 'ENV'
-ANTHROPIC_API_KEY=
-ELEVENLABS_API_KEY=
-BARAZA_API_URL=https://baraza-protocol.vercel.app
-ENV
-
-cat > "$DIR/package.json" << 'JSON'
-{
-  "name": "baraza-ai",
-  "version": "0.1.0",
-  "description": "Akili AI Council for Baraza Protocol",
-  "main": "dist/orchestrator/index.js",
-  "scripts": {
-    "build": "tsc",
-    "dev": "ts-node orchestrator/index.ts",
-    "test": "vitest run",
-    "lint": "eslint **/*.ts"
-  },
-  "dependencies": {
-    "@anthropic-ai/sdk": "^0.30.0"
-  },
-  "devDependencies": {
-    "typescript": "^5.4.0",
-    "ts-node": "^10.9.2",
-    "vitest": "^1.6.0"
-  }
-}
-JSON
-
-mkdir -p "$DIR/.github/workflows"
-cat > "$DIR/.github/workflows/ci.yml" << 'YAML'
-name: CI
-
-on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main]
-
-jobs:
-  ci:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-      - run: npm install
-      - run: npm run build --if-present
-      - run: npm test --if-present
-YAML
-
-cat > "$DIR/README.md" << 'MD'
-# baraza-ai
-Akili AI Council — autonomous agents for Baraza Protocol.
-
-## The 5 Agents
-| Agent | Role |
-|---|---|
-| Amara | Community intelligence and member insights |
-| Kofi | Governance analysis and proposal summarization |
-| Zara | Compliance monitoring and risk flagging |
-| Nia | Research and market intelligence |
-| Seku | Content and communications |
-
-## Baraza TV Anchors
-| Anchor | Role |
-|---|---|
-| Amina Wanjiru | Lead anchor — East African woman, broadcast quality |
-| Jabari Adeyemi | Co-anchor |
-
-Built on Claude (Anthropic). Voices via ElevenLabs.
-
-## Setup
-```bash
-npm install
-cp .env.example .env
-# Add ANTHROPIC_API_KEY
-npm run dev
-```
-MD
-
-printf '%s' "$GITIGNORE" > "$DIR/.gitignore"
-push_repo "baraza-ai"
 
 # ──────────────────────────────────────────────────────────────
 # DONE
@@ -961,13 +763,14 @@ echo ""
 echo "1. baraza-contracts-stellar  https://github.com/$GITHUB_USER/baraza-contracts-stellar"
 echo "2. baraza-contracts-solana   https://github.com/$GITHUB_USER/baraza-contracts-solana"
 echo "3. baraza-ussd               https://github.com/$GITHUB_USER/baraza-ussd"
-echo "4. baraza-ai                 https://github.com/$GITHUB_USER/baraza-ai"
 echo ""
 echo "Each repo has: main + develop branches, full folder structure,"
 echo "README, .gitignore, .env.example, and CI workflow."
 echo ""
 echo "MANUAL STEPS:"
 echo "  - Add branch protection on main for each repo"
-echo "  - Add ANTHROPIC_API_KEY secret to baraza-ai GitHub Secrets"
 echo "  - Add AT_API_KEY + AT_USERNAME to baraza-ussd GitHub Secrets"
+echo ""
+echo "Note: The Akili Council (formerly baraza-ai) now lives inline at"
+echo "      app/src/lib/akili/ in this repo — no separate scaffold."
 echo "======================================================"

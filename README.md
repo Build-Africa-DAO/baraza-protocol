@@ -30,7 +30,7 @@ Baraza gives any group a shared treasury, governed by its members. Members pay d
 | Database | Supabase (PostgreSQL + RLS) |
 | Primary chain | Stellar (BRZA token, XLM treasury, M-Pesa via Kotani Pay) |
 | Secondary chain | Solana (NFT membership, Realms governance, Squads v4) |
-| AI layer | Claude (Asha AI brain + Akili Council agents) |
+| AI layer | Claude (Akili — community brain + 5-agent council) |
 | Mobile | Africa's Talking (USSD + SMS, works on feature phones) |
 | Hosting | Vercel |
 

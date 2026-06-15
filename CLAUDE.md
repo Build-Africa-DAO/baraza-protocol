@@ -77,7 +77,8 @@ Stellar launches first. Never treat EVM or Solana as launch blockers.
 | `app/src/lib/evm/manager.ts` | Aragon OSx deployDao() client |
 | `app/src/lib/evm/base-governance.ts` | viem governance: castVote, getVotes, proposal state |
 | `app/src/lib/programs/pda.ts` | Solana PDA derivation (all 5 programs) |
-| `app/api/agent/chat.ts` | Asha community brain (Claude claude-sonnet-4-6, SSE streaming) |
+| `app/api/agent/chat.ts` | Akili community brain (Claude claude-sonnet-4-6, SSE streaming) |
+| `app/src/lib/akili/` | Akili Council — 5 specialised one-shot agents (Amara, Kofi, Zara, Nia, Seku) |
 | `app/api/stellar/verify-payment.ts` | Payment verification — HMAC, Horizon, Supabase |
 | `supabase/migrations/` | Run 001–010 in filename order before any payment flow |
 | `docs/NEXT_STEPS.md` | Phase 0–5 PRD with dependency order |
@@ -87,8 +88,10 @@ Stellar launches first. Never treat EVM or Solana as launch blockers.
 
 ## AI layer
 
-- **Asha** (`/api/agent/chat`) — Claude claude-sonnet-4-6 streaming. Drafts proposals, flags bad ones, answers community questions. Falls back to static when `ANTHROPIC_API_KEY` unset.
+- **Akili brain** (`/api/agent/chat`) — Claude claude-sonnet-4-6 streaming. Drafts proposals, flags bad ones, answers community questions. Falls back to static when `ANTHROPIC_API_KEY` unset.
+- **Akili Council** (`app/src/lib/akili/`) — 5 specialised one-shot agents: Amara (community intel), Kofi (governance), Zara (compliance), Nia (research), Seku (content). Invoke via `invokeCouncilAgent(name, message)`.
 - **Dev swarm** (`.github/workflows/agent-swarm.yml`) — 4 parallel agents on every PR: SEO · Design · Security · Code. Requires `ANTHROPIC_API_KEY` in GitHub secrets.
+- React internals (`AshaChat`, `useAshaChat`, `AshaChatContext`) still carry the legacy Asha names — rename pending; user-facing copy already says "Akili".
 
 ---
 
