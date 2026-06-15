@@ -1,4 +1,4 @@
--- 010_fix_payment_orders_rls.sql
+-- 011_fix_payment_orders_rls.sql
 --
 -- Keep payment_orders closed to anon clients. Payment status reads must go
 -- through /api/payment-orders/status, which uses the service role key and
