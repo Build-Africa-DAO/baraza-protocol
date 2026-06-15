@@ -12,9 +12,7 @@
           const stored = window.localStorage.getItem("baraza:theme");
           const theme = stored === "light" || stored === "dark"
             ? stored
-            : window.matchMedia("(prefers-color-scheme: light)").matches
-              ? "light"
-              : "dark";
+            : "dark";
           document.documentElement.classList.toggle("dark", theme === "dark");
           document.documentElement.style.colorScheme = theme;
           document
