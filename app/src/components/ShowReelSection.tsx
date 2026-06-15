@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, ExternalLink, Play } from "lucide-react";
+import { ArrowRight, ExternalLink, Film, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -74,11 +74,41 @@ const TWO_DIGIT = new Intl.NumberFormat("en-US", {
 
 /* ─── Player ──────────────────────────────────────────────────────────── */
 
+// YouTube returns a 120×90 placeholder when a video ID doesn't resolve
+// (deleted, private, or non-existent). Real maxresdefault.jpg is 1280×720.
+// Anything ≤ this is the placeholder — render "reel arriving soon" instead.
+const YT_PLACEHOLDER_MAX_WIDTH = 200;
+
 function VideoPlayer({ video }: { video: ReelVideo }) {
   // Parent remounts this component on activeIndex change (keyed motion wrapper),
   // so initial state IS the reset — no useEffect needed.
   const [playing, setPlaying] = useState(false);
   const [iframeFailed, setIframeFailed] = useState(false);
+  const [thumbMissing, setThumbMissing] = useState(false);
+
+  // Coming-soon panel — when YouTube serves its "no such video" placeholder,
+  // we render this instead of the broken-looking gray tile.
+  if (thumbMissing) {
+    return (
+      <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-border/40 bg-[radial-gradient(ellipse_at_top_left,rgba(255,140,60,0.18),rgba(0,0,0,0.95))]">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center">
+          <span className="grid h-14 w-14 place-items-center rounded-full border border-white/15 bg-black/45 backdrop-blur-sm">
+            <Film className="h-6 w-6 text-white/70" />
+          </span>
+          <p className="font-display text-base font-semibold tracking-tight text-white sm:text-lg">
+            Reel arriving soon
+          </p>
+          <p className="max-w-md text-[11px] leading-relaxed text-white/55 sm:text-xs">
+            We're filming with real communities right now. This slot is reserved for{' '}
+            <span className="italic">{video.title}</span> from {video.community}.
+          </p>
+          <span className="mt-1 rounded-full border border-white/10 bg-black/40 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-white/55">
+            {video.date}
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-border/40 bg-black">
@@ -99,6 +129,11 @@ function VideoPlayer({ video }: { video: ReelVideo }) {
             alt=""
             loading="lazy"
             decoding="async"
+            onLoad={(e) => {
+              if (e.currentTarget.naturalWidth <= YT_PLACEHOLDER_MAX_WIDTH) {
+                setThumbMissing(true);
+              }
+            }}
             className={cn(
               "h-full w-full object-cover transition-all duration-500",
               // Art direction: subtle desaturation on the still so it feels
@@ -227,6 +262,79 @@ function VideoIndex({
 
 /* ─── Filmstrip ───────────────────────────────────────────────────────── */
 
+function FilmstripFrame({
+  video,
+  index,
+  active,
+  reduce,
+  onSelect,
+}: {
+  video: ReelVideo;
+  index: number;
+  active: boolean;
+  reduce: boolean | null;
+  onSelect: (i: number) => void;
+}) {
+  const [thumbMissing, setThumbMissing] = useState(false);
+  return (
+    <motion.button
+      type="button"
+      onClick={() => onSelect(index)}
+      aria-label={`Frame ${index + 1}: ${video.title}`}
+      aria-current={active ? "true" : undefined}
+      initial={reduce ? undefined : { opacity: 0, y: 8 }}
+      whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.6 }}
+      transition={{ duration: 0.4, delay: index * 0.07, ease: "easeOut" }}
+      className={cn(
+        "relative shrink-0 overflow-hidden rounded-md border-2 transition-all",
+        "aspect-[16/10] w-40 sm:w-44 md:w-48",
+        active
+          ? "border-primary shadow-[0_10px_28px_-12px_rgba(255,140,60,0.6)]"
+          : "border-white/10 hover:border-white/30",
+      )}
+    >
+      {thumbMissing ? (
+        // Filmstrip frame variant of "reel arriving soon" — tighter than the
+        // featured player's panel so the row stays visually consistent.
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-gradient-to-br from-black via-zinc-950 to-zinc-900">
+          <Film className="h-5 w-5 text-white/60" />
+          <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-white/55">
+            Coming soon
+          </span>
+        </div>
+      ) : (
+        <img
+          src={`https://img.youtube.com/vi/${video.youtubeId}/mqdefault.jpg`}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          onLoad={(e) => {
+            if (e.currentTarget.naturalWidth <= YT_PLACEHOLDER_MAX_WIDTH) {
+              setThumbMissing(true);
+            }
+          }}
+          className={cn(
+            "h-full w-full object-cover transition-all duration-500",
+            active ? "saturate-100" : "saturate-0 brightness-75 group-hover:saturate-50",
+          )}
+        />
+      )}
+      <span
+        className={cn(
+          "absolute left-2 top-2 grid h-6 min-w-6 place-items-center rounded-sm px-1 font-mono text-[10px] tabular-nums",
+          active ? "bg-primary text-primary-foreground" : "bg-black/65 text-white/80",
+        )}
+      >
+        {TWO_DIGIT.format(index + 1)}
+      </span>
+      <span className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/85 to-transparent px-2 pb-1.5 pt-4 text-left text-[10px] font-semibold uppercase tracking-wider text-white">
+        {video.tag}
+      </span>
+    </motion.button>
+  );
+}
+
 const SPROCKET_TOP: React.CSSProperties = {
   backgroundImage:
     "radial-gradient(circle at 14px center, rgba(8,8,10,0.92) 4.5px, transparent 5.2px)",
@@ -248,51 +356,16 @@ function Filmstrip({
     <div className="relative">
       <div className="h-3 w-full" style={SPROCKET_TOP} aria-hidden />
       <div className="flex gap-3 overflow-x-auto bg-black/45 px-3 py-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-        {videos.map((video, i) => {
-          const active = i === activeIndex;
-          return (
-            <motion.button
-              key={video.youtubeId}
-              type="button"
-              onClick={() => onSelect(i)}
-              aria-label={`Frame ${i + 1}: ${video.title}`}
-              aria-current={active ? "true" : undefined}
-              initial={reduce ? undefined : { opacity: 0, y: 8 }}
-              whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.6 }}
-              transition={{ duration: 0.4, delay: i * 0.07, ease: "easeOut" }}
-              className={cn(
-                "relative shrink-0 overflow-hidden rounded-md border-2 transition-all",
-                "aspect-[16/10] w-40 sm:w-44 md:w-48",
-                active
-                  ? "border-primary shadow-[0_10px_28px_-12px_rgba(255,140,60,0.6)]"
-                  : "border-white/10 hover:border-white/30",
-              )}
-            >
-              <img
-                src={`https://img.youtube.com/vi/${video.youtubeId}/mqdefault.jpg`}
-                alt=""
-                loading="lazy"
-                decoding="async"
-                className={cn(
-                  "h-full w-full object-cover transition-all duration-500",
-                  active ? "saturate-100" : "saturate-0 brightness-75 group-hover:saturate-50",
-                )}
-              />
-              <span
-                className={cn(
-                  "absolute left-2 top-2 grid h-6 min-w-6 place-items-center rounded-sm px-1 font-mono text-[10px] tabular-nums",
-                  active ? "bg-primary text-primary-foreground" : "bg-black/65 text-white/80",
-                )}
-              >
-                {TWO_DIGIT.format(i + 1)}
-              </span>
-              <span className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/85 to-transparent px-2 pb-1.5 pt-4 text-left text-[10px] font-semibold uppercase tracking-wider text-white">
-                {video.tag}
-              </span>
-            </motion.button>
-          );
-        })}
+        {videos.map((video, i) => (
+          <FilmstripFrame
+            key={video.youtubeId}
+            video={video}
+            index={i}
+            active={i === activeIndex}
+            reduce={reduce}
+            onSelect={onSelect}
+          />
+        ))}
       </div>
       <div className="h-3 w-full" style={SPROCKET_TOP} aria-hidden />
     </div>
