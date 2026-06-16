@@ -29,10 +29,8 @@ import {
   type StellarNetworkName,
 } from './_lib/stellar-mint';
 
-// Stellar SDK needs Node.js (Buffer + Node fetch). Vercel Fluid Compute is
-// Node by default, so no explicit runtime config — declaring it triggers
-// FUNCTION_INVOCATION_FAILED at invocation time. See chat.ts for the full
-// diagnosis.
+// nodejs runtime — Stellar SDK isn't edge-compatible (Buffer + Node fetch).
+export const config = { runtime: 'nodejs' };
 
 const PROMOTIONS: Array<{ from: string; to: string }> = [
   // Reverse order matters — see file header.

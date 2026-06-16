@@ -2,12 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
 import { AKILI_RELAY } from '../../src/akili/prompts';
 
-// Runtime config removed: explicit `{ runtime: 'nodejs' }` was producing
-// FUNCTION_INVOCATION_FAILED 500s in production (verified 2026-06-17). Vercel
-// Fluid Compute is now the default and supports this Web-API handler shape
-// natively; specifying the legacy runtime field shadows that and crashes the
-// invocation before our handler runs, so member-facing error classification
-// below never gets a chance to fire.
+export const config = { runtime: 'nodejs' };
 
 interface ChatRequest {
   message: string;
