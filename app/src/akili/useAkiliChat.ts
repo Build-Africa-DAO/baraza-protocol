@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { AkiliChatContext } from '@/contexts/akili-chat-context';
+import { AkiliChatContext } from '@/akili/akili-chat-context';
 
 export function useAkiliChat() {
   const ctx = useContext(AkiliChatContext);

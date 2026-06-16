@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { STAGE_META, inferStage } from "@/lib/proposalStatus";
 import CommunityBanner from "@/components/CommunityBanner";
 import { useSeo } from "@/lib/seo";
-import AkiliSecurityReview from "@/components/security/AkiliSecurityReview";
+import AkiliSecurityReview from "@/akili/AkiliSecurityReview";
 import { reviewProposal } from "@/lib/securityReview";
 import { useChain } from "@/hooks/useChain";
 import {

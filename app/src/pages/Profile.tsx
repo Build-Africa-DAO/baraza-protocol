@@ -20,7 +20,7 @@ import Layout from "@/components/Layout";
 import { formatRailAmountFromKes, formatRailDate, truncateAddress } from "@/lib/utils";
 import CommunityBanner from "@/components/CommunityBanner";
 import { fetchMembershipsForWallet, listMembershipsForWallet } from "@/lib/memberships";
-import { AskAkili } from "@/components/chat/AskAkili";
+import { AskAkili } from "@/akili/AskAkili";
 import { MemberBadges } from "@/components/MemberBadges";
 import { deriveBadges } from "@/lib/badges";
 import { useCommunities } from "@/hooks/useCommunities";

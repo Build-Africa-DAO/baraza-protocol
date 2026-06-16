@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Bot, Compass, LayoutDashboard, Sparkles, WalletCards } from "lucide-react";
-import { useAkiliChat } from "@/hooks/useAkiliChat";
+import { useAkiliChat } from "@/akili/useAkiliChat";
 
 const platformLinks = [
   {

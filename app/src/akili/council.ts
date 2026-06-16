@@ -5,7 +5,7 @@ import {
   type AkiliPrincipalName,
   type CouncilAgent,
   type CouncilAgentName,
-} from '@/lib/akili/prompts';
+} from '@/akili/prompts';
 
 const COUNCIL_MODEL = 'claude-sonnet-4-6';
 const DEFAULT_MAX_TOKENS = 1024;
@@ -191,5 +191,5 @@ export function routeToCouncilAgent(message: string): CouncilAgentName {
   return 'kofi';
 }
 
-export { COUNCIL_AGENTS } from '@/lib/akili/prompts';
-export type { CouncilAgent, CouncilAgentName } from '@/lib/akili/prompts';
+export { COUNCIL_AGENTS } from '@/akili/prompts';
+export type { CouncilAgent, CouncilAgentName } from '@/akili/prompts';

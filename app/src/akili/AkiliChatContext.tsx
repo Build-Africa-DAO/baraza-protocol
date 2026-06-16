@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { AkiliChatContext } from '@/contexts/akili-chat-context';
+import { AkiliChatContext } from '@/akili/akili-chat-context';
 
 export const AkiliChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);

@@ -13,7 +13,7 @@ import CommunityBanner from '@/components/CommunityBanner';
 import { useChain } from '@/hooks/useChain';
 import { useSeo } from '@/lib/seo';
 import { CHAINS, type Chain } from '@/lib/chain';
-import { AskAkili } from '@/components/chat/AskAkili';
+import { AskAkili } from '@/akili/AskAkili';
 import { useBarazaChain } from '@/hooks/useBarazaData';
 import { communityPda, toSlug } from '@/lib/programs';
 import { saveCommunityChainMapping } from '@/lib/chainMappings';

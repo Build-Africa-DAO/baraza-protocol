@@ -4,7 +4,7 @@ import { Menu, Moon, MoreHorizontal, PlayCircle, Search, Sparkles, Sun, X } from
 import { BrandLogo } from "@/components/BrandLogo";
 import ChainSelector from "@/components/ChainSelector";
 import EnvironmentSelector from "@/components/EnvironmentSelector";
-import { useAkiliChat } from "@/hooks/useAkiliChat";
+import { useAkiliChat } from "@/akili/useAkiliChat";
 import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
 

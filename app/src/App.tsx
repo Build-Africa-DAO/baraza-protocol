@@ -4,10 +4,10 @@ import { Toaster } from '@/components/ui/toaster';
 import WalletProviders from '@/components/WalletProviders';
 import ChainProvider from '@/components/ChainProvider';
 import PageLoader from '@/components/PageLoader';
-import { AkiliChatProvider } from '@/contexts/AkiliChatContext';
+import { AkiliChatProvider } from '@/akili/AkiliChatContext';
 import { OfflineProvider } from '@/contexts/OfflineContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
-import AkiliChat from '@/components/chat/AkiliChat';
+import AkiliChat from '@/akili/AkiliChat';
 
 const Index = lazy(() => import('./pages/Index'));
 const Communities = lazy(() => import('./pages/Communities'));

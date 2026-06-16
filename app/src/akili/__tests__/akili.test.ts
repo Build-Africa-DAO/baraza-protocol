@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { COUNCIL_AGENTS, routeToCouncilAgent, type CouncilAgentName } from '@/lib/akili';
-import { buildCouncilSessionContext } from '@/lib/akili/council';
+import { COUNCIL_AGENTS, routeToCouncilAgent, type CouncilAgentName } from '@/akili';
+import { buildCouncilSessionContext } from '@/akili/council';
 import {
   AKILI_PRINCIPALS,
   AKILI_RELAY,
@@ -10,7 +10,7 @@ import {
   buildRelationshipTensionContext,
   listTensionPairs,
   type AkiliPrincipalName,
-} from '@/lib/akili/prompts';
+} from '@/akili/prompts';
 
 describe('Akili Council registry', () => {
   it('exposes exactly the five named agents', () => {

@@ -26,7 +26,7 @@ import {
 import { useCommunities } from '@/hooks/useCommunities';
 import { cn, formatRailAmountFromKes, formatRailDate } from '@/lib/utils';
 import { useSeo } from '@/lib/seo';
-import AkiliSecurityReview from '@/components/security/AkiliSecurityReview';
+import AkiliSecurityReview from '@/akili/AkiliSecurityReview';
 import { reviewBounty } from '@/lib/securityReview';
 import { useChain } from '@/hooks/useChain';
 

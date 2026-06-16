@@ -30,7 +30,7 @@ import BountyBoard from '@/components/BountyBoard';
 import { CHAINS } from '@/lib/chain';
 import { useSeo } from '@/lib/seo';
 import { getBountyStatsForCommunity } from '@/lib/bounties';
-import AkiliSecurityReview from '@/components/security/AkiliSecurityReview';
+import AkiliSecurityReview from '@/akili/AkiliSecurityReview';
 import { reviewCommunity } from '@/lib/securityReview';
 import { useChain } from '@/hooks/useChain';
 import { getTokenGateStatus } from '@/lib/tokenGate';

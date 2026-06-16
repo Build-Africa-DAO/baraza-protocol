@@ -1,5 +1,5 @@
 import { Sparkles } from 'lucide-react';
-import { useAkiliChat } from '@/hooks/useAkiliChat';
+import { useAkiliChat } from '@/akili/useAkiliChat';
 import { cn } from '@/lib/utils';
 
 interface AskAkiliProps {
