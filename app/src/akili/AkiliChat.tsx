@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X, Send, Sparkles } from 'lucide-react';
-import { useAkiliChat } from '@/hooks/useAkiliChat';
+import { useAkiliChat } from '@/akili/useAkiliChat';
 import { useChain } from '@/hooks/useChain';
 import { useLocation } from 'react-router-dom';
 import type { ChainMeta } from '@/lib/chain';
@@ -255,7 +255,12 @@ async function streamAkiliResponse(
   history: Array<{ role: 'user' | 'assistant'; content: string }>,
   onChunk: (text: string) => void,
 ): Promise<void> {
-  const res = await fetch('/api/agent/chat', {
+  // VITE_AKILI_API_URL points at the standalone Akili service (https://<akili>.vercel.app).
+  // Unset = use the in-repo /api/agent/chat fallback. Set = direct cross-origin call.
+  const akiliBase = (import.meta.env.VITE_AKILI_API_URL as string | undefined)?.replace(/\/$/, '');
+  const endpoint = akiliBase ? `${akiliBase}/api/chat` : '/api/agent/chat';
+
+  const res = await fetch(endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ message, communityId: communityId ?? undefined, history }),
