@@ -2,7 +2,12 @@ import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
 import { AKILI_RELAY } from '../../src/akili/prompts';
 
-export const config = { runtime: 'nodejs' };
+// Runtime config removed: explicit `{ runtime: 'nodejs' }` was producing
+// FUNCTION_INVOCATION_FAILED 500s in production (verified 2026-06-17). Vercel
+// Fluid Compute is now the default and supports this Web-API handler shape
+// natively; specifying the legacy runtime field shadows that and crashes the
+// invocation before our handler runs, so member-facing error classification
+// below never gets a chance to fire.
 
 interface ChatRequest {
   message: string;
@@ -81,6 +86,24 @@ export function classifyChatError(error: unknown): ChatErrorEvent {
 }
 
 export default async function handler(req: Request): Promise<Response> {
+  // Belt-and-suspenders: any unexpected throw inside the handler body becomes
+  // a classified SSE event so the chat UI shows a member-facing message
+  // instead of Vercel's bare FUNCTION_INVOCATION_FAILED page.
+  try {
+    return await handleChat(req);
+  } catch (err) {
+    const classified = classifyChatError(err);
+    return new Response(JSON.stringify(classified), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
+  }
+}
+
+async function handleChat(req: Request): Promise<Response> {
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       headers: {
@@ -97,9 +120,19 @@ export default async function handler(req: Request): Promise<Response> {
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    return new Response(JSON.stringify({ error: 'AI not configured' }), {
-      status: 503,
-      headers: { 'Content-Type': 'application/json' },
+    // Surface as a classified event so the chat UI renders the same
+    // member-facing message it would for a 401 from the upstream API.
+    const classified: ChatErrorEvent = {
+      category: 'auth_failed',
+      message:
+        "Akili can't reach the brain right now — the API key is missing, invalid, or revoked.",
+    };
+    return new Response(JSON.stringify(classified), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
     });
   }
 

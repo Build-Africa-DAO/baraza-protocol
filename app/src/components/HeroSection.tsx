@@ -65,8 +65,11 @@ function HeroHeadline() {
 
   return (
     <span className="block max-w-[13ch] sm:max-w-none">
-      <span className="block text-foreground">Launch treasury</span>
-      <span className="block text-foreground">tools for your</span>
+      {/* Trailing spaces preserve word boundaries in textContent (SEO, social
+          scrapers, screen-reader text mode) without affecting visual layout —
+          block-display spans drop trailing whitespace. */}
+      <span className="block text-foreground">Launch treasury </span>
+      <span className="block text-foreground">tools for your </span>
       <span className="relative block min-h-[1em] overflow-hidden">
         <AnimatePresence mode="wait" initial={false}>
           <motion.span
