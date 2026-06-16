@@ -134,7 +134,7 @@ Failure: PAYMENT_FAILED | PAYMENT_EXPIRED | AMOUNT_MISMATCH
 ```
 app/                      Vite + React SPA (TypeScript, Tailwind, Node 24)
   api/                    Vercel serverless functions
-    agent/chat.ts         Asha AI community brain (Claude claude-sonnet-4-6, streaming SSE)
+    agent/chat.ts         Akili AI community brain (Claude claude-sonnet-4-6, streaming SSE)
     stellar/              create-payment-intent.ts, verify-payment.ts
     payments/             brza-membership.ts, reconcile, kotani, minisend
     membership/activate.ts
@@ -143,7 +143,7 @@ app/                      Vite + React SPA (TypeScript, Tailwind, Node 24)
     webhooks/             africastalking.ts, kotani.ts
   src/
     components/
-      chat/AshaChat.tsx   Community brain UI (streaming, falls back to static)
+      chat/AkiliChat.tsx  Community brain UI (streaming, falls back to static)
     lib/
       adapters/           solana.ts, stellar.ts, evm.ts, celo.ts
       brza/               constants.ts (allocations, phases, vesting, emission)
@@ -187,7 +187,7 @@ docs/
 
 ## AI layer
 
-### Asha — Community Brain
+### Akili — Community Brain
 - **Endpoint**: `POST /api/agent/chat` (streaming SSE)
 - **Model**: claude-sonnet-4-6
 - **System prompt**: role (community brain), capabilities (draft/explain/flag/guide), proposal JSON schema, flag criteria (duplicate, overspend, personal benefit, unmeasurable criteria)
@@ -215,7 +215,7 @@ docs/
 
 ### Server-side (never in VITE_ prefix)
 ```
-ANTHROPIC_API_KEY          Asha community brain + dev swarm
+ANTHROPIC_API_KEY          Akili community brain + dev swarm
 SUPABASE_URL               Supabase project URL
 SUPABASE_SERVICE_ROLE_KEY  Bypasses RLS — server only
 STELLAR_NETWORK            testnet | mainnet
@@ -248,7 +248,7 @@ VITE_BASE_TOKEN_ADDRESS    Per-community after deployDao()
 
 ## Pending blockers (in priority order)
 
-1. Add `ANTHROPIC_API_KEY` to Vercel + GitHub secrets (unlocks Asha + swarm)
+1. Add `ANTHROPIC_API_KEY` to Vercel + GitHub secrets (unlocks Akili + swarm)
 2. Add Supabase env vars to Vercel (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 3. Run Supabase migrations 001–010 (`supabase db push`)
 4. Implement `persistOrder()` in `app/api/stellar/verify-payment.ts` (stub returns `persisted: false`)
