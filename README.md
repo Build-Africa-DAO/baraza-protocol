@@ -17,8 +17,61 @@ Baraza gives any group a shared treasury, governed by its members. Members pay d
 - **Chamas** (East Africa rotating savings groups)
 - **Stokvels** (South Africa rotating pot)
 - **SACCOs** (savings and credit cooperatives)
-- **DAOs** (on-chain governed organizations)
 - **Cooperatives** (worker and producer groups)
+- **DAOs** (on-chain governed organizations)
+
+Primary markets: Kenya, Tanzania, Uganda, Ethiopia, Nigeria.
+
+---
+
+## Products
+
+| Product | Status |
+|---|---|
+| **Baraza Protocol** — treasury, dues, voting, BRZA | Phase 0 |
+| **Baraza TV** — community-led video, dues-and-vote storytelling | Pre-launch |
+| **IDO / Public Launch** — BRZA at $0.10 | Planned |
+| **DEX** — community-token liquidity | Planned |
+
+---
+
+## Chain priority (do not reorder)
+
+1. **Stellar** — primary. All treasuries are Stellar G-accounts. BRZA is a Stellar custom asset. M-Pesa → Kotani Pay → XLM → treasury.
+2. **Solana** — governance. 5 Anchor programs written; not yet deployed to devnet.
+3. **Base (EVM)** — secondary. Aragon OSx Manager factory at known addresses.
+4. **Celo** — mobile scaffold. GoodDollar G$ identity. Stub only.
+
+Stellar launches first. EVM and Solana are never launch blockers.
+
+---
+
+## BRZA token
+
+| Field | Value |
+|---|---|
+| Supply | 1,000,000,000 |
+| Decimals | 7 |
+| Network | Stellar custom asset |
+| Phase 0 price | $0.02 |
+| IDO price | $0.10 |
+| Source of truth | `app/src/lib/brza/constants.ts` |
+
+| Bucket | % | Vesting |
+|---|---|---|
+| Community Rewards | 20% | Emission 2M/month |
+| Founder A | 7.5% | 1yr cliff + 3yr vest |
+| Founder B | 7.5% | 1yr cliff + 3yr vest |
+| Operations | 15% | Milestone-gated |
+| Public Sale | 12% | Phase 0 (20M) + IDO (100M) |
+| Reserve | 10% | 1yr cliff + 3yr vest |
+| Liquidity Pool | 8% | Unlock at IDO |
+| Grants | 8% | 6mo cliff + 2yr vest |
+| Referral | 5% | Per event |
+| Events | 4% | Per event |
+| Baraza TV Creators | 3% | Per content milestone |
+
+BRZA ≠ XLM. The token is not the payment rail.
 
 ---
 
@@ -28,45 +81,59 @@ Baraza gives any group a shared treasury, governed by its members. Members pay d
 |---|---|
 | Frontend | Vite + React, TypeScript, Tailwind CSS (in `app/`) |
 | Database | Supabase (PostgreSQL + RLS) |
-| Primary chain | Stellar (BRZA token, XLM treasury, M-Pesa via Kotani Pay) |
-| Secondary chain | Solana (NFT membership, Realms governance, Squads v4) |
-| AI layer | Claude (Akili — community brain + 5-agent council) |
-| Mobile | Africa's Talking (USSD + SMS, works on feature phones) |
+| Primary chain | Stellar — BRZA token, XLM treasury, M-Pesa via Kotani Pay |
+| Governance chain | Solana — 5 Anchor programs (treasury, governance, membership, community registry, payment attestation) |
+| Secondary chain | Base (EVM) — Aragon OSx |
+| Mobile chain | Celo — GoodDollar G$ identity (scaffold) |
+| AI layer | Claude — Akili relay (`/api/agent/chat`) + 5-agent council (Amara, Kofi, Zara, Nia, Seku) |
+| Mobile on-ramp | Africa's Talking USSD + SMS (works on feature phones) |
+| Wallets | Phantom, Solflare, Coinbase Wallet (others not supported) |
 | Hosting | Vercel |
+
+---
+
+## Akili
+
+The protocol's AI layer is two surfaces sharing one character system.
+
+- **Akili relay** — `/api/agent/chat`. Single-voice Claude streaming. Drafts proposals, flags bad ones, answers community questions in plain English or Swahili. Falls back to a classified `auth_failed` event when `ANTHROPIC_API_KEY` is unset.
+- **Akili Council** — `app/src/akili/`. Five specialists, each with a full character bible at `docs/akili-council/`. Invoke via `invokeCouncilAgent(name, message)`.
+
+| Agent | Domain | Cast |
+|---|---|---|
+| **Amara** | Content & media — Baraza TV, episode performance | warm · fast · outward |
+| **Kofi** | Governance — proposals, quorum, multi-sig, charter | cool · deliberate · inward |
+| **Zara** | Economy — BRZA flows, treasury, bounties, anomalies | cold · deliberate · outward |
+| **Nia** | People — sentiment, participation, churn, onboarding | warm · deliberate · inward |
+| **Seku** | Research — regulatory horizon, sourcing discipline | cool · fast · outward |
+
+Akili enforces a Decision Stack Guard: never greet, never compress dissent, fidelity over equality.
 
 ---
 
 ## Architecture Rules
 
-These are non-negotiable. Every contributor must follow them.
+These are non-negotiable.
 
-- All chain calls go through `/lib/adapters/index.ts` — no component talks to a chain directly
-- Chain names (Stellar, Solana) never appear in the UI except on onboarding and withdrawal screens
-- Users see KES, UGX, ZAR — never BRZA unless they ask
-- BRZA is the only token held in community treasuries
-- Smart contracts are audited before mainnet — no exceptions
-- KYC data is encrypted at rest, never plain text, purged on deletion request
+- All business logic lives in `app/src/lib/`. Components → hooks → lib. Components never import lib directly.
+- All chain calls go through `app/src/lib/adapters/index.ts` — no component talks to a chain directly.
+- Wallet support: **Phantom, Solflare, Coinbase Wallet only** — do not add others.
+- Supabase is optional everywhere — every route falls back gracefully when env vars are unset.
+- `intentToken` is required for Stellar mainnet payment verification — legacy fields dev-only.
+- Activation secret is client-side only from order creation to membership activation.
+- `withdrawals_enabled` stays `false` until multisig handoff is tested on devnet.
+- Update `app/src/lib/knowledgeGraph.ts` when adding chain rails, contracts, or settlement routes.
+- Never reference Builder Protocol or Nouns DAO. Use Aragon OSx language.
+- Do not add Magic UI or heavy animation libraries.
 
 ---
 
-## The 14 Modules
+## Security
 
-| Module | Description | Tier |
-|---|---|---|
-| treasury | Group wallet — Stellar multisig | Core |
-| governance | Proposals and voting | Core |
-| membership | Member management and pricing | Core |
-| nft_membership | Soulbound membership cards | Core |
-| community_token | Launch a group token | Core |
-| bounty_board | Task board with BRZA rewards | Core |
-| stokvel_rotation | Rotating pot engine | Core |
-| loan_engine | Borrow against community token | Core |
-| grant_application | Apply for Baraza grant | Core |
-| blackbook | Plain-language ledger | Core |
-| dividend_distribution | Pay all members proportionally | Core |
-| mpesa_rails | M-Pesa in and out | Mobile |
-| bank_rails | Bank account integration | Banking |
-| compliance | KYC, AML, tax reporting | Any |
+- Use `crypto.timingSafeEqual` for every secret comparison — never `===`.
+- Never log or expose `SUPABASE_SERVICE_ROLE_KEY`, `STELLAR_INTENT_SECRET`, `PAYMENT_ADAPTER_PROXY_SECRET`, `PAYMENT_PHONE_HASH_PEPPER`, `KOTANI_PAY_API_KEY`, or any private key.
+- `payment_orders` `SELECT` is `false` via RLS — reads go through `/api/payment-orders/status` + activation secret.
+- Rate-limit payment routes before public launch.
 
 ---
 
@@ -85,51 +152,80 @@ npm --prefix app run dev
 
 Open http://localhost:5173
 
-Other commands:
+Other commands (run with `--prefix app`):
 
 ```bash
-npm --prefix app run typecheck   # TypeScript strict check
-npm --prefix app run lint        # ESLint
-npm --prefix app run test        # unit tests (vitest)
-npm --prefix app run build       # Production build → app/dist
+npm run typecheck   # TypeScript strict check (app + node tsconfigs)
+npm run lint        # ESLint
+npm run test        # unit tests (vitest)
+npm run build       # Production build → app/dist
 ```
+
+Run Supabase migrations `001`–`017` (in filename order) before any payment flow.
 
 ---
 
 ## Environment Variables
 
-See `.env.example` and `app/.env.local.example` for the full list. Required for the basic UI:
+See `app/.env.local.example` for the full list. Required for the basic UI:
 
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 
-Server-side (API routes / Vercel): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `STELLAR_NETWORK`, `STELLAR_HORIZON_URL`, `STELLAR_TREASURY_ACCOUNT`, `STELLAR_INTENT_SECRET` (generate: `openssl rand -hex 32`), Kotani Pay keys.
+Server-side (`/api/*` on Vercel):
 
-Never commit real keys. Use `app/.env.local` which is gitignored. Never expose `SUPABASE_SERVICE_ROLE_KEY`, `STELLAR_INTENT_SECRET`, `PAYMENT_ADAPTER_PROXY_SECRET`, `PAYMENT_PHONE_HASH_PEPPER`, `KOTANI_PAY_API_KEY`, or any private keys in frontend code — only `VITE_*` variables reach the browser.
+- `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
+- `STELLAR_NETWORK`, `STELLAR_HORIZON_URL`, `STELLAR_TREASURY_ACCOUNT`
+- `STELLAR_INTENT_SECRET` (generate: `openssl rand -hex 32`)
+- `BRZA_DISTRIBUTOR_SECRET`, `BRZA_ISSUER_PUBLIC_KEY` (for the mint promoter cron)
+- `KOTANI_PAY_API_KEY` (M-Pesa rail)
+- `ANTHROPIC_API_KEY` (Akili; absent triggers the classified-error fallback)
+
+Never commit real keys. `app/.env.local` is gitignored. Only `VITE_*` variables reach the browser.
 
 ---
 
-## Branch Strategy
+## Status — Immediate blockers
 
-| Branch | Purpose |
+1. `ANTHROPIC_API_KEY` → Vercel + GitHub Actions secrets.
+2. Supabase env vars → Vercel (URL, anon key, service role key).
+3. `supabase db push` — run migrations `001`–`017`.
+4. Fund Stellar testnet treasury G-account, then run the XLM payment-verification smoke.
+5. Pick an indexer source for `MINT_CONFIRMED → INDEXER_CONFIRMED → RECONCILED` — currently a blind status walk; real BRZA mint + Horizon confirmation already ship.
+
+The promoter cron runs once daily on the Vercel Hobby plan. Restore `*/5 * * * *` once on Pro — the five-minute reconciliation cadence is the design.
+
+---
+
+## Key Files
+
+| Path | Purpose |
 |---|---|
-| `main` | Production only — PR required, 1 approval |
-| `develop` | Integration — all features merge here first |
-| `feat/brza-core` | Active sprint — BRZA token + Stellar foundation |
-| `feat/stellar` | Stellar contracts and adapter |
-| `feat/solana` | Solana Anchor programs |
-| `feat/ussd` | Africa's Talking USSD and SMS layer |
+| `AGENTS.md` | Agent instructions, API routes, payment-flow source of truth |
+| `CLAUDE.md` | Project rules for AI contributors |
+| `app/src/lib/brza/constants.ts` | BRZA tokenomics, allocation, vesting, emission |
+| `app/src/lib/chains/config.ts` | Chain config + Aragon OSx addresses |
+| `app/src/lib/evm/manager.ts` | Aragon OSx `deployDao()` client |
+| `app/src/lib/evm/base-governance.ts` | viem governance: `castVote`, `getVotes`, proposal state |
+| `app/src/lib/programs/pda.ts` | Solana PDA derivation (all 5 programs) |
+| `app/api/agent/chat.ts` | Akili community brain — Claude streaming + classified errors |
+| `app/src/akili/` | Akili Council — 5 specialists + relay |
+| `app/api/stellar/verify-payment.ts` | Payment verification — HMAC, Horizon, Supabase |
+| `app/api/cron/promote-orders.ts` | Order promoter — Stellar mint + Horizon confirmation |
+| `supabase/migrations/` | Run 001–017 in filename order before any payment flow |
+| `docs/NEXT_STEPS.md` | Phase 0–5 PRD with dependency order |
+| `docs/akili-council/` | Character bibles for the five council agents |
 
 ---
 
-## Sprint Plan
+## Do Not
 
-| Sprint | Focus | Duration |
-|---|---|---|
-| 1 | BRZA Stellar asset, Privy wallet, M-Pesa STK push, USSD | 2 weeks |
-| 2 | Community creation, treasury flow, mass distribution | 3 weeks |
-| 3 | Realms governance, community voting, audit trail | 3 weeks |
-| 4 | BRZA dashboard, TVL tracker, Phase 0 pre-sale page | 2 weeks |
+- Add wallets beyond Phantom, Solflare, Coinbase Wallet.
+- Commit secrets, private keys, or service role keys.
+- Set `withdrawals_enabled = true` before multisig handoff.
+- Relax `intentToken` requirement for Stellar mainnet.
+- Bypass the activation secret gate in `membership/activate.ts`.
+- Reference Builder Protocol, Nouns DAO, or noun.wtf anywhere.
 
 ---
 
@@ -145,6 +241,7 @@ Directors: Aziz Motomoto + Joanne Wendoh Olweny
 ## Links
 
 - Live: https://baraza-protocol.vercel.app
+- Repo: https://github.com/Azizudinly/baraza-protocol
 - Docs: [Notion Master Document](https://app.notion.com/p/3797722eef3b81a0bdafdc037054a3c9)
 - Contact: aziz@buildafricadao.org
 
