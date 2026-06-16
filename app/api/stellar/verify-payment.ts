@@ -1,4 +1,6 @@
-export const config = { runtime: 'nodejs' };
+// Runtime config dropped: explicit `{ runtime: 'nodejs' }` triggers
+// FUNCTION_INVOCATION_FAILED on Vercel Fluid Compute. Node.js is the
+// default; the Stellar SDK still gets the Buffer + Node fetch it needs.
 
 interface VerifyStellarRequest {
   // Preferred: server-signed token that binds communityId+amountXlm at intent creation time.

@@ -1,4 +1,6 @@
-export const config = { runtime: 'nodejs' };
+// Runtime config dropped: explicit `{ runtime: 'nodejs' }` triggers
+// FUNCTION_INVOCATION_FAILED on Vercel Fluid Compute. Node.js is the
+// default; we don't need to declare it. See chat.ts for the full diagnosis.
 
 interface CommunityCreateRequest {
   name: string;
