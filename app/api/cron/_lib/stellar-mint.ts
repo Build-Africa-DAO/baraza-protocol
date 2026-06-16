@@ -163,13 +163,14 @@ export async function confirmMintTransaction(
     const server = new Horizon.Server(horizonUrl);
     const record = await server.transactions().transaction(txHash).call();
     if (record.successful) {
-      return { status: 'confirmed', ledger: record.ledger };
+      return { status: 'confirmed', ledger: record.ledger_attr };
     }
     // Tx landed in a ledger but reverted. result_xdr would carry the op
-    // codes; surfacing the raw xdr is enough for ops triage.
+    // codes; surfacing the raw xdr is enough for ops triage. record.ledger
+    // is a callable that fetches the LedgerRecord; ledger_attr is the seq.
     return {
       status: 'failed',
-      error: `tx reverted on ledger ${record.ledger}${
+      error: `tx reverted on ledger ${record.ledger_attr}${
         record.result_xdr ? ` (result_xdr: ${record.result_xdr})` : ''
       }`,
     };
