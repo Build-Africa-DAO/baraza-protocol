@@ -41,7 +41,6 @@
   },
   "crons": [
     {
-      "_comment": "Schedule is daily because the project is on Vercel Hobby, which rejects any cron expression that would run more than once per day with FUNCTION_INVOCATION_FAILED at DEPLOY time (not runtime). The intended design is */5 * * * * — five-minute reconciliation cadence so MINT_QUEUED → MINT_SUBMITTED → MINT_CONFIRMED → RECONCILED never sits stale. Restore that schedule the moment we move to Pro. Member-facing impact today: payment promotion takes up to 24h instead of up to 5min.",
       "path": "/api/cron/promote-orders",
       "schedule": "0 0 * * *"
     }
