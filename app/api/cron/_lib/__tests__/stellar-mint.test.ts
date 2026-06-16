@@ -3,8 +3,15 @@
 // ("private key must be hex string or Uint8Array"). Node env gives the real
 // crypto primitives the SDK expects.
 
-import { describe, expect, it } from 'vitest';
-import { classifyMintError, mintBrzaPayment } from '../stellar-mint';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { Horizon } from '@stellar/stellar-sdk';
+import {
+  classifyMintError,
+  confirmMintTransaction,
+  mintBrzaBatch,
+  mintBrzaPayment,
+  STELLAR_MAX_OPS_PER_TX,
+} from '../stellar-mint';
 
 // Valid Stellar testnet keypairs generated once with Keypair.random() and
 // hardcoded. These are throwaway testnet identities — no real funds attached.
@@ -198,5 +205,150 @@ describe('classifyMintError — Horizon error decoding', () => {
   it('picks the first terminal op code when multiple are present', () => {
     const result = classifyMintError(horizonResponse(['op_success', 'op_no_trust']));
     expect(result).toEqual({ message: 'Stellar op error: op_no_trust', retriable: false });
+  });
+});
+
+describe('confirmMintTransaction — Horizon lookup', () => {
+  const HORIZON_URL = 'https://horizon-testnet.stellar.org';
+  const TX_HASH = 'a'.repeat(64);
+
+  // Spy that we install on Horizon.Server.prototype.transactions for each
+  // test. Returns a chainable builder whose .call() resolves/rejects as
+  // configured. Using prototype-spy avoids needing to mock the SDK module.
+  function stubTransactions(behavior: () => Promise<unknown>) {
+    const builder = { call: vi.fn(behavior) };
+    const transactionBuilder = { transaction: vi.fn(() => builder) };
+    return vi
+      .spyOn(Horizon.Server.prototype, 'transactions')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .mockReturnValue(transactionBuilder as any);
+  }
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('returns confirmed when Horizon reports successful=true', async () => {
+    stubTransactions(async () => ({ successful: true, ledger: 12345 }));
+
+    const result = await confirmMintTransaction(HORIZON_URL, TX_HASH);
+
+    expect(result).toEqual({ status: 'confirmed', ledger: 12345 });
+  });
+
+  it('returns failed when Horizon reports successful=false (tx reverted)', async () => {
+    stubTransactions(async () => ({
+      successful: false,
+      ledger: 12345,
+      result_xdr: 'AAAAAA==',
+    }));
+
+    const result = await confirmMintTransaction(HORIZON_URL, TX_HASH);
+
+    expect(result).toMatchObject({ status: 'failed' });
+    if (result.status === 'failed') {
+      expect(result.error).toMatch(/ledger 12345/);
+      expect(result.error).toMatch(/AAAAAA==/);
+    }
+  });
+
+  it('returns pending when Horizon throws 404 (tx not yet propagated)', async () => {
+    stubTransactions(async () => {
+      const err = Object.assign(new Error('Not Found'), {
+        name: 'NotFoundError',
+        response: { status: 404 },
+      });
+      throw err;
+    });
+
+    const result = await confirmMintTransaction(HORIZON_URL, TX_HASH);
+
+    expect(result).toEqual({ status: 'pending' });
+  });
+
+  it('returns pending on network error so the next tick retries', async () => {
+    stubTransactions(async () => {
+      throw new Error('ETIMEDOUT');
+    });
+
+    const result = await confirmMintTransaction(HORIZON_URL, TX_HASH);
+
+    expect(result).toEqual({ status: 'pending' });
+  });
+
+  it('returns failed (not pending) when tx hash is empty — defensive guard', async () => {
+    const result = await confirmMintTransaction(HORIZON_URL, '');
+
+    expect(result).toMatchObject({ status: 'failed', error: expect.stringMatching(/missing/i) });
+  });
+});
+
+describe('mintBrzaBatch — pre-flight validation (no Horizon call)', () => {
+  const ENTRY = { recipient: RECIPIENT_PK, amount: '50' };
+  const batchParams = {
+    distributorSecret: DISTRIBUTOR_SECRET,
+    issuerPublicKey: ISSUER_PK,
+    entries: [ENTRY, ENTRY],
+    memo: 'batch:2',
+    horizonUrl: 'http://127.0.0.1:1/horizon-unreachable',
+    network: 'testnet' as const,
+  };
+
+  it('rejects an empty batch as terminal', async () => {
+    const result = await mintBrzaBatch({ ...batchParams, entries: [] });
+
+    expect(result).toMatchObject({ ok: false, retriable: false, error: expect.stringMatching(/empty/i) });
+  });
+
+  it(`rejects a batch exceeding ${STELLAR_MAX_OPS_PER_TX} ops as terminal`, async () => {
+    const tooMany = Array(STELLAR_MAX_OPS_PER_TX + 1).fill(ENTRY);
+    const result = await mintBrzaBatch({ ...batchParams, entries: tooMany });
+
+    expect(result).toMatchObject({
+      ok: false,
+      retriable: false,
+      error: expect.stringMatching(/exceeds Stellar/i),
+    });
+  });
+
+  it('rejects an invalid distributor secret as terminal', async () => {
+    const result = await mintBrzaBatch({ ...batchParams, distributorSecret: 'not-a-secret' });
+
+    expect(result).toMatchObject({ ok: false, retriable: false });
+  });
+
+  it('rejects a recipient with a malformed public key as terminal', async () => {
+    const result = await mintBrzaBatch({
+      ...batchParams,
+      entries: [ENTRY, { recipient: 'GBOGUS', amount: '50' }],
+    });
+
+    expect(result).toMatchObject({ ok: false, retriable: false });
+  });
+
+  it('rejects a non-positive amount in any entry as terminal', async () => {
+    const result = await mintBrzaBatch({
+      ...batchParams,
+      entries: [ENTRY, { recipient: RECIPIENT_PK, amount: '0' }],
+    });
+
+    expect(result).toMatchObject({
+      ok: false,
+      retriable: false,
+      error: expect.stringMatching(/positive number/i),
+    });
+  });
+
+  it('rejects a memo over 28 bytes as terminal', async () => {
+    const result = await mintBrzaBatch({ ...batchParams, memo: 'a'.repeat(29) });
+
+    expect(result).toMatchObject({
+      ok: false,
+      retriable: false,
+      error: expect.stringMatching(/28 bytes/i),
+    });
   });
 });

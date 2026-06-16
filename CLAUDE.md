@@ -100,7 +100,7 @@ Stellar launches first. Never treat EVM or Solana as launch blockers.
 2. Supabase env vars → Vercel (URL, anon key, service role key)
 3. `supabase db push` — run migrations 001–012
 4. Fund Stellar testnet treasury G-account + run XLM payment verification smoke
-5. Replace demo cron promoter with real BRZA mint submission logic
+5. Pick an indexer source for `MINT_CONFIRMED → INDEXER_CONFIRMED → RECONCILED` (currently a blind status walk; real BRZA mint + Horizon confirmation already ship)
 
 ---
 
