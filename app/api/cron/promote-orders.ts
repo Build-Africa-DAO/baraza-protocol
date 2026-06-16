@@ -20,11 +20,12 @@
  * one stage per tick (otherwise PAYMENT_CONFIRMED would fast-forward to
  * RECONCILED in a single tick).
  *
- * Schedule: see `vercel.json` crons. Locked to `0 0 * * *` (daily) because
+ * Schedule: see `vercel.json` crons. Locked to "0 0 * * *" (daily) because
  * Vercel Hobby rejects any expression that fires more than once per day at
- * DEPLOY time. The design intent is `*/5 * * * *` (five-minute reconciliation
- * cadence) — restore the moment the project moves to Pro. Member-facing
- * impact today: payment promotion takes up to 24h instead of up to 5min.
+ * DEPLOY time. The design intent is a five-minute reconciliation cadence
+ * (slash-5 stars) — restore the moment the project moves to Pro.
+ * Member-facing impact today: payment promotion takes up to 24h instead
+ * of up to 5min.
  */
 
 import {
