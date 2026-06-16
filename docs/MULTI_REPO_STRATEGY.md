@@ -39,7 +39,7 @@ A split is worth doing when **at least three** of these criteria are true. Fewer
 **What exists today**
 
 - `app/api/agent/chat.ts` — Claude streaming chat brain
-- `app/src/components/chat/AshaChat.tsx` — drawer UI (internals still named Asha; user-facing copy is Akili)
+- `app/src/components/chat/AkiliChat.tsx` — AkiliChat drawer UI (Akili community brain)
 - `app/src/components/chat/AskAkili.tsx` — inline trigger component
 - `app/src/lib/akili/` — Akili Council: 5 one-shot specialists (Amara, Kofi, Zara, Nia, Seku) with prompts + dispatcher
 
@@ -157,7 +157,7 @@ app/src/
 
 Once `import x from '@/akili/...'` is the only way the rest of the app touches Akili, the *actual* repo split becomes `git mv app/src/akili ./` in a new repo. Until then, internal boundaries are 95% of the value at 5% of the cost.
 
-The Akili Council is already in `app/src/lib/akili/` — that's the right shape. The chat drawer (`AshaChat.tsx`, `AskAkili.tsx`, `useAshaChat.ts`, `AshaChatContext`) is the piece that should move into the same folder, so the entire AI layer has one boundary.
+The Akili Council is already in `app/src/lib/akili/` — that's the right shape. The chat drawer (`AkiliChat.tsx`, `AskAkili.tsx`, `useAkiliChat.ts`, `AkiliChatContext`) is the piece that should move into the same folder, so the entire AI layer has one boundary.
 
 ---
 

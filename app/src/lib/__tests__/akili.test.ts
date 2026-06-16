@@ -176,3 +176,98 @@ describe('Relationship Tension Context', () => {
     expect(keys).toContain('amara|nia');
   });
 });
+
+describe('buildCouncilSessionContext — wire-level injection', () => {
+  it('returns empty string when no principals are active (backward compat default)', () => {
+    expect(buildCouncilSessionContext([])).toEqual('');
+  });
+
+  it('returns empty string when only one non-Akili principal is active', () => {
+    expect(buildCouncilSessionContext(['amara'])).toEqual('');
+    expect(buildCouncilSessionContext(['kofi'])).toEqual('');
+  });
+
+  it('injects the tension block wrapped in [COUNCIL CONTEXT] markers when 2+ principals active', () => {
+    const ctx = buildCouncilSessionContext(['kofi', 'seku']);
+    expect(ctx).toContain('[COUNCIL CONTEXT]');
+    expect(ctx).toContain('[END COUNCIL CONTEXT]');
+    expect(ctx).toContain('Kofi ↔ Seku');
+  });
+
+  it('does NOT inject when only 1 principal is active and that principal is not Akili', () => {
+    expect(buildCouncilSessionContext(['nia'])).toEqual('');
+    expect(buildCouncilSessionContext(['seku'])).toEqual('');
+  });
+
+  it('Akili active with one other principal still receives the FULL tension block', () => {
+    // Only amara + akili are active, but the full block must fire because akili is present.
+    const ctx = buildCouncilSessionContext(['amara', 'akili']);
+    expect(ctx).toContain('Kofi ↔ Seku');
+    expect(ctx).toContain('Amara ↔ Zara');
+    expect(ctx).toContain('Seku → Nia');
+    expect(ctx).toContain('Kofi → Nia');
+    expect(ctx).toContain('Amara ↔ Nia');
+  });
+
+  it('Akili active with all council members present still produces the full tension block', () => {
+    const ctx = buildCouncilSessionContext(['amara', 'kofi', 'zara', 'nia', 'seku', 'akili']);
+    expect(ctx).toContain('Kofi ↔ Seku');
+    expect(ctx).toContain('Amara ↔ Zara');
+    expect(ctx).toContain('Seku → Nia');
+    expect(ctx).toContain('Kofi → Nia');
+    expect(ctx).toContain('Amara ↔ Nia');
+  });
+
+  it('Decision Stack Guard prepend fires when Akili is active without Nia or Kofi', () => {
+    const ctx = buildCouncilSessionContext(['akili', 'amara']);
+    expect(ctx).toContain('GUARD: Community signal incomplete.');
+    expect(ctx).toContain('Nia and Kofi must both be present before Step 1 clears.');
+    // Guard appears before the tension block.
+    const guardIdx = ctx.indexOf('GUARD:');
+    const tensionIdx = ctx.indexOf('## Active relationship tensions');
+    expect(guardIdx).toBeGreaterThan(-1);
+    expect(tensionIdx).toBeGreaterThan(guardIdx);
+  });
+
+  it('Decision Stack Guard fires when Akili is active with only Nia (Kofi missing)', () => {
+    const ctx = buildCouncilSessionContext(['akili', 'nia']);
+    expect(ctx).toContain('GUARD: Community signal incomplete.');
+  });
+
+  it('Decision Stack Guard fires when Akili is active with only Kofi (Nia missing)', () => {
+    const ctx = buildCouncilSessionContext(['akili', 'kofi']);
+    expect(ctx).toContain('GUARD: Community signal incomplete.');
+  });
+
+  it('Decision Stack Guard does NOT fire when Akili + Nia + Kofi are all present', () => {
+    const ctx = buildCouncilSessionContext(['akili', 'nia', 'kofi']);
+    expect(ctx).not.toContain('GUARD: Community signal incomplete.');
+    // But tension content still fires (full block since akili is active).
+    expect(ctx).toContain('Kofi → Nia');
+  });
+
+  it('Decision Stack Guard does NOT fire when Akili is not active', () => {
+    const ctx = buildCouncilSessionContext(['amara', 'zara']);
+    expect(ctx).not.toContain('GUARD:');
+  });
+
+  it('one-way asymmetric Seku→Nia line stays directional, never flattened', () => {
+    const ctx = buildCouncilSessionContext(['nia', 'seku']);
+    expect(ctx).toContain('Seku → Nia (one-way, asymmetric)');
+    expect(ctx).not.toContain('Nia → Seku');
+  });
+
+  it('one-way asymmetric Kofi→Nia line stays directional, never flattened', () => {
+    const ctx = buildCouncilSessionContext(['kofi', 'nia']);
+    expect(ctx).toContain('Kofi → Nia (one-way, asymmetric)');
+    expect(ctx).not.toContain('Nia → Kofi');
+  });
+
+  it('multi-agent session without Akili: only pair-matched lines fire', () => {
+    const ctx = buildCouncilSessionContext(['kofi', 'seku']);
+    expect(ctx).toContain('Kofi ↔ Seku');
+    // Pairs not in the active set must NOT appear.
+    expect(ctx).not.toContain('Amara ↔ Zara');
+    expect(ctx).not.toContain('Amara ↔ Nia');
+  });
+});

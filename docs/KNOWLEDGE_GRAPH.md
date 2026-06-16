@@ -1,6 +1,6 @@
 # Baraza Knowledge Graph
 
-The knowledge graph is the project memory for Baraza. It links communities, chain rails, proposals, bounties, Asha security checks, and readiness tasks so product and engineering decisions stay connected as the build moves toward testnet.
+The knowledge graph is the project memory for Baraza. It links communities, chain rails, proposals, bounties, Akili security checks, and readiness tasks so product and engineering decisions stay connected as the build moves toward testnet.
 
 ## Source
 
@@ -45,7 +45,7 @@ When adding a feature, also update the graph if the feature changes one of these
 
 - A new chain rail, wallet, testnet, RPC, or contract address
 - A new community workflow such as proposals, bounties, dues, payouts, or membership
-- A new security check or Asha review outcome
+- A new security check or Akili review outcome
 - A new blocker or testnet readiness task
 - A new settlement route such as SOL, XLM, G$, M-Pesa, or community token
 
