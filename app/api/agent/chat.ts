@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
-import { AKILI_RELAY } from '../../src/lib/akili/prompts';
+import { AKILI_RELAY } from '../../src/akili/prompts';
 
 export const config = { runtime: 'nodejs' };
 
@@ -8,6 +8,76 @@ interface ChatRequest {
   message: string;
   communityId?: string;
   history?: Array<{ role: 'user' | 'assistant'; content: string }>;
+}
+
+/**
+ * Categories the client UI can branch on. The friendly message is what
+ * the member sees in the chat bubble; the category lets the UI render
+ * the right affordance (e.g., a "top up credits" link for admins on
+ * `credits_exhausted`, vs. a plain retry button on `rate_limited`).
+ */
+export type ChatErrorCategory =
+  | 'credits_exhausted'
+  | 'auth_failed'
+  | 'rate_limited'
+  | 'overloaded'
+  | 'unknown';
+
+export interface ChatErrorEvent {
+  category: ChatErrorCategory;
+  message: string;
+}
+
+/**
+ * Map an Anthropic SDK error to a chat-level category + a member-facing
+ * message. Exported so tests can pin the classification rules.
+ *
+ * Notes on the credits case: Anthropic returns 400 invalid_request_error
+ * with a "credit balance is too low" body, not a dedicated status code.
+ * String-match is fragile but it's the only signal the API exposes today.
+ */
+export function classifyChatError(error: unknown): ChatErrorEvent {
+  // SDK throws subclasses of APIError with .status set. Fall back to
+  // duck-typing for the rare case where a raw fetch error escapes.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const anyErr = error as any;
+  const status: number | undefined = anyErr?.status;
+  const rawMessage: string = anyErr?.message ?? String(error ?? 'Unknown error');
+
+  if (status === 401 || status === 403) {
+    return {
+      category: 'auth_failed',
+      message:
+        "Akili can't reach the brain right now — the API key is missing, invalid, or revoked.",
+    };
+  }
+
+  if (status === 429) {
+    return {
+      category: 'rate_limited',
+      message: 'Akili is busy right now. Give it a moment and try again.',
+    };
+  }
+
+  if (status === 529 || /overloaded/i.test(rawMessage)) {
+    return {
+      category: 'overloaded',
+      message: 'Akili is overloaded right now. Try again in a moment.',
+    };
+  }
+
+  if (status === 400 && /credit balance|insufficient credits|low.*credit/i.test(rawMessage)) {
+    return {
+      category: 'credits_exhausted',
+      message:
+        "Akili is out of credits and can't respond right now. Your message is fine — a community admin needs to top up the AI budget.",
+    };
+  }
+
+  return {
+    category: 'unknown',
+    message: rawMessage,
+  };
 }
 
 export default async function handler(req: Request): Promise<Response> {
@@ -80,9 +150,9 @@ export default async function handler(req: Request): Promise<Response> {
 
         controller.enqueue(encoder.encode('data: [DONE]\n\n'));
       } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Unknown error';
+        const classified = classifyChatError(err);
         controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify({ error: msg })}\n\n`)
+          encoder.encode(`data: ${JSON.stringify(classified)}\n\n`),
         );
       } finally {
         controller.close();

@@ -249,6 +249,28 @@ const getStaticResponse = (input: string): string => {
   return 'Great question! Baraza helps DAOs and communities manage KES funds and make decisions together. Try asking me about launching a DAO, how voting works, the shared fund, or how to join an existing group.';
 };
 
+/**
+ * Categorized stream error so the chat UI can pick the right fallback —
+ * render the friendly server message for known categories (credits out,
+ * auth failed, rate limit) vs. fall through to the static keyword bank
+ * for unknowns and network failures.
+ */
+export type ChatStreamErrorCategory =
+  | 'credits_exhausted'
+  | 'auth_failed'
+  | 'rate_limited'
+  | 'overloaded'
+  | 'unknown';
+
+export class ChatStreamError extends Error {
+  category: ChatStreamErrorCategory;
+  constructor(category: ChatStreamErrorCategory, message: string) {
+    super(message);
+    this.name = 'ChatStreamError';
+    this.category = category;
+  }
+}
+
 async function streamAkiliResponse(
   message: string,
   communityId: string | null,
@@ -266,7 +288,7 @@ async function streamAkiliResponse(
     body: JSON.stringify({ message, communityId: communityId ?? undefined, history }),
   });
 
-  if (!res.ok || !res.body) throw new Error('unavailable');
+  if (!res.ok || !res.body) throw new ChatStreamError('unknown', 'unavailable');
 
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
@@ -283,9 +305,21 @@ async function streamAkiliResponse(
       const payload = line.slice(6);
       if (payload === '[DONE]') return;
       try {
-        const parsed = JSON.parse(payload) as { text?: string; error?: string };
+        const parsed = JSON.parse(payload) as {
+          text?: string;
+          category?: ChatStreamErrorCategory;
+          message?: string;
+        };
         if (parsed.text) onChunk(parsed.text);
-      } catch { /* ignore malformed */ }
+        // Server emits {category, message} on classified errors. Throw so
+        // the caller decides: render friendly message vs static fallback.
+        if (parsed.category) {
+          throw new ChatStreamError(parsed.category, parsed.message ?? 'unknown error');
+        }
+      } catch (err) {
+        if (err instanceof ChatStreamError) throw err;
+        /* ignore malformed json */
+      }
     }
   }
 }
@@ -388,13 +422,20 @@ const AkiliChat: React.FC = () => {
           prev.map((m) => (m.id === akiliId ? { ...m, text: m.text + chunk } : m))
         );
       });
-    } catch {
-      // Fall back to static responses when API is unavailable
+    } catch (err) {
       setIsTyping(false);
+      // For classified server errors (credits out, auth failed, rate limit,
+      // overloaded) the server's plain-English message is more helpful than
+      // the keyword fallback — show it so the member knows the chat is
+      // intentionally silent vs. broken. Unknown/network errors get the
+      // static fallback so the conversation keeps moving.
+      const isClassified =
+        err instanceof ChatStreamError && err.category !== 'unknown';
+      const replacement = isClassified
+        ? (err as ChatStreamError).message
+        : getStaticResponse(text);
       setMessages((prev) =>
-        prev.map((m) =>
-          m.id === akiliId ? { ...m, text: getStaticResponse(text) } : m
-        )
+        prev.map((m) => (m.id === akiliId ? { ...m, text: replacement } : m))
       );
     }
   }, [chainMeta, communityId, isTyping, messages]);
