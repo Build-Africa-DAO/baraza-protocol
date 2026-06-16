@@ -197,7 +197,7 @@ async function mintQueuedOrders(): Promise<MintTickResult> {
   let skipped_no_allocation = 0;
 
   for (const order of queue) {
-    if (order.brza_allocated == null || order.brza_allocated <= 0) {
+    if (order.brza_allocated === null || order.brza_allocated <= 0) {
       // Legacy intents without pinned rates have NULL brza_allocated. Don't
       // mint an unknown amount — leave at MINT_QUEUED for manual reconciliation.
       skipped_no_allocation += 1;
