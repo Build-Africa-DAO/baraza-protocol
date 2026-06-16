@@ -232,7 +232,9 @@ describe('confirmMintTransaction — Horizon lookup', () => {
   });
 
   it('returns confirmed when Horizon reports successful=true', async () => {
-    stubTransactions(async () => ({ successful: true, ledger: 12345 }));
+    // Horizon SDK exposes the ledger sequence number as `ledger_attr`
+    // (the `ledger` field is a callable that fetches the LedgerRecord).
+    stubTransactions(async () => ({ successful: true, ledger_attr: 12345 }));
 
     const result = await confirmMintTransaction(HORIZON_URL, TX_HASH);
 
@@ -242,7 +244,7 @@ describe('confirmMintTransaction — Horizon lookup', () => {
   it('returns failed when Horizon reports successful=false (tx reverted)', async () => {
     stubTransactions(async () => ({
       successful: false,
-      ledger: 12345,
+      ledger_attr: 12345,
       result_xdr: 'AAAAAA==',
     }));
 
