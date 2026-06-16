@@ -411,6 +411,6 @@ Phase 4.6  Auth gate                        — required before launch
 
 2. **Relayer wallet for Base NFT minting.** Server-side NFT minting on Base requires a funded EOA with minting rights granted by the Token contract. Add `BASE_RELAYER_PRIVATE_KEY` to server-side env vars (never frontend). Fund it with ETH on Base Sepolia for testing.
 
-3. **USSD flow.** Kenya-first USSD path is mentioned in env files but no `/api/ussd` handler route exists. Scope: decide whether USSD launches at MVP or Phase 2.
+3. **USSD flow.** `app/api/ussd/index.ts` exists and handles USSD menu sessions. Scope: decide whether USSD launches at MVP or Phase 2, and confirm full Africa's Talking USSD sandbox integration end-to-end.
 
 4. **Solana mainnet program addresses.** The devnet program IDs in `pda.ts` are confirmed working on devnet. Confirm whether the same programs are deployed on mainnet-beta before any production launch.
