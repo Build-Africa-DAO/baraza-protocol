@@ -56,10 +56,10 @@ impl TreasuryVaultContract {
         if signers.is_empty() {
             panic!("at least one signer required");
         }
-        if signers.len() as u32 > MAX_SIGNERS {
+        if signers.len() > MAX_SIGNERS {
             panic!("too many signers");
         }
-        if threshold == 0 || threshold > signers.len() as u32 {
+        if threshold == 0 || threshold > signers.len() {
             panic!("threshold out of range");
         }
 
@@ -145,7 +145,7 @@ impl TreasuryVaultContract {
         if proposal.executed {
             panic!("already executed");
         }
-        if proposal.approvals.len() as u32 < config.threshold {
+        if proposal.approvals.len() < config.threshold {
             panic!("insufficient approvals");
         }
 
@@ -212,5 +212,219 @@ impl TreasuryVaultContract {
             }
         }
         false
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use soroban_sdk::{
+        testutils::Address as _,
+        token::{Client as TokenClient, StellarAssetClient},
+        vec, Env,
+    };
+
+    struct Harness<'a> {
+        env: Env,
+        client: TreasuryVaultContractClient<'a>,
+        token: Address,
+        token_admin_client: StellarAssetClient<'a>,
+        vault_address: Address,
+        signers: Vec<Address>,
+    }
+
+    fn setup(threshold: u32, signer_count: u32) -> Harness<'static> {
+        let env = Env::default();
+        env.mock_all_auths();
+
+        let token_admin = Address::generate(&env);
+        let sac = env.register_stellar_asset_contract_v2(token_admin);
+        let token = sac.address();
+        let token_admin_client = StellarAssetClient::new(&env, &token);
+
+        let vault_address = env.register_contract(None, TreasuryVaultContract);
+        let client = TreasuryVaultContractClient::new(&env, &vault_address);
+
+        let mut signers: Vec<Address> = Vec::new(&env);
+        for _ in 0..signer_count {
+            signers.push_back(Address::generate(&env));
+        }
+
+        client.initialize(
+            &String::from_str(&env, "baraza-kisumu"),
+            &token,
+            &signers,
+            &threshold,
+        );
+
+        Harness {
+            env,
+            client,
+            token,
+            token_admin_client,
+            vault_address,
+            signers,
+        }
+    }
+
+    #[test]
+    fn test_full_multisig_flow_executes_token_transfer() {
+        let h = setup(2, 3);
+
+        // Fund the vault so it can pay out.
+        h.token_admin_client.mint(&h.vault_address, &1_000);
+
+        let recipient = Address::generate(&h.env);
+        let memo = String::from_str(&h.env, "operational payout");
+
+        let proposal_id = h.client.propose(&h.signers.get(0).unwrap(), &recipient, &400, &memo);
+        // Proposer counts as the first approval; one more reaches threshold=2.
+        h.client.approve(&h.signers.get(1).unwrap(), &proposal_id);
+
+        h.client.execute(&proposal_id);
+
+        let token_client = TokenClient::new(&h.env, &h.token);
+        assert_eq!(token_client.balance(&recipient), 400);
+        assert_eq!(token_client.balance(&h.vault_address), 600);
+
+        let proposal = h.client.get_proposal(&proposal_id).unwrap();
+        assert!(proposal.executed);
+    }
+
+    #[test]
+    #[should_panic(expected = "insufficient approvals")]
+    fn test_execute_below_threshold_rejected() {
+        let h = setup(3, 3);
+        h.token_admin_client.mint(&h.vault_address, &500);
+
+        let recipient = Address::generate(&h.env);
+        let proposal_id = h.client.propose(
+            &h.signers.get(0).unwrap(),
+            &recipient,
+            &100,
+            &String::from_str(&h.env, "early"),
+        );
+        // Only 1 approval (proposer) — threshold is 3.
+        h.client.execute(&proposal_id);
+    }
+
+    #[test]
+    #[should_panic(expected = "already approved")]
+    fn test_double_approval_by_same_signer_rejected() {
+        let h = setup(2, 3);
+        let recipient = Address::generate(&h.env);
+        let proposal_id = h.client.propose(
+            &h.signers.get(0).unwrap(),
+            &recipient,
+            &50,
+            &String::from_str(&h.env, "dup"),
+        );
+        // Proposer already counts as approval 1 — re-approving must fail.
+        h.client.approve(&h.signers.get(0).unwrap(), &proposal_id);
+    }
+
+    #[test]
+    #[should_panic(expected = "not a signer")]
+    fn test_propose_by_non_signer_rejected() {
+        let h = setup(2, 3);
+        let outsider = Address::generate(&h.env);
+        let recipient = Address::generate(&h.env);
+        h.client.propose(
+            &outsider,
+            &recipient,
+            &10,
+            &String::from_str(&h.env, "outsider"),
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "not a signer")]
+    fn test_approve_by_non_signer_rejected() {
+        let h = setup(2, 3);
+        let recipient = Address::generate(&h.env);
+        let proposal_id = h.client.propose(
+            &h.signers.get(0).unwrap(),
+            &recipient,
+            &10,
+            &String::from_str(&h.env, "p"),
+        );
+        let outsider = Address::generate(&h.env);
+        h.client.approve(&outsider, &proposal_id);
+    }
+
+    #[test]
+    #[should_panic(expected = "already executed")]
+    fn test_execute_twice_rejected() {
+        let h = setup(2, 2);
+        h.token_admin_client.mint(&h.vault_address, &500);
+        let recipient = Address::generate(&h.env);
+        let proposal_id = h.client.propose(
+            &h.signers.get(0).unwrap(),
+            &recipient,
+            &50,
+            &String::from_str(&h.env, "once"),
+        );
+        h.client.approve(&h.signers.get(1).unwrap(), &proposal_id);
+        h.client.execute(&proposal_id);
+        // Second execute must trip the executed flag.
+        h.client.execute(&proposal_id);
+    }
+
+    #[test]
+    #[should_panic(expected = "amount must be positive")]
+    fn test_propose_non_positive_amount_rejected() {
+        let h = setup(2, 2);
+        let recipient = Address::generate(&h.env);
+        h.client.propose(
+            &h.signers.get(0).unwrap(),
+            &recipient,
+            &0,
+            &String::from_str(&h.env, "zero"),
+        );
+    }
+
+    #[test]
+    fn test_deposit_increases_balance() {
+        let h = setup(2, 2);
+        let depositor = Address::generate(&h.env);
+        h.token_admin_client.mint(&depositor, &900);
+
+        h.client.deposit(&depositor, &900);
+        assert_eq!(h.client.balance(), 900);
+
+        let token_client = TokenClient::new(&h.env, &h.token);
+        assert_eq!(token_client.balance(&depositor), 0);
+    }
+
+    #[test]
+    #[should_panic(expected = "threshold out of range")]
+    fn test_initialize_threshold_above_signer_count_rejected() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let token_admin = Address::generate(&env);
+        let token = env.register_stellar_asset_contract_v2(token_admin).address();
+
+        let vault = env.register_contract(None, TreasuryVaultContract);
+        let client = TreasuryVaultContractClient::new(&env, &vault);
+
+        let signers = vec![&env, Address::generate(&env), Address::generate(&env)];
+        client.initialize(
+            &String::from_str(&env, "x"),
+            &token,
+            &signers,
+            &4, // threshold > signers.len()
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "already initialized")]
+    fn test_initialize_twice_rejected() {
+        let h = setup(1, 1);
+        h.client.initialize(
+            &String::from_str(&h.env, "y"),
+            &h.token,
+            &h.signers,
+            &1,
+        );
     }
 }
