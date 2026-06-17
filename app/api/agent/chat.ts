@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
-import { AKILI_RELAY } from '../../src/akili/prompts';
+import { AKILI_RELAY } from '../../src/akili/prompts.js';
 
 export const config = { runtime: 'nodejs' };
 

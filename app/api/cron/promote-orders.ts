@@ -34,7 +34,7 @@ import {
   mintBrzaPayment,
   STELLAR_MAX_OPS_PER_TX,
   type StellarNetworkName,
-} from './_lib/stellar-mint';
+} from './_lib/stellar-mint.js';
 
 // nodejs runtime — Stellar SDK isn't edge-compatible (Buffer + Node fetch).
 export const config = { runtime: 'nodejs' };
