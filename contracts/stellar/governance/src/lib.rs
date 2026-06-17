@@ -2,15 +2,15 @@
 
 use soroban_sdk::{
     contract, contractimpl, contracttype, symbol_short,
-    Address, Env, String, Symbol, Val, Vec,
+    Address, Env, IntoVal, String, Symbol, Val, Vec,
 };
 
 fn require_member(env: &Env, community_id: &String, voter: &Address) {
     let membership: Address = env.storage().instance().get(&DataKey::Membership).unwrap();
     let args: Vec<Val> = soroban_sdk::vec![
         env,
-        community_id.clone().into(),
-        voter.clone().into(),
+        community_id.into_val(env),
+        voter.into_val(env),
     ];
     let is_member: bool = env.invoke_contract(&membership, &Symbol::new(env, "is_member"), args);
     if !is_member {
@@ -22,11 +22,12 @@ fn require_member(env: &Env, community_id: &String, voter: &Address) {
 const DEFAULT_VOTING_PERIOD: u64 = 7 * 24 * 60 * 60;
 
 #[contracttype]
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum ProposalStatus {
     Active,
     Passed,
     Failed,
+    Tied,
     Executed,
     Cancelled,
 }
@@ -169,7 +170,10 @@ impl GovernanceContract {
     }
 
     /// Finalize a proposal once its deadline has passed.
-    /// Sets status to Passed or Failed based on vote totals. Anyone can call this.
+    /// Sets status to Passed, Failed, or Tied based on vote totals. Anyone can call this.
+    /// Strict majority required to pass — equal for/against resolves to Tied (terminal,
+    /// not Passed and not Failed) so callers must surface the deadlock rather than
+    /// silently treating it as rejection.
     pub fn finalize(env: Env, proposal_id: u64) -> ProposalStatus {
         let mut proposal: Proposal = env
             .storage()
@@ -186,8 +190,10 @@ impl GovernanceContract {
 
         proposal.status = if proposal.for_votes > proposal.against_votes {
             ProposalStatus::Passed
-        } else {
+        } else if proposal.against_votes > proposal.for_votes {
             ProposalStatus::Failed
+        } else {
+            ProposalStatus::Tied
         };
 
         env.storage()
@@ -282,21 +288,38 @@ impl GovernanceContract {
 #[cfg(test)]
 mod test {
     use super::*;
-    use soroban_sdk::{testutils::Address as _, Env};
+    use soroban_sdk::{
+        contract as sdk_contract, contractimpl as sdk_contractimpl,
+        testutils::{Address as _, Ledger as _},
+        Env,
+    };
 
-    fn setup() -> (Env, GovernanceContractClient<'static>) {
+    /// Minimal stand-in for the membership contract so cross-contract `is_member`
+    /// resolves during tests. Always returns true — membership-gating is tested
+    /// in the membership crate itself; here we exercise governance flow only.
+    #[sdk_contract]
+    pub struct MockMembership;
+
+    #[sdk_contractimpl]
+    impl MockMembership {
+        pub fn is_member(_env: Env, _community_id: String, _member: Address) -> bool {
+            true
+        }
+    }
+
+    fn setup() -> (Env, GovernanceContractClient<'static>, Address) {
         let env = Env::default();
         env.mock_all_auths();
-        let id = env.register_contract(None, GovernanceContract);
-        let client = GovernanceContractClient::new(&env, &id);
-        (env, client)
+        let membership_id = env.register_contract(None, MockMembership);
+        let governance_id = env.register_contract(None, GovernanceContract);
+        let client = GovernanceContractClient::new(&env, &governance_id);
+        (env, client, membership_id)
     }
 
     #[test]
     fn test_full_proposal_lifecycle() {
-        let (env, client) = setup();
+        let (env, client, membership) = setup();
         let admin = Address::generate(&env);
-        let membership = Address::generate(&env);
         client.initialize(&admin, &membership, &None);
 
         let proposer = Address::generate(&env);
@@ -333,9 +356,8 @@ mod test {
     #[test]
     #[should_panic(expected = "already voted")]
     fn test_double_vote_rejected() {
-        let (env, client) = setup();
+        let (env, client, membership) = setup();
         let admin = Address::generate(&env);
-        let membership = Address::generate(&env);
         client.initialize(&admin, &membership, &None);
 
         let proposer = Address::generate(&env);
@@ -350,10 +372,56 @@ mod test {
     }
 
     #[test]
-    fn test_failed_proposal_when_against_wins() {
-        let (env, client) = setup();
+    fn test_tied_proposal_resolves_to_tied() {
+        let (env, client, membership) = setup();
         let admin = Address::generate(&env);
-        let membership = Address::generate(&env);
+        client.initialize(&admin, &membership, &None);
+
+        let proposer = Address::generate(&env);
+        let community_id = String::from_str(&env, "baraza-nairobi");
+        let title = String::from_str(&env, "Split the room");
+        let desc = String::from_str(&env, "One for, one against.");
+
+        let proposal_id = client.create_proposal(&proposer, &community_id, &title, &desc);
+        let voter_a = Address::generate(&env);
+        let voter_b = Address::generate(&env);
+        client.vote(&voter_a, &proposal_id, &true);
+        client.vote(&voter_b, &proposal_id, &false);
+
+        let period = client.voting_period();
+        env.ledger().with_mut(|l| l.timestamp += period + 1);
+
+        let status = client.finalize(&proposal_id);
+        assert_eq!(status, ProposalStatus::Tied);
+    }
+
+    #[test]
+    #[should_panic(expected = "proposal has not passed")]
+    fn test_tied_proposal_cannot_be_executed() {
+        let (env, client, membership) = setup();
+        let admin = Address::generate(&env);
+        client.initialize(&admin, &membership, &None);
+
+        let proposer = Address::generate(&env);
+        let community_id = String::from_str(&env, "baraza-mombasa");
+        let title = String::from_str(&env, "Deadlocked");
+        let desc = String::from_str(&env, "Zero votes cast.");
+
+        let proposal_id = client.create_proposal(&proposer, &community_id, &title, &desc);
+
+        let period = client.voting_period();
+        env.ledger().with_mut(|l| l.timestamp += period + 1);
+
+        let status = client.finalize(&proposal_id);
+        assert_eq!(status, ProposalStatus::Tied);
+
+        client.mark_executed(&proposal_id);
+    }
+
+    #[test]
+    fn test_failed_proposal_when_against_wins() {
+        let (env, client, membership) = setup();
+        let admin = Address::generate(&env);
         client.initialize(&admin, &membership, &None);
 
         let proposer = Address::generate(&env);
