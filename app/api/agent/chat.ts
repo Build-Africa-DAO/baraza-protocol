@@ -80,10 +80,27 @@ export function classifyChatError(error: unknown): ChatErrorEvent {
   };
 }
 
-export default async function handler(req: Request): Promise<Response> {
-  // Belt-and-suspenders: any unexpected throw inside the handler body becomes
-  // a classified SSE event so the chat UI shows a member-facing message
-  // instead of Vercel's bare FUNCTION_INVOCATION_FAILED page.
+// Named HTTP-method exports (POST, OPTIONS) — NOT `export default`.
+// Vercel's Node.js runtime treats a default-export `(req, res) => void`
+// classic signature and ignores any returned Response, which silently
+// hangs requests for the full timeout. Named method exports are the
+// documented way to use the Web `fetch`-style API on Fluid Compute.
+// See https://vercel.com/docs/functions/functions-api-reference#function-signature
+
+export function OPTIONS(): Response {
+  return new Response(null, {
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  });
+}
+
+export async function POST(req: Request): Promise<Response> {
+  // Belt-and-suspenders: any unexpected throw inside the handler body
+  // becomes a classified JSON event so the chat UI shows a member-facing
+  // message instead of Vercel's bare FUNCTION_INVOCATION_FAILED page.
   try {
     return await handleChat(req);
   } catch (err) {
@@ -99,20 +116,6 @@ export default async function handler(req: Request): Promise<Response> {
 }
 
 async function handleChat(req: Request): Promise<Response> {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST',
-        'Access-Control-Allow-Headers': 'Content-Type',
-      },
-    });
-  }
-
-  if (req.method !== 'POST') {
-    return new Response('Method Not Allowed', { status: 405 });
-  }
-
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     // Surface as a classified event so the chat UI renders the same
