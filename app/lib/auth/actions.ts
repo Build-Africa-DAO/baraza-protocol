@@ -15,6 +15,8 @@ export type AuthState = {
   channel: "phone" | "email";
   contact?: string;
   error?: string;
+  /** Set on a successful verify so the client can animate, then navigate. */
+  success?: boolean;
 };
 
 const GENERIC_ERROR =
@@ -76,7 +78,10 @@ export async function verifyPhoneOtp(
     };
   }
 
-  redirect("/");
+  // Session cookie is set above by verifyOtp (we're in a Server Action, so the
+  // write is committed). Return success instead of redirecting so the client
+  // can play the exit animation before navigating.
+  return { step: "verify", channel: "phone", contact: phone, success: true };
 }
 
 // ---------------------------------------------------------------------------
@@ -129,7 +134,7 @@ export async function verifyEmailOtp(
     };
   }
 
-  redirect("/");
+  return { step: "verify", channel: "email", contact: email, success: true };
 }
 
 // ---------------------------------------------------------------------------

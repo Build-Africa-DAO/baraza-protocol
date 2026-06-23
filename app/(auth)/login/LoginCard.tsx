@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition, type FormEvent } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
+import { useRouter } from "next/navigation";
 import {
   sendEmailOtp,
   sendPhoneOtp,
@@ -29,6 +30,7 @@ export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
   const [resendIn, setResendIn] = useState(0);
   const [isPending, startTransition] = useTransition();
   const panelRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   // Motion 1 — entrance stagger (once, on mount).
   useGSAP(
@@ -118,11 +120,28 @@ export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
     }
 
     startTransition(async () => {
-      // On success the action redirects server-side; only errors return state.
       const next =
         view.channel === "phone"
           ? await verifyPhoneOtp(view, formData)
           : await verifyEmailOtp(view, formData);
+
+      if (next.success) {
+        // Motion 4 — fade the panel up and out, then go to the dashboard.
+        const go = () => router.push("/dashboard");
+        if (prefersReduced()) {
+          go();
+        } else {
+          gsap.to(".auth-panel", {
+            y: -10,
+            opacity: 0,
+            duration: 0.3,
+            ease: "power2.in",
+            onComplete: go,
+          });
+        }
+        return;
+      }
+
       setView(next);
       if (next.error) {
         setCode("");
