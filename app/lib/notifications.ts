@@ -61,7 +61,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
     title: "Group invitation",
     body: "You've been invited to join Finance Circle",
     actionUrl: "/?tab=daos",
-    actionLabel: "View DAOs",
+    actionLabel: "View Groups",
     read: true,
     createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
   },

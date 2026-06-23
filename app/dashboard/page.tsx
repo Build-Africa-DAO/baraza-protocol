@@ -1,5 +1,7 @@
+import { t } from "@/app/lib/i18n";
+
 export const metadata = {
-  title: "Dashboard · Baraza",
+  title: "Dashibodi · Baraza",
 };
 
 // Placeholder — receives the post-login redirect so it doesn't 404.
@@ -14,9 +16,9 @@ export default function Dashboard() {
         <span className="absolute inset-[14px] rounded-full bg-baraza-lime" />
       </span>
       <h1 className="mt-5 font-display text-3xl font-bold tracking-[-0.02em]">
-        Welcome to Baraza
+        {t("dashboard.welcome")}
       </h1>
-      <p className="mt-2 text-sm text-baraza-muted">Your dashboard is coming.</p>
+      <p className="mt-2 text-sm text-baraza-muted">{t("dashboard.coming")}</p>
     </main>
   );
 }

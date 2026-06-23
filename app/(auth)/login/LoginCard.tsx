@@ -12,6 +12,7 @@ import {
   type AuthState,
 } from "@/app/lib/auth/actions";
 import { maskContact } from "@/app/lib/auth/phone";
+import { t } from "@/app/lib/i18n";
 import GoogleButton from "./GoogleButton";
 import OtpInput from "./OtpInput";
 
@@ -63,19 +64,19 @@ export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
 
   useEffect(() => {
     if (resendIn <= 0) return;
-    const t = setTimeout(() => setResendIn((s) => s - 1), 1000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setResendIn((s) => s - 1), 1000);
+    return () => clearTimeout(timer);
   }, [resendIn]);
 
-  // Error copy lives here (client-side) — plain direction, never "Error".
+  // Error copy — pulled from i18n, plain direction, never "Error".
   const error: string | undefined = view.error
     ? view.step === "verify"
-      ? "That code didn't work. Try again or resend."
+      ? t("login.error.code")
       : view.channel === "phone"
-        ? "Check your number and try again."
-        : "Check your email and try again."
+        ? t("login.error.phone")
+        : t("login.error.email")
     : oauthError && view.step === "enter"
-      ? "Couldn't continue with Google. Try your phone instead."
+      ? t("login.error.google")
       : undefined;
 
   function send(formData: FormData, channel: "phone" | "email") {
@@ -187,24 +188,28 @@ export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
       {view.step === "enter" ? (
         <>
           <h1 className="font-display text-3xl font-bold tracking-[-0.02em] text-baraza-white">
-            Welcome to Baraza
+            {t("login.title")}
           </h1>
           <p className="mt-2 text-sm text-baraza-muted">
-            Continue to your community.
+            {t("login.sub")}
           </p>
 
           {error && <ErrorNote>{error}</ErrorNote>}
 
-          {/* Google — first, fastest, most-tapped */}
+          {/*
+            Google sign-in — device-secured via Google account.
+            We frame it as signing in with your phone/device, not as a wallet
+            connection. No seed phrase. No Baraza-held address. (Goal 5)
+          */}
           <div className="mt-6">
             <GoogleButton />
             <p className="mt-2 text-center text-xs text-baraza-muted">
-              Most people use Google — it&apos;s the fastest.
+              {t("login.google.hint")}
             </p>
           </div>
 
           <Divider>
-            {view.channel === "phone" ? "or use your phone" : "or use your email"}
+            {view.channel === "phone" ? t("login.or.phone") : t("login.or.email")}
           </Divider>
 
           <form onSubmit={onSubmit} className="phone-form enter-form space-y-3">
@@ -221,8 +226,8 @@ export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
                   required
                   autoFocus
                   aria-label="Phone number"
-                  placeholder="712 345 678"
-                  className="min-h-12 w-full bg-transparent px-3 py-3 font-mono text-base text-baraza-white outline-none placeholder:text-baraza-muted/60"
+                  placeholder={t("login.phone.placeholder")}
+                  className="min-h-[52px] w-full bg-transparent px-3 py-3 font-mono text-base text-baraza-white outline-none placeholder:text-baraza-muted/60"
                 />
               </div>
             ) : (
@@ -234,12 +239,12 @@ export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
                 autoFocus
                 aria-label="Email"
                 placeholder="you@example.com"
-                className="min-h-12 w-full rounded-xl border border-baraza-border bg-baraza-surface px-3 py-3 text-base text-baraza-white outline-none transition focus:border-baraza-lime focus:ring-2 focus:ring-baraza-lime/30 placeholder:text-baraza-muted/60"
+                className="min-h-[52px] w-full rounded-xl border border-baraza-border bg-baraza-surface px-3 py-3 text-base text-baraza-white outline-none transition focus:border-baraza-lime focus:ring-2 focus:ring-baraza-lime/30 placeholder:text-baraza-muted/60"
               />
             )}
 
             <PrimaryButton pending={isPending}>
-              {isPending ? "Sending…" : "Send code →"}
+              {isPending ? t("login.sending") : t("login.send")}
             </PrimaryButton>
           </form>
 
@@ -248,22 +253,22 @@ export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
             onClick={() =>
               switchChannel(view.channel === "phone" ? "email" : "phone")
             }
-            className="mx-auto mt-6 block min-h-12 text-sm text-baraza-muted underline-offset-4 transition hover:text-baraza-teal hover:underline"
+            className="mx-auto mt-6 block min-h-[44px] text-sm text-baraza-muted underline-offset-4 transition hover:text-baraza-teal hover:underline"
           >
-            {view.channel === "phone" ? "Use email instead" : "Use phone instead"}
+            {view.channel === "phone" ? t("login.use.email") : t("login.use.phone")}
           </button>
 
           <p className="mt-6 text-center text-xs text-baraza-muted/80">
-            By continuing you agree to our terms and privacy policy.
+            {t("login.terms")}
           </p>
         </>
       ) : (
         <>
           <h1 className="font-display text-3xl font-bold tracking-[-0.02em] text-baraza-white">
-            Enter the code
+            {t("login.verify.title")}
           </h1>
           <p className="mt-2 text-sm text-baraza-muted">
-            We sent it to{" "}
+            {t("login.verify.sub")}{" "}
             <span className="font-mono text-baraza-white">
               {maskContact(view.contact ?? "")}
             </span>
@@ -280,7 +285,7 @@ export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
             </div>
 
             <PrimaryButton pending={isPending} disabled={code.length < 6}>
-              {isPending ? "Checking…" : "Verify"}
+              {isPending ? t("login.verifying") : t("login.verify.cta")}
             </PrimaryButton>
           </form>
 
@@ -288,19 +293,19 @@ export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
             <button
               type="button"
               onClick={back}
-              className="min-h-12 font-medium text-baraza-muted transition hover:text-baraza-teal"
+              className="min-h-[44px] font-medium text-baraza-muted transition hover:text-baraza-teal"
             >
-              {view.channel === "phone" ? "Change number" : "Change email"}
+              {view.channel === "phone" ? t("login.change.number") : t("login.change.email")}
             </button>
             <button
               type="button"
               onClick={resend}
               disabled={resendIn > 0 || isPending}
-              className="min-h-12 font-medium text-baraza-muted transition enabled:hover:text-baraza-teal disabled:text-baraza-muted/50"
+              className="min-h-[44px] font-medium text-baraza-muted transition enabled:hover:text-baraza-teal disabled:text-baraza-muted/50"
             >
               {resendIn > 0
-                ? `Resend in 0:${String(resendIn).padStart(2, "0")}`
-                : "Resend code"}
+                ? `${t("login.resend.wait")}${String(resendIn).padStart(2, "0")}`
+                : t("login.resend")}
             </button>
           </div>
         </>
@@ -332,7 +337,7 @@ function PrimaryButton({
     <button
       type="submit"
       disabled={pending || disabled}
-      className="min-h-12 w-full rounded-xl bg-baraza-lime px-4 py-3 text-sm font-semibold text-baraza-black transition hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-baraza-lime/50 focus:ring-offset-2 focus:ring-offset-baraza-black active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50"
+      className="min-h-[52px] w-full rounded-xl bg-baraza-lime px-4 py-3 text-sm font-semibold text-baraza-black transition hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-baraza-lime/50 focus:ring-offset-2 focus:ring-offset-baraza-black active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50"
     >
       {children}
     </button>

@@ -10,7 +10,7 @@ const TYPE_GROUPS: { label: string; types: EventType[] | "all" | "unread" }[] = 
   { label: "Unread", types: "unread" },
   { label: "Bounties", types: ["new_bounty", "new_bid", "bid_accepted", "bid_rejected", "status_changed"] },
   { label: "Payments", types: ["payment_processed"] },
-  { label: "DAOs", types: ["dao_invitation", "achievement"] },
+  { label: "Groups", types: ["dao_invitation", "achievement"] },
   { label: "Comments", types: ["comment_reply", "mention"] },
 ];
 

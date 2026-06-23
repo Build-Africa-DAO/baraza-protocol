@@ -49,9 +49,6 @@ export default function LaunchDAOModal({ open, onClose }: Props) {
     threshold: 60,
     quorum: 30,
     votingPeriod: 7,
-    fundNew: true,
-    fundAddress: "",
-    fundCurrency: "USDC",
   });
   const [submitted, setSubmitted] = useState(false);
 
@@ -70,15 +67,15 @@ export default function LaunchDAOModal({ open, onClose }: Props) {
       <Overlay onClose={onClose}>
         <div className="text-center py-8 px-6">
           <div className="w-16 h-16 rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center text-3xl mx-auto mb-5">🎉</div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Group created!</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Kikundi kimeundwa!</h2>
           <p className="text-sm text-gray-500 max-w-xs mx-auto mb-6">
-            <strong>{form.name}</strong> is live on Stellar. Share it with your community.
+            <strong>{form.name}</strong> iko tayari. Shiriki na jamii yako.
           </p>
           <button
             onClick={onClose}
-            className="bg-gray-900 hover:bg-gray-700 text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors"
+            className="min-h-[44px] bg-gray-900 hover:bg-gray-700 text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors"
           >
-            Done
+            Imekamilika
           </button>
         </div>
       </Overlay>
@@ -104,27 +101,27 @@ export default function LaunchDAOModal({ open, onClose }: Props) {
           </div>
         ))}
       </div>
-      <p className="text-xs text-gray-400 mb-5">Step {step + 1} of {STEPS.length} — <span className="text-gray-700 font-medium">{STEPS[step]}</span></p>
+      <p className="text-xs text-gray-400 mb-5">Hatua {step + 1} kati ya {STEPS.length} — <span className="text-gray-700 font-medium">{STEPS[step]}</span></p>
 
       {/* Step 0: Basics */}
       {step === 0 && (
         <div className="flex flex-col gap-4">
-          <h2 className="text-lg font-bold text-gray-900">Tell us about your group</h2>
-          <Field label="Group name" required>
+          <h2 className="text-lg font-bold text-gray-900">Tuambie kuhusu kikundi chako</h2>
+          <Field label="Jina la kikundi" required>
             <input
               type="text"
               value={form.name}
               onChange={(e) => set("name", e.target.value)}
-              placeholder="e.g. Kibera Youth Collective"
+              placeholder="mf. Kibera Youth Collective"
               className="input"
             />
           </Field>
-          <Field label="One-line description">
+          <Field label="Maelezo mafupi">
             <input
               type="text"
               value={form.tagline}
               onChange={(e) => set("tagline", e.target.value)}
-              placeholder="What does your group do?"
+              placeholder="Kikundi chako kinafanya nini?"
               className="input"
             />
           </Field>
@@ -134,14 +131,14 @@ export default function LaunchDAOModal({ open, onClose }: Props) {
       {/* Step 1: Decisions */}
       {step === 1 && (
         <div className="flex flex-col gap-5">
-          <h2 className="text-lg font-bold text-gray-900">How decisions are made</h2>
-          <p className="text-sm text-gray-500 -mt-3">How will your group make decisions?</p>
+          <h2 className="text-lg font-bold text-gray-900">Jinsi maamuzi yanavyofanywa</h2>
+          <p className="text-sm text-gray-500 -mt-3">Kikundi chako kitafanya maamuzi vipi?</p>
 
           <div className="flex flex-col gap-2">
             {GOV_MODELS.map((m) => (
               <label
                 key={m.id}
-                className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-colors ${
+                className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-colors min-h-[44px] ${
                   form.govModel === m.id
                     ? "border-orange-400 bg-orange-50"
                     : "border-gray-200 hover:border-gray-300 bg-white"
@@ -166,8 +163,8 @@ export default function LaunchDAOModal({ open, onClose }: Props) {
           <Field
             label={
               <span className="flex items-center">
-                Approval threshold
-                <Tooltip text="The minimum share of votes that must say 'Yes' for a decision to pass. At 60%, at least 6 out of every 10 voters need to approve before anything happens with the group's shared fund or rules." />
+                Kiwango cha idhini
+                <Tooltip text="Sehemu ndogo ya kura ambazo lazima ziseme 'Ndiyo' kwa uamuzi kupita. Kwa 60%, angalau kura 6 kati ya 10 zinahitajika." />
               </span>
             }
           >
@@ -182,9 +179,9 @@ export default function LaunchDAOModal({ open, onClose }: Props) {
               <span className="text-sm font-bold text-gray-900 w-12 text-right">{form.threshold}%</span>
             </div>
             <p className="text-xs text-gray-400 mt-1">
-              {form.threshold <= 51 ? "Simple majority — fast but less protection against bad decisions."
-                : form.threshold <= 66 ? "Supermajority — a good balance of speed and security."
-                : "High consensus — harder to pass anything, but very secure."}
+              {form.threshold <= 51 ? "Wingi rahisi — haraka lakini hatari kidogo."
+                : form.threshold <= 66 ? "Wingi mkubwa — usawa mzuri wa kasi na usalama."
+                : "Makubaliano ya juu — vigumu zaidi kupita chochote, lakini salama sana."}
             </p>
           </Field>
 
@@ -192,7 +189,7 @@ export default function LaunchDAOModal({ open, onClose }: Props) {
             label={
               <span className="flex items-center">
                 Quorum
-                <Tooltip text="The minimum number of members who must vote before the result counts at all. This stops a tiny group from passing decisions when most members aren't paying attention. Example: with 20% quorum and 100 members, at least 20 people need to vote." />
+                <Tooltip text="Idadi ndogo ya wanachama ambao lazima wapige kura kabla matokeo hayajahesabiwa. Hii inazuia kundi dogo kupitisha maamuzi wanachama wengi hawashiriki." />
               </span>
             }
           >
@@ -211,8 +208,8 @@ export default function LaunchDAOModal({ open, onClose }: Props) {
           <Field
             label={
               <span className="flex items-center">
-                Voting period
-                <Tooltip text="How many days a decision stays open for members to vote. Too short and members miss it — too long and decisions are slow. 5–7 days works well for most groups." />
+                Muda wa kupiga kura
+                <Tooltip text="Idadi ya siku uamuzi unabaki wazi kwa wanachama kupiga kura. Siku 5–7 zinafanya kazi vizuri kwa vikundi vingi." />
               </span>
             }
           >
@@ -224,7 +221,7 @@ export default function LaunchDAOModal({ open, onClose }: Props) {
                 onChange={(e) => set("votingPeriod", Number(e.target.value))}
                 className="input w-24"
               />
-              <span className="text-sm text-gray-500">days</span>
+              <span className="text-sm text-gray-500">siku</span>
             </div>
           </Field>
         </div>
@@ -235,74 +232,40 @@ export default function LaunchDAOModal({ open, onClose }: Props) {
         <div className="flex flex-col gap-5">
           <div>
             <h2 className="text-lg font-bold text-gray-900 flex items-center gap-1">
-              Shared fund setup
-              <Tooltip text="The shared fund belongs entirely to your community — not to Baraza. Every member can see the balance and transaction history. No single person can move funds alone; your community's own votes decide every spend." />
+              Usanidi wa mfuko wa pamoja
+              <Tooltip text="Mfuko wa pamoja ni wa jamii yako peke yake — si wa Baraza. Kila mwanachama anaweza kuona salio na historia ya miamala. Hakuna mtu mmoja anayeweza kusogeza fedha peke yake; kura za jamii yako zinaamu kila matumizi." />
             </h2>
-            <p className="text-sm text-gray-500 mt-1">Your community holds its own fund. Baraza does not hold, manage, or access it.</p>
+            <p className="text-sm text-gray-500 mt-1">Jamii yako inashikilia mfuko wake. Baraza haishikili, haisimamii, wala hana ufikiaji wake.</p>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <label className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-colors ${form.fundNew ? "border-orange-400 bg-orange-50" : "border-gray-200 hover:border-gray-300"}`}>
-              <input
-                type="radio"
-                checked={form.fundNew}
-                onChange={() => set("fundNew", true)}
-                className="mt-0.5 accent-orange-500"
-              />
-              <div>
-                <p className="text-sm font-semibold text-gray-900">Create a new shared fund</p>
-                <p className="text-xs text-gray-500 mt-0.5">A member-controlled account on Stellar. Members control it together by vote — no single person holds the keys. Baraza has no access.</p>
-              </div>
-            </label>
-            <label className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-colors ${!form.fundNew ? "border-orange-400 bg-orange-50" : "border-gray-200 hover:border-gray-300"}`}>
-              <input
-                type="radio"
-                checked={!form.fundNew}
-                onChange={() => set("fundNew", false)}
-                className="mt-0.5 accent-orange-500"
-              />
-              <div>
-                <p className="text-sm font-semibold text-gray-900">Connect an existing account</p>
-                <p className="text-xs text-gray-500 mt-0.5">Already have a member-controlled account? Paste its address below.</p>
-              </div>
-            </label>
+          {/*
+            Goal 5 (UX pass): We no longer ask the user to paste a wallet
+            address. That pattern is crypto-native and unsuitable for the
+            target user. Connecting an existing member-controlled account is
+            a follow-up infra task (full passkey/multisig kit integration).
+            For now we confirm the user wants a new member-controlled fund.
+          */}
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+            <p className="font-semibold text-amber-900 mb-1 text-sm">Mfuko mpya wa wanachama</p>
+            <p className="text-amber-800 text-xs leading-relaxed">
+              Tutaunda akaunti inayomilikiwa na wanachama wote. Hakuna mtu mmoja anayeshikilia ufunguo — wote wanakubaliana kwa kura ndipo fedha zinasogea.
+            </p>
           </div>
 
-          {!form.fundNew && (
-            <Field label="Account address">
-              <input
-                type="text"
-                value={form.fundAddress}
-                onChange={(e) => set("fundAddress", e.target.value)}
-                placeholder="Stellar address"
-                className="input font-mono text-sm"
-              />
-            </Field>
-          )}
-
-          <Field
-            label={
-              <span className="flex items-center">
-                Primary currency
-                <Tooltip text="The currency your group will mainly use for contributions and payouts. USDC is a stablecoin — its value stays close to 1 US Dollar, making it easier to budget and plan." />
-              </span>
-            }
-          >
-            <select value={form.fundCurrency} onChange={(e) => set("fundCurrency", e.target.value)} className="input">
-              <option>USDC</option>
-              <option>USDT</option>
-              <option>XLM</option>
-            </select>
-          </Field>
+          {/* KES as the single display currency — no crypto amounts shown */}
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm">
+            <p className="font-semibold text-gray-800 mb-1">Sarafu: KSh (shilingi ya Kenya)</p>
+            <p className="text-gray-500 text-xs">Michango yote na malipo yataonyeshwa kwa KSh.</p>
+          </div>
 
           {/* Shared fund explainer card */}
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm">
-            <p className="font-semibold text-amber-900 mb-1">How the shared fund works</p>
+            <p className="font-semibold text-amber-900 mb-1">Jinsi mfuko wa pamoja unavyofanya kazi</p>
             <ul className="text-amber-800 text-xs space-y-1 leading-relaxed list-none">
-              <li>→ Members save into the community&apos;s own account — not Baraza&apos;s</li>
-              <li>→ Anyone can raise how to spend or move funds</li>
-              <li>→ Spending only happens after a vote passes</li>
-              <li>→ Every transaction is visible to all members</li>
+              <li>→ Wanachama wanaokoa kwenye akaunti ya jamii — si ya Baraza</li>
+              <li>→ Yeyote anaweza kupendekeza jinsi ya kutumia au kusogeza fedha</li>
+              <li>→ Matumizi yanafanyika tu baada ya kura kupita</li>
+              <li>→ Kila muamala unaonekana kwa wanachama wote</li>
             </ul>
           </div>
         </div>
@@ -311,18 +274,18 @@ export default function LaunchDAOModal({ open, onClose }: Props) {
       {/* Step 3: Review */}
       {step === 3 && (
         <div className="flex flex-col gap-4">
-          <h2 className="text-lg font-bold text-gray-900">Review your group</h2>
+          <h2 className="text-lg font-bold text-gray-900">Kagua kikundi chako</h2>
           <div className="bg-gray-50 rounded-2xl divide-y divide-gray-200 border border-gray-200 text-sm">
-            <Row label="Name" value={form.name || "—"} />
-            <Row label="Network" value="Stellar" />
-            <Row label="Decision model" value={GOV_MODELS.find((m) => m.id === form.govModel)?.label ?? "—"} />
-            <Row label="Threshold" value={`${form.threshold}% approval`} />
-            <Row label="Quorum" value={`${form.quorum}% must vote`} />
-            <Row label="Voting period" value={`${form.votingPeriod} days`} />
-            <Row label="Shared fund" value={form.fundNew ? "New member-controlled account" : form.fundAddress || "—"} />
-            <Row label="Currency" value={form.fundCurrency} />
+            <Row label="Jina" value={form.name || "—"} />
+            <Row label="Mtandao" value="Stellar" />
+            <Row label="Mfumo wa maamuzi" value={GOV_MODELS.find((m) => m.id === form.govModel)?.label ?? "—"} />
+            <Row label="Kiwango cha idhini" value={`${form.threshold}% ya kura`} />
+            <Row label="Quorum" value={`${form.quorum}% lazima wapige kura`} />
+            <Row label="Muda wa kupiga kura" value={`siku ${form.votingPeriod}`} />
+            <Row label="Mfuko wa pamoja" value="Akaunti mpya inayomilikiwa na wanachama" />
+            <Row label="Sarafu" value="KSh" />
           </div>
-          <p className="text-xs text-gray-400">By launching you agree that your community&apos;s fund is held and controlled by its members — not by Baraza. Transaction fees apply on Stellar.</p>
+          <p className="text-xs text-gray-400">Kwa kuanzisha unakubali kwamba mfuko wa jamii yako unashikiliwa na kudhibitiwa na wanachama wake — si na Baraza. Ada za muamala zinatumika kwenye Stellar.</p>
         </div>
       )}
 
@@ -331,17 +294,17 @@ export default function LaunchDAOModal({ open, onClose }: Props) {
         <button
           type="button"
           onClick={step === 0 ? onClose : back}
-          className="text-sm text-gray-500 hover:text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+          className="min-h-[44px] text-sm text-gray-500 hover:text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
         >
-          {step === 0 ? "Cancel" : "← Back"}
+          {step === 0 ? "Ghairi" : "← Nyuma"}
         </button>
         <button
           type="button"
           onClick={step === STEPS.length - 1 ? submit : next}
           disabled={step === 0 && !form.name.trim()}
-          className="bg-orange-500 hover:bg-orange-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold px-6 py-2 rounded-xl transition-colors"
+          className="min-h-[44px] bg-orange-500 hover:bg-orange-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold px-6 py-2 rounded-xl transition-colors"
         >
-          {step === STEPS.length - 1 ? "Start group" : "Continue →"}
+          {step === STEPS.length - 1 ? "Anza kikundi" : "Endelea →"}
         </button>
       </div>
     </Overlay>
@@ -352,10 +315,10 @@ function Overlay({ children, onClose }: { children: React.ReactNode; onClose: ()
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-5 sm:p-6">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors text-xl leading-none"
+          className="absolute top-4 right-4 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors text-xl leading-none"
         >
           ×
         </button>
