@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const NETWORKS = ["All", "Stellar", "Solana", "Arbitrum", "Base", "Abstract", "Optimism", "Celo"];
+const NETWORKS = ["All", "Stellar"];
 
 const DAOS = [
   {
@@ -10,8 +10,8 @@ const DAOS = [
     name: "Kibera Youth Collective",
     tagline: "A savings group for young entrepreneurs in Kibera. We pool resources monthly and create other's business delivery.",
     members: 34,
-    treasury: "KSh 104,200",
-    proposals: 5,
+    fund: "KSh 104,200",
+    decisions: 5,
     tags: ["Youth business poster kit"],
     network: "Stellar",
     coverColor: "#1a2744",
@@ -24,8 +24,8 @@ const DAOS = [
     name: "Mwarzo Housing Sacco",
     tagline: "Community housing initiative. Members contribute monthly toward land purchase and construction.",
     members: 14,
-    treasury: "KSh 1,480,000",
-    proposals: 3,
+    fund: "KSh 1,480,000",
+    decisions: 3,
     tags: ["Housing", "Sacco"],
     network: "Stellar",
     coverColor: "#0e3a2f",
@@ -38,8 +38,8 @@ const DAOS = [
     name: "Mama Mboga Association",
     tagline: "Market vendors cooperative for bulk purchasing, shared transport, and collective bargaining.",
     members: 103,
-    treasury: "KSh 88,400",
-    proposals: 2,
+    fund: "KSh 88,400",
+    decisions: 2,
     tags: ["Market", "Trade"],
     network: "Stellar",
     coverColor: "#2d1a00",
@@ -52,10 +52,10 @@ const DAOS = [
     name: "TechBridge Nairobi",
     tagline: "Professional network for tech workers. Monthly contributions for direct content audit more.",
     members: 29,
-    treasury: "KSh 210,500",
-    proposals: 4,
+    fund: "KSh 210,500",
+    decisions: 4,
     tags: ["Tech", "Professional"],
-    network: "Arbitrum",
+    network: "Stellar",
     coverColor: "#0a1628",
     logoColor: "#6366f1",
     logo: "TB",
@@ -66,10 +66,10 @@ const DAOS = [
     name: "Westlands Traders Circle",
     tagline: "Import-export business coalition funding shared logistics and trade finance.",
     members: 47,
-    treasury: "KSh 560,000",
-    proposals: 6,
+    fund: "KSh 560,000",
+    decisions: 6,
     tags: ["Trade", "Logistics"],
-    network: "Base",
+    network: "Stellar",
     coverColor: "#1a0a2e",
     logoColor: "#8b5cf6",
     logo: "WT",
@@ -77,13 +77,13 @@ const DAOS = [
   },
   {
     id: 6,
-    name: "Kakamega Farmers DAO",
+    name: "Kakamega Farmers Circle",
     tagline: "Smallholder farmers pooling for inputs, equipment hire, and collective market access.",
     members: 88,
-    treasury: "KSh 145,300",
-    proposals: 3,
+    fund: "KSh 145,300",
+    decisions: 3,
     tags: ["Agriculture", "Rural"],
-    network: "Celo",
+    network: "Stellar",
     coverColor: "#0d2b0d",
     logoColor: "#16a34a",
     logo: "KF",
@@ -93,7 +93,7 @@ const DAOS = [
 
 export default function TopDAOs() {
   const [search, setSearch] = useState("");
-  const [activeNetwork, setActiveNetwork] = useState("Stellar");
+  const [activeNetwork, setActiveNetwork] = useState("All");
 
   const filtered = DAOS.filter((d) => {
     const matchNetwork = activeNetwork === "All" || d.network === activeNetwork;
@@ -145,7 +145,7 @@ export default function TopDAOs() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            Launch a DAO
+            Start a group
           </button>
         </div>
       </div>
@@ -177,12 +177,12 @@ export default function TopDAOs() {
                   <p className="text-xs text-gray-400">Members</p>
                 </div>
                 <div>
-                  <p className="text-xl font-bold text-gray-900">{featured.treasury}</p>
-                  <p className="text-xs text-gray-400">Treasury</p>
+                  <p className="text-xl font-bold text-gray-900">{featured.fund}</p>
+                  <p className="text-xs text-gray-400">Community fund</p>
                 </div>
                 <div>
-                  <p className="text-xl font-bold text-gray-900">{featured.proposals}</p>
-                  <p className="text-xs text-gray-400">Proposals</p>
+                  <p className="text-xl font-bold text-gray-900">{featured.decisions}</p>
+                  <p className="text-xs text-gray-400">Decisions</p>
                 </div>
               </div>
             </div>
@@ -200,7 +200,7 @@ export default function TopDAOs() {
 
       {/* Count */}
       <p className="text-xs text-gray-400 uppercase tracking-wider mb-4 font-medium">
-        {filtered.length} DAOs found
+        {filtered.length} groups found
       </p>
 
       {/* Grid */}
@@ -237,8 +237,8 @@ export default function TopDAOs() {
                   <p className="text-[11px] text-gray-400">Members</p>
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900 text-sm">{dao.treasury}</p>
-                  <p className="text-[11px] text-gray-400">Treasury</p>
+                  <p className="font-semibold text-gray-900 text-sm">{dao.fund}</p>
+                  <p className="text-[11px] text-gray-400">Community fund</p>
                 </div>
               </div>
 
@@ -256,7 +256,7 @@ export default function TopDAOs() {
       </div>
 
       {filtered.length === 0 && (
-        <div className="text-center text-gray-400 py-20">No DAOs match your search.</div>
+        <div className="text-center text-gray-400 py-20">No groups match your search.</div>
       )}
     </div>
   );

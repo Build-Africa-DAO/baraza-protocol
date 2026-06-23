@@ -32,28 +32,26 @@ function Tooltip({ text }: { text: string }) {
   );
 }
 
-const NETWORKS = ["Solana", "Base", "Arbitrum", "Celo", "Optimism"];
 const GOV_MODELS = [
-  { id: "token", label: "Token vote", desc: "Members vote with tokens they hold" },
-  { id: "multisig", label: "Multisig", desc: "A fixed set of signers approve decisions" },
+  { id: "token", label: "Badge vote", desc: "Members vote with their membership badges" },
+  { id: "multisig", label: "Council approval", desc: "A fixed set of council members approve decisions" },
   { id: "simple", label: "Simple majority", desc: "One member, one vote — majority wins" },
 ];
 
-const STEPS = ["Basics", "Governance", "Treasury", "Review"];
+const STEPS = ["Basics", "Decisions", "Shared fund", "Review"];
 
 export default function LaunchDAOModal({ open, onClose }: Props) {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState({
     name: "",
     tagline: "",
-    network: "Solana",
     govModel: "simple",
     threshold: 60,
     quorum: 30,
     votingPeriod: 7,
-    treasuryNew: true,
-    treasuryAddress: "",
-    treasuryCurrency: "USDC",
+    fundNew: true,
+    fundAddress: "",
+    fundCurrency: "USDC",
   });
   const [submitted, setSubmitted] = useState(false);
 
@@ -72,9 +70,9 @@ export default function LaunchDAOModal({ open, onClose }: Props) {
       <Overlay onClose={onClose}>
         <div className="text-center py-8 px-6">
           <div className="w-16 h-16 rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center text-3xl mx-auto mb-5">🎉</div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">DAO created!</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Group created!</h2>
           <p className="text-sm text-gray-500 max-w-xs mx-auto mb-6">
-            <strong>{form.name}</strong> is live on {form.network}. Share it with your community.
+            <strong>{form.name}</strong> is live on Stellar. Share it with your community.
           </p>
           <button
             onClick={onClose}
@@ -111,8 +109,8 @@ export default function LaunchDAOModal({ open, onClose }: Props) {
       {/* Step 0: Basics */}
       {step === 0 && (
         <div className="flex flex-col gap-4">
-          <h2 className="text-lg font-bold text-gray-900">Tell us about your DAO</h2>
-          <Field label="DAO name" required>
+          <h2 className="text-lg font-bold text-gray-900">Tell us about your group</h2>
+          <Field label="Group name" required>
             <input
               type="text"
               value={form.name}
@@ -126,23 +124,18 @@ export default function LaunchDAOModal({ open, onClose }: Props) {
               type="text"
               value={form.tagline}
               onChange={(e) => set("tagline", e.target.value)}
-              placeholder="What does your DAO do?"
+              placeholder="What does your group do?"
               className="input"
             />
-          </Field>
-          <Field label="Network">
-            <select value={form.network} onChange={(e) => set("network", e.target.value)} className="input">
-              {NETWORKS.map((n) => <option key={n}>{n}</option>)}
-            </select>
           </Field>
         </div>
       )}
 
-      {/* Step 1: Governance */}
+      {/* Step 1: Decisions */}
       {step === 1 && (
         <div className="flex flex-col gap-5">
-          <h2 className="text-lg font-bold text-gray-900">Governance model</h2>
-          <p className="text-sm text-gray-500 -mt-3">How will your DAO make decisions?</p>
+          <h2 className="text-lg font-bold text-gray-900">How decisions are made</h2>
+          <p className="text-sm text-gray-500 -mt-3">How will your group make decisions?</p>
 
           <div className="flex flex-col gap-2">
             {GOV_MODELS.map((m) => (
@@ -174,7 +167,7 @@ export default function LaunchDAOModal({ open, onClose }: Props) {
             label={
               <span className="flex items-center">
                 Approval threshold
-                <Tooltip text="The minimum share of votes that must say 'Yes' for a proposal to pass. At 60%, at least 6 out of every 10 voters need to approve before anything happens with the DAO's money or rules." />
+                <Tooltip text="The minimum share of votes that must say 'Yes' for a decision to pass. At 60%, at least 6 out of every 10 voters need to approve before anything happens with the group's shared fund or rules." />
               </span>
             }
           >
@@ -189,7 +182,7 @@ export default function LaunchDAOModal({ open, onClose }: Props) {
               <span className="text-sm font-bold text-gray-900 w-12 text-right">{form.threshold}%</span>
             </div>
             <p className="text-xs text-gray-400 mt-1">
-              {form.threshold <= 51 ? "Simple majority — fast but less protection against bad proposals."
+              {form.threshold <= 51 ? "Simple majority — fast but less protection against bad decisions."
                 : form.threshold <= 66 ? "Supermajority — a good balance of speed and security."
                 : "High consensus — harder to pass anything, but very secure."}
             </p>
@@ -219,7 +212,7 @@ export default function LaunchDAOModal({ open, onClose }: Props) {
             label={
               <span className="flex items-center">
                 Voting period
-                <Tooltip text="How many days a proposal stays open for members to vote. Too short and members miss it — too long and decisions are slow. 5–7 days works well for most groups." />
+                <Tooltip text="How many days a decision stays open for members to vote. Too short and members miss it — too long and decisions are slow. 5–7 days works well for most groups." />
               </span>
             }
           >
@@ -237,51 +230,51 @@ export default function LaunchDAOModal({ open, onClose }: Props) {
         </div>
       )}
 
-      {/* Step 2: Treasury */}
+      {/* Step 2: Shared fund */}
       {step === 2 && (
         <div className="flex flex-col gap-5">
           <div>
             <h2 className="text-lg font-bold text-gray-900 flex items-center gap-1">
-              Treasury setup
-              <Tooltip text="The treasury is your DAO's shared on-chain wallet. Every member can see the balance and transaction history — nothing is hidden. Think of it as a joint bank account that runs itself using smart contracts, so no single person can move funds alone." />
+              Shared fund setup
+              <Tooltip text="The shared fund belongs entirely to your community — not to Baraza. Every member can see the balance and transaction history. No single person can move funds alone; your community's own votes decide every spend." />
             </h2>
-            <p className="text-sm text-gray-500 mt-1">Where will your DAO's funds be held?</p>
+            <p className="text-sm text-gray-500 mt-1">Your community holds its own fund. Baraza does not hold, manage, or access it.</p>
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-colors ${form.treasuryNew ? "border-orange-400 bg-orange-50" : "border-gray-200 hover:border-gray-300"}`}>
+            <label className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-colors ${form.fundNew ? "border-orange-400 bg-orange-50" : "border-gray-200 hover:border-gray-300"}`}>
               <input
                 type="radio"
-                checked={form.treasuryNew}
-                onChange={() => set("treasuryNew", true)}
+                checked={form.fundNew}
+                onChange={() => set("fundNew", true)}
                 className="mt-0.5 accent-orange-500"
               />
               <div>
-                <p className="text-sm font-semibold text-gray-900">Create a new treasury</p>
-                <p className="text-xs text-gray-500 mt-0.5">We'll deploy a multi-sig smart contract wallet on {form.network}. Members control it together — no single person holds the keys.</p>
+                <p className="text-sm font-semibold text-gray-900">Create a new shared fund</p>
+                <p className="text-xs text-gray-500 mt-0.5">A member-controlled account on Stellar. Members control it together by vote — no single person holds the keys. Baraza has no access.</p>
               </div>
             </label>
-            <label className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-colors ${!form.treasuryNew ? "border-orange-400 bg-orange-50" : "border-gray-200 hover:border-gray-300"}`}>
+            <label className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-colors ${!form.fundNew ? "border-orange-400 bg-orange-50" : "border-gray-200 hover:border-gray-300"}`}>
               <input
                 type="radio"
-                checked={!form.treasuryNew}
-                onChange={() => set("treasuryNew", false)}
+                checked={!form.fundNew}
+                onChange={() => set("fundNew", false)}
                 className="mt-0.5 accent-orange-500"
               />
               <div>
-                <p className="text-sm font-semibold text-gray-900">Connect an existing wallet</p>
-                <p className="text-xs text-gray-500 mt-0.5">Already have a multisig or DAO wallet? Paste its address below.</p>
+                <p className="text-sm font-semibold text-gray-900">Connect an existing account</p>
+                <p className="text-xs text-gray-500 mt-0.5">Already have a member-controlled account? Paste its address below.</p>
               </div>
             </label>
           </div>
 
-          {!form.treasuryNew && (
-            <Field label="Wallet address">
+          {!form.fundNew && (
+            <Field label="Account address">
               <input
                 type="text"
-                value={form.treasuryAddress}
-                onChange={(e) => set("treasuryAddress", e.target.value)}
-                placeholder="0x… or Solana address"
+                value={form.fundAddress}
+                onChange={(e) => set("fundAddress", e.target.value)}
+                placeholder="Stellar address"
                 className="input font-mono text-sm"
               />
             </Field>
@@ -291,26 +284,25 @@ export default function LaunchDAOModal({ open, onClose }: Props) {
             label={
               <span className="flex items-center">
                 Primary currency
-                <Tooltip text="This is the token your DAO will mainly use for contributions and payouts. USDC is a stablecoin — its value stays close to 1 US Dollar, making it easier to budget and plan." />
+                <Tooltip text="The currency your group will mainly use for contributions and payouts. USDC is a stablecoin — its value stays close to 1 US Dollar, making it easier to budget and plan." />
               </span>
             }
           >
-            <select value={form.treasuryCurrency} onChange={(e) => set("treasuryCurrency", e.target.value)} className="input">
+            <select value={form.fundCurrency} onChange={(e) => set("fundCurrency", e.target.value)} className="input">
               <option>USDC</option>
               <option>USDT</option>
-              <option>SOL</option>
-              <option>ETH</option>
+              <option>XLM</option>
             </select>
           </Field>
 
-          {/* Treasury explainer card */}
+          {/* Shared fund explainer card */}
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm">
-            <p className="font-semibold text-amber-900 mb-1">How the treasury works</p>
+            <p className="font-semibold text-amber-900 mb-1">How the shared fund works</p>
             <ul className="text-amber-800 text-xs space-y-1 leading-relaxed list-none">
-              <li>→ Members contribute funds to the treasury wallet</li>
-              <li>→ Anyone can propose how to spend or move funds</li>
-              <li>→ Spending only happens after a proposal passes a vote</li>
-              <li>→ Every transaction is public and recorded on-chain</li>
+              <li>→ Members save into the community&apos;s own account — not Baraza&apos;s</li>
+              <li>→ Anyone can raise how to spend or move funds</li>
+              <li>→ Spending only happens after a vote passes</li>
+              <li>→ Every transaction is visible to all members</li>
             </ul>
           </div>
         </div>
@@ -319,18 +311,18 @@ export default function LaunchDAOModal({ open, onClose }: Props) {
       {/* Step 3: Review */}
       {step === 3 && (
         <div className="flex flex-col gap-4">
-          <h2 className="text-lg font-bold text-gray-900">Review your DAO</h2>
+          <h2 className="text-lg font-bold text-gray-900">Review your group</h2>
           <div className="bg-gray-50 rounded-2xl divide-y divide-gray-200 border border-gray-200 text-sm">
             <Row label="Name" value={form.name || "—"} />
-            <Row label="Network" value={form.network} />
-            <Row label="Governance" value={GOV_MODELS.find((m) => m.id === form.govModel)?.label ?? "—"} />
+            <Row label="Network" value="Stellar" />
+            <Row label="Decision model" value={GOV_MODELS.find((m) => m.id === form.govModel)?.label ?? "—"} />
             <Row label="Threshold" value={`${form.threshold}% approval`} />
             <Row label="Quorum" value={`${form.quorum}% must vote`} />
             <Row label="Voting period" value={`${form.votingPeriod} days`} />
-            <Row label="Treasury" value={form.treasuryNew ? "New multisig (auto-deployed)" : form.treasuryAddress || "—"} />
-            <Row label="Currency" value={form.treasuryCurrency} />
+            <Row label="Shared fund" value={form.fundNew ? "New member-controlled account" : form.fundAddress || "—"} />
+            <Row label="Currency" value={form.fundCurrency} />
           </div>
-          <p className="text-xs text-gray-400">By launching you agree that this DAO will operate on-chain. Gas fees apply on {form.network}.</p>
+          <p className="text-xs text-gray-400">By launching you agree that your community&apos;s fund is held and controlled by its members — not by Baraza. Transaction fees apply on Stellar.</p>
         </div>
       )}
 
@@ -349,7 +341,7 @@ export default function LaunchDAOModal({ open, onClose }: Props) {
           disabled={step === 0 && !form.name.trim()}
           className="bg-orange-500 hover:bg-orange-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold px-6 py-2 rounded-xl transition-colors"
         >
-          {step === STEPS.length - 1 ? "Launch DAO 🚀" : "Continue →"}
+          {step === STEPS.length - 1 ? "Start group" : "Continue →"}
         </button>
       </div>
     </Overlay>

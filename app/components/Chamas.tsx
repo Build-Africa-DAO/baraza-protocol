@@ -172,7 +172,7 @@ export default function Chamas() {
                 </div>
                 <div>
                   <p className="text-xl font-bold text-gray-900">{featured.treasury}</p>
-                  <p className="text-xs text-gray-400">Treasury</p>
+                  <p className="text-xs text-gray-400">Community fund</p>
                 </div>
                 <div>
                   <p className="text-xl font-bold text-gray-900">{featured.meetingCycle}</p>
@@ -232,7 +232,7 @@ export default function Chamas() {
                 </div>
                 <div>
                   <p className="font-semibold text-gray-900 text-sm">{chama.treasury}</p>
-                  <p className="text-[11px] text-gray-400">Treasury</p>
+                  <p className="text-[11px] text-gray-400">Community fund</p>
                 </div>
                 <div>
                   <p className="font-semibold text-gray-900 text-sm">{chama.meetingCycle}</p>

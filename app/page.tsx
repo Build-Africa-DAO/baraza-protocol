@@ -13,16 +13,16 @@ type Tab = "daos" | "chamas" | "bounties" | "contributors";
 
 const VALID_TABS: Tab[] = ["daos", "chamas", "bounties", "contributors"];
 
-const ROTATING_WORDS = ["DAO", "SACCO", "treasury"];
+const ROTATING_WORDS = ["community fund", "SACCO", "group"];
 
 const FEATURES = [
-  { title: "Govern", sub: "On-chain voting" },
-  { title: "Treasury", sub: "Shared funds" },
+  { title: "Vote", sub: "Shared decisions" },
+  { title: "Save", sub: "Community fund" },
   { title: "Bounties", sub: "Paid tasks" },
 ];
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: "daos", label: "DAOs" },
+  { id: "daos", label: "Groups" },
   { id: "chamas", label: "Chamas" },
   { id: "bounties", label: "Bounties" },
   { id: "contributors", label: "Contributors" },
@@ -113,7 +113,7 @@ function HomeContent() {
             </Link>
             <div className="flex items-center gap-1.5 text-sm text-gray-700 bg-gray-100 px-3 py-1.5 rounded-full">
               <span className="w-2 h-2 rounded-full bg-green-500 inline-block"></span>
-              Solana
+              Stellar
             </div>
             <button className="text-sm font-semibold bg-gray-900 hover:bg-gray-700 text-white px-4 py-1.5 rounded-full transition-colors">
               Connect
@@ -148,7 +148,7 @@ function HomeContent() {
           </div>
 
           <p className="text-gray-400 text-base mb-10 max-w-xl mx-auto leading-relaxed">
-            Launch a DAO, post bounties, run on-chain votes, and keep your treasury transparent — built for communities across Africa.
+            Start a community fund, post bounties, run votes, and keep your shared savings visible to every member — built for communities across Africa.
           </p>
 
           {/* Primary CTAs */}
@@ -157,13 +157,13 @@ function HomeContent() {
               onClick={() => handleTabChange("daos")}
               className="bg-amber-400 hover:bg-amber-300 text-black font-extrabold px-8 py-3.5 rounded-xl text-sm tracking-widest uppercase transition-colors"
             >
-              Browse DAOs →
+              Browse groups →
             </button>
             <button
               onClick={() => handleTabChange("daos")}
               className="bg-orange-500 hover:bg-orange-400 text-white font-extrabold px-8 py-3.5 rounded-xl text-sm tracking-widest uppercase transition-colors"
             >
-              Launch a DAO
+              Start a group
             </button>
             <button
               onClick={() => handleTabChange("bounties")}
@@ -204,9 +204,9 @@ function HomeContent() {
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-6 pt-6 pb-0">
           <p className="text-xs font-semibold text-orange-500 uppercase tracking-widest mb-1">Discover</p>
-          <h2 className="text-2xl font-bold text-gray-900 mb-1">DAOs & Chamas</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-1">Groups & Chamas</h2>
           <p className="text-gray-500 text-sm mb-5">
-            Find a DAO to join, or explore Chamas — they are different communities on Baraza
+            Find a group to join, or explore Chamas — they are different communities on Baraza
           </p>
 
           {/* Tabs */}
@@ -245,13 +245,13 @@ function HomeContent() {
               <span className="font-bold text-gray-900">Baraza</span>
             </div>
             <p className="text-xs text-gray-400 max-w-xs">
-              A treasury layer for groups that collect dues, take on proposals, and move funds with shared governance.
+              A shared savings layer for communities that collect dues, raise decisions, and move their own funds together.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-x-16 gap-y-1 text-sm text-gray-500">
-            <button onClick={() => handleTabChange("daos")} className="text-left hover:text-gray-800 transition-colors">Browse DAOs</button>
+            <button onClick={() => handleTabChange("daos")} className="text-left hover:text-gray-800 transition-colors">Browse groups</button>
             <button onClick={() => handleTabChange("chamas")} className="text-left hover:text-gray-800 transition-colors">Browse Chamas</button>
-            <button onClick={() => handleTabChange("daos")} className="text-left hover:text-gray-800 transition-colors">Launch a DAO</button>
+            <button onClick={() => handleTabChange("daos")} className="text-left hover:text-gray-800 transition-colors">Start a group</button>
             <button onClick={() => handleTabChange("chamas")} className="text-left hover:text-gray-800 transition-colors">Start a Chama</button>
             <button onClick={() => handleTabChange("contributors")} className="text-left hover:text-gray-800 transition-colors">Evaluate Best Practice</button>
             <button onClick={() => handleTabChange("daos")} className="text-left hover:text-gray-800 transition-colors">How it Works</button>
