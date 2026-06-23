@@ -1,0 +1,249 @@
+{
+  "folders": [
+    {
+      "name": "baraza-protocol",
+      "path": "."
+    },
+    {
+      "name": "baraza-tv",
+      "path": "../baraza-tv"
+    },
+    {
+      "name": "baraza-ai",
+      "path": "../baraza-ai"
+    },
+    {
+      "name": "baraza-ussd",
+      "path": "../baraza-ussd"
+    },
+    {
+      "name": "baraza-contracts-stellar",
+      "path": "../baraza-contracts-stellar"
+    },
+    {
+      "name": "baraza-contracts-solana",
+      "path": "../baraza-contracts-solana"
+    }
+  ],
+  "settings": {
+    // TypeScript
+    "typescript.tsdk": "baraza-protocol/app/node_modules/typescript/lib",
+    "typescript.enablePromptUseWorkspaceTsdk": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "[typescript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+      "editor.formatOnSave": true
+    },
+    "[typescriptreact]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+      "editor.formatOnSave": true
+    },
+    "[rust]": {
+      "editor.defaultFormatter": "rust-lang.rust-analyzer",
+      "editor.formatOnSave": true
+    },
+    "[python]": {
+      "editor.defaultFormatter": "ms-python.black-formatter",
+      "editor.formatOnSave": true
+    },
+
+    // Editor
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.rulers": [100],
+    "editor.bracketPairColorization.enabled": true,
+    "editor.guides.bracketPairs": true,
+    "editor.inlayHints.enabled": "on",
+
+    // Files
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/.git": true,
+      "**/target": true,
+      "**/.anchor": true,
+      "**/dist": true,
+      "**/.next": true,
+      "**/graphify-out": true,
+      "**/third_party": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/target": true,
+      "**/dist": true,
+      "**/.next": true,
+      "**/Cargo.lock": true,
+      "**/graphify-out": true,
+      "**/third_party": true
+    },
+
+    // ESLint
+    "eslint.workingDirectories": [
+      { "directory": "baraza-protocol/app", "changeProcessCWD": true },
+      { "directory": "baraza-ussd", "changeProcessCWD": true },
+      { "directory": "baraza-ai", "changeProcessCWD": true }
+    ],
+    "eslint.validate": ["typescript", "typescriptreact"],
+
+    // Rust
+    "rust-analyzer.linkedProjects": [
+      "baraza-contracts-stellar/Cargo.toml",
+      "baraza-contracts-solana/Cargo.toml",
+      "baraza-protocol/Cargo.toml"
+    ],
+    "rust-analyzer.checkOnSave": true,
+    "rust-analyzer.check.command": "clippy",
+
+    // Git
+    "git.ignoreLimitWarning": true,
+    "git.autofetch": true,
+
+    // Security — never show .env values in editor
+    "dotenv.enableAutocloaking": true
+  },
+  "extensions": {
+    "recommendations": [
+      // TypeScript + React
+      "esbenp.prettier-vscode",
+      "dbaeumer.vscode-eslint",
+      "bradlc.vscode-tailwindcss",
+      "dsznajder.es7-react-js-snippets",
+
+      // Rust
+      "rust-lang.rust-analyzer",
+      "serayuzgur.crates",
+      "tamasfe.even-better-toml",
+
+      // Solana / Anchor
+      "ackstorm.solidity",
+
+      // Python (USSD bridge)
+      "ms-python.python",
+      "ms-python.black-formatter",
+
+      // Git
+      "eamodio.gitlens",
+      "github.vscode-pull-request-github",
+
+      // Env files
+      "mikestead.dotenv",
+
+      // Markdown
+      "yzhang.markdown-all-in-one",
+      "davidanson.vscode-markdownlint",
+
+      // Productivity
+      "streetsidesoftware.code-spell-checker",
+      "usernamehw.errorlens",
+      "christian-kohler.path-intellisense"
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "baraza-protocol: dev server",
+        "type": "node",
+        "request": "launch",
+        "runtimeExecutable": "npm",
+        "runtimeArgs": ["--prefix", "app", "run", "dev"],
+        "cwd": "${workspaceFolder:baraza-protocol}",
+        "console": "integratedTerminal",
+        "skipFiles": ["<node_internals>/**"]
+      },
+      {
+        "name": "baraza-protocol: tests",
+        "type": "node",
+        "request": "launch",
+        "runtimeExecutable": "npm",
+        "runtimeArgs": ["--prefix", "app", "run", "test"],
+        "cwd": "${workspaceFolder:baraza-protocol}",
+        "console": "integratedTerminal",
+        "skipFiles": ["<node_internals>/**"]
+      },
+      {
+        "name": "baraza-ussd: dev",
+        "type": "node",
+        "request": "launch",
+        "runtimeExecutable": "npm",
+        "runtimeArgs": ["run", "dev"],
+        "cwd": "${workspaceFolder:baraza-ussd}",
+        "console": "integratedTerminal",
+        "skipFiles": ["<node_internals>/**"]
+      },
+      {
+        "name": "baraza-ai: orchestrator",
+        "type": "node",
+        "request": "launch",
+        "runtimeExecutable": "npm",
+        "runtimeArgs": ["run", "dev"],
+        "cwd": "${workspaceFolder:baraza-ai}",
+        "console": "integratedTerminal",
+        "skipFiles": ["<node_internals>/**"]
+      },
+      {
+        "name": "baraza-tv: bridge",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "${workspaceFolder:baraza-tv}/bridge/websocket-server.py",
+        "console": "integratedTerminal"
+      }
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "protocol: install",
+        "type": "shell",
+        "command": "npm --prefix app install",
+        "options": { "cwd": "${workspaceFolder:baraza-protocol}" },
+        "group": "build"
+      },
+      {
+        "label": "protocol: typecheck",
+        "type": "shell",
+        "command": "npm --prefix app run typecheck",
+        "options": { "cwd": "${workspaceFolder:baraza-protocol}" },
+        "group": "test",
+        "problemMatcher": "$tsc"
+      },
+      {
+        "label": "protocol: lint",
+        "type": "shell",
+        "command": "npm --prefix app run lint",
+        "options": { "cwd": "${workspaceFolder:baraza-protocol}" },
+        "group": "test"
+      },
+      {
+        "label": "protocol: test",
+        "type": "shell",
+        "command": "npm --prefix app run test",
+        "options": { "cwd": "${workspaceFolder:baraza-protocol}" },
+        "group": { "kind": "test", "isDefault": true }
+      },
+      {
+        "label": "contracts-stellar: build",
+        "type": "shell",
+        "command": "cargo build --target wasm32-unknown-unknown --release",
+        "options": { "cwd": "${workspaceFolder:baraza-contracts-stellar}" },
+        "group": "build"
+      },
+      {
+        "label": "contracts-solana: build",
+        "type": "shell",
+        "command": "anchor build",
+        "options": { "cwd": "${workspaceFolder:baraza-contracts-solana}" },
+        "group": "build"
+      },
+      {
+        "label": "ussd: test",
+        "type": "shell",
+        "command": "npm test",
+        "options": { "cwd": "${workspaceFolder:baraza-ussd}" },
+        "group": "test"
+      }
+    ]
+  }
+}

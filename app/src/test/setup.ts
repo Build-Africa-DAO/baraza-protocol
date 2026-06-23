@@ -1,0 +1,23 @@
+import '@testing-library/jest-dom';
+import { afterEach, beforeEach, vi } from 'vitest';
+
+// --- localStorage mock ---
+const store: Record<string, string> = {};
+
+const localStorageMock = {
+  getItem: (key: string) => store[key] ?? null,
+  setItem: (key: string, value: string) => { store[key] = value; },
+  removeItem: (key: string) => { delete store[key]; },
+  clear: () => { Object.keys(store).forEach((k) => delete store[k]); },
+  get length() { return Object.keys(store).length; },
+  key: (i: number) => Object.keys(store)[i] ?? null,
+};
+
+// Per-file `@vitest-environment node` overrides have no `window` global;
+// only patch localStorage when one exists (the jsdom default).
+if (typeof window !== 'undefined') {
+  Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+}
+
+beforeEach(() => localStorageMock.clear());
+afterEach(() => vi.clearAllMocks());

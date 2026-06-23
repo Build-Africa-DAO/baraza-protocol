@@ -1,0 +1,46 @@
+{
+  "buildCommand": "cd app && npm install && npm run build",
+  "outputDirectory": "app/dist",
+  "installCommand": "echo skip",
+  "framework": null,
+  "rewrites": [
+    { "source": "/((?!api/)(?!_vercel/).*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options",  "value": "nosniff" },
+        { "key": "X-Frame-Options",          "value": "DENY" },
+        { "key": "Referrer-Policy",          "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy",       "value": "camera=(), microphone=(), geolocation=()" }
+      ]
+    }
+  ],
+  "functions": {
+    "app/api/ussd/index.ts": {
+      "maxDuration": 5
+    },
+    "app/api/mpesa/simulate.ts": {
+      "maxDuration": 15
+    },
+    "app/api/membership/activate.ts": {
+      "maxDuration": 30
+    },
+    "app/api/stellar/verify-payment.ts": {
+      "maxDuration": 30
+    },
+    "app/api/payment-orders/status.ts": {
+      "maxDuration": 10
+    },
+    "app/api/cron/promote-orders.ts": {
+      "maxDuration": 60
+    }
+  }
+}

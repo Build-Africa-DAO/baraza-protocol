@@ -1,0 +1,20 @@
+[package]
+name = "treasury_vault"
+version = "0.1.0"
+description = "Baraza treasury vault program (deposits visible, withdrawals gated)"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "treasury_vault"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+idl-build = ["anchor-lang/idl-build"]
+
+[dependencies]
+anchor-lang = "0.30.1"

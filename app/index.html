@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0d0d0d" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <script>
+      (() => {
+        try {
+          const stored = window.localStorage.getItem("baraza:theme");
+          const theme = stored === "light" || stored === "dark"
+            ? stored
+            : "dark";
+          document.documentElement.classList.toggle("dark", theme === "dark");
+          document.documentElement.style.colorScheme = theme;
+          document
+            .querySelector('meta[name="theme-color"]')
+            ?.setAttribute("content", theme === "dark" ? "#0d0d0d" : "#f9f9f9");
+        } catch {
+          document.documentElement.classList.add("dark");
+        }
+      })();
+    </script>
+
+    <title>Baraza - Treasury tools for DAOs, communities &amp; SACCOs</title>
+    <meta name="description" content="Baraza is a phone-first treasury and governance platform for DAOs, communities, SACCOs, and co-operatives. Collect M-Pesa dues in KSh, submit proposals, vote, and manage shared funds." />
+    <meta name="keywords" content="DAO, community, chama, SACCO, welfare group, cooperative, treasury, governance, KES, M-Pesa, Kenya, Africa" />
+    <meta name="author" content="Baraza Protocol" />
+    <link rel="canonical" href="https://baraza-protocol.vercel.app/" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Baraza Protocol" />
+    <meta property="og:locale" content="en_KE" />
+    <meta property="og:url" content="https://baraza-protocol.vercel.app/" />
+    <meta property="og:title" content="Baraza - Treasury tools for DAOs, communities &amp; SACCOs" />
+    <meta property="og:description" content="Phone-first KSh treasury and governance for DAOs, communities, SACCOs, and co-ops. Every vote and shilling stays visible." />
+    <meta property="og:image" content="https://baraza-protocol.vercel.app/og-image.svg" />
+    <meta property="og:image:type" content="image/svg+xml" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Baraza - launch a shared treasury for your DAO, community, or SACCO." />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Baraza - Treasury tools for DAOs, communities &amp; SACCOs" />
+    <meta name="twitter:description" content="Phone-first KSh treasury and governance for DAOs, communities, SACCOs, and co-ops. Every vote and shilling stays visible." />
+    <meta name="twitter:image" content="https://baraza-protocol.vercel.app/og-image.svg" />
+
+    <link rel="icon" type="image/svg+xml" href="/baraza-logo-v2.svg" />
+    <link rel="apple-touch-icon" href="/baraza-logo-v2.svg" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://baraza-protocol.vercel.app/#organization",
+            "name": "Baraza Protocol",
+            "url": "https://baraza-protocol.vercel.app/",
+            "logo": "https://baraza-protocol.vercel.app/baraza-logo-v2.svg",
+            "description": "Phone-first treasury and governance for DAOs, communities, SACCOs, welfare groups, and co-operatives."
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://baraza-protocol.vercel.app/#website",
+            "url": "https://baraza-protocol.vercel.app/",
+            "name": "Baraza Protocol",
+            "publisher": { "@id": "https://baraza-protocol.vercel.app/#organization" },
+            "inLanguage": "en"
+          },
+          {
+            "@type": "SoftwareApplication",
+            "name": "Baraza",
+            "applicationCategory": "FinanceApplication",
+            "operatingSystem": "Web, iOS, Android",
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "KES" },
+            "description": "Launch and manage shared treasury rules for DAOs, communities, SACCOs, welfare groups, and co-operatives.",
+            "audience": {
+              "@type": "Audience",
+              "geographicArea": { "@type": "Country", "name": "Kenya" }
+            }
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
