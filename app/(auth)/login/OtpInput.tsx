@@ -95,7 +95,7 @@ export default function OtpInput({
           onKeyDown={(e) => handleKeyDown(i, e)}
           onFocus={handleFocus}
           aria-label={`Digit ${i + 1}`}
-          className="h-12 min-h-12 w-full rounded-xl border border-black/15 bg-white text-center font-mono text-lg text-[#1a1a1a] outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-500/30 disabled:opacity-50"
+          className="h-12 min-h-12 w-full rounded-xl border border-baraza-border bg-baraza-surface text-center font-mono text-lg text-baraza-white outline-none transition focus:border-baraza-lime focus:ring-2 focus:ring-baraza-lime/30 disabled:opacity-50"
         />
       ))}
     </div>

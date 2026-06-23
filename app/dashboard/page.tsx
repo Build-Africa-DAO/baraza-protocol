@@ -7,14 +7,16 @@ export const metadata = {
 // Phase 4), including the auth guard that redirects unauthenticated users.
 export default function Dashboard() {
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center bg-[#f5f3ef] px-6 text-center text-[#1a1a1a]">
-      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-orange-500 font-mono text-lg font-bold text-white">
-        B
+    <main className="flex min-h-dvh flex-col items-center justify-center bg-baraza-black px-6 text-center text-baraza-white">
+      <span className="relative inline-grid h-12 w-12 place-items-center">
+        <span className="absolute inset-0 rounded-full border-2 border-baraza-lime/30" />
+        <span className="absolute inset-[7px] rounded-full border-2 border-baraza-teal/50" />
+        <span className="absolute inset-[14px] rounded-full bg-baraza-lime" />
       </span>
-      <h1 className="mt-5 text-3xl font-bold tracking-tight">
+      <h1 className="mt-5 font-display text-3xl font-bold tracking-[-0.02em]">
         Welcome to Baraza
       </h1>
-      <p className="mt-2 text-sm text-black/60">Your dashboard is coming.</p>
+      <p className="mt-2 text-sm text-baraza-muted">Your dashboard is coming.</p>
     </main>
   );
 }

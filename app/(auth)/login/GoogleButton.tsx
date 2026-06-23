@@ -7,7 +7,7 @@ export default function GoogleButton() {
     <form action={signInWithGoogle}>
       <button
         type="submit"
-        className="flex w-full items-center justify-center gap-3 rounded-xl border border-black/15 bg-white px-4 py-3 text-sm font-semibold text-[#1a1a1a] transition hover:bg-black/[0.03] focus:outline-none focus:ring-2 focus:ring-orange-500/30 active:translate-y-px"
+        className="flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-baraza-border bg-baraza-surface px-4 py-3 text-sm font-semibold text-baraza-white transition hover:bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-baraza-teal/40 active:translate-y-px"
       >
         <svg aria-hidden viewBox="0 0 24 24" className="h-5 w-5">
           <path

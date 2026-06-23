@@ -1,15 +1,36 @@
 @import "tailwindcss";
 
+/* Baraza brand system — see BARAZA_BRAND_BOOK.md (v1.0 LOCKED). Dark-first. */
 :root {
-  --background: #f5f3ef;
-  --foreground: #1a1a1a;
+  --background: #0d0f0e;
+  --foreground: #f2f4f0;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+
+  /* Primary */
+  --color-baraza-black: #0d0f0e;
+  --color-baraza-lime: #c8f060;
+  --color-baraza-ember: #e8784a;
+  --color-baraza-teal: #4abfb0;
+  --color-baraza-white: #f2f4f0;
+
+  /* Surface */
+  --color-baraza-surface: #161918;
+  --color-baraza-border: #2a2e2c;
+  --color-baraza-muted: #7a8480;
+
+  /* Status */
+  --color-baraza-success: #4ade80;
+  --color-baraza-warning: #fbbf24;
+  --color-baraza-error: #f87171;
+
+  /* Type roles */
+  --font-display: var(--font-syne);
+  --font-sans: var(--font-dm-sans);
+  --font-mono: var(--font-jetbrains-mono);
 }
 
 body {

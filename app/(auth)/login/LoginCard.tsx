@@ -47,7 +47,7 @@ export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
     { scope: panelRef },
   );
 
-  // Motion 2 (incoming half) — slide the OTP form in when we reach the code step.
+  // Motion 2 (incoming half) — slide the OTP form in at the code step.
   useGSAP(
     () => {
       if (view.step !== "verify" || prefersReduced()) return;
@@ -67,8 +67,7 @@ export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
     return () => clearTimeout(t);
   }, [resendIn]);
 
-  // Error copy lives here (client-side) so the auth logic in actions.ts stays
-  // untouched. Plain direction — never the word "Error".
+  // Error copy lives here (client-side) — plain direction, never "Error".
   const error: string | undefined = view.error
     ? view.step === "verify"
       ? "That code didn't work. Try again or resend."
@@ -92,7 +91,6 @@ export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
           setCode("");
           setResendIn(RESEND_SECONDS);
         };
-        // Motion 2 (outgoing half) — slide the phone form out, then swap.
         if (prefersReduced()) {
           finish();
         } else {
@@ -183,12 +181,15 @@ export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
 
   return (
     <div ref={panelRef} className="auth-panel">
+      {/* Mobile mark (brand panel is desktop-only) */}
+      <RingMark className="mb-6 h-10 w-10 md:hidden" />
+
       {view.step === "enter" ? (
         <>
-          <h1 className="text-3xl font-bold tracking-tight text-[#1a1a1a]">
+          <h1 className="font-display text-3xl font-bold tracking-[-0.02em] text-baraza-white">
             Welcome to Baraza
           </h1>
-          <p className="mt-2 text-sm text-black/60">
+          <p className="mt-2 text-sm text-baraza-muted">
             Continue to your community.
           </p>
 
@@ -197,7 +198,7 @@ export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
           {/* Google — first, fastest, most-tapped */}
           <div className="mt-6">
             <GoogleButton />
-            <p className="mt-2 text-center text-xs text-black/45">
+            <p className="mt-2 text-center text-xs text-baraza-muted">
               Most people use Google — it&apos;s the fastest.
             </p>
           </div>
@@ -206,13 +207,10 @@ export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
             {view.channel === "phone" ? "or use your phone" : "or use your email"}
           </Divider>
 
-          <form
-            onSubmit={onSubmit}
-            className="phone-form enter-form space-y-3"
-          >
+          <form onSubmit={onSubmit} className="phone-form enter-form space-y-3">
             {view.channel === "phone" ? (
-              <div className="flex items-stretch overflow-hidden rounded-xl border border-black/15 bg-white focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/30">
-                <span className="flex items-center gap-1 border-r border-black/10 bg-black/[0.03] px-3 font-mono text-sm text-black/70">
+              <div className="flex items-stretch overflow-hidden rounded-xl border border-baraza-border bg-baraza-surface focus-within:border-baraza-lime focus-within:ring-2 focus-within:ring-baraza-lime/30">
+                <span className="flex items-center gap-1 border-r border-baraza-border bg-black/20 px-3 font-mono text-sm text-baraza-muted">
                   🇰🇪 +254
                 </span>
                 <input
@@ -224,7 +222,7 @@ export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
                   autoFocus
                   aria-label="Phone number"
                   placeholder="712 345 678"
-                  className="min-h-12 w-full bg-transparent px-3 py-3 font-mono text-base text-[#1a1a1a] outline-none placeholder:text-black/30"
+                  className="min-h-12 w-full bg-transparent px-3 py-3 font-mono text-base text-baraza-white outline-none placeholder:text-baraza-muted/60"
                 />
               </div>
             ) : (
@@ -236,7 +234,7 @@ export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
                 autoFocus
                 aria-label="Email"
                 placeholder="you@example.com"
-                className="min-h-12 w-full rounded-xl border border-black/15 bg-white px-3 py-3 text-base text-[#1a1a1a] outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-500/30 placeholder:text-black/30"
+                className="min-h-12 w-full rounded-xl border border-baraza-border bg-baraza-surface px-3 py-3 text-base text-baraza-white outline-none transition focus:border-baraza-lime focus:ring-2 focus:ring-baraza-lime/30 placeholder:text-baraza-muted/60"
               />
             )}
 
@@ -250,23 +248,23 @@ export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
             onClick={() =>
               switchChannel(view.channel === "phone" ? "email" : "phone")
             }
-            className="mx-auto mt-6 block text-sm text-black/50 underline-offset-4 transition hover:text-orange-600 hover:underline"
+            className="mx-auto mt-6 block min-h-12 text-sm text-baraza-muted underline-offset-4 transition hover:text-baraza-teal hover:underline"
           >
             {view.channel === "phone" ? "Use email instead" : "Use phone instead"}
           </button>
 
-          <p className="mt-8 text-center text-xs text-black/40">
+          <p className="mt-6 text-center text-xs text-baraza-muted/80">
             By continuing you agree to our terms and privacy policy.
           </p>
         </>
       ) : (
         <>
-          <h1 className="text-3xl font-bold tracking-tight text-[#1a1a1a]">
+          <h1 className="font-display text-3xl font-bold tracking-[-0.02em] text-baraza-white">
             Enter the code
           </h1>
-          <p className="mt-2 text-sm text-black/60">
+          <p className="mt-2 text-sm text-baraza-muted">
             We sent it to{" "}
-            <span className="font-mono text-black/80">
+            <span className="font-mono text-baraza-white">
               {maskContact(view.contact ?? "")}
             </span>
             .
@@ -290,7 +288,7 @@ export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
             <button
               type="button"
               onClick={back}
-              className="min-h-12 font-medium text-black/60 transition hover:text-orange-600"
+              className="min-h-12 font-medium text-baraza-muted transition hover:text-baraza-teal"
             >
               {view.channel === "phone" ? "Change number" : "Change email"}
             </button>
@@ -298,7 +296,7 @@ export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
               type="button"
               onClick={resend}
               disabled={resendIn > 0 || isPending}
-              className="min-h-12 font-medium text-black/60 transition enabled:hover:text-orange-600 disabled:text-black/35"
+              className="min-h-12 font-medium text-baraza-muted transition enabled:hover:text-baraza-teal disabled:text-baraza-muted/50"
             >
               {resendIn > 0
                 ? `Resend in 0:${String(resendIn).padStart(2, "0")}`
@@ -308,6 +306,16 @@ export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
         </>
       )}
     </div>
+  );
+}
+
+function RingMark({ className = "h-10 w-10" }: { className?: string }) {
+  return (
+    <span className={`relative inline-grid place-items-center ${className}`}>
+      <span className="absolute inset-0 rounded-full border-2 border-baraza-lime/30" />
+      <span className="absolute inset-[6px] rounded-full border-2 border-baraza-teal/50" />
+      <span className="absolute inset-[12px] rounded-full bg-baraza-lime" />
+    </span>
   );
 }
 
@@ -324,7 +332,7 @@ function PrimaryButton({
     <button
       type="submit"
       disabled={pending || disabled}
-      className="min-h-12 w-full rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500/40 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50"
+      className="min-h-12 w-full rounded-xl bg-baraza-lime px-4 py-3 text-sm font-semibold text-baraza-black transition hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-baraza-lime/50 focus:ring-offset-2 focus:ring-offset-baraza-black active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50"
     >
       {children}
     </button>
@@ -333,10 +341,10 @@ function PrimaryButton({
 
 function Divider({ children }: { children: React.ReactNode }) {
   return (
-    <div className="my-5 flex items-center gap-3 text-xs text-black/40">
-      <span className="h-px flex-1 bg-black/10" />
+    <div className="my-5 flex items-center gap-3 text-xs text-baraza-muted">
+      <span className="h-px flex-1 bg-baraza-border" />
       {children}
-      <span className="h-px flex-1 bg-black/10" />
+      <span className="h-px flex-1 bg-baraza-border" />
     </div>
   );
 }
@@ -345,7 +353,7 @@ function ErrorNote({ children }: { children: React.ReactNode }) {
   return (
     <p
       role="alert"
-      className="mt-4 rounded-xl border border-red-500/20 bg-red-500/5 px-3 py-2.5 text-sm text-red-700"
+      className="mt-4 rounded-xl border border-baraza-error/30 bg-baraza-error/10 px-3 py-2.5 text-sm text-baraza-error"
     >
       {children}
     </p>
