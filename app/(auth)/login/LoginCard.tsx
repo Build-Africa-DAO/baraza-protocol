@@ -1,11 +1,8 @@
 "use client";
 
-import {
-  useEffect,
-  useState,
-  useTransition,
-  type FormEvent,
-} from "react";
+import { useEffect, useRef, useState, useTransition, type FormEvent } from "react";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
 import {
   sendEmailOtp,
   sendPhoneOtp,
@@ -19,6 +16,10 @@ import OtpInput from "./OtpInput";
 
 const RESEND_SECONDS = 30;
 
+const prefersReduced = () =>
+  typeof window !== "undefined" &&
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
   const [view, setView] = useState<AuthState>({
     step: "enter",
@@ -27,6 +28,36 @@ export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
   const [code, setCode] = useState("");
   const [resendIn, setResendIn] = useState(0);
   const [isPending, startTransition] = useTransition();
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Motion 1 — entrance stagger (once, on mount).
+  useGSAP(
+    () => {
+      if (prefersReduced()) return;
+      gsap.from(".auth-panel > *", {
+        y: 20,
+        opacity: 0,
+        stagger: 0.07,
+        duration: 0.35,
+        ease: "power2.out",
+      });
+    },
+    { scope: panelRef },
+  );
+
+  // Motion 2 (incoming half) — slide the OTP form in when we reach the code step.
+  useGSAP(
+    () => {
+      if (view.step !== "verify" || prefersReduced()) return;
+      gsap.from(".otp-form", {
+        x: 30,
+        opacity: 0,
+        duration: 0.3,
+        ease: "power2.out",
+      });
+    },
+    { scope: panelRef, dependencies: [view.step] },
+  );
 
   useEffect(() => {
     if (resendIn <= 0) return;
@@ -34,11 +65,17 @@ export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
     return () => clearTimeout(t);
   }, [resendIn]);
 
-  const error =
-    view.error ??
-    (oauthError && view.step === "enter"
-      ? "We couldn't finish with Google. Try a code instead."
-      : undefined);
+  // Error copy lives here (client-side) so the auth logic in actions.ts stays
+  // untouched. Plain direction — never the word "Error".
+  const error: string | undefined = view.error
+    ? view.step === "verify"
+      ? "That code didn't work. Try again or resend."
+      : view.channel === "phone"
+        ? "Check your number and try again."
+        : "Check your email and try again."
+    : oauthError && view.step === "enter"
+      ? "Couldn't continue with Google. Try your phone instead."
+      : undefined;
 
   function send(formData: FormData, channel: "phone" | "email") {
     startTransition(async () => {
@@ -46,10 +83,27 @@ export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
         channel === "phone"
           ? await sendPhoneOtp(view, formData)
           : await sendEmailOtp(view, formData);
-      setView(next);
+
       if (next.step === "verify") {
-        setCode("");
-        setResendIn(RESEND_SECONDS);
+        const finish = () => {
+          setView(next);
+          setCode("");
+          setResendIn(RESEND_SECONDS);
+        };
+        // Motion 2 (outgoing half) — slide the phone form out, then swap.
+        if (prefersReduced()) {
+          finish();
+        } else {
+          gsap.to(".phone-form", {
+            x: -30,
+            opacity: 0,
+            duration: 0.25,
+            ease: "power2.in",
+            onComplete: finish,
+          });
+        }
+      } else {
+        setView(next);
       }
     });
   }
@@ -57,17 +111,37 @@ export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
+
     if (view.step === "enter") {
       send(formData, view.channel);
       return;
     }
+
     startTransition(async () => {
-      // On success these redirect server-side; only errors return state.
+      // On success the action redirects server-side; only errors return state.
       const next =
         view.channel === "phone"
           ? await verifyPhoneOtp(view, formData)
           : await verifyEmailOtp(view, formData);
       setView(next);
+      if (next.error) {
+        setCode("");
+        // Motion 5 — shake the code boxes on a wrong code.
+        if (!prefersReduced()) {
+          gsap.fromTo(
+            ".otp-inputs",
+            { x: -8 },
+            {
+              x: 8,
+              repeat: 3,
+              yoyo: true,
+              duration: 0.08,
+              ease: "none",
+              onComplete: () => gsap.set(".otp-inputs", { x: 0 }),
+            },
+          );
+        }
+      }
     });
   }
 
@@ -89,86 +163,80 @@ export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
   }
 
   return (
-    <div key={view.step} className="animate-fade-up">
+    <div ref={panelRef} className="auth-panel">
       {view.step === "enter" ? (
         <>
           <h1 className="text-3xl font-bold tracking-tight text-[#1a1a1a]">
             Welcome to Baraza
           </h1>
           <p className="mt-2 text-sm text-black/60">
-            Sign in to pick up where you left off.
+            Continue to your community.
           </p>
 
           {error && <ErrorNote>{error}</ErrorNote>}
 
-          <form onSubmit={onSubmit} className="mt-6 space-y-4">
+          {/* Google — first, fastest, most-tapped */}
+          <div className="mt-6">
+            <GoogleButton />
+            <p className="mt-2 text-center text-xs text-black/45">
+              Most people use Google — it&apos;s the fastest.
+            </p>
+          </div>
+
+          <Divider>
+            {view.channel === "phone" ? "or use your phone" : "or use your email"}
+          </Divider>
+
+          <form
+            onSubmit={onSubmit}
+            className="phone-form enter-form space-y-3"
+          >
             {view.channel === "phone" ? (
-              <label className="block">
-                <span className="text-sm font-semibold text-[#1a1a1a]">
-                  Phone number
-                </span>
-                <div className="mt-1.5 flex items-stretch overflow-hidden rounded-xl border border-black/15 bg-white focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/30">
-                  <span className="flex items-center gap-1 border-r border-black/10 bg-black/[0.03] px-3 font-mono text-sm text-black/70">
-                    🇰🇪 +254
-                  </span>
-                  <input
-                    name="phone"
-                    type="tel"
-                    inputMode="tel"
-                    autoComplete="tel"
-                    required
-                    autoFocus
-                    placeholder="712 345 678"
-                    className="w-full bg-transparent px-3 py-3 font-mono text-base text-[#1a1a1a] outline-none placeholder:text-black/30"
-                  />
-                </div>
-                <span className="mt-1.5 block text-xs text-black/50">
-                  We&apos;ll text you a code.
-                </span>
-              </label>
-            ) : (
-              <label className="block">
-                <span className="text-sm font-semibold text-[#1a1a1a]">
-                  Email
+              <div className="flex items-stretch overflow-hidden rounded-xl border border-black/15 bg-white focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/30">
+                <span className="flex items-center gap-1 border-r border-black/10 bg-black/[0.03] px-3 font-mono text-sm text-black/70">
+                  🇰🇪 +254
                 </span>
                 <input
-                  name="email"
-                  type="email"
-                  autoComplete="email"
+                  name="phone"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
                   required
                   autoFocus
-                  placeholder="you@example.com"
-                  className="mt-1.5 w-full rounded-xl border border-black/15 bg-white px-3 py-3 text-base text-[#1a1a1a] outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-500/30 placeholder:text-black/30"
+                  aria-label="Phone number"
+                  placeholder="712 345 678"
+                  className="min-h-12 w-full bg-transparent px-3 py-3 font-mono text-base text-[#1a1a1a] outline-none placeholder:text-black/30"
                 />
-                <span className="mt-1.5 block text-xs text-black/50">
-                  We&apos;ll email you a code.
-                </span>
-              </label>
+              </div>
+            ) : (
+              <input
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                autoFocus
+                aria-label="Email"
+                placeholder="you@example.com"
+                className="min-h-12 w-full rounded-xl border border-black/15 bg-white px-3 py-3 text-base text-[#1a1a1a] outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-500/30 placeholder:text-black/30"
+              />
             )}
 
             <PrimaryButton pending={isPending}>
-              {isPending ? "Sending…" : "Send code"}
+              {isPending ? "Sending…" : "Send code →"}
             </PrimaryButton>
           </form>
-
-          <Divider />
-
-          <GoogleButton />
 
           <button
             type="button"
             onClick={() =>
               switchChannel(view.channel === "phone" ? "email" : "phone")
             }
-            className="mt-3 w-full text-center text-sm font-medium text-black/60 underline-offset-4 transition hover:text-orange-600 hover:underline"
+            className="mx-auto mt-6 block text-sm text-black/50 underline-offset-4 transition hover:text-orange-600 hover:underline"
           >
             {view.channel === "phone" ? "Use email instead" : "Use phone instead"}
           </button>
 
-          <p className="mt-8 text-center text-xs text-black/45">
-            New here? Just enter your number — we&apos;ll set you up.
-          </p>
-          <p className="mt-2 text-center text-xs text-black/40">
+          <p className="mt-8 text-center text-xs text-black/40">
             By continuing you agree to our terms and privacy policy.
           </p>
         </>
@@ -187,10 +255,12 @@ export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
 
           {error && <ErrorNote>{error}</ErrorNote>}
 
-          <form onSubmit={onSubmit} className="mt-6 space-y-4">
+          <form onSubmit={onSubmit} className="otp-form mt-6 space-y-4">
             <input type="hidden" name="contact" value={view.contact ?? ""} />
             <input type="hidden" name="code" value={code} />
-            <OtpInput value={code} onChange={setCode} disabled={isPending} />
+            <div className="otp-inputs">
+              <OtpInput value={code} onChange={setCode} disabled={isPending} />
+            </div>
 
             <PrimaryButton pending={isPending} disabled={code.length < 6}>
               {isPending ? "Checking…" : "Verify"}
@@ -201,7 +271,7 @@ export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
             <button
               type="button"
               onClick={back}
-              className="font-medium text-black/60 transition hover:text-orange-600"
+              className="min-h-12 font-medium text-black/60 transition hover:text-orange-600"
             >
               {view.channel === "phone" ? "Change number" : "Change email"}
             </button>
@@ -209,7 +279,7 @@ export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
               type="button"
               onClick={resend}
               disabled={resendIn > 0 || isPending}
-              className="font-medium text-black/60 transition enabled:hover:text-orange-600 disabled:text-black/35"
+              className="min-h-12 font-medium text-black/60 transition enabled:hover:text-orange-600 disabled:text-black/35"
             >
               {resendIn > 0
                 ? `Resend in 0:${String(resendIn).padStart(2, "0")}`
@@ -235,18 +305,18 @@ function PrimaryButton({
     <button
       type="submit"
       disabled={pending || disabled}
-      className="w-full rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500/40 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50"
+      className="min-h-12 w-full rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500/40 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50"
     >
       {children}
     </button>
   );
 }
 
-function Divider() {
+function Divider({ children }: { children: React.ReactNode }) {
   return (
     <div className="my-5 flex items-center gap-3 text-xs text-black/40">
       <span className="h-px flex-1 bg-black/10" />
-      or continue with
+      {children}
       <span className="h-px flex-1 bg-black/10" />
     </div>
   );

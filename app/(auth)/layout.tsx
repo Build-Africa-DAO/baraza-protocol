@@ -9,8 +9,8 @@ import type { ReactNode } from "react";
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-dvh flex flex-col md:grid md:grid-cols-[clamp(18rem,38%,30rem)_1fr]">
-      {/* Brand panel */}
-      <aside className="relative overflow-hidden bg-[#1c1714] px-6 py-8 text-[#f5f3ef] md:flex md:flex-col md:justify-between md:px-12 md:py-16">
+      {/* Brand panel — desktop only */}
+      <aside className="relative hidden overflow-hidden bg-[#1c1714] px-6 py-8 text-[#f5f3ef] md:flex md:flex-col md:justify-between md:px-12 md:py-16">
         <div
           aria-hidden
           className="pointer-events-none absolute -right-28 -top-28 h-[26rem] w-[26rem] rounded-full opacity-[0.14] md:-right-20 md:top-auto md:-bottom-28"

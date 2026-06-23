@@ -1,8 +1,18 @@
 "use client";
 
-import { useRef, type ClipboardEvent, type KeyboardEvent } from "react";
+import {
+  useRef,
+  type ClipboardEvent,
+  type FocusEvent,
+  type KeyboardEvent,
+} from "react";
+import gsap from "gsap";
 
 const LENGTH = 6;
+
+const prefersReduced = () =>
+  typeof window !== "undefined" &&
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /**
  * Six-box one-time-code input. Controlled via `value` (a string of up to 6
@@ -46,6 +56,16 @@ export default function OtpInput({
     }
   }
 
+  function handleFocus(e: FocusEvent<HTMLInputElement>) {
+    if (prefersReduced()) return;
+    gsap.to(e.currentTarget, {
+      scale: 1.05,
+      duration: 0.1,
+      yoyo: true,
+      repeat: 1,
+    });
+  }
+
   function handlePaste(e: ClipboardEvent<HTMLDivElement>) {
     e.preventDefault();
     const text = e.clipboardData
@@ -73,8 +93,9 @@ export default function OtpInput({
           value={digits[i]}
           onChange={(e) => handleChange(i, e.target.value)}
           onKeyDown={(e) => handleKeyDown(i, e)}
+          onFocus={handleFocus}
           aria-label={`Digit ${i + 1}`}
-          className="h-12 w-full rounded-xl border border-black/15 bg-white text-center font-mono text-lg text-[#1a1a1a] outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-500/30 disabled:opacity-50"
+          className="h-12 min-h-12 w-full rounded-xl border border-black/15 bg-white text-center font-mono text-lg text-[#1a1a1a] outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-500/30 disabled:opacity-50"
         />
       ))}
     </div>
