@@ -28,6 +28,8 @@
  * of up to 5min.
  */
 
+import { timingSafeEqual } from 'node:crypto';
+
 import {
   confirmMintTransaction,
   mintBrzaBatch,
@@ -91,11 +93,29 @@ function json(body: unknown, init?: ResponseInit): Response {
   });
 }
 
+/**
+ * Vercel Cron's trigger request doesn't always reach this handler as a
+ * Headers instance (observed in production: `req.headers.get is not a
+ * function`, unlike normal HTTP-triggered invocations of this same
+ * nodejs function). Accept either a Headers-like object or a plain
+ * header record so the cron tick never throws before the auth check runs.
+ */
+function getAuthorizationHeader(req: Request): string {
+  const headers = req.headers as unknown;
+  if (headers && typeof (headers as Headers).get === 'function') {
+    return (headers as Headers).get('authorization') ?? '';
+  }
+  const record = headers as Record<string, string | string[] | undefined> | undefined;
+  const raw = record?.authorization ?? record?.['Authorization'];
+  return (Array.isArray(raw) ? raw[0] : raw) ?? '';
+}
+
 function isAuthorized(req: Request): boolean {
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) return false;
-  const header = req.headers.get('authorization') ?? '';
-  return header === `Bearer ${cronSecret}`;
+  const header = Buffer.from(getAuthorizationHeader(req));
+  const expected = Buffer.from(`Bearer ${cronSecret}`);
+  return header.length === expected.length && timingSafeEqual(header, expected);
 }
 
 function paymentOrderFilter(from: string): string {
