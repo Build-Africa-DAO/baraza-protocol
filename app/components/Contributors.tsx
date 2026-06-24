@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { t } from "@/app/lib/i18n";
+import { useT } from "@/app/lib/LocaleContext";
 
 const CONTRIBUTORS = [
   {
@@ -94,6 +94,7 @@ const ROLE_FILTER_VALUES = ["All", "Founders", "Admins", "Members"] as const;
 const SORT_OPTION_VALUES = ["Contribution", "Join Date", "Name", "Last Active"] as const;
 
 export default function Contributors() {
+  const t = useT();
   const [search, setSearch] = useState("");
   const [activeRole, setActiveRole] = useState("All");
   const [activeSort, setActiveSort] = useState("Contribution");

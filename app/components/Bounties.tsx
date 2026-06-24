@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { t } from "@/app/lib/i18n";
+import { useT } from "@/app/lib/LocaleContext";
 
 const SKILLS = ["Development", "Design", "Translation", "Writing", "Marketing", "Community", "Research", "Operations", "Legal", "Data Analytics"];
 const SORT_VALUES = ["newest", "reward", "deadline"] as const;
@@ -112,14 +112,15 @@ const TAG_COLORS: Record<string, { bg: string; text: string }> = {
   Legal: { bg: "#fff1f2", text: "#be123c" },
 };
 
-function deadlineStyle(daysLeft: number): { color: string; label: string } {
-  const suffix = t("bounties.deadline.suffix");
+function deadlineStyle(daysLeft: number, tFn: (key: string) => string): { color: string; label: string } {
+  const suffix = tFn("bounties.deadline.suffix");
   if (daysLeft <= 7) return { color: "#ef4444", label: `${daysLeft}d ${suffix}` };
   if (daysLeft <= 14) return { color: "#f59e0b", label: `${daysLeft}d ${suffix}` };
   return { color: "#6b7280", label: `${daysLeft}d ${suffix}` };
 }
 
 export default function Bounties() {
+  const t = useT();
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("newest");
@@ -257,7 +258,7 @@ export default function Bounties() {
 
           <div className="flex flex-col gap-3 mt-6">
             {filtered.map((b) => {
-              const dl = deadlineStyle(b.daysLeft);
+              const dl = deadlineStyle(b.daysLeft, t);
               const isHot = b.rewardNum >= 50000;
               const isUrgent = b.daysLeft <= 7;
               return (

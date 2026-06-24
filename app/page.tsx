@@ -8,7 +8,8 @@ import Chamas from "./components/Chamas";
 import Bounties from "./components/Bounties";
 import Contributors from "./components/Contributors";
 import NotificationBell from "./components/NotificationBell";
-import { t } from "@/app/lib/i18n";
+import { useT } from "@/app/lib/LocaleContext";
+import LanguageToggle from "./components/LanguageToggle";
 
 type Tab = "daos" | "chamas" | "bounties" | "contributors";
 
@@ -35,6 +36,7 @@ const TABS: { id: Tab; labelKey: string }[] = [
 ];
 
 function HomeContent() {
+  const t = useT();
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -251,9 +253,12 @@ function HomeContent() {
             <button onClick={() => handleTabChange("daos")} className="text-left hover:text-gray-800 transition-colors min-h-[44px] flex items-center">{t("footer.how")}</button>
           </div>
         </div>
-        <div className="border-t border-gray-100 px-4 sm:px-6 py-3 max-w-7xl mx-auto flex flex-col sm:flex-row justify-between gap-1 text-xs text-gray-400">
+        <div className="border-t border-gray-100 px-4 sm:px-6 py-3 max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-gray-400">
           <span>{t("footer.copyright")}</span>
-          <span>{t("footer.built")}</span>
+          <div className="flex items-center gap-4">
+            <span>{t("footer.built")}</span>
+            <LanguageToggle />
+          </div>
         </div>
       </footer>
     </div>

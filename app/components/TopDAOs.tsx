@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { t } from "@/app/lib/i18n";
+import { useT } from "@/app/lib/LocaleContext";
 
 const NETWORKS = ["All", "Stellar"];
 
@@ -93,6 +93,7 @@ const DAOS = [
 ];
 
 export default function TopDAOs() {
+  const t = useT();
   const [search, setSearch] = useState("");
   const [activeNetwork, setActiveNetwork] = useState("All");
 

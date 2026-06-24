@@ -12,7 +12,7 @@ import {
   type AuthState,
 } from "@/app/lib/auth/actions";
 import { maskContact } from "@/app/lib/auth/phone";
-import { t } from "@/app/lib/i18n";
+import { useT } from "@/app/lib/LocaleContext";
 import GoogleButton from "./GoogleButton";
 import OtpInput from "./OtpInput";
 
@@ -23,6 +23,7 @@ const prefersReduced = () =>
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 export default function LoginCard({ oauthError }: { oauthError?: boolean }) {
+  const t = useT();
   const [view, setView] = useState<AuthState>({
     step: "enter",
     channel: "phone",

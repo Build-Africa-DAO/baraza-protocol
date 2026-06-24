@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Syne, DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { NotificationProvider } from "./lib/NotificationContext";
+import { LocaleProvider } from "./lib/LocaleContext";
 
 // Baraza brand type system — see BARAZA_BRAND_BOOK.md
 const syne = Syne({
@@ -35,7 +36,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${syne.variable} ${dmSans.variable} ${jetBrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <NotificationProvider>{children}</NotificationProvider>
+        <LocaleProvider>
+          <NotificationProvider>{children}</NotificationProvider>
+        </LocaleProvider>
       </body>
     </html>
   );

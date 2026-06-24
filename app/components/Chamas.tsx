@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { t } from "@/app/lib/i18n";
+import { useT } from "@/app/lib/LocaleContext";
 
 const TYPES = ["All", "Savings", "Housing", "Trade", "Agriculture", "Youth", "Women"];
 
@@ -87,6 +87,7 @@ const CHAMAS = [
 ];
 
 export default function Chamas() {
+  const t = useT();
   const [search, setSearch] = useState("");
   const [activeType, setActiveType] = useState("All");
 
