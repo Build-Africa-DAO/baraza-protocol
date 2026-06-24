@@ -1,13 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { t } from "@/app/lib/i18n";
 
 const SKILLS = ["Development", "Design", "Translation", "Writing", "Marketing", "Community", "Research", "Operations", "Legal", "Data Analytics"];
-const SORT_OPTIONS = [
-  { value: "newest", label: "Newest first" },
-  { value: "reward", label: "Highest reward" },
-  { value: "deadline", label: "Closing soon" },
-];
+const SORT_VALUES = ["newest", "reward", "deadline"] as const;
 
 const BOUNTIES = [
   {
@@ -116,9 +113,10 @@ const TAG_COLORS: Record<string, { bg: string; text: string }> = {
 };
 
 function deadlineStyle(daysLeft: number): { color: string; label: string } {
-  if (daysLeft <= 7) return { color: "#ef4444", label: `${daysLeft}d left` };
-  if (daysLeft <= 14) return { color: "#f59e0b", label: `${daysLeft}d left` };
-  return { color: "#6b7280", label: `${daysLeft}d left` };
+  const suffix = t("bounties.deadline.suffix");
+  if (daysLeft <= 7) return { color: "#ef4444", label: `${daysLeft}d ${suffix}` };
+  if (daysLeft <= 14) return { color: "#f59e0b", label: `${daysLeft}d ${suffix}` };
+  return { color: "#6b7280", label: `${daysLeft}d ${suffix}` };
 }
 
 export default function Bounties() {
@@ -146,15 +144,25 @@ export default function Bounties() {
   const uniqueSkills = new Set(filtered.flatMap((b) => b.tags)).size;
   const urgentCount = filtered.filter((b) => b.daysLeft <= 7).length;
 
+  const sortOptionLabels: Record<string, string> = {
+    newest: t("bounties.sort.newest"),
+    reward: t("bounties.sort.reward"),
+    deadline: t("bounties.sort.deadline"),
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
       {/* Stats bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
         {[
-          { label: "Open bounties", value: filtered.length.toString(), accent: "#f97316" },
-          { label: "Total rewards", value: `KSh ${totalRewards.toLocaleString()}`, accent: "#10b981" },
-          { label: "Avg reward", value: `KSh ${avgReward.toLocaleString()}`, accent: "#6366f1" },
-          { label: urgentCount > 0 ? `${urgentCount} closing soon` : "Skills needed", value: urgentCount > 0 ? "Urgent" : `${uniqueSkills} categories`, accent: urgentCount > 0 ? "#ef4444" : "#8b5cf6" },
+          { label: t("bounties.stat.open"), value: filtered.length.toString(), accent: "#f97316" },
+          { label: t("bounties.stat.total.rewards"), value: `KSh ${totalRewards.toLocaleString()}`, accent: "#10b981" },
+          { label: t("bounties.stat.avg.reward"), value: `KSh ${avgReward.toLocaleString()}`, accent: "#6366f1" },
+          {
+            label: urgentCount > 0 ? `${urgentCount} ${t("bounties.stat.closing.soon")}` : t("bounties.stat.skills.needed"),
+            value: urgentCount > 0 ? t("bounties.stat.urgent") : `${uniqueSkills} ${t("bounties.stat.categories")}`,
+            accent: urgentCount > 0 ? "#ef4444" : "#8b5cf6",
+          },
         ].map((s) => (
           <div key={s.label} className="bg-white rounded-2xl border border-gray-200 px-4 py-3 flex flex-col gap-0.5">
             <p className="text-xl font-bold text-gray-900">{s.value}</p>
@@ -168,33 +176,33 @@ export default function Bounties() {
         {/* Sidebar */}
         <aside className="w-60 flex-shrink-0 hidden md:block">
           <div className="bg-white border border-gray-200 rounded-2xl p-5 sticky top-20">
-            <h2 className="font-semibold text-gray-900 text-sm mb-4">Filters</h2>
+            <h2 className="font-semibold text-gray-900 text-sm mb-4">{t("bounties.filters.heading")}</h2>
 
             <div className="mb-5">
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Sort</p>
+              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">{t("bounties.filters.sort.label")}</p>
               <select
                 value={sort}
                 onChange={(e) => setSort(e.target.value)}
                 className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-orange-400"
               >
-                {SORT_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
+                {SORT_VALUES.map((v) => (
+                  <option key={v} value={v}>{sortOptionLabels[v]}</option>
                 ))}
               </select>
             </div>
 
             <div>
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Skills</p>
+              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">{t("bounties.filters.skills.label")}</p>
               {selectedSkills.length > 0 && (
                 <button
                   onClick={() => setSelectedSkills([])}
                   className="text-xs text-orange-500 mb-3 hover:underline"
                 >
-                  Clear ({selectedSkills.length})
+                  {t("bounties.filters.clear")} ({selectedSkills.length})
                 </button>
               )}
               {!selectedSkills.length && (
-                <p className="text-xs text-gray-400 mb-3">Click to filter by skill</p>
+                <p className="text-xs text-gray-400 mb-3">{t("bounties.filters.skills.hint")}</p>
               )}
               <div className="flex flex-wrap gap-1.5">
                 {SKILLS.map((s) => (
@@ -220,9 +228,9 @@ export default function Bounties() {
           {/* Header */}
           <div className="flex items-center justify-between mb-2">
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Open Bounties</h1>
+              <h1 className="text-xl font-bold text-gray-900">{t("bounties.heading")}</h1>
               <p className="text-sm text-gray-500">
-                {filtered.length} bounties · KSh {totalRewards.toLocaleString()} in rewards
+                {filtered.length} {t("bounties.subtitle.separator")} · KSh {totalRewards.toLocaleString()} {t("bounties.subtitle.rewards")}
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -232,7 +240,7 @@ export default function Bounties() {
                 </svg>
                 <input
                   type="text"
-                  placeholder="Search bounties..."
+                  placeholder={t("bounties.search.placeholder")}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="bg-white border border-gray-200 rounded-lg pl-9 pr-4 py-2 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-orange-400 w-52"
@@ -242,7 +250,7 @@ export default function Bounties() {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                Post bounty
+                {t("bounties.post")}
               </button>
             </div>
           </div>
@@ -277,11 +285,11 @@ export default function Bounties() {
                           <div>
                             <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                               <span className="text-xs font-medium text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
-                                {b.status}
+                                {t("bounties.status.open")}
                               </span>
                               {isHot && (
                                 <span className="text-xs font-bold text-orange-600 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full">
-                                  🔥 Hot
+                                  🔥 {t("bounties.badge.hot")}
                                 </span>
                               )}
                               {b.tags.map((tag) => (
@@ -296,13 +304,13 @@ export default function Bounties() {
                             </div>
                             <h3 className="font-semibold text-gray-900">{b.title}</h3>
                             <p className="text-xs text-gray-500 mt-0.5">
-                              {b.createdDaysAgo === 1 ? "1 day" : `${b.createdDaysAgo} days`} ago · {b.org}
+                              {b.createdDaysAgo === 1 ? t("bounties.posted.day") : `${b.createdDaysAgo} ${t("bounties.posted.days")}`} · {b.org}
                               <span className="ml-1.5 text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">{b.orgType}</span>
                             </p>
                           </div>
                           <div className="text-right flex-shrink-0">
                             <p className="text-lg font-bold text-orange-500">{b.reward}</p>
-                            <p className="text-xs text-gray-400">{b.submissions} submission{b.submissions !== 1 ? "s" : ""}</p>
+                            <p className="text-xs text-gray-400">{b.submissions !== 1 ? `${b.submissions} ${t("bounties.submissions.many")}` : t("bounties.submissions.one")}</p>
                           </div>
                         </div>
                       </div>
@@ -317,7 +325,7 @@ export default function Bounties() {
                         {dl.label}
                       </div>
                       <button className="text-sm font-medium text-gray-700 hover:text-gray-900 border border-gray-200 hover:border-gray-400 px-4 py-1.5 rounded-lg transition-colors">
-                        Submit work →
+                        {t("bounties.submit")}
                       </button>
                     </div>
                   </div>
@@ -328,12 +336,12 @@ export default function Bounties() {
             {filtered.length === 0 && (
               <div className="text-center py-20">
                 <p className="text-gray-300 text-4xl mb-4">🎯</p>
-                <p className="text-gray-500 font-medium">No bounties match your filters.</p>
+                <p className="text-gray-500 font-medium">{t("bounties.empty.text")}</p>
                 <button
                   onClick={() => { setSearch(""); setSelectedSkills([]); }}
                   className="mt-3 text-xs text-orange-500 hover:underline"
                 >
-                  Clear all filters
+                  {t("bounties.filters.clear.all")}
                 </button>
               </div>
             )}

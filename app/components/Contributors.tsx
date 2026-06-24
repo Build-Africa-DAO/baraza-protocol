@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { t } from "@/app/lib/i18n";
 
 const CONTRIBUTORS = [
   {
@@ -89,8 +90,8 @@ const ROLE_COLORS: Record<string, { bg: string; text: string }> = {
   Member: { bg: "#f3f4f6", text: "#374151" },
 };
 
-const ROLE_FILTERS = ["All", "Founders", "Admins", "Members"];
-const SORT_OPTIONS = ["Contribution", "Join Date", "Name", "Last Active"];
+const ROLE_FILTER_VALUES = ["All", "Founders", "Admins", "Members"] as const;
+const SORT_OPTION_VALUES = ["Contribution", "Join Date", "Name", "Last Active"] as const;
 
 export default function Contributors() {
   const [search, setSearch] = useState("");
@@ -111,15 +112,29 @@ export default function Contributors() {
 
   const totalContributed = CONTRIBUTORS.reduce((sum, c) => sum + parseInt(c.contributed.replace(/[^0-9]/g, "")), 0);
 
+  const roleFilterLabels: Record<string, string> = {
+    All: t("contributors.role.all"),
+    Founders: t("contributors.role.founders"),
+    Admins: t("contributors.role.admins"),
+    Members: t("contributors.role.members"),
+  };
+
+  const sortOptionLabels: Record<string, string> = {
+    Contribution: t("contributors.sort.contribution"),
+    "Join Date": t("contributors.sort.joined"),
+    Name: t("contributors.sort.name"),
+    "Last Active": t("contributors.sort.active"),
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
       {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
         {[
-          { label: "Total Members", value: CONTRIBUTORS.length.toString(), icon: "👥" },
-          { label: "Total Contributed", value: `KSh ${totalContributed.toLocaleString()}`, icon: "💰" },
-          { label: "Avg per Member", value: `KSh ${Math.round(totalContributed / CONTRIBUTORS.length).toLocaleString()}`, icon: "📊" },
-          { label: "Leaders", value: "3", icon: "🏅" },
+          { label: t("contributors.stat.members"), value: CONTRIBUTORS.length.toString(), icon: "👥" },
+          { label: t("contributors.stat.contributed"), value: `KSh ${totalContributed.toLocaleString()}`, icon: "💰" },
+          { label: t("contributors.stat.avg"), value: `KSh ${Math.round(totalContributed / CONTRIBUTORS.length).toLocaleString()}`, icon: "📊" },
+          { label: t("contributors.stat.leaders"), value: "3", icon: "🏅" },
         ].map((stat) => (
           <div key={stat.label} className="bg-white rounded-2xl border border-gray-200 p-4">
             <p className="text-2xl mb-1">{stat.icon}</p>
@@ -137,14 +152,14 @@ export default function Contributors() {
           </svg>
           <input
             type="text"
-            placeholder="Search members..."
+            placeholder={t("contributors.search.placeholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-white border border-gray-200 rounded-lg pl-9 pr-4 py-2 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-orange-400"
           />
         </div>
         <div className="flex gap-2">
-          {ROLE_FILTERS.map((r) => (
+          {ROLE_FILTER_VALUES.map((r) => (
             <button
               key={r}
               onClick={() => setActiveRole(r)}
@@ -154,7 +169,7 @@ export default function Contributors() {
                   : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
               }`}
             >
-              {r}
+              {roleFilterLabels[r]}
             </button>
           ))}
         </div>
@@ -166,15 +181,15 @@ export default function Contributors() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7h18M6 12h12M9 17h6" />
           </svg>
-          Sort by:
+          {t("contributors.sort.label")}
         </span>
-        {SORT_OPTIONS.map((s) => (
+        {SORT_OPTION_VALUES.map((s) => (
           <button
             key={s}
             onClick={() => setActiveSort(s)}
             className={`transition-colors ${activeSort === s ? "text-orange-500 font-medium" : "hover:text-gray-900"}`}
           >
-            {s}
+            {sortOptionLabels[s]}
             {activeSort === s && " ↓"}
           </button>
         ))}
@@ -204,7 +219,7 @@ export default function Contributors() {
                 </span>
               </div>
               <p className="text-xs text-gray-400">
-                Joined {c.joinedAgo} ago · {c.contributed} contributed
+                {t("contributors.joined")} {c.joinedAgo} {t("contributors.ago")} · {c.contributed} {t("contributors.contributed")}
               </p>
               {c.bio && (
                 <p className="text-xs text-gray-500 mt-1 line-clamp-1">{c.bio}</p>
@@ -213,15 +228,15 @@ export default function Contributors() {
             <div className="hidden sm:flex items-center gap-6 text-sm text-right flex-shrink-0">
               <div>
                 <p className="font-semibold text-gray-900">{c.votes}</p>
-                <p className="text-xs text-gray-400">Votes</p>
+                <p className="text-xs text-gray-400">{t("contributors.col.votes")}</p>
               </div>
               <div>
                 <p className="font-semibold text-gray-900">{c.payments}</p>
-                <p className="text-xs text-gray-400">Payments</p>
+                <p className="text-xs text-gray-400">{t("contributors.col.payments")}</p>
               </div>
               <div>
                 <p className="font-semibold text-orange-500">{c.reputation.toLocaleString()}</p>
-                <p className="text-xs text-gray-400">Reputation</p>
+                <p className="text-xs text-gray-400">{t("contributors.col.reputation")}</p>
               </div>
             </div>
           </div>
@@ -229,7 +244,7 @@ export default function Contributors() {
       </div>
 
       {filtered.length === 0 && (
-        <div className="text-center text-gray-400 py-20">No contributors match your filters.</div>
+        <div className="text-center text-gray-400 py-20">{t("contributors.empty")}</div>
       )}
     </div>
   );
