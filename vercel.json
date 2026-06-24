@@ -24,23 +24,29 @@
     }
   ],
   "functions": {
-    "app/api/ussd/index.ts": {
+    "api/ussd/index.ts": {
       "maxDuration": 5
     },
-    "app/api/mpesa/simulate.ts": {
+    "api/mpesa/simulate.ts": {
       "maxDuration": 15
     },
-    "app/api/membership/activate.ts": {
+    "api/membership/activate.ts": {
       "maxDuration": 30
     },
-    "app/api/stellar/verify-payment.ts": {
+    "api/stellar/verify-payment.ts": {
       "maxDuration": 30
     },
-    "app/api/payment-orders/status.ts": {
+    "api/payment-orders/status.ts": {
       "maxDuration": 10
     },
-    "app/api/cron/promote-orders.ts": {
+    "api/cron/promote-orders.ts": {
       "maxDuration": 60
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/promote-orders",
+      "schedule": "0 0 * * *"
+    }
+  ]
 }
