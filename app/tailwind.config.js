@@ -18,8 +18,8 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				sans: ['Public Sans', 'system-ui', 'sans-serif'],
-				display: ['Hanken Grotesk', 'system-ui', 'sans-serif'],
+				sans: ['DM Sans', 'system-ui', 'sans-serif'],
+				display: ['Syne', 'system-ui', 'sans-serif'],
 				mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
 			},
 			colors: {

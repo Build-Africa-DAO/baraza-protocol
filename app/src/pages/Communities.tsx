@@ -240,8 +240,8 @@ export default function Communities() {
             </div>
           ) : (
             <div className="baraza-card p-12 text-center">
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Search className="w-6 h-6" />
+              <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+                <Search className="w-6 h-6 text-muted-foreground" />
               </div>
               <p className="font-display text-base font-semibold mb-1">
                 {emptyResultTitle(search)}

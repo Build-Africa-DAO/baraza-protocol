@@ -57,7 +57,7 @@ function AnimatedSetupChecklist({ items, summary }: AnimatedSetupChecklistProps)
 
   return (
     <motion.div
-      className="baraza-card sticky top-24 overflow-hidden p-5"
+      className="baraza-card overflow-hidden p-5 lg:sticky lg:top-24"
       initial={{ opacity: 0, y: 18, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
@@ -518,8 +518,8 @@ const CreateCommunity: React.FC = () => {
         <section className="py-20">
           <div className="container mx-auto px-4">
             <div className="max-w-md mx-auto text-center">
-              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-                <CheckCircle2 className="w-8 h-8" />
+              <div className="w-16 h-16 rounded-full bg-confirmed/15 flex items-center justify-center mx-auto mb-6">
+                <CheckCircle2 className="w-8 h-8 text-confirmed" />
               </div>
               <h2 className="font-display text-2xl font-bold mb-3">
                 {form.name} is live

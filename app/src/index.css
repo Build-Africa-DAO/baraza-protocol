@@ -40,7 +40,7 @@
     --input: 22 12% 93%;
     --ring: 22 90% 42%;
 
-    --radius: 0.5rem;
+    --radius: 0.25rem;
 
     /* Extended semantic tokens */
     --warm: 22 90% 42%;
@@ -169,13 +169,13 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-family: 'Public Sans', system-ui, sans-serif;
+    font-family: 'DM Sans', system-ui, sans-serif;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Hanken Grotesk', system-ui, sans-serif;
+    font-family: 'Syne', system-ui, sans-serif;
   }
 }
 
@@ -311,7 +311,7 @@
     background: var(--gradient-primary) !important;
     color: hsl(var(--primary-foreground)) !important;
     border-radius: var(--radius) !important;
-    font-family: 'Public Sans', system-ui, sans-serif !important;
+    font-family: 'DM Sans', system-ui, sans-serif !important;
     font-weight: 600 !important;
     font-size: 0.875rem !important;
     height: 2.5rem !important;
@@ -330,10 +330,10 @@
     background: hsl(var(--card)) !important;
     border: 1px solid hsl(var(--border)) !important;
     border-radius: 1rem !important;
-    font-family: 'Public Sans', system-ui, sans-serif !important;
+    font-family: 'DM Sans', system-ui, sans-serif !important;
   }
   .wallet-adapter-modal-title {
-    font-family: 'Hanken Grotesk', system-ui, sans-serif !important;
+    font-family: 'Syne', system-ui, sans-serif !important;
     color: hsl(var(--foreground)) !important;
   }
   .wallet-adapter-modal-list li {
@@ -357,7 +357,7 @@
   }
   .wallet-adapter-dropdown-list-item {
     color: hsl(var(--foreground)) !important;
-    font-family: 'Public Sans', system-ui, sans-serif !important;
+    font-family: 'DM Sans', system-ui, sans-serif !important;
   }
   .wallet-adapter-dropdown-list-item:hover {
     background: hsl(var(--surface)) !important;
