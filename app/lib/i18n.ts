@@ -1,17 +1,17 @@
 /**
  * Baraza i18n — lightweight, no framework.
  *
- * Swahili (sw) is the PRIMARY language for the join + community flows.
- * English (en) is the FALLBACK when a key is missing in sw.
+ * English (en) is the ACTIVE launch language. The Swahili (sw) dictionary is
+ * retained in full but DORMANT — deferred to a later Swahili release. Nothing
+ * was deleted; only the lookup order in t() selects en first.
  *
- * IMPORTANT: A native-speaker review is strongly recommended before public
- * launch. The Swahili here is natural Kenyan register, not literal
- * machine translation, but it has not been validated by a fluent
- * community member.
+ * To re-enable Swahili later: flip the order in t() back to `sw[key] ?? en[key]`
+ * (or add real locale state). The sw strings still need a native-speaker review
+ * before they are shown to users.
  *
  * Usage:
  *   import { t } from "@/app/lib/i18n";
- *   t("hero.cta.browse")  // returns Swahili string, English fallback
+ *   t("hero.cta.browse")  // returns English string (sw fallback)
  */
 
 const sw: Record<string, string> = {
@@ -353,11 +353,12 @@ const en: Record<string, string> = {
 };
 
 /**
- * Returns the Swahili string for `key`, falling back to English if absent.
- * If neither exists the key itself is returned so missing strings are visible.
+ * Returns the English string for `key` (active launch language), falling back
+ * to Swahili if absent, then the key itself so missing strings stay visible.
+ * Swahili is dormant — flip the order to `sw[key] ?? en[key]` to re-enable it.
  */
 export function t(key: string): string {
-  return sw[key] ?? en[key] ?? key;
+  return en[key] ?? sw[key] ?? key;
 }
 
 export { sw, en };
