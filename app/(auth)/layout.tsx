@@ -1,11 +1,9 @@
-import type { ReactNode } from "react";
-
 /**
  * Auth shell — editorial split on the Baraza dark system. A warm brand panel
  * with the concentric-ring assembly motif sits beside the form. The panel is
  * desktop-only; on mobile the form stands alone (the card carries its own mark).
  */
-export default function AuthLayout({ children }: { children: ReactNode }) {
+export default function AuthLayout({ children }: LayoutProps<"/">) {
   return (
     <div className="min-h-dvh flex flex-col bg-baraza-black md:grid md:grid-cols-[clamp(18rem,38%,30rem)_1fr]">
       {/* Brand panel — desktop only */}
