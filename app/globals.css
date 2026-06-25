@@ -31,6 +31,23 @@
   --font-display: var(--font-syne);
   --font-sans: var(--font-dm-sans);
   --font-mono: var(--font-jetbrains-mono);
+
+  /* ---------------------------------------------------------------------
+   * Coordination-plane palette (design spec v3) — ADDITIVE.
+   * Does not replace the LOCKED v1 brand tokens above; these drive the
+   * member-facing coordination screens (proposals, dashboard, bounties…).
+   * Warm amber-black canvas. Orange is reserved for the single primary
+   * action + active/selected state ONLY. Yellow is for positive/complete.
+   * ------------------------------------------------------------------- */
+  --color-coord-canvas: #181303;   /* page canvas — warm amber-black, never pure black */
+  --color-coord-surface: #211b08;  /* base card surface */
+  --color-coord-surface-2: #251f0b;/* raised surface */
+  --color-coord-surface-3: #302915;/* hover / inset surface + borders */
+  --color-coord-border: #302915;
+  --color-coord-cream: #efe2c2;    /* primary text */
+  --color-coord-muted: #b3a06f;    /* secondary text */
+  --color-coord-orange: #f97316;   /* PRIMARY ACTION + active/selected ONLY */
+  --color-coord-yellow: #ffe083;   /* positive / complete, used sparingly */
 }
 
 body {
