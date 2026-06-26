@@ -23,7 +23,13 @@ const Profile = lazy(() => import('./pages/Profile'));
 const TreasuryDetail = lazy(() => import('./pages/TreasuryDetail'));
 const ProposalDetail = lazy(() => import('./pages/ProposalDetail'));
 const AdminReconciliation = lazy(() => import('./pages/AdminReconciliation'));
+const AkiliCouncilFilings = lazy(() => import('./pages/AkiliCouncilFilings'));
+const RetroRounds = lazy(() => import('./pages/RetroRounds'));
+const RetroVote = lazy(() => import('./pages/RetroVote'));
+const RetroResults = lazy(() => import('./pages/RetroResults'));
+const RetroCommunity = lazy(() => import('./pages/RetroCommunity'));
 const Onboarding = lazy(() => import('./pages/Onboarding'));
+const ClaimIdentity = lazy(() => import('./pages/ClaimIdentity'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 const App: React.FC = () => {
@@ -55,7 +61,13 @@ const App: React.FC = () => {
               <Route path="/dashboard/:id/treasury" element={<TreasuryDetail />} />
               <Route path="/dashboard/:id/decisions/:decisionId" element={<ProposalDetail />} />
               <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/claim" element={<ClaimIdentity />} />
               <Route path="/admin" element={<AdminReconciliation />} />
+              <Route path="/admin/akili" element={<AkiliCouncilFilings />} />
+              <Route path="/admin/retro" element={<RetroRounds />} />
+              <Route path="/retro/:communityId" element={<RetroCommunity />} />
+              <Route path="/retro/:communityId/vote" element={<RetroVote />} />
+              <Route path="/retro/:communityId/results" element={<RetroResults />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             </Suspense>

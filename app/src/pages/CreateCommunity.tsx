@@ -6,6 +6,7 @@ import Layout from '@/components/Layout';
 import { COMMUNITY_TYPES, DAO_CREATION_FEE_KES, PAYBILL_ADDON_FEE_KES, USSD_ADDON_FEE_KES } from '@/lib/constants';
 import { formatKSh, formatRailAmountFromKes, formatRailAmountWithKes } from '@/lib/utils';
 import { normaliseKenyanPhone } from '@/lib/phone';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletGuard } from '@/hooks/useWalletGuard';
 import { useToast } from '@/hooks/use-toast';
 import { createCommunityRecord } from '@/lib/communities';
@@ -17,6 +18,7 @@ import { AskAkili } from '@/akili/AskAkili';
 import { useBarazaChain } from '@/hooks/useBarazaData';
 import { communityPda, toSlug } from '@/lib/programs';
 import { saveCommunityChainMapping } from '@/lib/chainMappings';
+import { buildWalletProofHeaders } from '@/lib/walletProof';
 
 type TreasuryPolicy = 'multisig-ready' | 'proposal-only' | 'manual-review';
 type ChecklistState = 'complete' | 'active' | 'pending';
@@ -262,7 +264,8 @@ const CreateCommunity: React.FC = () => {
     path: "/create",
   });
   const navigate = useNavigate();
-  const { requireWallet, isReady } = useWalletGuard({ action: 'launch a DAO' });
+  const { requireWallet, isReady, address: founderAddress } = useWalletGuard({ action: 'launch a DAO' });
+  const wallet = useWallet();
   const { toast } = useToast();
   const { chain } = useChain();
   const chainClient = useBarazaChain();
@@ -444,6 +447,10 @@ const CreateCommunity: React.FC = () => {
         if (paybill) setAssignedPaybill(paybill);
         if (ussd) setAssignedUssd(ussd);
 
+        const walletProofHeaders = founderAddress
+          ? await buildWalletProofHeaders(wallet, 'create-community')
+          : undefined;
+
         const community = await createCommunityRecord({
           name: form.name,
           type: form.type,
@@ -456,6 +463,8 @@ const CreateCommunity: React.FC = () => {
           treasuryPolicy: form.treasuryPolicy as 'multisig-ready' | 'proposal-only' | 'manual-review',
           paybillNumber: paybill,
           ussdShortcode: ussd,
+          createdBy: founderAddress ?? undefined,
+          walletProofHeaders,
         });
         if (chainResult) {
           saveCommunityChainMapping({

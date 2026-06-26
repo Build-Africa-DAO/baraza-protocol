@@ -157,34 +157,50 @@ function buildSystemBlocks(
  * heuristic, not a classifier: when the signal is weak, fall back to Kofi
  * (governance) since that is the most common Baraza ask.
  *
- * NOTE on bible-vs-router split: the character bibles in
- * `docs/akili-council/` describe each agent's *editorial* domain (Amara
- * = Content & Media, Nia = People, etc.). The router below is the
- * *functional* dispatch layer Aziz curated — it intentionally diverges
- * from a strict bible-domain match. The tests in
- * `app/src/lib/__tests__/akili.test.ts` encode the router as product
- * contract: change the router only when you change the tests too.
+ * Routes match the character bibles in `docs/akili-council/` and the live
+ * filing record at `.claude/data/akili-council/<agent>/filings.jsonl`.
+ * Prior curated divergence (member-churn → amara, external-research → nia)
+ * has been retired — it contradicted both the bibles and Nia's actual usage
+ * as a People agent (see her Kibera and onboarding filings).
  *
- * Current routing intent (from the tests):
- *   - amara — community telemetry (turnout, churn, growth, engagement)
- *   - kofi  — proposals, quorum, treasury impact, default
- *   - zara  — compliance scope (KYC, tax, AML, VASP)
- *   - nia   — external comparison + cross-community research
- *   - seku  — outbound copy (announcements, WhatsApp, SMS, reminders)
+ *   - nia   — community/people: churn, retention, onboarding, sentiment,
+ *             belonging, member-to-member trust, conflict surfacing,
+ *             participation health.
+ *   - amara — content/media: episode performance, scheduling, replay,
+ *             thumbnails, Baraza TV.
+ *   - seku  — external research: market trends, benchmarks, comparable
+ *             communities, regulatory horizon. Also outbound copy
+ *             (announcements, WhatsApp, SMS) until a dedicated comms
+ *             agent lands.
+ *   - zara  — compliance + treasury anomaly (KYC, tax, AML, VASP).
+ *   - kofi  — default: proposals, quorum, voting, treasury impact.
  */
 export function routeToCouncilAgent(message: string): CouncilAgentName {
   const m = message.toLowerCase();
 
-  if (/(announce|message|recap|reminder|whatsapp|sms|copy|caption|script|broadcast)/.test(m)) {
+  // seku — outbound copy (kept here pending a dedicated comms agent)
+  if (/(announce|message|recap|reminder|whatsapp|sms|copy|caption|script)/.test(m)) {
     return 'seku';
   }
+  // seku — external research, market scans, comparable communities
+  if (/(research|trend|market|benchmark|comparable|industry|landscape|other (chamas|saccos|stokvels|communities|groups|daos))/.test(m)) {
+    return 'seku';
+  }
+  // zara — compliance + regulatory framing
   if (/(kyc|aml|tax|sanction|regulator|license|licence|vasp|compliance|legal)/.test(m)) {
     return 'zara';
   }
-  if (/(research|trend|market|benchmark|comparable|industry|landscape|other (chamas|saccos|stokvels|communities|groups|daos))/.test(m)) {
+  // kofi — explicit governance terms (run before nia so generic "member"
+  // mentions inside governance asks don't get pulled into community-health)
+  if (/(quorum|proposal|vote|voting|charter|multi-?sig|treasury impact|treasury authoris|bylaw)/.test(m)) {
+    return 'kofi';
+  }
+  // nia — people/community-health (member side)
+  if (/(turnout|participation|members?\s|growth|churn|retention|engagement|attendance|sentiment|belonging|onboarding|conflict|trust|how is the community)/.test(m)) {
     return 'nia';
   }
-  if (/(turnout|participation|members|growth|churn|engagement|attendance|how is the community)/.test(m)) {
+  // amara — content/media surface
+  if (/(episode|scheduling|thumbnail|replay|re-watch|broadcast|baraza tv|btv|content)/.test(m)) {
     return 'amara';
   }
   // Default: governance analysis (proposals, quorum, voting, treasury impact)

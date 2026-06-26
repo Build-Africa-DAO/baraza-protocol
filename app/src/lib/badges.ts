@@ -79,7 +79,7 @@ export const BADGES: Record<BadgeId, BadgeMeta> = {
     criteria: 'Create a community that survives its first 90 days.',
     glyph: '⭐',
     tone: 'primary',
-    derivable: false, // needs communities.created_by exposed on the client Community type
+    derivable: true,
   },
   'quorum-keeper': {
     id: 'quorum-keeper',
@@ -88,7 +88,7 @@ export const BADGES: Record<BadgeId, BadgeMeta> = {
     criteria: 'Vote on at least 5 community proposals.',
     glyph: '🗳️',
     tone: 'secondary',
-    derivable: false, // needs per-member vote count from the votes table
+    derivable: true,
   },
 };
 
@@ -99,6 +99,16 @@ export interface BadgeDerivationInput {
   activeMembershipCount: number;
   /** Earliest joinedAt across all memberships, ISO 8601. Null = no memberships. */
   earliestJoinedAt: string | null;
+  /**
+   * Number of communities the wallet founded that are ≥90 days old.
+   * Optional — defaults to 0 when caller hasn't wired the signal yet.
+   */
+  foundedSurvivingCommunityCount?: number;
+  /**
+   * Total proposals this wallet has voted on across all communities.
+   * Optional — defaults to 0 when caller hasn't wired the signal yet.
+   */
+  proposalVoteCount?: number;
 }
 
 export interface BadgeDerivationResult {
@@ -141,7 +151,21 @@ export function deriveBadges(input: BadgeDerivationInput): BadgeDerivationResult
     inProgress.push('veteran');
   }
 
-  // Always-locked (need backend support)
+  // founder — created a community that has survived ≥90 days
+  if ((input.foundedSurvivingCommunityCount ?? 0) >= 1) {
+    earned.push('founder');
+  } else {
+    inProgress.push('founder');
+  }
+
+  // quorum-keeper — voted on ≥5 proposals
+  if ((input.proposalVoteCount ?? 0) >= 5) {
+    earned.push('quorum-keeper');
+  } else {
+    inProgress.push('quorum-keeper');
+  }
+
+  // Any non-derivable badges still surface as locked teasers.
   const locked: BadgeId[] = [];
   for (const [id, meta] of Object.entries(BADGES) as Array<[BadgeId, BadgeMeta]>) {
     if (!meta.derivable) locked.push(id);

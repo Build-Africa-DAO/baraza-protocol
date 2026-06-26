@@ -1,4 +1,5 @@
 import type { UssdSession } from './session.js';
+import { peekPendingWelcome, welcomeFlow } from './welcome.js';
 
 export interface PendingPayOrder {
   communityCode: string;
@@ -182,6 +183,14 @@ export function handleUssdInput(params: {
   brzaBalance?: number;
 }): MenuResult {
   const { text, phoneNumber, brzaBalance } = params;
+
+  // Nia's welcome flow — if MINT_CONFIRMED has flagged this phone as a
+  // freshly-onboarded member, the entire session belongs to the welcome
+  // until it completes or the member skips to main menu.
+  const pendingWelcome = peekPendingWelcome(phoneNumber);
+  if (pendingWelcome) {
+    return welcomeFlow(text, pendingWelcome);
+  }
 
   if (text === '') {
     return mainMenu();

@@ -452,6 +452,15 @@ class BarazaDataStore {
     return decision?.voters[walletKey] || null;
   }
 
+  // Quorum-keeper badge: distinct proposals this wallet has voted on.
+  getVoteCountForWallet(walletKey: string): number {
+    let count = 0;
+    for (const decision of this.decisions.values()) {
+      if (decision.voters[walletKey]) count += 1;
+    }
+    return count;
+  }
+
   // ---- Writes ----
 
   async createCommunity(data: {

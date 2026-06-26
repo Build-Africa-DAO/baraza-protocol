@@ -30,7 +30,7 @@ Repo: `Azizudinly/baraza-protocol`
 
 ### Critical / Blocking
 
-1. **Token allocation discrepancy** — The Notion product spec allocation table sums to 1,100,000,000 (110% of supply), not 1,000,000,000. This must be reconciled before any allocation is changed in `app/src/lib/brza/constants.ts`. Current constants remain authoritative until resolved. Buckets in conflict: Ecosystem & Grants 17%, Community Rewards 18%, Events 5%, Reserve 5%, Liquidity Pool 10%.
+1. **Token allocation discrepancy** — The Notion product spec allocation table sums to 1,100,000,000 (110% of supply), not 1,000,000,000. This must be reconciled before any allocation is changed in `app/src/lib/brza/constants.ts`. Current constants remain authoritative until resolved. Buckets in conflict: Ecosystem & Grants 17%, Community Rewards 18%, Events 5%, Reserve 5%, Liquidity Pool 10%. *Status check 2026-06-19: still open, Notion-side fix; see `docs/TOKENOMICS_AUDIT_REPORT.md` for the cross-repo confirmation that constants.ts is authoritative.*
 
 2. **VASP registration (Kenya Virtual Asset Service Providers Act 2025)** — The Kenya VASP Act is live. BRZA token issuance on Stellar mainnet likely requires VASP registration. TODO: engage legal counsel before mainnet token launch. Do not issue BRZA on mainnet without completing this.
 

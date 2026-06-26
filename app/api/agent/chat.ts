@@ -1,6 +1,11 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
-import { AKILI_RELAY } from '../../src/akili/prompts.js';
+import { AKILI_RELAY, type AkiliPrincipalName } from '../../src/akili/prompts.js';
+import {
+  buildCouncilSessionContext,
+  invokeCouncilAgent,
+  type CouncilAgentName,
+} from '../../src/akili/council.js';
 
 export const config = { runtime: 'nodejs' };
 
@@ -8,6 +13,10 @@ interface ChatRequest {
   message: string;
   communityId?: string;
   history?: Array<{ role: 'user' | 'assistant'; content: string }>;
+  /** When set, route the request to a named council agent (one-shot, non-streaming). */
+  agent?: CouncilAgentName;
+  /** When set, inject relationship-tension context into the relay-mode system prompt. */
+  activePrincipals?: ReadonlyArray<AkiliPrincipalName>;
 }
 
 /**
@@ -48,7 +57,7 @@ export function classifyChatError(error: unknown): ChatErrorEvent {
     return {
       category: 'auth_failed',
       message:
-        "Akili can't reach the brain right now — the API key is missing, invalid, or revoked.",
+        "Akili can't reach the brain right now - the API key is missing, invalid, or revoked.",
     };
   }
 
@@ -70,7 +79,7 @@ export function classifyChatError(error: unknown): ChatErrorEvent {
     return {
       category: 'credits_exhausted',
       message:
-        "Akili is out of credits and can't respond right now. Your message is fine — a community admin needs to top up the AI budget.",
+        "Akili is out of credits and can't respond right now. Your message is fine - a community admin needs to top up the AI budget.",
     };
   }
 
@@ -80,7 +89,7 @@ export function classifyChatError(error: unknown): ChatErrorEvent {
   };
 }
 
-// Named HTTP-method exports (POST, OPTIONS) — NOT `export default`.
+// Named HTTP-method exports (POST, OPTIONS) - NOT `export default`.
 // Vercel's Node.js runtime treats a default-export `(req, res) => void`
 // classic signature and ignores any returned Response, which silently
 // hangs requests for the full timeout. Named method exports are the
@@ -123,7 +132,7 @@ async function handleChat(req: Request): Promise<Response> {
     const classified: ChatErrorEvent = {
       category: 'auth_failed',
       message:
-        "Akili can't reach the brain right now — the API key is missing, invalid, or revoked.",
+        "Akili can't reach the brain right now - the API key is missing, invalid, or revoked.",
     };
     return new Response(JSON.stringify(classified), {
       status: 200,
@@ -141,14 +150,53 @@ async function handleChat(req: Request): Promise<Response> {
     return new Response('Bad Request', { status: 400 });
   }
 
-  const { message, communityId, history = [] } = body;
+  const { message, communityId, history = [], agent, activePrincipals } = body;
   if (!message?.trim()) return new Response('Bad Request', { status: 400 });
 
   const communityContext = communityId ? await loadCommunityContext(communityId) : '';
+  const encoder = new TextEncoder();
+
+  // Council mode: one-shot to a named specialist. Emitted as a single SSE
+  // event so the client uses the same parser as the relay-streaming path.
+  if (agent) {
+    const result = await invokeCouncilAgent(agent, message.trim(), {
+      apiKey,
+      context: communityContext || undefined,
+      activePrincipals,
+    });
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(
+          encoder.encode(
+            `data: ${JSON.stringify({ text: result.text, agent: result.agent })}\n\n`,
+          ),
+        );
+        controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+        controller.close();
+      },
+    });
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
+  }
+
   const systemPrompt = buildSystemPrompt(communityContext);
+  // Relay mode: when 2+ principals are flagged, inject the session-context
+  // block (tension lines + Decision Stack Guard prepend if applicable) in
+  // front of the user message. Empty string when fewer than 2 principals.
+  const sessionContext = activePrincipals?.length
+    ? buildCouncilSessionContext(activePrincipals)
+    : '';
+  const userContent = sessionContext
+    ? `${sessionContext}\n\n${message.trim()}`
+    : message.trim();
 
   const client = new Anthropic({ apiKey });
-  const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -162,19 +210,14 @@ async function handleChat(req: Request): Promise<Response> {
               role: m.role,
               content: m.content,
             })),
-            { role: 'user', content: message.trim() },
+            { role: 'user', content: userContent },
           ],
         });
 
         for await (const event of messageStream) {
-          if (
-            event.type === 'content_block_delta' &&
-            event.delta.type === 'text_delta'
-          ) {
+          if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
             controller.enqueue(
-              encoder.encode(
-                `data: ${JSON.stringify({ text: event.delta.text })}\n\n`
-              )
+              encoder.encode(`data: ${JSON.stringify({ text: event.delta.text })}\n\n`),
             );
           }
         }
@@ -182,9 +225,7 @@ async function handleChat(req: Request): Promise<Response> {
         controller.enqueue(encoder.encode('data: [DONE]\n\n'));
       } catch (err) {
         const classified = classifyChatError(err);
-        controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify(classified)}\n\n`),
-        );
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify(classified)}\n\n`));
       } finally {
         controller.close();
       }
@@ -195,7 +236,7 @@ async function handleChat(req: Request): Promise<Response> {
     headers: {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
+      Connection: 'keep-alive',
       'Access-Control-Allow-Origin': '*',
     },
   });
@@ -213,7 +254,7 @@ async function loadCommunityContext(communityId: string): Promise<string> {
       supabase
         .from('communities')
         .select(
-          'name, description, chain, membership_fee_kes, quorum_pct, approval_threshold_pct'
+          'name, description, chain, membership_fee_kes, quorum_pct, approval_threshold_pct',
         )
         .eq('id', communityId)
         .single(),
@@ -233,7 +274,7 @@ async function loadCommunityContext(communityId: string): Promise<string> {
         ? proposals
             .map(
               (p) =>
-                `  - "${p.title}" [${p.status}] — ${p.for_votes ?? 0} for / ${p.against_votes ?? 0} against`
+                `  - "${p.title}" [${p.status}] - ${p.for_votes ?? 0} for / ${p.against_votes ?? 0} against`,
             )
             .join('\n')
         : '  (none active)';
@@ -259,7 +300,7 @@ function buildSystemPrompt(communityContext: string): string {
   //          and the taboo list (never greet, never strip dissent, etc.).
   //
   // Layer 2: Direct-chat operational surface (DRAFT / EXPLAIN / FLAG / GUIDE)
-  //          — what this specific endpoint exists to do.
+  //          - what this specific endpoint exists to do.
   //
   // Layer 3: Live community context if supplied (Supabase snapshot).
   //
@@ -268,11 +309,10 @@ function buildSystemPrompt(communityContext: string): string {
   // responds in its own voice; the guard's discipline (never greet,
   // never compress dissent, fidelity-not-equality) still applies.
   //
-  // TODO(akili-council-mode): when a UI surface lets a member open a
-  //   council-orchestrated session, accept `activePrincipals` on the
-  //   request body and pass it to invokeCouncilAgent(...) or build the
-  //   council session context here via buildCouncilSessionContext from
-  //   '../../src/lib/akili/council'. Today the chat brain is single-voice.
+  // Council mode is now wired: callers can pass `agent` to invoke a
+  // specialist one-shot, or `activePrincipals` to inject the relationship
+  // tension block + Decision Stack Guard prepend into relay-mode output.
+  // See handleChat() above for the dispatch.
   return `${AKILI_RELAY.systemPrompt}
 
 # Direct-chat task surface
@@ -280,15 +320,15 @@ function buildSystemPrompt(communityContext: string): string {
 You are answering a member of a Baraza community in a live, single-turn chat session. There is no other council agent feeding into this exchange. Use your own voice. The Decision Stack Guard above does not fire here (no council synthesis is in flight), but the discipline does: never greet, never soften a flag into a feeling, never speak for an agent who has not filed.
 
 ## Capabilities
-1. **DRAFT** — Turn a member's idea into a structured governance proposal ready for human review.
-2. **EXPLAIN** — Answer questions about community rules, treasury, vote status, and how Baraza works.
-3. **FLAG** — Identify problems with a proposal before it goes to a vote.
-4. **GUIDE** — Walk new members through wallet setup, M-Pesa payment, and their first vote.
+1. **DRAFT** - Turn a member's idea into a structured governance proposal ready for human review.
+2. **EXPLAIN** - Answer questions about community rules, treasury, vote status, and how Baraza works.
+3. **FLAG** - Identify problems with a proposal before it goes to a vote.
+4. **GUIDE** - Walk new members through wallet setup, M-Pesa payment, and their first vote.
 
 ## Hard limits (in addition to your taboo list)
 - You NEVER submit proposals, cast votes, or execute transactions.
 - You NEVER access private keys, phone numbers, or any personal data.
-- All drafts require a human to review and submit — you advise, members decide.
+- All drafts require a human to review and submit - you advise, members decide.
 - Define any blockchain or technical term you use in plain English.
 ${communityContext ? `\n## This community\n${communityContext}\n` : ''}
 ## Proposal draft format
@@ -306,7 +346,7 @@ When drafting a proposal, produce this JSON block then a plain-English summary:
 }
 \`\`\`
 
-## Flag criteria — raise ⚠️ and explain clearly if:
+## Flag criteria - raise a warning and explain clearly if:
 - A near-identical proposal is already active or pending.
 - The budget exceeds 20% of the known treasury balance.
 - The proposal primarily benefits the proposer personally.
@@ -315,5 +355,5 @@ When drafting a proposal, produce this JSON block then a plain-English summary:
 - The proposal text is spam, abuse, or completely off-topic.
 
 ## Direct-chat tone
-Plain English by default. If the member writes in Swahili, reply in Swahili. Keep answers short — one short paragraph unless you are drafting a full proposal. Open with content; do not greet. Say "the community" — not "your DAO."`;
+Plain English by default. If the member writes in Swahili, reply in Swahili. Keep answers short - one short paragraph unless you are drafting a full proposal. Open with content; do not greet. Say "the community" - not "your DAO."`;
 }

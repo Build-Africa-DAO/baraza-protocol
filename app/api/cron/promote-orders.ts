@@ -35,6 +35,8 @@ import {
   STELLAR_MAX_OPS_PER_TX,
   type StellarNetworkName,
 } from './_lib/stellar-mint.js';
+import { flagPendingWelcomeOnOrder } from '../../src/lib/ussd/welcome.js';
+import { sweepInvisibleUssdMembers } from '../../src/lib/ussd/monitoring.js';
 
 // nodejs runtime — Stellar SDK isn't edge-compatible (Buffer + Node fetch).
 export const config = { runtime: 'nodejs' };
@@ -285,6 +287,74 @@ async function markMintConfirmed(orderId: string): Promise<void> {
     },
     body: JSON.stringify({ status: 'MINT_CONFIRMED' }),
   });
+
+  // Nia's USSD welcome trigger — fire-and-forget. Looks up phone + community
+  // for this order; if it's a USSD-originated first payment, flags a pending
+  // welcome on the order metadata so the next dial gets W0.
+  void maybeTriggerUssdWelcome(orderId);
+}
+
+async function maybeTriggerUssdWelcome(orderId: string): Promise<void> {
+  const url = process.env.SUPABASE_URL?.replace(/\/$/, '');
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceKey) return;
+
+  try {
+    const params = new URLSearchParams({
+      order_id: `eq.${orderId}`,
+      select: 'community_id,provider,amount_expected,metadata',
+      limit: '1',
+    }).toString();
+    const res = await fetch(`${url}/rest/v1/payment_orders?${params}`, {
+      headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` },
+    });
+    if (!res.ok) return;
+
+    interface Row {
+      community_id: string;
+      provider: string;
+      amount_expected: number;
+      metadata?: { source?: string; phone?: string; phone_number?: string } | null;
+    }
+    const rows = (await res.json().catch(() => [])) as Row[];
+    const row = rows[0];
+    if (!row) return;
+
+    // USSD-originated payments carry source: 'ussd' + phone in metadata. If
+    // either is missing we can't issue a welcome — surface nothing.
+    const phone = row.metadata?.phone ?? row.metadata?.phone_number;
+    const isUssd =
+      row.metadata?.source === 'ussd' || row.provider === 'africastalking';
+    if (!isUssd || !phone) return;
+
+    // Look up the community name. If communities table read fails or the row
+    // is absent, fall back to the code as a safe display value.
+    let communityName = row.community_id;
+    try {
+      const cRes = await fetch(
+        `${url}/rest/v1/communities?id=eq.${encodeURIComponent(row.community_id)}&select=name`,
+        { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } },
+      );
+      if (cRes.ok) {
+        const cRows = (await cRes.json().catch(() => [])) as Array<{ name?: string }>;
+        if (cRows[0]?.name) communityName = cRows[0].name;
+      }
+    } catch {
+      // ignore — fallback handled above
+    }
+
+    await flagPendingWelcomeOnOrder({
+      orderId,
+      phoneNumber: phone,
+      communityCode: row.community_id,
+      communityName,
+      paymentAmountKes: row.amount_expected,
+      monthsPaid: 1,
+      totalMonthsExpected: 1,
+    });
+  } catch (err) {
+    console.warn('[promote-orders] maybeTriggerUssdWelcome failed', orderId, err);
+  }
 }
 
 async function confirmSubmittedMints(): Promise<ConfirmTickResult> {
@@ -547,12 +617,18 @@ export default async function handler(req: Request): Promise<Response> {
 
   const totalPromoted = Object.values(results).reduce((sum, r) => sum + r.promoted, 0);
 
+  // Seku monitoring: scan for RECONCILED USSD members who haven't dialled
+  // back in 30 days and flag them for operator follow-up. Safe to run every
+  // tick — the query filters out already-flagged orders.
+  const invisible = await sweepInvisibleUssdMembers(30);
+
   return json({
     ok: true,
     totalPromoted,
     mint: mintResult,
     confirm: confirmResult,
     breakdown: results,
+    invisibleSweep: invisible,
     tickAt: new Date().toISOString(),
   }, { status: 200 });
 }

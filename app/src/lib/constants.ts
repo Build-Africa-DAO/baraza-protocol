@@ -26,6 +26,11 @@ export interface Community {
   treasuryPolicy?: 'multisig-ready' | 'proposal-only' | 'manual-review';
   paybillNumber?: string;
   ussdShortcode?: string;
+  /**
+   * Wallet address of the founder. Used by the Founder badge to verify
+   * authorship. Optional because legacy rows and mock seeds may not carry it.
+   */
+  createdBy?: string;
 }
 
 export const DEFAULT_GOVERNANCE = {

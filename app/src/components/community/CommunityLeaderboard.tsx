@@ -1,4 +1,4 @@
-import { Star, Trophy, Zap } from 'lucide-react';
+import { Sparkles, Star, Trophy, Zap } from 'lucide-react';
 import { getBountiesForCommunity } from '@/lib/bounties';
 import { cn } from '@/lib/utils';
 
@@ -33,17 +33,6 @@ function buildLeaderboard(communityId: string): ContributorStat[] {
     reputation: s.bountiesCompleted * 10 + Math.floor(s.totalEarned / 1000),
   }));
 
-  // Inject seed contributors if board is empty (gives the page life before activity)
-  if (stats.length === 0) {
-    return [
-      { name: 'David K.', bountiesCompleted: 3, totalEarned: 86000, reputation: 116 },
-      { name: 'Wanjiru M.', bountiesCompleted: 2, totalEarned: 62000, reputation: 82 },
-      { name: 'Amara T.', bountiesCompleted: 2, totalEarned: 55000, reputation: 75 },
-      { name: 'Brian O.', bountiesCompleted: 1, totalEarned: 30000, reputation: 40 },
-      { name: 'Faith N.', bountiesCompleted: 1, totalEarned: 26000, reputation: 36 },
-    ];
-  }
-
   return stats.sort((a, b) => b.reputation - a.reputation);
 }
 
@@ -61,6 +50,56 @@ export default function CommunityLeaderboard({ communityId }: Props) {
   const leaders = buildLeaderboard(communityId);
   const top3 = leaders.slice(0, 3);
   const rest = leaders.slice(3);
+
+  // No real awarded/paid bounty contributors yet — show an honest empty state
+  // instead of seeded names. Fake activity erodes the "witnessed standing"
+  // signal that the badge system is supposed to carry.
+  if (leaders.length === 0) {
+    return (
+      <div className="space-y-4">
+        <div className="baraza-card p-5">
+          <div className="mb-5 flex items-center gap-2">
+            <Trophy className="h-4 w-4 text-secondary" />
+            <h3 className="font-display text-base font-semibold">Top contributors</h3>
+            <span className="ml-auto text-[10px] uppercase tracking-widest text-muted-foreground">
+              By reputation
+            </span>
+          </div>
+          <div className="rounded-xl border border-dashed p-8 text-center">
+            <div className="mx-auto mb-3 grid h-10 w-10 place-items-center rounded-full border">
+              <Sparkles className="h-4 w-4 text-secondary" />
+            </div>
+            <p className="font-display text-base font-semibold">
+              No contributors ranked yet
+            </p>
+            <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">
+              The leaderboard fills when bounties are awarded and paid. Be the first —
+              complete an open bounty and your name lands here.
+            </p>
+          </div>
+        </div>
+
+        <div className="baraza-card p-4">
+          <p className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider mb-3">
+            How reputation is scored
+          </p>
+          <div className="grid gap-2 sm:grid-cols-3 text-xs">
+            {[
+              ['Bounty completed', '+10 rep', 'Per awarded / paid task'],
+              ['KES earned', '+1 rep / KES 1,000', 'From confirmed payouts'],
+              ['Governance vote', '+2 rep (coming soon)', 'Participating in proposals'],
+            ].map(([action, score, note]) => (
+              <div key={action} className="rounded-lg border border-border/50 p-3">
+                <p className="font-semibold text-foreground">{action}</p>
+                <p className="text-primary font-bold mt-0.5">{score}</p>
+                <p className="text-muted-foreground mt-0.5 text-[10px]">{note}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

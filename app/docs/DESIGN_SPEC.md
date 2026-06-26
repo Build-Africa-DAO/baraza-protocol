@@ -191,20 +191,22 @@ Required fields:
 
 ```text
 ┌─────────────────────────────────────┐
-│ Community Token Distribution        │
-│ Total Supply: 10,000,000 tokens     │
+│ BRZA Token Distribution             │
+│ Total Supply: 1,000,000,000 BRZA    │
 │                                     │
-│ [████░░░░] 40% – Community Treasury │
-│ [███░░░░░] 30% – Founding Members   │
-│ [██░░░░░░] 20% – Airdrop Reserve   │
-│ [█░░░░░░░] 10% – Team              │
+│ [████░░░░] 20% – Community Rewards  │
+│ [███░░░░░] 15% – Operations         │
+│ [██░░░░░░] 15% – Founders (A + B)   │
+│ [██░░░░░░] 12% – Public Sale        │
+│ [█░░░░░░░] 10% – Reserve            │
+│ [██░░░░░░] 28% – Liquidity/Grants/… │
 │                                     │
-│ Your Holdings: 1,234 tokens (0.01%) │
+│ Your Holdings: 1,234 BRZA (0.0001%) │
 │ Voting Power: 1,234 votes           │
 └─────────────────────────────────────┘
 ```
 
-- Stacked-bar visualization of token allocation buckets
+- Stacked-bar visualization of BRZA allocation buckets (source: `app/src/lib/brza/constants.ts`)
 - User's personal holdings + voting power surfaced prominently
 - Optional pie-chart variant for the dashboard hero
 

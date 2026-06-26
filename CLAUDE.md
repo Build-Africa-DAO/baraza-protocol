@@ -4,9 +4,33 @@
 
 Baraza is a multi-chain community governance and treasury protocol for African DAOs, chamas, SACCOs, cooperatives, and stokvels. Primary market: Kenya, Tanzania, Uganda, Ethiopia, Nigeria.
 
-**Products:** Baraza Protocol · Baraza TV · IDO/Public Launch · DEX  
-**Founder:** Aziz Mohammed (@azizke) — `wethem2022@gmail.com`  
+**Products:** Baraza Protocol · Baraza TV · IDO/Public Launch · DEX
+**Founder:** Aziz Mohammed (@azizke) — `wethem2022@gmail.com`
 **Live:** baraza-protocol.vercel.app · GitHub: github.com/Azizudinly/baraza-protocol
+
+---
+
+## DAOs-as-a-Business — the headline product
+
+The revenue case: Baraza is **the only protocol where a registered SACCO, cooperative society, NGO, alumni association, or chama-graduating-to-LLP can run on-chain governance, treasury, and member distributions while keeping its legal standing in its home jurisdiction.**
+
+Every community on Baraza runs the same DAO kernel (see *DAO governance is the canonical model* below). The product tier is determined by the **wrapper class** the community chooses at creation:
+
+| `wrapper_class` | Who it is | What it gets | Pricing |
+|---|---|---|---|
+| `informal` | A chama, study circle, friend group — no legal entity | Full DAO kernel (proposals, votes, treasury, BRZA, retro rounds, badges, streaks, Akili Council) | Free |
+| `self_declared` | A community that names itself as a registered SACCO/cooperative/NGO but hasn't uploaded a verifying certificate | Everything in `informal` + "Self-declared" badge + access to compliance report exports | Subscription (TBD) |
+| `verified_business` | KYB-reviewed; certificate on file; registration number + authority verified | Everything in `self_declared` + "Verified" badge + Akili Council premium statutory mode (Kofi cites the actual Cooperative Societies Act sections; Zara quotes SASRA reserve ratios) + officer-tied multisig signer policy | Subscription (TBD) |
+
+**Six categories that pay the verified tier:**
+1. Cooperatives (Cooperative Societies Act, Kenya / Tanzania / Uganda)
+2. SACCOs (SASRA-registered, Kenya)
+3. NGOs (NGO Coordination Board, Kenya — equivalents elsewhere)
+4. Investment clubs / chamas graduating to LLP or limited cooperative
+5. Religious organisations and endowments (registered trustees)
+6. Alumni associations / homeowner associations (registered mutual association)
+
+The wrapper layer is **metadata + verification + display + Akili context** — it never branches the underlying governance, voting, treasury, BRZA, or retro code paths. See *DAO governance is the canonical model* for the invariant.
 
 ---
 
@@ -34,6 +58,24 @@ Stellar launches first. Never treat EVM or Solana as launch blockers.
 - Update `app/src/lib/knowledgeGraph.ts` when adding chain rails, contracts, or settlement routes.
 - Do not reference Builder Protocol or Nouns in UI, docs, or comments — use Aragon OSx.
 - Do not add Magic UI or heavy animation libraries.
+
+---
+
+## DAO governance is the canonical model
+
+**Every community on Baraza is a DAO under the hood.** Chamas, SACCOs, stokvels, cooperatives, ROSCAs, alumni groups, burial societies — all 23 types in `app/src/lib/constants.ts:108-132` run on the same DAO primitives: proposals, votes, treasury, multisig, dues, BRZA emission, badges, streaks, retro rounds. There is no "chama mode" or "SACCO mode" — there is one governance kernel, and type is a label + creation-time governance preset over that kernel.
+
+**Audit-confirmed invariant (2026-06-20):** zero `if (community.type === …)` runtime branches exist in `app/src/`, `app/api/`, or `contracts/`. The architecture holds the line cleanly.
+
+Rules for keeping it that way:
+
+- Type selection at `CreateCommunity.tsx` auto-populates governance form fields (quorum, approval threshold, voting period, treasury policy) from `GOVERNANCE_PRESETS`. The user can override every value. After creation, type becomes inert metadata.
+- Post-creation, `communities.type` is read for cosmetic surfaces only — banner imagery (`communityVisuals.ts`), settings display, gallery copy. **Never branch governance, treasury, voting, or token logic on it.**
+- Loan terms (`LOAN_TERMS` in `brza/constants.ts`) are global — `maxLtvPct: 0.50`, `aprPct: 0.05`, `termMonths: 12` — never configurable per community type.
+- Treasury policy (`multisig-ready`, `proposal-only`, `manual-review`) is an independent field on `communities`, not derived from type. A SACCO can ship with `proposal-only`; a chama can ship with `multisig-ready`. The configuration is per-community, not per-type.
+- Retro rounds (`app/src/lib/brza/retroRounds.ts`) and the BRZA emission pool are type-agnostic — pool sizing is per-community-membership share, never per-type share.
+- Any member of any community type can open a retro round, vote, draft proposals, and govern. The DAO surface is the surface, regardless of label.
+- **Adding a new community type:** add to `COMMUNITY_TYPES`, optionally add a `GOVERNANCE_PRESETS` entry, optionally add banner imagery. Do not add behavior branches. Type is a starter, not a switch.
 
 ---
 

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, ChevronDown, ChevronUp, Users, Shield, ShieldCheck,
@@ -9,6 +9,8 @@ import { useMembers } from '@/hooks/useBarazaData';
 import { formatRailAmountFromKes, formatRailDate } from '@/lib/utils';
 import type { Member, Contribution } from '@/lib/dataStore';
 import { useChain } from '@/hooks/useChain';
+import { DuesStreakChip } from '@/components/DuesStreakChip';
+import { fetchDuesStreakBatch, type StreakResult } from '@/lib/duesStreak';
 
 function timeAgo(ts: number): string {
   const seconds = Math.floor((Date.now() - ts) / 1000);
@@ -72,10 +74,11 @@ const ContributionRow: React.FC<{ contribution: Contribution }> = ({ contributio
 
 // ---------- Member card (expanded) ----------
 
-const MemberCard: React.FC<{ member: Member; isExpanded: boolean; onToggle: () => void }> = ({
+const MemberCard: React.FC<{ member: Member; isExpanded: boolean; onToggle: () => void; streakMonths?: number }> = ({
   member,
   isExpanded,
   onToggle,
+  streakMonths,
 }) => {
   const { chainMeta } = useChain();
   const role = roleConfig[member.role] || roleConfig.member;
@@ -109,6 +112,7 @@ const MemberCard: React.FC<{ member: Member; isExpanded: boolean; onToggle: () =
               <RoleIcon className="w-2.5 h-2.5" />
               {role.label}
             </span>
+            <DuesStreakChip streakMonths={streakMonths} />
           </div>
           <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
             <span className="inline-flex items-center gap-1">
@@ -224,6 +228,19 @@ const MemberDirectory: React.FC<MemberDirectoryProps> = ({ communityId, totalCou
   const [sortAsc, setSortAsc] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [roleFilter, setRoleFilter] = useState<'all' | 'founder' | 'admin' | 'member'>('all');
+
+  // Batched dues-streak fetch — one round trip for all visible members.
+  // Witnessed standing — chama culture surfaces, not just self-view.
+  const [streaksByWallet, setStreaksByWallet] = useState<Record<string, StreakResult>>({});
+  useEffect(() => {
+    const wallets = members.map((m) => m.walletKey).filter((w): w is string => !!w);
+    if (wallets.length === 0) { setStreaksByWallet({}); return; }
+    let cancelled = false;
+    fetchDuesStreakBatch(wallets)
+      .then((result) => { if (!cancelled) setStreaksByWallet(result); })
+      .catch(() => undefined);
+    return () => { cancelled = true; };
+  }, [members]);
 
   const filtered = useMemo(() => {
     const result = members.filter((m) => {
@@ -373,6 +390,7 @@ const MemberDirectory: React.FC<MemberDirectoryProps> = ({ communityId, totalCou
                 member={member}
                 isExpanded={expandedId === member.id}
                 onToggle={() => setExpandedId(expandedId === member.id ? null : member.id)}
+                streakMonths={streaksByWallet[member.walletKey]?.consecutiveMonthsPaid}
               />
             </motion.div>
           ))}
