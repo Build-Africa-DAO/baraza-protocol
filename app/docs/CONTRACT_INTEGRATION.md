@@ -2,7 +2,7 @@
 
 **Status:** Preview mode. Contract source is present for Solana and EVM; frontend write flows remain guarded until deployed addresses, IDLs, ABIs, and transaction builders are wired end-to-end.
 **Programs:** `community_registry`, `membership`, `payment_attestation`, `governance`, `treasury_vault`
-**Chains:** Solana (primary), Stellar, EVM (Ethereum, Base, Arbitrum, Polygon, Optimism)
+**Chains:** Stellar (reference), Solana, EVM (Ethereum, Base, Arbitrum, Polygon, Optimism)
 **Ref:** See `CROSS_CHAIN_DEPLOYMENT_CHECKLIST.md` before any testnet or mainnet rollout.
 
 ## Latest Local Verification
@@ -257,3 +257,5 @@ Blocking items:
 5. Treasury withdrawal guard not removable until proposal execution validation is wired
 6. Stellar oracle and bridge support unconfirmed
 7. Squads multisig not yet controlling program upgrade authority
+
+> Product-layer document. Retained in this repo pending the public/private split; only framing corrections are in scope here.

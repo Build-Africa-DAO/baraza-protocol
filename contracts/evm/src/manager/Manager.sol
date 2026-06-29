@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 import { UUPS } from "../lib/proxy/UUPS.sol";
@@ -294,3 +294,4 @@ contract Manager is IManager, VersionedContract, UUPS, Ownable, ManagerStorageV1
     /// @param _newImpl The new implementation address
     function _authorizeUpgrade(address _newImpl) internal override onlyOwner {}
 }
+

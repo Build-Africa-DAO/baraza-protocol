@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 /// @title GovernorStorageV2
@@ -8,3 +8,4 @@ contract GovernorStorageV2 {
     /// @notice The delayed governance expiration timestamp
     uint256 public delayedGovernanceExpirationTimestamp;
 }
+

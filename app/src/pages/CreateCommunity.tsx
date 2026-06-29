@@ -6,6 +6,7 @@ import Layout from '@/components/Layout';
 import { COMMUNITY_TYPES, DAO_CREATION_FEE_KES, PAYBILL_ADDON_FEE_KES, USSD_ADDON_FEE_KES } from '@/lib/constants';
 import { formatKSh, formatRailAmountFromKes, formatRailAmountWithKes } from '@/lib/utils';
 import { normaliseKenyanPhone } from '@/lib/phone';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletGuard } from '@/hooks/useWalletGuard';
 import { useToast } from '@/hooks/use-toast';
 import { createCommunityRecord } from '@/lib/communities';
@@ -17,6 +18,7 @@ import { AskAkili } from '@/akili/AskAkili';
 import { useBarazaChain } from '@/hooks/useBarazaData';
 import { communityPda, toSlug } from '@/lib/programs';
 import { saveCommunityChainMapping } from '@/lib/chainMappings';
+import { buildWalletProofHeaders } from '@/lib/walletProof';
 
 type TreasuryPolicy = 'multisig-ready' | 'proposal-only' | 'manual-review';
 type ChecklistState = 'complete' | 'active' | 'pending';
@@ -55,7 +57,7 @@ function AnimatedSetupChecklist({ items, summary }: AnimatedSetupChecklistProps)
 
   return (
     <motion.div
-      className="baraza-card sticky top-24 overflow-hidden p-5"
+      className="baraza-card overflow-hidden p-5 lg:sticky lg:top-24"
       initial={{ opacity: 0, y: 18, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
@@ -262,7 +264,8 @@ const CreateCommunity: React.FC = () => {
     path: "/create",
   });
   const navigate = useNavigate();
-  const { requireWallet, isReady } = useWalletGuard({ action: 'launch a DAO' });
+  const { requireWallet, isReady, address: founderAddress } = useWalletGuard({ action: 'launch a DAO' });
+  const wallet = useWallet();
   const { toast } = useToast();
   const { chain } = useChain();
   const chainClient = useBarazaChain();
@@ -444,6 +447,10 @@ const CreateCommunity: React.FC = () => {
         if (paybill) setAssignedPaybill(paybill);
         if (ussd) setAssignedUssd(ussd);
 
+        const walletProofHeaders = founderAddress
+          ? await buildWalletProofHeaders(wallet, 'create-community')
+          : undefined;
+
         const community = await createCommunityRecord({
           name: form.name,
           type: form.type,
@@ -456,6 +463,8 @@ const CreateCommunity: React.FC = () => {
           treasuryPolicy: form.treasuryPolicy as 'multisig-ready' | 'proposal-only' | 'manual-review',
           paybillNumber: paybill,
           ussdShortcode: ussd,
+          createdBy: founderAddress ?? undefined,
+          walletProofHeaders,
         });
         if (chainResult) {
           saveCommunityChainMapping({
@@ -509,8 +518,8 @@ const CreateCommunity: React.FC = () => {
         <section className="py-20">
           <div className="container mx-auto px-4">
             <div className="max-w-md mx-auto text-center">
-              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-                <CheckCircle2 className="w-8 h-8" />
+              <div className="w-16 h-16 rounded-full bg-confirmed/15 flex items-center justify-center mx-auto mb-6">
+                <CheckCircle2 className="w-8 h-8 text-confirmed" />
               </div>
               <h2 className="font-display text-2xl font-bold mb-3">
                 {form.name} is live

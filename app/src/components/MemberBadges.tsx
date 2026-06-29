@@ -42,9 +42,16 @@ function BadgeChip({
   if (variant === 'compact') {
     return (
       <div
+        role="listitem"
         title={state === 'earned' ? meta.description : meta.criteria}
+        aria-label={`${meta.label} — ${state === 'earned' ? meta.description : meta.criteria}`}
+        data-state={state}
         className={cn(
-          'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-colors',
+          'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold',
+          // Tie color + scale to the data-state so the transition fires the
+          // instant the parent recomputes — no dead air after the action.
+          'transition-all duration-300 ease-out',
+          'data-[state=earned]:scale-100 data-[state=pending]:scale-[0.97] data-[state=locked]:scale-[0.97]',
           state === 'earned' ? earnedStyle : pendingStyle,
         )}
       >
@@ -59,8 +66,13 @@ function BadgeChip({
   // expanded
   return (
     <div
+      role="listitem"
+      aria-label={`${meta.label} — ${state === 'earned' ? meta.description : meta.criteria}`}
+      data-state={state}
       className={cn(
-        'flex items-start gap-3 rounded-xl border p-3 transition-colors',
+        'flex items-start gap-3 rounded-xl border p-3',
+        'transition-all duration-300 ease-out',
+        'data-[state=earned]:scale-100 data-[state=pending]:scale-[0.99] data-[state=locked]:scale-[0.99]',
         state === 'earned' ? earnedStyle : pendingStyle,
       )}
     >
@@ -98,6 +110,8 @@ export function MemberBadges({ result, variant = 'compact' }: MemberBadgesProps)
 
   return (
     <div
+      role="list"
+      aria-label={`Member badges — ${earned.length} earned`}
       className={cn(
         variant === 'compact' ? 'flex flex-wrap gap-1.5' : 'grid gap-2 sm:grid-cols-2',
       )}

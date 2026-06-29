@@ -341,11 +341,11 @@ const CommunityDashboard: React.FC = () => {
 
           {/* Live stats */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
-            <LiveStatCard icon={TrendingUp} label="Treasury" value={community.fundBalance} format={(v) => formatRailAmountFromKes(v, communityChainMeta)} color="" bg="" />
-            <LiveStatCard icon={Users} label="Members" value={community.memberCount} color="" bg="" />
-            <LiveStatCard icon={Vote} label="Active Proposals" value={activeDecisions.length} color="" bg="" showDelta={false} />
-            <LiveStatCard icon={History} label="Past Proposals" value={pastDecisions.length} color="" bg="" showDelta={false} />
-            <LiveStatCard icon={BriefcaseBusiness} label="Open Bounties" value={bountyStats.open} color="" bg="" showDelta={false} />
+            <LiveStatCard icon={TrendingUp} label="Treasury" value={community.fundBalance} format={(v) => formatRailAmountFromKes(v, communityChainMeta)} color="text-primary" bg="bg-primary/10" />
+            <LiveStatCard icon={Users} label="Members" value={community.memberCount} color="text-secondary" bg="bg-secondary/10" />
+            <LiveStatCard icon={Vote} label="Active Proposals" value={activeDecisions.length} color="text-accent" bg="bg-accent/10" showDelta={false} />
+            <LiveStatCard icon={History} label="Past Proposals" value={pastDecisions.length} color="text-muted-foreground" bg="bg-muted" showDelta={false} />
+            <LiveStatCard icon={BriefcaseBusiness} label="Open Bounties" value={bountyStats.open} color="text-confirmed" bg="bg-confirmed/10" showDelta={false} />
           </div>
 
           {/* ── Sidebar + content layout ──────────────────────── */}

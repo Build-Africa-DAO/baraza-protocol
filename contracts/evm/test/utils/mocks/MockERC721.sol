@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 import { ERC721 } from "../../../src/lib/token/ERC721.sol";
@@ -23,3 +23,4 @@ contract MockERC721 is UUPS, ERC721 {
         // no-op
     }
 }
+

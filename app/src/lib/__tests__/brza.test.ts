@@ -75,7 +75,7 @@ describe('BRZA allocation invariants', () => {
       BRZA_EMISSION.bountyPoolPct +
       BRZA_EMISSION.membershipRewardPct +
       BRZA_EMISSION.governanceRewardPct +
-      BRZA_EMISSION.referralPct;
+      BRZA_EMISSION.reservedPct;
     expect(sum).toBeCloseTo(1.0, 10);
   });
 

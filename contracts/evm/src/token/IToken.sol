@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 import { IUUPS } from "../lib/interfaces/IUUPS.sol";
@@ -169,3 +169,4 @@ interface IToken is IUUPS, IERC721Votes, TokenTypesV1, TokenTypesV2 {
     /// @param newRenderer new renderer address to use
     function setMetadataRenderer(IBaseMetadata newRenderer) external;
 }
+

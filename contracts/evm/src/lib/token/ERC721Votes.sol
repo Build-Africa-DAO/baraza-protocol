@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 import { IERC721Votes } from "../interfaces/IERC721Votes.sol";
@@ -320,3 +320,4 @@ abstract contract ERC721Votes is IERC721Votes, EIP712, ERC721 {
         super._afterTokenTransfer(_from, _to, _tokenId);
     }
 }
+

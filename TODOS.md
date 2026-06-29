@@ -2,33 +2,71 @@
 
 ## Governance
 
-## Gamification / rewards (P2 — design + scope before building)
+## Gamification / rewards (P2)
 
-Each item is small-blast-radius — uses tables/columns that already exist in the schema, no new token allocation beyond what's already documented in `app/src/lib/brza/constants.ts`. Order is build-order: first item is cheapest, last is the biggest swing.
+### Open
 
-### 1. Vote streak → voting weight multiplier
-- `votes` table records `cast_at` per proposal. Compute the streak as "consecutive proposals in the same community where the member's last vote was within the previous proposal's window."
-- Persist on a view, not as a column, until the read pattern is validated.
-- Multiplier: capped at 1.5× weight after 6 consecutive votes; decays back to 1.0 after one skip. Decay schedule needs design — full reset is too punishing for chamas where one absence is normal.
-- Display: small chip on Profile + ProposalDetail showing current streak. No leaderboard.
-- Migration sketch lives in this PR thread; not yet a file.
+#### Phase 5 wiring — vote-streak multiplier into vote casting
+- Math + tests landed (`app/src/lib/voteStreak.ts`, 15 tests). Integration into actual vote weight gated on council filings: **Kofi** (procedure under charter — weight inflation is a material member-right change), **Nia** (chama-cultural absence question — funerals/harvest/school-fees decay), **Zara** (treasury authorisation impact at the margin), **Seku** (sourcing on documented streak-multiplier mechanics outside Web3).
+- Default `currentVotingWeight` stays 1.0 across the stack until council clears wiring.
 
-### 2. Dues streak badge (no token reward, just standing)
-- `payment_orders` already records every M-Pesa settlement. Compute `consecutive_months_paid_on_time` per member.
-- Surface as a `member_standing` view + a "Good standing · 7 months" chip on the community page member list.
-- No BRZA payout — this is reputational only. The cap-table doesn't need to absorb every engagement signal.
-
-### 3. Referral 90-day survival gate
-- Current referral pool (5% of supply per `brza/constants.ts`) currently allocates on signup per the docs comments. Gate the payout: referrer earns only after the referee stays an active member for 90 days AND pays at least 3 months of dues.
-- Two-sided: referee gets X/2 BRZA on their 3rd successful dues payment. Halves Sybil incentive — the new account has to *do* something to unlock both sides.
-- Update the cron promoter (CLAUDE.md flags this as a known-fake) to query `payment_orders` for the 90-day check before minting referral BRZA.
-
-### Out of scope for now (bigger swings)
-- Reputation badges (Founder / Quorum-keeper / Bounty-closer / Convener / Steward) — need a `member_badges` table + governance vote on each badge's criteria. Worth a separate spec.
+#### Out of scope for now (bigger swings)
+- Token-bearing reputation badges (Founder-with-BRZA / Quorum-keeper-with-BRZA, etc.) — Kofi's 5 conditions precedent from `badge-token-pressure` filing (2026-06-17, id 95cd). Five conditions: identity continuity live, communityRewards/referral draw only, sub-cap within 2M/month, named multi-sig, charter amendment clause.
 - Curator economy on bounties (proposal-author share, reviewer share) — touches the bounty payout flow which is partly unbuilt.
 - Cross-community reputation — opt-in, privacy-preserving design needed before any code.
 
 ## Completed
+
+### 2026-06-19 — Phase 9: Identity continuity (bidirectional claim flow)
+- Migration `021_identity_links.sql` — `identity_links` + `identity_claim_pending` tables, service-role-only RLS.
+- `app/src/lib/identity/claim.ts` — 6-digit code generator (crypto.getRandomValues, not Math.random), SHA-256 code hash, HMAC phone hash reusing `PAYMENT_PHONE_HASH_PEPPER`, 5-attempt cap + 10-minute TTL + wallet-mismatch guard on wallet-initiated claims.
+- `app/src/lib/identity/resolver.ts` — `resolveCanonicalIdentity()`, 5-minute cache, cluster-aware (one phone_hash → many wallets warmed together).
+- `app/api/identity/initiate-claim.ts` + `verify-claim.ts` — bidirectional REST.
+- `app/src/pages/ClaimIdentity.tsx` — wallet-side UI (`/claim`), phone → SMS code → linked.
+- `phone_hash` is canonical per Nia's W3 promise ("your phone IS your membership").
+- `referralPayoutBlockedReason()` accepts `identityContinuityLive` — lifts Kofi's phase ceiling when operator flags continuity live.
+
+### 2026-06-19 — Phase 6: Referral 90d+3-payment Sybil gate
+- Akili council ruling 2026-06-19 (filings: kofi 351d, zara 18f8, nia 4c43, seku f025) — SHIP CONDITIONAL.
+- Fixed `BRZA_EMISSION.referralPct` double-draw against the 50M Referral bucket — now `reservedPct`, sum still 1.0.
+- New `BRZA_REFERRAL` constants — 500/250 split, 90d+3 gate, monthly sub-cap 50K, per-referrer cap 5/12mo rolling, velocity breach 5/30d, phase0 ceiling.
+- `referralPayoutBlockedReason()` runtime guard enforces Kofi 4a/4c/4d + Seku pepper dedup. **Kofi 4d (named multi-sig signers) ships unsatisfied — unresolved dissent on file.**
+- `app/src/components/ReferralProgress.tsx` — Nia's required design (relationship named, NO BRZA visible during 90d lock).
+- 14 referral-guard tests.
+
+### 2026-06-19 — Phase 5: Vote-streak multiplier (math + tests)
+- `app/src/lib/voteStreak.ts` — `computeVoteStreak`, `streakToMultiplier`, `applyVoteMultiplier`. Cap 1.5×, 6-vote ramp, single-skip decay.
+- 15 tests covering ramp, cap, decay, dedup, float discipline.
+- **Integration into actual vote weight pending council ruling.**
+
+### 2026-06-18 — Phase 2-A: Nia's USSD welcome (W0–W3 + SMS fallback)
+- `app/src/lib/ussd/welcome.ts` — 4-screen flow, pending welcome registry, SMS fallback queue.
+- Cross-process via `payment_orders.metadata` (cron writes, USSD endpoint rehydrates).
+- Pre-check in `handleUssdInput()` routes pending welcomes through the flow.
+- 21 tests.
+
+### 2026-06-18 — Phase 2-B: Seku monitoring instrumentation
+- Migration `018_ussd_monitoring.sql` — `ussd_session_exits` table.
+- `app/src/lib/ussd/monitoring.ts` — `logSessionExit()`, `classifyExit()`, `sweepInvisibleUssdMembers(30)`.
+- Sweep wired into `promote-orders.ts` cron — flags `metadata.invisible_member = true` on RECONCILED USSD orders with no session in 30 days.
+
+### 2026-06-18 — Phase 2-C: `/api/payment-orders/streak` (live chip data)
+- `app/src/lib/duesStreak.ts` — pure `computeStreak()` (UTC months, gap-resets, per-community partition).
+- `/api/payment-orders/streak` + `/api/payment-orders/streak-batch` (Phase 12 batched).
+- Profile aside + membership rows + MemberDirectory rows all wired.
+
+### 2026-06-17 — Gamification phases 1, 3, 4 (badges + leaderboard + a11y)
+- **Phase 1**: Founder + Quorum-keeper unlocked; `Community.createdBy` exposed; `dataStore.getVoteCountForWallet()` powers Profile "Voting history".
+- **Phase 3**: `CommunityLeaderboard` hardcoded "David K. / Wanjiku M." removed; honest empty state.
+- **Phase 4**: 15 `deriveBadges` tests + a11y on badge chips (`role="list"/"listitem"`, `aria-label`, `data-state` transitions, no-dead-air sync prime on Profile mount).
+
+### 2026-06-19 — Council / operations
+- `lib/badgeDistribution.ts` — runtime gate; falls closed until `USSD_WELCOME_DEPLOYED=1`. Honors Kemi-vs-Nia dissent on file.
+- `docs/akili-council/MEMBER_VOICE_GAPS.md` — MVG-001 (USSD welcome copy) + MVG-002 (Phase 6 referee UX) carried, with closure protocol.
+- `skills/akili-memory/memory.sh` — jq dependency replaced with node fallback; smoke-tested.
+- Council backfill via node: synthesis + guard-audit entries for `phase-6-referral-gate-cleared` written to akili memory.
+
+### 2026-06-14 — Profile double-fetch + useBrzaBalance cache eviction
 
 ### 2026-06-14 — Profile double-fetch + useBrzaBalance cache eviction
 - Profile.tsx dropped the `fetchTotalBrzaBalance(address)` round trip — it queried the same memberships rows as the adjacent `fetchMembershipsForWallet` effect. `totalBrza` is now a `useMemo` summing `record.brzaBalance` across `myMemberships` (which already carries `voting_weight` via rowToRecord).

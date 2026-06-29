@@ -78,6 +78,12 @@ Auction reward policy in this rollout:
 - `barazaRewardsBPS = 250` (2.5%)
 - `referralRewardsBPS = 250` (2.5%)
 
+Note: this 2.5% is an **EVM-specific auction reward split**, intentionally distinct
+from the 2% `treasuryTxPct` defined in `app/src/lib/brza/constants.ts`. The core
+constant governs Stellar-side treasury transactions; this EVM-side BPS governs
+auction-mechanism rewards on EVM mainnet only. Flagged in
+`docs/TOKENOMICS_AUDIT_REPORT.md` (2026-06-14) and confirmed intentional.
+
 Outputs are written to `deploys/1.version2_upgrade.txt`.
 
 Note: deployment scripts in this repo do not auto-write contract address fields to `addresses/1.json`; update those fields manually from `deploys/1.version2_upgrade.txt`. WETH is read from `addresses/1.json`.

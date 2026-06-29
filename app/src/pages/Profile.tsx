@@ -22,7 +22,11 @@ import CommunityBanner from "@/components/CommunityBanner";
 import { fetchMembershipsForWallet, listMembershipsForWallet } from "@/lib/memberships";
 import { AskAkili } from "@/akili/AskAkili";
 import { MemberBadges } from "@/components/MemberBadges";
+import { DuesStreakChip } from "@/components/DuesStreakChip";
+import { ReferralProgress } from "@/components/ReferralProgress";
 import { deriveBadges } from "@/lib/badges";
+import { fetchDuesStreak, type StreakResult } from "@/lib/duesStreak";
+import { dataStore } from "@/lib/dataStore";
 import { useCommunities } from "@/hooks/useCommunities";
 import { CHAINS } from "@/lib/chain";
 import { useSeo } from "@/lib/seo";
@@ -73,9 +77,24 @@ export default function Profile() {
   // and skip the lookup when no wallet is connected.
   const address = publicKey?.toBase58() ?? "";
 
-  const [myMemberships, setMyMemberships] = useState<
-    Array<{ record: ReturnType<typeof listMembershipsForWallet>[number]; community: typeof communities[number] }>
-  >([]);
+  type MembershipPair = { record: ReturnType<typeof listMembershipsForWallet>[number]; community: typeof communities[number] };
+
+  // Prime synchronously so the Badges card never flashes "0 earned" between
+  // mount and the first effect tick — matches the join → recognition flow.
+  const initialMemberships = useMemo<MembershipPair[]>(() => {
+    if (!address) return [];
+    return listMembershipsForWallet(address)
+      .map((r) => {
+        const c = communities.find((c) => c.id === r.communityId);
+        return c ? { record: r, community: c } : null;
+      })
+      .filter((e): e is MembershipPair => e !== null);
+    // Intentionally ignore communities/address changes here — this only seeds
+    // the very first render. The effect below keeps the list current.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const [myMemberships, setMyMemberships] = useState<MembershipPair[]>(initialMemberships);
 
   useEffect(() => {
     if (!address) { setMyMemberships([]); return; }
@@ -104,17 +123,42 @@ export default function Profile() {
     [myMemberships],
   );
 
+  const [badgeEvaluatedAt] = useState(() => Date.now());
+
   // Badges derive from already-loaded membership data — no extra fetches.
-  const badgeResult = useMemo(() => {
+  const badgeResult_ = useMemo(() => {
     const joinedTimes = myMemberships
       .map((m) => new Date(m.record.joinedAt).getTime())
       .filter((t) => Number.isFinite(t));
     const earliest = joinedTimes.length > 0 ? new Date(Math.min(...joinedTimes)).toISOString() : null;
-    return deriveBadges({
-      activeMembershipCount: myMemberships.length,
-      earliestJoinedAt: earliest,
-    });
-  }, [myMemberships]);
+
+    // Founder — communities this wallet created that are ≥90 days old.
+    const NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000;
+    const foundedSurvivingCommunityCount = address
+      ? communities.filter((c) => {
+          if (c.createdBy !== address) return false;
+          const createdAt = new Date(c.createdAt).getTime();
+          return Number.isFinite(createdAt) && badgeEvaluatedAt - createdAt >= NINETY_DAYS_MS;
+        }).length
+      : 0;
+
+    // Quorum-keeper — proposals this wallet has voted on (across all communities).
+    const proposalVoteCount = address ? dataStore.getVoteCountForWallet(address) : 0;
+
+    return {
+      result: deriveBadges({
+        activeMembershipCount: myMemberships.length,
+        earliestJoinedAt: earliest,
+        foundedSurvivingCommunityCount,
+        proposalVoteCount,
+      }),
+      proposalVoteCount,
+      foundedSurvivingCommunityCount,
+    };
+  }, [myMemberships, communities, address, badgeEvaluatedAt]);
+
+  const badgeResult = badgeResult_.result;
+  const proposalVoteCount = badgeResult_.proposalVoteCount;
 
   const memberBounties = useMemo(
     () => myMemberships.flatMap(({ community }) =>
@@ -132,6 +176,23 @@ export default function Profile() {
     setStellarMessage(null);
     setSettlementMessage(null);
     setStellarSettlements(listStellarSettlements(address));
+  }, [address]);
+
+  const [streak, setStreak] = useState<StreakResult>({
+    consecutiveMonthsPaid: 0,
+    lastPaidAt: null,
+    perCommunity: {},
+  });
+
+  useEffect(() => {
+    if (!address) return;
+    let cancelled = false;
+    fetchDuesStreak(address)
+      .then((result) => {
+        if (!cancelled) setStreak(result);
+      })
+      .catch(() => undefined);
+    return () => { cancelled = true; };
   }, [address]);
 
   const refreshStellarBalances = async (account = stellarAccount) => {
@@ -264,7 +325,10 @@ export default function Profile() {
             <aside className="space-y-6">
               {/* BRZA balance summary */}
               <div className="baraza-card p-5">
-                <h2 className="mb-3 font-mono text-xs uppercase tracking-widest">BRZA balance</h2>
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="font-mono text-xs uppercase tracking-widest">BRZA balance</h2>
+                  <DuesStreakChip streakMonths={streak.consecutiveMonthsPaid} />
+                </div>
                 <div className="flex items-end gap-2">
                   <span className="font-display text-4xl font-black tabular-nums leading-none">
                     {address ? totalBrza : '—'}
@@ -289,6 +353,14 @@ export default function Profile() {
                 <p className="mt-3 text-xs text-muted-foreground">
                   Badges show what you've done in Baraza communities. Locked badges show what's still possible.
                 </p>
+              </div>
+
+              {/* Referrer progress — Nia filing 2026-06-19 (id 4c43).
+                  The relationship, named. No BRZA amount during lock.
+                  Data source pending Phase 6 referrals schema; renders the
+                  "coming soon" slot for now so the slot exists. */}
+              <div className="baraza-card p-5">
+                <ReferralProgress />
               </div>
 
               <div className="baraza-card p-5">
@@ -519,6 +591,7 @@ export default function Profile() {
                               <span className="font-semibold text-primary">
                                 {record.brzaBalance} BRZA
                               </span>
+                              <DuesStreakChip streakMonths={streak.perCommunity[community.id]} />
                             </div>
                           </div>
                           <ArrowRight className="h-4 w-4 shrink-0" />
@@ -610,9 +683,25 @@ export default function Profile() {
                   <h2 className="mb-4 font-mono text-xs uppercase tracking-widest">
                     Voting history
                   </h2>
-                  <p className="text-sm">
-                    No votes yet. Once you join a group and vote on a proposal, your record appears here.
-                  </p>
+                  {proposalVoteCount > 0 ? (
+                    <div>
+                      <p className="font-display text-3xl font-black tabular-nums leading-none">
+                        {proposalVoteCount}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        proposal{proposalVoteCount === 1 ? '' : 's'} voted on across your communities
+                      </p>
+                      <p className="mt-3 text-xs text-muted-foreground">
+                        {proposalVoteCount >= 5
+                          ? 'Quorum-keeper standing earned.'
+                          : `${5 - proposalVoteCount} more vote${5 - proposalVoteCount === 1 ? '' : 's'} to earn Quorum-keeper.`}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-sm">
+                      No votes yet. Once you join a group and vote on a proposal, your record appears here.
+                    </p>
+                  )}
                 </div>
 
                 <div className="baraza-card p-5">

@@ -297,11 +297,11 @@ DAO members must be able to ratify, override, dispute, or ignore AI recommendati
 
 Baraza should not force one chain or provider to do everything. Use each platform where it is strongest.
 
-### 6.1 Solana
+### 6.1 Stellar reference + adapters
 
-Solana is the core ownership, governance, and community execution layer.
+Stellar is the reference implementation for settlement and contract behavior, while other chains are supported through adapters that match the same interface.
 
-Put on Solana:
+Reference implementation responsibilities:
 
 - Community registry
 - Membership tier configuration
@@ -312,7 +312,7 @@ Put on Solana:
 - Vote snapshots
 - Treasury record, vault authority, or read model
 
-Roadmap Solana scope:
+Adapter roadmap scope:
 
 - Production treasury vault execution
 - Crypto bounty escrow
@@ -322,7 +322,7 @@ Roadmap Solana scope:
 - Community token logic, if legally approved
 - Bonding curve logic, if legally approved
 
-Why Solana:
+Why adapters matter:
 
 - Low transaction cost
 - Fast confirmation
@@ -1561,3 +1561,5 @@ Baraza workflow rules:
 - Keep generated or cloned reference repositories out of production commits unless intentionally vendored.
 - Before opening a PR, include PRD/doc changes, program changes, generated clients, and tests in separate, reviewable commits where practical.
 - PR descriptions should include the user flow affected, on-chain programs touched, payment states touched, test evidence, and any mocked integrations.
+
+> Product-layer document. Retained in this repo pending the public/private split; only framing corrections are in scope here.

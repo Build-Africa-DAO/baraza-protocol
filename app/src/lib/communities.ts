@@ -16,6 +16,8 @@ type CommunityInsert = {
   treasuryPolicy?: TreasuryPolicy;
   paybillNumber?: string;
   ussdShortcode?: string;
+  createdBy?: string;
+  walletProofHeaders?: Record<string, string>;
 };
 
 type CommunityRow = {
@@ -47,6 +49,8 @@ type CommunityRow = {
   paybillNumber?: string | null;
   ussd_shortcode?: string | null;
   ussdShortcode?: string | null;
+  created_by?: string | null;
+  createdBy?: string | null;
 };
 
 const VALID_TREASURY_POLICIES: TreasuryPolicy[] = ['multisig-ready', 'proposal-only', 'manual-review'];
@@ -138,6 +142,7 @@ function communityFromRow(row: CommunityRow): Community {
     treasuryPolicy: parseTreasuryPolicy(row.treasury_policy ?? row.treasuryPolicy ?? null),
     paybillNumber: row.paybill_number ?? row.paybillNumber ?? undefined,
     ussdShortcode: row.ussd_shortcode ?? row.ussdShortcode ?? undefined,
+    createdBy: row.created_by ?? row.createdBy ?? undefined,
   };
 }
 
@@ -177,7 +182,7 @@ export async function listCommunities(): Promise<Community[]> {
   const { data, error } = await client
     .from('communities')
     .select(
-      'id,name,type,description,membership_fee,member_count,fund_balance,active_decisions,created_at,image,chain,quorum_pct,approval_threshold_pct,voting_period_days,treasury_policy,paybill_number,ussd_shortcode',
+      'id,name,type,description,membership_fee,member_count,fund_balance,active_decisions,created_at,image,chain,quorum_pct,approval_threshold_pct,voting_period_days,treasury_policy,paybill_number,ussd_shortcode,created_by',
     )
     .order('created_at', { ascending: false });
 
@@ -195,7 +200,7 @@ export async function getCommunity(id: string): Promise<Community | null> {
   const { data, error } = await client
     .from('communities')
     .select(
-      'id,name,type,description,membership_fee,member_count,fund_balance,active_decisions,created_at,image,chain,quorum_pct,approval_threshold_pct,voting_period_days,treasury_policy,paybill_number,ussd_shortcode',
+      'id,name,type,description,membership_fee,member_count,fund_balance,active_decisions,created_at,image,chain,quorum_pct,approval_threshold_pct,voting_period_days,treasury_policy,paybill_number,ussd_shortcode,created_by',
     )
     .eq('id', id)
     .maybeSingle();
@@ -233,12 +238,13 @@ export async function createCommunityRecord(input: CommunityInsert): Promise<Com
     treasuryPolicy,
     paybillNumber: input.paybillNumber || undefined,
     ussdShortcode: input.ussdShortcode || undefined,
+    createdBy: input.createdBy || undefined,
   };
 
   try {
     const res = await fetch('/api/communities', {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', ...(input.walletProofHeaders ?? {}) },
       body: JSON.stringify({
         name: input.name,
         type: input.type,
@@ -251,6 +257,7 @@ export async function createCommunityRecord(input: CommunityInsert): Promise<Com
         treasuryPolicy,
         paybillNumber: input.paybillNumber,
         ussdShortcode: input.ussdShortcode,
+        createdBy: input.createdBy,
       }),
     });
 

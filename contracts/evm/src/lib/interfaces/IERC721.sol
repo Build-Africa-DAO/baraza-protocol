@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 /// @title IERC721
@@ -109,3 +109,4 @@ interface IERC721 {
         uint256 tokenId
     ) external;
 }
+

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 import { IEIP712 } from "../interfaces/IEIP712.sol";
@@ -69,3 +69,4 @@ abstract contract EIP712 is IEIP712, Initializable {
         return keccak256(abi.encode(DOMAIN_TYPEHASH, HASHED_NAME, HASHED_VERSION, block.chainid, address(this)));
     }
 }
+

@@ -9,6 +9,12 @@ import WelcomeScreen from '@/components/onboarding/WelcomeScreen';
 
 type OnboardingStep = 'phone' | 'otp' | 'welcome';
 
+const STEP_PROGRESS: Record<OnboardingStep, number> = {
+  phone: 33,
+  otp: 66,
+  welcome: 100,
+};
+
 function generateOtp(): string {
   return String(Math.floor(100_000 + Math.random() * 900_000));
 }
@@ -66,57 +72,84 @@ export default function Onboarding() {
     navigate('/communities');
   }
 
+  function handleSkip() {
+    navigate('/communities');
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-background via-background to-primary/5 px-4 py-12">
-      <AnimatePresence mode="wait">
-        {step === 'phone' && (
-          <motion.div
-            key="phone"
-            variants={stepVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="w-full"
-          >
-            <PhoneEntry onSubmit={handlePhoneSubmit} />
-          </motion.div>
-        )}
+    <div className="flex min-h-screen flex-col bg-background">
+      <header className="fixed left-0 top-0 z-50 w-full bg-background/80 backdrop-blur-md">
+        <div className="h-1.5 w-full bg-surface">
+          <div
+            className="h-full bg-primary transition-all duration-500 ease-out"
+            style={{ width: `${STEP_PROGRESS[step]}%` }}
+          />
+        </div>
+        <nav className="mx-auto flex w-full max-w-md items-center justify-between px-4 py-4">
+          <span className="font-display text-xl font-bold tracking-tight text-primary">Baraza</span>
+          {step !== 'welcome' && (
+            <button
+              type="button"
+              onClick={handleSkip}
+              className="text-xs font-semibold uppercase tracking-widest text-muted-foreground transition-colors hover:text-primary"
+            >
+              Skip
+            </button>
+          )}
+        </nav>
+      </header>
 
-        {step === 'otp' && (
-          <motion.div
-            key="otp"
-            variants={stepVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="w-full"
-          >
-            <OtpVerify
-              phone={phone}
-              expectedCode={otpCode}
-              onVerified={handleVerified}
-              onBack={() => setStep('phone')}
-              onResend={() => void handleResend()}
-            />
-          </motion.div>
-        )}
+      <main className="flex flex-1 items-center justify-center px-4 pb-12 pt-24">
+        <AnimatePresence mode="wait">
+          {step === 'phone' && (
+            <motion.div
+              key="phone"
+              variants={stepVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className="w-full"
+            >
+              <PhoneEntry onSubmit={handlePhoneSubmit} />
+            </motion.div>
+          )}
 
-        {step === 'welcome' && (
-          <motion.div
-            key="welcome"
-            variants={stepVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="w-full"
-          >
-            <WelcomeScreen phone={phone} onContinue={handleContinue} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+          {step === 'otp' && (
+            <motion.div
+              key="otp"
+              variants={stepVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className="w-full"
+            >
+              <OtpVerify
+                phone={phone}
+                expectedCode={otpCode}
+                onVerified={handleVerified}
+                onBack={() => setStep('phone')}
+                onResend={() => void handleResend()}
+              />
+            </motion.div>
+          )}
+
+          {step === 'welcome' && (
+            <motion.div
+              key="welcome"
+              variants={stepVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className="w-full"
+            >
+              <WelcomeScreen phone={phone} onContinue={handleContinue} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </main>
     </div>
   );
 }

@@ -41,12 +41,12 @@ export const CURRENT_PHASE: BrzaPhase = 'phase0';
 // Total: 1,000,000,000 BRZA
 // Products: Protocol (governance/treasury) · Baraza TV · IDO · DEX
 //
-// WARNING — SOURCE DISCREPANCY (2026-06-08):
-// The Notion product spec table sums to 1,100,000,000 (110%), not 1B.
-// Buckets affected: ecosystemGrants 17%, communityRewards 18%, events 5%,
-// reserve 5%, liquidityPool 10% — together with the others they exceed supply.
-// TODO: reconcile Notion allocation before changing this file.
-// Until resolved, the existing allocation below is authoritative.
+// NOTION DISCREPANCY (2026-06-08, confirmed by audit 2026-06-14 — see
+// `docs/TOKENOMICS_AUDIT_REPORT.md`): the Notion product spec table sums
+// to 1,100,000,000 (110%) due to inflated ecosystemGrants/communityRewards/
+// events/reserve/liquidityPool entries. This file is authoritative; the
+// Notion side is the one that must change. Do NOT alter the allocation
+// below to match Notion — confirm with the audit report instead.
 
 export const BRZA_ALLOCATION = {
   communityRewards:  200_000_000,  // 20% — emission over 5yr, 2M/month cap
@@ -80,7 +80,15 @@ export const BRZA_VESTING = {
 
 // ── Community reward emission ───────────────────────────────────────────────
 // Source: communityRewards pool (200M)
-// Flows: join reward · vote reward · proposal reward · bounty payout · referral
+// Flows: join reward · vote reward · proposal reward · bounty payout
+//
+// Referral was previously listed here as `referralPct: 0.10`, which double-
+// drew against the dedicated 50M Referral bucket (`BRZA_ALLOCATION.referral`).
+// Zara flagged the double-draw 2026-06-19 (filing 2026-06-19T03-00-00Z-18f8).
+// Akili council ruling 2026-06-19 (phase-6-referral-gate-cleared): referral
+// payouts draw exclusively from the 50M bucket. See BRZA_REFERRAL below.
+// The 10% slot is retained as `reservedPct` so the community-rewards monthly
+// cap stays whole and any future flow has a clean home.
 
 export const BRZA_EMISSION = {
   total:               BRZA_ALLOCATION.communityRewards,
@@ -88,8 +96,85 @@ export const BRZA_EMISSION = {
   bountyPoolPct:       0.40,
   membershipRewardPct: 0.30,
   governanceRewardPct: 0.20,
-  referralPct:         0.10,
+  reservedPct:         0.10,
 } as const;
+
+// ── Referral mechanic (Phase 6 — SHIP CONDITIONAL) ──────────────────────────
+// Source: BRZA_ALLOCATION.referral (50M, 5%). Independent of BRZA_EMISSION.
+//
+// Council ruling 2026-06-19 (filings: kofi 351d, zara 18f8, nia 4c43, seku f025):
+//   * Kofi cond 4(c): monthly sub-cap REQUIRED. Set here.
+//   * Kofi cond 4(a): identity-continuity is PARTIAL. Phase 6 ships TIME-LIMITED
+//     at Phase 0 ($0.02). Must NOT persist into IDO ($0.10) without Celo G$
+//     or Soroban credential live. Enforced via `priceCeilingPhase`.
+//   * Zara: 500/250 payout split (referrer/referee). Sybil dues floor KES 650
+//     routes to product separately. Per-wallet cap 5/12-month rolling.
+//   * Zara signal `referral_velocity_breach`: pause + human review at >5/30d.
+//   * Seku: family-ring vector requires PAYMENT_PHONE_HASH_PEPPER dedup ACTIVE
+//     before launch. See `requiresPepperDedupActive`.
+//   * Nia: referrer progress signal required (UX, not payout). See
+//     `components/ReferralProgress.tsx`.
+
+export const BRZA_REFERRAL = {
+  bucketTokens:                  BRZA_ALLOCATION.referral,
+  // Conservative ceiling. Plateau drain modelled by Zara at ~27K BRZA/month;
+  // this cap gives ~833 months runway and ~7x headroom vs the model.
+  monthlySubCapTokens:           50_000,
+  payoutReferrerTokens:          500,
+  payoutRefereeTokens:           250,
+  gateMinDaysActive:             90,
+  gateMinPaymentsMade:           3,
+  maxPairsPerReferrerRolling12mo: 5,
+  velocityBreachPairsPer30d:     5,
+  // Hard ceiling — referral mechanic disabled at any phase priced above this
+  // until identity continuity is live (Kofi cond 4a).
+  priceCeilingPhase:             'phase0' as BrzaPhase,
+  // Seku cond — block payouts at runtime if pepper dedup is not configured.
+  requiresPepperDedupActive:     true,
+  // Kofi cond 4(d) — UNRESOLVED at ship time. Named multi-sig signers must
+  // be filled before any disbursement batch. Ship-time override-log entry
+  // required if disbursements run with this empty.
+  multiSigSignersWallets:        [] as readonly string[],
+} as const;
+
+/**
+ * Runtime guard: referral payouts may not fire unless all four council
+ * conditions are satisfied. Returns the blocking reason or null when clear.
+ *
+ * `identityContinuityLive` lifts Kofi's phase ceiling once Phase 9
+ * (bidirectional identity claim flow) is in production AND the operator
+ * affirms enough wallets are linked. Until then, payouts above Phase 0
+ * remain blocked.
+ */
+export function referralPayoutBlockedReason(args: {
+  currentPhase: BrzaPhase;
+  paymentPhoneHashPepperConfigured: boolean;
+  monthlyDisbursedTokens: number;
+  identityContinuityLive?: boolean;
+}): string | null {
+  // Kofi cond 4a — price ceiling lifts only when identity continuity is live.
+  const phaseRanks: Record<BrzaPhase, number> = {
+    phase0: 0, seed: 1, strategic: 2, launch: 3, market: 4,
+  };
+  const aboveCeiling =
+    phaseRanks[args.currentPhase] > phaseRanks[BRZA_REFERRAL.priceCeilingPhase];
+  if (aboveCeiling && !args.identityContinuityLive) {
+    return 'referral_disabled_above_phase0_until_identity_continuity_live';
+  }
+  // Seku cond — pepper dedup required
+  if (BRZA_REFERRAL.requiresPepperDedupActive && !args.paymentPhoneHashPepperConfigured) {
+    return 'referral_disabled_pepper_dedup_not_configured';
+  }
+  // Kofi cond 4c — monthly sub-cap enforcement
+  if (args.monthlyDisbursedTokens >= BRZA_REFERRAL.monthlySubCapTokens) {
+    return 'referral_monthly_sub_cap_exhausted';
+  }
+  // Kofi cond 4d — named multi-sig signers required for any disbursement
+  if (BRZA_REFERRAL.multiSigSignersWallets.length < 3) {
+    return 'referral_disabled_multisig_signers_unnamed';
+  }
+  return null;
+}
 
 // ── Baraza TV creator economics ─────────────────────────────────────────────
 // Source: barazaTvCreators pool (30M) + subscription/tip revenue

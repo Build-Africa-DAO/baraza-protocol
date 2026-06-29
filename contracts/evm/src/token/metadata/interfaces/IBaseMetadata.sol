@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 import { IUUPS } from "../../../lib/interfaces/IUUPS.sol";
@@ -44,3 +44,4 @@ interface IBaseMetadata is IUUPS {
     /// @notice Get metadata owner address
     function owner() external view returns (address);
 }
+

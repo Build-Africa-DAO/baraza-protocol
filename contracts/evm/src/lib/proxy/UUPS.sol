@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 import { IUUPS } from "../interfaces/IUUPS.sol";
@@ -62,3 +62,4 @@ abstract contract UUPS is IUUPS, ERC1967Upgrade {
         return _IMPLEMENTATION_SLOT;
     }
 }
+

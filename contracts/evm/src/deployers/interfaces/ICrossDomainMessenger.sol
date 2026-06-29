@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 /// @title ICrossDomainMessenger
@@ -9,3 +9,4 @@ interface ICrossDomainMessenger {
     /// @return Address of the sender of the currently executing message on the other chain.
     function xDomainMessageSender() external view returns (address);
 }
+

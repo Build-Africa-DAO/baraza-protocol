@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 import { TokenTypesV1 } from "../types/TokenTypesV1.sol";
@@ -18,3 +18,4 @@ contract TokenStorageV1 is TokenTypesV1 {
     /// @dev ERC-721 token id => Founder
     mapping(uint256 => Founder) internal tokenRecipient;
 }
+

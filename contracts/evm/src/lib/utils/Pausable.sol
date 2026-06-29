@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 import { IPausable } from "../interfaces/IPausable.sol";
@@ -59,3 +59,4 @@ abstract contract Pausable is IPausable, Initializable {
         emit Unpaused(msg.sender);
     }
 }
+

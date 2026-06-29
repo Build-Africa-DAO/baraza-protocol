@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 import { Proxy } from "@openzeppelin/contracts/proxy/Proxy.sol";
@@ -31,3 +31,4 @@ contract ERC1967Proxy is IERC1967Upgrade, Proxy, ERC1967Upgrade {
         return ERC1967Upgrade._getImplementation();
     }
 }
+

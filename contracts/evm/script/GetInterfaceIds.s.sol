@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
@@ -31,3 +31,4 @@ contract GetInterfaceIds is Script {
         //Token(0xCa226cDf9f9E27B09dd873f69FD2d0aF33A46a07).mintFromReserveTo(0x27B4a2eB472C280b17B79c315F79C522B038aFCF, 11);
     }
 }
+

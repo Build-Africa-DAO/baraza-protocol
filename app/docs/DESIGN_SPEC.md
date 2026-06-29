@@ -1,7 +1,7 @@
 # Baraza Platform — Design Specification
 
 > Essential elements and user flows for the Baraza community DAO platform.
-> Built on **Solana** (MVP) and **Stellar** (Phase 2). See `MVP_ARCHITECTURE.md`
+> Built around a multichain adapter model with **Stellar** as the reference implementation. See `MVP_ARCHITECTURE.md`
 > for the chain/program layer and `PRD.md` for product scope.
 
 ---
@@ -19,7 +19,7 @@ community.
 | Token | Community governance token (optional per community) |
 | Membership | Multi-mode: free, purchased, airdrop, invite-only |
 | Roles | Founder, Moderator, Member tiers |
-| Networks | **Solana** (MVP) + **Stellar** (Phase 2) |
+| Networks | **Stellar** (reference) + additional adapters |
 | Currencies | SOL, XLM, USDC, KES via M-Pesa (off-chain) |
 
 ---
@@ -191,20 +191,22 @@ Required fields:
 
 ```text
 ┌─────────────────────────────────────┐
-│ Community Token Distribution        │
-│ Total Supply: 10,000,000 tokens     │
+│ BRZA Token Distribution             │
+│ Total Supply: 1,000,000,000 BRZA    │
 │                                     │
-│ [████░░░░] 40% – Community Treasury │
-│ [███░░░░░] 30% – Founding Members   │
-│ [██░░░░░░] 20% – Airdrop Reserve   │
-│ [█░░░░░░░] 10% – Team              │
+│ [████░░░░] 20% – Community Rewards  │
+│ [███░░░░░] 15% – Operations         │
+│ [██░░░░░░] 15% – Founders (A + B)   │
+│ [██░░░░░░] 12% – Public Sale        │
+│ [█░░░░░░░] 10% – Reserve            │
+│ [██░░░░░░] 28% – Liquidity/Grants/… │
 │                                     │
-│ Your Holdings: 1,234 tokens (0.01%) │
+│ Your Holdings: 1,234 BRZA (0.0001%) │
 │ Voting Power: 1,234 votes           │
 └─────────────────────────────────────┘
 ```
 
-- Stacked-bar visualization of token allocation buckets
+- Stacked-bar visualization of BRZA allocation buckets (source: `app/src/lib/brza/constants.ts`)
 - User's personal holdings + voting power surfaced prominently
 - Optional pie-chart variant for the dashboard hero
 
@@ -503,3 +505,5 @@ Sizing:
 - [ ] Create activity feed for communities
 - [ ] Design member list / management UI
 - [ ] Create delegation UI (Baraza-specific)
+
+> Product-layer document. Retained in this repo pending the public/private split; only framing corrections are in scope here.

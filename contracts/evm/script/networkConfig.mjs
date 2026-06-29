@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BUSL-1.1
 export const SUPPORTED_NETWORKS = [
   { alias: "mainnet", chainId: "1", label: "ethereum-mainnet" },
   { alias: "sepolia", chainId: "11155111", label: "ethereum-sepolia" },
@@ -20,3 +21,4 @@ export function byAlias(alias) {
 export function isSupported(alias) {
   return SUPPORTED_NETWORKS.some((n) => n.alias === alias);
 }
+

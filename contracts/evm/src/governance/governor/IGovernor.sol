@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 import { IUUPS } from "../../lib/interfaces/IUUPS.sol";
@@ -313,3 +313,4 @@ interface IGovernor is IUUPS, IOwnable, IEIP712, GovernorTypesV1 {
     /// @notice The EIP-712 typehash to vote with a signature
     function VOTE_TYPEHASH() external view returns (bytes32);
 }
+

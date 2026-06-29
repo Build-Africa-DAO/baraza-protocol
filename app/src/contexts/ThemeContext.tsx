@@ -31,7 +31,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
 
     const metaTheme = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-    metaTheme?.setAttribute("content", theme === "dark" ? "#0a0d0a" : "#fbfaf6");
+    metaTheme?.setAttribute("content", theme === "dark" ? "#181303" : "#fbfaf6");
   }, [theme]);
 
   const value = useMemo(

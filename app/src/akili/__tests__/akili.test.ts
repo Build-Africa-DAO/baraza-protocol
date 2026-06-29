@@ -35,14 +35,22 @@ describe('Akili Council registry', () => {
 
 describe('routeToCouncilAgent', () => {
   it.each<[string, CouncilAgentName]>([
+    // seku — outbound copy + external research
     ['Write a WhatsApp announcement for the next vote', 'seku'],
     ['Draft an SMS reminder for dues', 'seku'],
+    ['What are other chamas in Nairobi doing about loan defaults?', 'seku'],
+    ['Show me market trends for similar SACCOs', 'seku'],
+    // zara — compliance
     ['Is this proposal compliant with Kenya KYC rules?', 'zara'],
     ['Does this trigger any tax obligation?', 'zara'],
-    ['What are other chamas in Nairobi doing about loan defaults?', 'nia'],
-    ['Show me market trends for similar SACCOs', 'nia'],
-    ['How is the community doing on turnout this month?', 'amara'],
-    ['Member churn looks high — what changed?', 'amara'],
+    // nia — community/people (member side)
+    ['How is the community doing on turnout this month?', 'nia'],
+    ['Member churn looks high — what changed?', 'nia'],
+    ['Why is onboarding stalling for new members?', 'nia'],
+    // amara — content/media surface
+    ['Which episode performed best this month?', 'amara'],
+    ['Show me the Baraza TV scheduling grid', 'amara'],
+    // kofi — governance (default)
     ['Should this proposal pass given the treasury impact?', 'kofi'],
     ['Recommend a quorum for a 20-member chama', 'kofi'],
   ])('routes %j → %s', (message, expected) => {

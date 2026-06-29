@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
 /// @notice Modified from OpenZeppelin Contracts v4.7.3 (token/ERC721/utils/ERC721Holder.sol)
@@ -35,3 +35,4 @@ abstract contract ERC1155TokenReceiver {
         return this.onERC1155BatchReceived.selector;
     }
 }
+

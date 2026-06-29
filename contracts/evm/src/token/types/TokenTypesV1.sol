@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 import { IBaseMetadata } from "../metadata/interfaces/IBaseMetadata.sol";
@@ -33,3 +33,4 @@ interface TokenTypesV1 {
         uint32 vestExpiry;
     }
 }
+

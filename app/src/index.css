@@ -40,7 +40,7 @@
     --input: 22 12% 93%;
     --ring: 22 90% 42%;
 
-    --radius: 0.5rem;
+    --radius: 0.25rem;
 
     /* Extended semantic tokens */
     --warm: 22 90% 42%;
@@ -81,39 +81,42 @@
   }
 
   .dark {
-    /* Baraza Design System v7 dark: Pure Black + Dark Orange + White */
+    /* Baraza Design System v8: Warm Obsidian + Signature Orange + Success Yellow
+       Tonal layering on a warm near-black base (#181303) — replaces the
+       achromatic grey-black v7 dark theme. Hue 46 = warm brown/orange base,
+       hue 25 = signature orange (#f97316), hue 45 = success yellow (#ffe083). */
 
-    --background: 0 0% 5%;
-    --foreground: 0 0% 96%;
+    --background: 46 78% 5%;
+    --foreground: 43 58% 85%;
 
-    --card: 0 0% 9%;
-    --card-foreground: 0 0% 96%;
+    --card: 46 61% 8%;
+    --card-foreground: 43 58% 85%;
 
-    --popover: 0 0% 8%;
-    --popover-foreground: 0 0% 96%;
+    --popover: 46 61% 8%;
+    --popover-foreground: 43 58% 85%;
 
-    --primary: 22 90% 52%;
-    --primary-foreground: 0 0% 5%;
+    --primary: 25 95% 53%;
+    --primary-foreground: 46 78% 5%;
 
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 5%;
+    --secondary: 43 30% 70%;
+    --secondary-foreground: 46 78% 5%;
 
-    --muted: 0 0% 13%;
-    --muted-foreground: 0 0% 58%;
+    --muted: 46 54% 9%;
+    --muted-foreground: 43 28% 62%;
 
-    --accent: 22 90% 52%;
-    --accent-foreground: 0 0% 5%;
+    --accent: 25 95% 53%;
+    --accent-foreground: 46 78% 5%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 96%;
 
-    --border: 22 28% 18%;
-    --input: 0 0% 13%;
-    --ring: 22 90% 52%;
+    --border: 44 39% 14%;
+    --input: 46 54% 9%;
+    --ring: 25 95% 53%;
 
-    --warm: 22 90% 52%;
-    --warm-foreground: 0 0% 5%;
-    --orange: 22 90% 52%;
+    --warm: 25 95% 53%;
+    --warm-foreground: 46 78% 5%;
+    --orange: 25 95% 53%;
 
     --dao: 22 85% 45%;
     --dao-foreground: 0 0% 96%;
@@ -121,23 +124,23 @@
     --network: 30 80% 48%;
     --network-foreground: 0 0% 5%;
 
-    --confirmed: 38 72% 46%;
-    --confirmed-foreground: 0 0% 5%;
+    --confirmed: 45 100% 76%;
+    --confirmed-foreground: 46 78% 5%;
 
-    --surface: 0 0% 11%;
-    --surface-hover: 0 0% 15%;
+    --surface: 46 54% 9%;
+    --surface-hover: 44 39% 14%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(22 90% 40%) 0%, hsl(22 90% 56%) 55%, hsl(18 88% 42%) 100%);
-    --gradient-warm: linear-gradient(135deg, hsl(22 90% 50%) 0%, hsl(18 88% 42%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(25 95% 45%) 0%, hsl(25 95% 58%) 55%, hsl(20 90% 45%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(25 95% 53%) 0%, hsl(20 90% 45%) 100%);
     --gradient-dao: linear-gradient(135deg, hsl(22 85% 42%) 0%, hsl(30 80% 48%) 100%);
-    --gradient-surface: linear-gradient(180deg, hsl(0 0% 9%) 0%, hsl(0 0% 5%) 100%);
-    --gradient-hero: radial-gradient(ellipse 55% 42% at 72% 10%, hsl(22 90% 52% / 0.18) 0%, transparent 58%),
-                     radial-gradient(ellipse 44% 36% at 22% 20%, hsl(18 88% 42% / 0.10) 0%, transparent 65%),
-                     linear-gradient(135deg, hsl(0 0% 5%) 0%, hsl(0 0% 7%) 50%, hsl(22 8% 7%) 100%);
+    --gradient-surface: linear-gradient(180deg, hsl(46 61% 8%) 0%, hsl(46 78% 5%) 100%);
+    --gradient-hero: radial-gradient(ellipse 55% 42% at 72% 10%, hsl(25 95% 53% / 0.18) 0%, transparent 58%),
+                     radial-gradient(ellipse 44% 36% at 22% 20%, hsl(20 90% 45% / 0.10) 0%, transparent 65%),
+                     linear-gradient(135deg, hsl(46 78% 5%) 0%, hsl(46 65% 7%) 50%, hsl(44 30% 8%) 100%);
 
     --shadow-card:  0 4px 24px -4px hsl(0 0% 0% / 0.80);
-    --shadow-glow:  0 0 40px hsl(22 90% 52% / 0.28);
-    --shadow-warm:  0 4px 24px hsl(22 90% 52% / 0.28);
+    --shadow-glow:  0 0 40px hsl(25 95% 53% / 0.28);
+    --shadow-warm:  0 4px 24px hsl(25 95% 53% / 0.28);
     --shadow-dao:   0 0 40px hsl(22 85% 45% / 0.20);
     --shadow-deep:  0 20px 60px -10px hsl(0 0% 0% / 0.92);
   }
@@ -166,12 +169,13 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-family: 'Public Sans', system-ui, sans-serif;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Hanken Grotesk', system-ui, sans-serif;
+    font-family: 'Syne', system-ui, sans-serif;
   }
 }
 
@@ -185,14 +189,14 @@
     border-radius: var(--radius);
     font-weight: 600;
     font-size: 0.875rem;
-    padding: 0.625rem 1.5rem;
+    padding: 0.75rem 1.5rem;
     border: none;
     transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
     cursor: pointer;
   }
   .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 14px 34px hsl(22 90% 42% / 0.38);
+    box-shadow: 0 14px 34px hsl(25 95% 53% / 0.38);
   }
   .btn-primary:active { transform: translateY(0) scale(0.98); }
 
@@ -204,14 +208,14 @@
     border-radius: var(--radius);
     font-weight: 700;
     font-size: 0.875rem;
-    padding: 0.625rem 1.5rem;
+    padding: 0.75rem 1.5rem;
     border: none;
     transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
     cursor: pointer;
   }
   .btn-warm:hover {
     transform: translateY(-2px);
-    box-shadow: 0 14px 34px hsl(22 90% 42% / 0.38);
+    box-shadow: 0 14px 34px hsl(25 95% 53% / 0.38);
   }
   .btn-warm:active { transform: translateY(0) scale(0.98); }
 
@@ -223,7 +227,7 @@
     border-radius: var(--radius);
     font-weight: 500;
     font-size: 0.875rem;
-    padding: 0.625rem 1.5rem;
+    padding: 0.75rem 1.5rem;
     border: 1px solid hsl(var(--border));
     transition: all 0.2s ease;
     cursor: pointer;
@@ -307,7 +311,7 @@
     background: var(--gradient-primary) !important;
     color: hsl(var(--primary-foreground)) !important;
     border-radius: var(--radius) !important;
-    font-family: 'Public Sans', system-ui, sans-serif !important;
+    font-family: 'DM Sans', system-ui, sans-serif !important;
     font-weight: 600 !important;
     font-size: 0.875rem !important;
     height: 2.5rem !important;
@@ -326,10 +330,10 @@
     background: hsl(var(--card)) !important;
     border: 1px solid hsl(var(--border)) !important;
     border-radius: 1rem !important;
-    font-family: 'Public Sans', system-ui, sans-serif !important;
+    font-family: 'DM Sans', system-ui, sans-serif !important;
   }
   .wallet-adapter-modal-title {
-    font-family: 'Hanken Grotesk', system-ui, sans-serif !important;
+    font-family: 'Syne', system-ui, sans-serif !important;
     color: hsl(var(--foreground)) !important;
   }
   .wallet-adapter-modal-list li {
@@ -353,7 +357,7 @@
   }
   .wallet-adapter-dropdown-list-item {
     color: hsl(var(--foreground)) !important;
-    font-family: 'Public Sans', system-ui, sans-serif !important;
+    font-family: 'DM Sans', system-ui, sans-serif !important;
   }
   .wallet-adapter-dropdown-list-item:hover {
     background: hsl(var(--surface)) !important;

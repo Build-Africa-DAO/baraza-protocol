@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 import { MetadataRendererTypesV2 } from "../types/MetadataRendererTypesV2.sol";
@@ -11,3 +11,4 @@ contract MetadataRendererStorageV2 is MetadataRendererTypesV2 {
     /// @dev While strings are quoted, JSON needs to be escaped.
     AdditionalTokenProperty[] internal additionalTokenProperties;
 }
+

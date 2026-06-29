@@ -214,10 +214,10 @@ Read talking points aloud verbatim where quoted; everything else is direction.
 - Navigate back to `/`.
 - Scroll smoothly to the footer.
 - Pause on the footer tagline: *"A treasury layer for groups that collect dues, vote on proposals, and move funds with shared on-chain visibility."*
-- Point at **Built on Solana** and **Built for communities in Africa**.
+- Point at **Stellar reference contracts** and **Built for communities in Africa**.
 
 **Talking point**
-> "That's the loop end-to-end. Browse, join, propose, vote, release — and every member can audit it. Built on Solana, built for groups that have been running treasuries on trust and want the receipts to match."
+> "That's the loop end-to-end. Browse, join, propose, vote, release - and every member can audit it. Built for groups that have been running treasuries on trust and want the receipts to match, with Stellar as the reference chain and adapters for other rails."
 
 ---
 
@@ -241,3 +241,5 @@ Drop any of these without losing the story:
 - **Cmd/Ctrl + L** then type a path — fastest way to navigate without leaving the address bar.
 - **Cmd/Ctrl + Tab** — switch to a pre-loaded tab.
 - **Cmd/Ctrl + 0** — reset zoom if you accidentally hit `+`/`-`.
+
+> Product-layer document. Retained in this repo pending the public/private split; only framing corrections are in scope here.

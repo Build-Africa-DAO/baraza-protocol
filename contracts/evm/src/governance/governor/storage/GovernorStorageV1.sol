@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 import { GovernorTypesV1 } from "../types/GovernorTypesV1.sol";
@@ -18,3 +18,4 @@ contract GovernorStorageV1 is GovernorTypesV1 {
     /// @dev Proposal Id => User => Has Voted
     mapping(bytes32 => mapping(address => bool)) internal hasVoted;
 }
+

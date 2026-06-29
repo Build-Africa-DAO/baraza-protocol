@@ -1,3 +1,5 @@
+import { getWalletProof, verifyWalletProof } from '../_lib/wallet-proof.js';
+
 export const config = { runtime: 'nodejs' };
 
 interface CommunityCreateRequest {
@@ -12,6 +14,7 @@ interface CommunityCreateRequest {
   treasuryPolicy?: string;
   paybillNumber?: string;
   ussdShortcode?: string;
+  createdBy?: string;
 }
 
 function json(body: unknown, init?: ResponseInit): Response {
@@ -33,7 +36,7 @@ export default async function handler(req: Request): Promise<Response> {
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       status: 204,
-      headers: { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'POST,OPTIONS', 'access-control-allow-headers': 'content-type' },
+      headers: { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'POST,OPTIONS', 'access-control-allow-headers': 'content-type,x-wallet-address,x-wallet-message,x-wallet-signature' },
     });
   }
 
@@ -51,6 +54,9 @@ export default async function handler(req: Request): Promise<Response> {
   if (!type?.trim()) return bad('type is required');
   if (!description?.trim()) return bad('description is required');
   if (typeof membershipFee !== 'number' || membershipFee < 0) return bad('membershipFee must be a non-negative number');
+  if (body.createdBy && !verifyWalletProof(getWalletProof(req, body.createdBy), body.createdBy, 'create-community')) {
+    return json({ error: 'wallet_proof_required', message: 'Valid founder wallet signature required' }, { status: 401 });
+  }
 
   const supabaseUrl = process.env.SUPABASE_URL?.trim();
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
@@ -85,6 +91,7 @@ export default async function handler(req: Request): Promise<Response> {
     treasury_policy: treasuryPolicy,
     paybill_number: body.paybillNumber ?? null,
     ussd_shortcode: body.ussdShortcode ?? null,
+    created_by: body.createdBy ?? null,
   };
 
   const res = await fetch(`${supabaseUrl}/rest/v1/communities`, {

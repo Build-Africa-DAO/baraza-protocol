@@ -37,11 +37,11 @@ MVP:
 
 | Layer | Integration | Purpose |
 | --- | --- | --- |
-| Chain execution | Solana | Membership, governance, vote records, treasury authority |
+| Chain execution | Stellar (reference) | Membership, governance, vote records, treasury authority through the reference implementation |
 | Mobile money | Africa's Talking | Live sandbox M-Pesa checkout and payment webhook for demo; production credentials later |
-| Solana indexing | Helius | Webhooks for mint, transfer, proposal, vote, and treasury events |
-| Wallet onboarding | Privy or equivalent embedded wallet provider | Create/link Solana wallet for phone-first users |
-| Crypto checkout | Solana Pay or Solana Commerce Kit | Optional wallet-native membership payment |
+| Adapter indexing | Chain-specific indexers | Webhooks and event indexing for proposals, votes, transfers, and treasury events |
+| Wallet onboarding | Privy or equivalent embedded wallet provider | Create/link the chain account needed by the selected adapter for phone-first users |
+| Crypto checkout | Adapter-native wallet checkout | Optional wallet-native membership payment |
 | Metadata | IPFS or Arweave | Community profile, membership metadata, proposal content |
 | Private state | Postgres or Supabase | Users, payment orders, webhooks, refunds, admin review |
 
@@ -700,3 +700,5 @@ The MVP is done when:
 - The community page shows members, proposals, and activity.
 - Admin can see and resolve stuck orders.
 - Private identifiers remain off-chain.
+
+> Product-layer document. Retained in this repo pending the public/private split; only framing corrections are in scope here.

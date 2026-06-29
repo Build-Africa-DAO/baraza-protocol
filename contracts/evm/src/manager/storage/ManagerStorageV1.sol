@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 import { ManagerTypesV1 } from "../types/ManagerTypesV1.sol";
@@ -15,3 +15,4 @@ contract ManagerStorageV1 is ManagerTypesV1 {
     /// @dev Token deployed address => Struct of all other DAO addresses
     mapping(address => DAOAddresses) internal daoAddressesByToken;
 }
+

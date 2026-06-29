@@ -53,9 +53,9 @@ Baraza is a governance and treasury protocol for African community groups. It le
 | Community Rewards | 200,000,000 | 20% | 0 | Emission 2M/month |
 | Founder A | 75,000,000 | 7.5% | 12 months | 36 months |
 | Founder B | 75,000,000 | 7.5% | 12 months | 36 months |
-| Operations | 150,000,000 | 15% | 0 | 36 months (milestone-gated) |
-| Public Sale | 120,000,000 | 12% | 0 | Phase 0: 20M · IDO: 100M |
-| Reserve | 100,000,000 | 10% | 12 months | 36 months |
+| Operations | 150,000,000 | 15% | 12 months | 36 months (milestone-gated) |
+| Public Sale | 120,000,000 | 12% | 6 months | 12 months · Phase 0: 20M · IDO: 100M |
+| Reserve | 100,000,000 | 10% | 24 months | 36 months (governance vote to release) |
 | Liquidity Pool | 80,000,000 | 8% | 0 | Unlock at IDO, locked 12 months |
 | Referral | 50,000,000 | 5% | 0 | Per referral event |
 | Grants | 80,000,000 | 8% | 6 months | 24 months |

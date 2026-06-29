@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
@@ -279,3 +279,4 @@ contract MerkleReserveMinter {
         return IOwnable(tokenContract).owner() == caller;
     }
 }
+

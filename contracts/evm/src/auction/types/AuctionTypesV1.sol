@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 /// @title AuctionTypesV1
@@ -37,3 +37,4 @@ contract AuctionTypesV1 {
         bool settled;
     }
 }
+

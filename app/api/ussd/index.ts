@@ -1,5 +1,12 @@
 import { getOrCreateSession, destroySession, resolveCountryFromPhone } from '../../src/lib/ussd/session.js';
 import { handleUssdInput, type PendingPayOrder } from '../../src/lib/ussd/menu.js';
+import {
+  hydratePendingWelcomeFromDb,
+  peekPendingWelcome,
+  takePendingSmsFallbacks,
+} from '../../src/lib/ussd/welcome.js';
+import { formatWelcomeSmsFallback } from '../../src/lib/notifications/sms.js';
+import { classifyExit, logSessionExit } from '../../src/lib/ussd/monitoring.js';
 
 export const config = { runtime: 'edge' };
 
@@ -53,6 +60,7 @@ async function createPaymentOrder(pending: PendingPayOrder, baseUrl: string): Pr
       currency: pending.currency,
       status: 'PAYMENT_CONFIRMED',
       confirmed_at: new Date().toISOString(),
+      metadata: { source: 'ussd', phone: pending.phoneNumber },
     }),
   });
 
@@ -80,7 +88,7 @@ async function fetchBrzaBalanceForPhone(phoneNumber: string): Promise<number> {
   return rows.reduce((sum, r) => sum + (r.voting_weight ?? 1), 0);
 }
 
-async function sendActivationSms(phoneNumber: string, activationUrl: string): Promise<void> {
+async function sendRawSms(phoneNumber: string, message: string): Promise<void> {
   const username = process.env.AT_USERNAME;
   const apiKey = process.env.AT_API_KEY;
   if (!username || !apiKey) return;
@@ -88,7 +96,7 @@ async function sendActivationSms(phoneNumber: string, activationUrl: string): Pr
   const body = new URLSearchParams({
     username,
     to: phoneNumber,
-    message: `Baraza: Your dues payment was received. Activate your membership here: ${activationUrl}`,
+    message,
     from: process.env.AT_SENDER_ID ?? 'Baraza',
   });
 
@@ -101,6 +109,13 @@ async function sendActivationSms(phoneNumber: string, activationUrl: string): Pr
     },
     body: body.toString(),
   });
+}
+
+async function sendActivationSms(phoneNumber: string, activationUrl: string): Promise<void> {
+  await sendRawSms(
+    phoneNumber,
+    `Baraza: Your dues payment was received. Activate your membership here: ${activationUrl}`,
+  );
 }
 
 export default async function handler(req: Request): Promise<Response> {
@@ -146,9 +161,19 @@ export default async function handler(req: Request): Promise<Response> {
   const countryCode = resolveCountryFromPhone(phoneNumber);
   const session = getOrCreateSession({ sessionId, phoneNumber, serviceCode, countryCode });
 
+  // Cross-process welcome hydration: cron-side `markMintConfirmed` writes a
+  // pending_welcome flag onto the payment_order; pick it up before routing
+  // so the welcome fires on the very next dial.
+  await hydratePendingWelcomeFromDb(phoneNumber).catch(() => undefined);
+
   // Prefetch BRZA balance when the user navigates to the balance menu (root '1').
   const isBalanceMenu = text === '1' || text.startsWith('1*');
   const brzaBalance = isBalanceMenu ? await fetchBrzaBalanceForPhone(phoneNumber) : undefined;
+
+  // Snapshot the welcome (if any) before handling, so we can format the
+  // SMS fallback even after the flow consumes the registry entry.
+  const welcomeSnapshot = peekPendingWelcome(phoneNumber);
+  const handlerStartedAt = Date.now();
 
   const result = handleUssdInput({ session, text, phoneNumber, brzaBalance });
 
@@ -162,6 +187,41 @@ export default async function handler(req: Request): Promise<Response> {
   if (result.pendingPayOrder) {
     const origin = new URL(req.url).origin;
     createPaymentOrder(result.pendingPayOrder, origin).catch(() => undefined);
+  }
+
+  // Dispatch any queued welcome SMS fallbacks (Nia's W0 "Main menu" skip path).
+  // Fire-and-forget so the USSD response stays fast.
+  const fallbackTargets = takePendingSmsFallbacks();
+  const smsFallbackQueued = fallbackTargets.length > 0;
+  if (smsFallbackQueued && welcomeSnapshot) {
+    const message = formatWelcomeSmsFallback(welcomeSnapshot.communityName);
+    for (const target of fallbackTargets) {
+      sendRawSms(target, message).catch(() => undefined);
+    }
+  }
+
+  // Seku monitoring: log every END as a session exit. CON events stay
+  // out of the table to avoid filling it with every keypress.
+  if (result.action === 'END') {
+    const welcomeIsPendingAfter = peekPendingWelcome(phoneNumber) !== null;
+    const { exitReason, welcomeState } = classifyExit({
+      resultAction: result.action,
+      resultText: result.text,
+      welcomeWasPending: welcomeSnapshot !== null,
+      welcomeIsPendingAfter,
+      smsFallbackQueued,
+    });
+    logSessionExit({
+      sessionId,
+      phoneNumber,
+      countryCode,
+      serviceCode,
+      lastMenuPath: text,
+      resultAction: result.action,
+      exitReason,
+      welcomeState,
+      durationMs: Date.now() - handlerStartedAt,
+    }).catch(() => undefined);
   }
 
   return new Response(`${result.action} ${result.text}`, {

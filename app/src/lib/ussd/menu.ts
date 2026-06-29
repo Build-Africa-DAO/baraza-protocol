@@ -1,4 +1,5 @@
 import type { UssdSession } from './session.js';
+import { peekPendingWelcome, welcomeFlow } from './welcome.js';
 
 export interface PendingPayOrder {
   communityCode: string;
@@ -170,7 +171,7 @@ function communityMenu(path: string[]): MenuResult {
 
 function helpMenu(): MenuResult {
   return {
-    text: 'Baraza Help\nVote & pay dues via USSD\nWeb: baraza.app\nSupport: *384*0#\nPowered by Solana',
+    text: 'Baraza Help\nVote & pay dues via USSD\nWeb: baraza.app\nSupport: *384*0#\nPowered by Baraza Protocol',
     action: 'END',
   };
 }
@@ -182,6 +183,14 @@ export function handleUssdInput(params: {
   brzaBalance?: number;
 }): MenuResult {
   const { text, phoneNumber, brzaBalance } = params;
+
+  // Nia's welcome flow — if MINT_CONFIRMED has flagged this phone as a
+  // freshly-onboarded member, the entire session belongs to the welcome
+  // until it completes or the member skips to main menu.
+  const pendingWelcome = peekPendingWelcome(phoneNumber);
+  if (pendingWelcome) {
+    return welcomeFlow(text, pendingWelcome);
+  }
 
   if (text === '') {
     return mainMenu();
@@ -205,3 +214,4 @@ export function handleUssdInput(params: {
       return { text: 'Invalid option. Please try again.', action: 'END' };
   }
 }
+

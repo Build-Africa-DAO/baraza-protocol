@@ -5,13 +5,30 @@ import { useAkiliChat } from '@/akili/useAkiliChat';
 import { useChain } from '@/hooks/useChain';
 import { useLocation } from 'react-router-dom';
 import type { ChainMeta } from '@/lib/chain';
+import type { CouncilAgentName } from '@/akili/council';
 
 interface Message {
   id: string;
   role: 'akili' | 'user';
   text: string;
   time: string;
+  /** When the message came from a named specialist instead of the relay. */
+  agent?: CouncilAgentName;
 }
+
+// Council specialists the member can consult one-shot. The relay (null) is
+// the default conversational voice; a specialist is a focused single-turn
+// read from that domain.
+type AgentSelection = CouncilAgentName | null;
+
+const COUNCIL_CHIPS: Array<{ key: AgentSelection; label: string; role: string }> = [
+  { key: null, label: 'Akili', role: 'relay' },
+  { key: 'nia', label: 'Nia', role: 'people' },
+  { key: 'kofi', label: 'Kofi', role: 'governance' },
+  { key: 'zara', label: 'Zara', role: 'economy' },
+  { key: 'amara', label: 'Amara', role: 'content' },
+  { key: 'seku', label: 'Seku', role: 'research' },
+];
 
 const timestamp = (chainMeta: ChainMeta) =>
   new Date().toLocaleTimeString(chainMeta.currency.locale, {
@@ -276,6 +293,7 @@ async function streamAkiliResponse(
   communityId: string | null,
   history: Array<{ role: 'user' | 'assistant'; content: string }>,
   onChunk: (text: string) => void,
+  agent: CouncilAgentName | null,
 ): Promise<void> {
   // VITE_AKILI_API_URL points at the standalone Akili service (https://<akili>.vercel.app).
   // Unset = use the in-repo /api/agent/chat fallback. Set = direct cross-origin call.
@@ -285,7 +303,12 @@ async function streamAkiliResponse(
   const res = await fetch(endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message, communityId: communityId ?? undefined, history }),
+    body: JSON.stringify({
+      message,
+      communityId: communityId ?? undefined,
+      history,
+      ...(agent ? { agent } : {}),
+    }),
   });
 
   if (!res.ok || !res.body) throw new ChatStreamError('unknown', 'unavailable');
@@ -348,6 +371,11 @@ const AkiliChat: React.FC = () => {
   const QUICK_REPLIES = QUICK_REPLIES_BY_ROUTE[routeContext];
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  // Selected council agent. null = relay (Akili). When a specialist is
+  // selected, the next send is a one-shot to that agent. Selection persists
+  // across sends so a member can converse within one domain.
+  const [selectedAgent, setSelectedAgent] = useState<AgentSelection>(null);
+  const activeChip = COUNCIL_CHIPS.find((c) => c.key === selectedAgent) ?? COUNCIL_CHIPS[0];
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const focusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -414,14 +442,26 @@ const AkiliChat: React.FC = () => {
       setIsTyping(false);
       setMessages((prev) => [
         ...prev,
-        { id: akiliId, role: 'akili', text: '', time: timestamp(chainMeta) },
+        {
+          id: akiliId,
+          role: 'akili',
+          text: '',
+          time: timestamp(chainMeta),
+          ...(selectedAgent ? { agent: selectedAgent } : {}),
+        },
       ]);
 
-      await streamAkiliResponse(text.trim(), communityId, history, (chunk) => {
-        setMessages((prev) =>
-          prev.map((m) => (m.id === akiliId ? { ...m, text: m.text + chunk } : m))
-        );
-      });
+      await streamAkiliResponse(
+        text.trim(),
+        communityId,
+        history,
+        (chunk) => {
+          setMessages((prev) =>
+            prev.map((m) => (m.id === akiliId ? { ...m, text: m.text + chunk } : m))
+          );
+        },
+        selectedAgent,
+      );
     } catch (err) {
       setIsTyping(false);
       // For classified server errors (credits out, auth failed, rate limit,
@@ -438,7 +478,7 @@ const AkiliChat: React.FC = () => {
         prev.map((m) => (m.id === akiliId ? { ...m, text: replacement } : m))
       );
     }
-  }, [chainMeta, communityId, isTyping, messages]);
+  }, [chainMeta, communityId, isTyping, messages, selectedAgent]);
 
   // Send pending message from hero search bar
   useEffect(() => {
@@ -504,8 +544,12 @@ const AkiliChat: React.FC = () => {
                   <Sparkles className="w-4 h-4 text-primary-foreground" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-primary-foreground leading-none">Akili</h4>
-                  <p className="text-[10px] text-primary-foreground/70 mt-0.5">Your Baraza guide</p>
+                  <h4 className="text-sm font-semibold text-primary-foreground leading-none">
+                    {activeChip.label}
+                  </h4>
+                  <p className="text-[10px] text-primary-foreground/70 mt-0.5 capitalize">
+                    {activeChip.key ? `Council · ${activeChip.role}` : 'Your Baraza guide'}
+                  </p>
                 </div>
               </div>
               <button
@@ -537,7 +581,11 @@ const AkiliChat: React.FC = () => {
                   >
                     {msg.text}
                   </div>
-                  <span className="text-[9px] text-muted-foreground mt-1 px-1">{msg.time}</span>
+                  <span className="text-[9px] text-muted-foreground mt-1 px-1">
+                    {msg.role === 'akili' && msg.agent
+                      ? `${msg.agent.charAt(0).toUpperCase()}${msg.agent.slice(1)} · ${msg.time}`
+                      : msg.time}
+                  </span>
                 </motion.div>
               ))}
 
@@ -577,6 +625,29 @@ const AkiliChat: React.FC = () => {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* Council selector */}
+            <div className="px-3 pt-2 pb-1 flex gap-1 overflow-x-auto flex-shrink-0 scrollbar-none">
+              {COUNCIL_CHIPS.map((chip) => {
+                const isActive = chip.key === selectedAgent;
+                return (
+                  <button
+                    key={chip.label}
+                    type="button"
+                    onClick={() => setSelectedAgent(chip.key)}
+                    aria-pressed={isActive}
+                    title={chip.key ? `Consult ${chip.label} (${chip.role})` : 'Akili relay (default)'}
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-colors ${
+                      isActive
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-surface text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {chip.label}
+                  </button>
+                );
+              })}
+            </div>
 
             {/* Input */}
             <form

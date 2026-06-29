@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 import { IOwnable } from "../interfaces/IOwnable.sol";
@@ -99,3 +99,4 @@ abstract contract Ownable is IOwnable, Initializable {
         delete _pendingOwner;
     }
 }
+

@@ -81,3 +81,12 @@ export function formatDuesReminder(
 export function formatMemberWelcome(communityName: string, adminPhone: string): string {
   return `Welcome to ${communityName} on Baraza! Your membership is active. Contact admin: ${adminPhone}. Manage at baraza.app or *384#.`;
 }
+
+/**
+ * USSD welcome SMS fallback — fires when a member skips the in-session
+ * welcome (Nia's W0 "Main menu" choice) or when the session timed out
+ * before W0 delivered. Plain ASCII for delivery reliability.
+ */
+export function formatWelcomeSmsFallback(communityName: string): string {
+  return `Baraza: Welcome to ${communityName}! Your KES payment is confirmed. Dial *384# to explore voting & dues. Your membership starts now.`;
+}
