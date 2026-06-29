@@ -46,6 +46,16 @@ interface AllocationRow {
   settlement_tx: string | null;
 }
 
+interface RetroRoundRow {
+  id: string;
+  community_id: string;
+  period_start: string;
+  period_end: string;
+  pool_brza: number;
+  status: string;
+  voting_closes_at: string;
+}
+
 export async function GET(req: Request): Promise<Response> {
   const url = new URL(req.url);
   const roundId = url.searchParams.get('roundId');
@@ -71,15 +81,7 @@ export async function GET(req: Request): Promise<Response> {
   }
 
   // Resolve round
-  let roundRow: {
-    id: string;
-    community_id: string;
-    period_start: string;
-    period_end: string;
-    pool_brza: number;
-    status: string;
-    voting_closes_at: string;
-  } | null = null;
+  let roundRow: RetroRoundRow | null = null;
 
   if (roundId) {
     const { data } = await supabase
@@ -87,7 +89,7 @@ export async function GET(req: Request): Promise<Response> {
       .select('id, community_id, period_start, period_end, pool_brza, status, voting_closes_at')
       .eq('id', roundId)
       .maybeSingle();
-    roundRow = (data as typeof roundRow) ?? null;
+    roundRow = (data as RetroRoundRow | null) ?? null;
   } else if (communityId) {
     const { data } = await supabase
       .from('retro_rounds')
@@ -97,7 +99,7 @@ export async function GET(req: Request): Promise<Response> {
       .order('period_start', { ascending: false })
       .limit(1)
       .maybeSingle();
-    roundRow = (data as typeof roundRow) ?? null;
+    roundRow = (data as RetroRoundRow | null) ?? null;
   }
 
   if (!roundRow) {
