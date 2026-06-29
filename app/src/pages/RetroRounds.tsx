@@ -59,6 +59,7 @@ export default function RetroRounds() {
   const [opening, setOpening] = useState(false);
   const [settling, setSettling] = useState(false);
   const [settleResult, setSettleResult] = useState<string | null>(null);
+  const [nowMs, setNowMs] = useState(() => Date.now());
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -102,6 +103,14 @@ export default function RetroRounds() {
       void loadActive(selectedCommunityId);
     }
   }, [isAdmin, selectedCommunityId, loadActive]);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setNowMs(Date.now());
+    }, 1000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
 
   const settleRound = useCallback(async () => {
     if (!walletAddress || !activeRound) return;
@@ -302,7 +311,7 @@ export default function RetroRounds() {
                 </div>
               </dl>
 
-              {new Date(activeRound.voting_closes_at).getTime() <= Date.now() ? (
+              {new Date(activeRound.voting_closes_at).getTime() <= nowMs ? (
                 <div className="border-t border-border pt-3 space-y-2">
                   <p className="text-xs text-muted-foreground">
                     Voting has closed. Run settlement to compute allocations and write them to{' '}

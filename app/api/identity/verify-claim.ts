@@ -148,7 +148,7 @@ export default async function handler(req: Request): Promise<Response> {
 
   // Verification ok — write the link, mark pending consumed.
   const nonce = crypto.randomUUID();
-  let proof = '';
+  let proof: string;
   try {
     proof = await buildVerificationProof(code, nonce);
   } catch {

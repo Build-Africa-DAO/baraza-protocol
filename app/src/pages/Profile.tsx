@@ -123,6 +123,8 @@ export default function Profile() {
     [myMemberships],
   );
 
+  const [badgeEvaluatedAt] = useState(() => Date.now());
+
   // Badges derive from already-loaded membership data — no extra fetches.
   const badgeResult_ = useMemo(() => {
     const joinedTimes = myMemberships
@@ -132,12 +134,11 @@ export default function Profile() {
 
     // Founder — communities this wallet created that are ≥90 days old.
     const NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000;
-    const now = Date.now();
     const foundedSurvivingCommunityCount = address
       ? communities.filter((c) => {
           if (c.createdBy !== address) return false;
           const createdAt = new Date(c.createdAt).getTime();
-          return Number.isFinite(createdAt) && now - createdAt >= NINETY_DAYS_MS;
+          return Number.isFinite(createdAt) && badgeEvaluatedAt - createdAt >= NINETY_DAYS_MS;
         }).length
       : 0;
 
@@ -154,7 +155,7 @@ export default function Profile() {
       proposalVoteCount,
       foundedSurvivingCommunityCount,
     };
-  }, [myMemberships, communities, address]);
+  }, [myMemberships, communities, address, badgeEvaluatedAt]);
 
   const badgeResult = badgeResult_.result;
   const proposalVoteCount = badgeResult_.proposalVoteCount;
