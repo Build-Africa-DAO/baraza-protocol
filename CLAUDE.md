@@ -4,7 +4,7 @@
 
 Baraza is a multi-chain community governance and treasury protocol for African DAOs, chamas, SACCOs, cooperatives, and stokvels. Primary market: Kenya, Tanzania, Uganda, Ethiopia, Nigeria.
 
-**Products:** Baraza Protocol · Baraza TV · IDO/Public Launch · DEX
+**Products:** Baraza Protocol · Baraza TV
 **Founder:** Aziz Mohammed (@azizke) — `wethem2022@gmail.com`
 **Live:** baraza-protocol.vercel.app · GitHub: github.com/Azizudinly/baraza-protocol
 
@@ -82,21 +82,8 @@ Rules for keeping it that way:
 ## BRZA token (quick ref)
 
 - **Supply:** 1,000,000,000 · 7 decimals · Stellar custom asset
-- **Phase 0:** $0.02 · **IDO:** $0.10
 - **Source of truth:** `app/src/lib/brza/constants.ts`
-
-| Bucket | % | Vesting |
-|---|---|---|
-| Community Rewards | 20% | Emission 2M/month |
-| Founder A + B | 7.5% each | 1yr cliff + 3yr vest |
-| Operations | 15% | Milestone-gated |
-| Public Sale | 12% | Phase 0 (20M) + IDO (100M) |
-| Reserve | 10% | 1yr cliff + 3yr vest |
-| Liquidity Pool | 8% | Unlock at IDO |
-| Grants | 8% | 6mo cliff + 2yr vest |
-| Referral | 5% | Per event |
-| Events | 4% | Per event |
-| Baraza TV Creators | 3% | Per content milestone |
+- Public pricing, allocation, and sale-planning details are intentionally omitted from repo docs pending counsel review.
 
 ---
 
@@ -114,7 +101,7 @@ Rules for keeping it that way:
 | File | Purpose |
 |---|---|
 | `AGENTS.md` | Full agent instructions, API routes, payment flow source of truth |
-| `app/src/lib/brza/constants.ts` | BRZA tokenomics, allocation, vesting, emission |
+| `app/src/lib/brza/constants.ts` | BRZA token configuration and emission logic |
 | `app/src/lib/chains/config.ts` | Chain config + Aragon OSx addresses |
 | `app/src/lib/evm/manager.ts` | Aragon OSx deployDao() client |
 | `app/src/lib/evm/base-governance.ts` | viem governance: castVote, getVotes, proposal state |
