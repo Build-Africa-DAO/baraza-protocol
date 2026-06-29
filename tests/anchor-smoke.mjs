@@ -3,9 +3,9 @@ import { existsSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { createRequire } from 'node:module';
 
-const requireFromApp = createRequire(new URL('../app/package.json', import.meta.url));
-const anchor = requireFromApp('@coral-xyz/anchor');
-const { Connection, Keypair, PublicKey, SystemProgram } = requireFromApp('@solana/web3.js');
+const requireFromRoot = createRequire(import.meta.url);
+const anchor = requireFromRoot('@coral-xyz/anchor');
+const { Connection, Keypair, PublicKey, SystemProgram } = requireFromRoot('@solana/web3.js');
 
 const anchorToml = readFileSync(new URL('../Anchor.toml', import.meta.url), 'utf8');
 const localnetMatch = anchorToml.match(/\[programs\.localnet\]([\s\S]*?)(?=\n\[|$)/);
