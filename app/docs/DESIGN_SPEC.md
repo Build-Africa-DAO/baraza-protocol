@@ -1,7 +1,7 @@
 # Baraza Platform — Design Specification
 
 > Essential elements and user flows for the Baraza community DAO platform.
-> Built on **Solana** (MVP) and **Stellar** (Phase 2). See `MVP_ARCHITECTURE.md`
+> Built around a multichain adapter model with **Stellar** as the reference implementation. See `MVP_ARCHITECTURE.md`
 > for the chain/program layer and `PRD.md` for product scope.
 
 ---
@@ -19,7 +19,7 @@ community.
 | Token | Community governance token (optional per community) |
 | Membership | Multi-mode: free, purchased, airdrop, invite-only |
 | Roles | Founder, Moderator, Member tiers |
-| Networks | **Solana** (MVP) + **Stellar** (Phase 2) |
+| Networks | **Stellar** (reference) + additional adapters |
 | Currencies | SOL, XLM, USDC, KES via M-Pesa (off-chain) |
 
 ---
@@ -505,3 +505,5 @@ Sizing:
 - [ ] Create activity feed for communities
 - [ ] Design member list / management UI
 - [ ] Create delegation UI (Baraza-specific)
+
+> Product-layer document. Retained in this repo pending the public/private split; only framing corrections are in scope here.

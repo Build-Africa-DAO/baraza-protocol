@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 import { MetadataRendererTypesV1 } from "../types/MetadataRendererTypesV1.sol";
@@ -96,3 +96,4 @@ interface IPropertyIPFSMetadataRenderer is IBaseMetadata, MetadataRendererTypesV
     /// @param newDescription The new description
     function updateDescription(string memory newDescription) external;
 }
+

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 /// @title MetadataRendererTypesV2
@@ -11,3 +11,4 @@ interface MetadataRendererTypesV2 {
         bool quote;
     }
 }
+

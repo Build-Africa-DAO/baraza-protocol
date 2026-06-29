@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 import { TokenTypesV2 } from "../types/TokenTypesV2.sol";
@@ -10,3 +10,4 @@ contract TokenStorageV2 is TokenTypesV2 {
     /// @notice The minter status of an address
     mapping(address => bool) public minter;
 }
+

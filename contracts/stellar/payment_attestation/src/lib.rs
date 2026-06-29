@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BUSL-1.1
 #![no_std]
 
 use soroban_sdk::{
@@ -145,3 +146,5 @@ mod test {
         client.attest(&tx_hash, &community_id, &50_000_000, &payer, &101);
     }
 }
+
+

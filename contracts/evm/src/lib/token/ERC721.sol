@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 import { IERC721 } from "../interfaces/IERC721.sol";
@@ -248,3 +248,4 @@ abstract contract ERC721 is IERC721, Initializable {
         uint256 _tokenId
     ) internal virtual {}
 }
+

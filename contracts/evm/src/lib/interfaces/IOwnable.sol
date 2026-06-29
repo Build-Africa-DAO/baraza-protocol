@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 /// @title IOwnable
@@ -58,3 +58,4 @@ interface IOwnable {
     /// @notice Cancels a pending ownership transfer
     function cancelOwnershipTransfer() external;
 }
+

@@ -171,7 +171,7 @@ function communityMenu(path: string[]): MenuResult {
 
 function helpMenu(): MenuResult {
   return {
-    text: 'Baraza Help\nVote & pay dues via USSD\nWeb: baraza.app\nSupport: *384*0#\nPowered by Solana',
+    text: 'Baraza Help\nVote & pay dues via USSD\nWeb: baraza.app\nSupport: *384*0#\nPowered by Baraza Protocol',
     action: 'END',
   };
 }
@@ -214,3 +214,4 @@ export function handleUssdInput(params: {
       return { text: 'Invalid option. Please try again.', action: 'END' };
   }
 }
+

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 /// @title IEIP712
@@ -26,3 +26,4 @@ interface IEIP712 {
     /// @notice The EIP-712 domain separator
     function DOMAIN_SEPARATOR() external view returns (bytes32);
 }
+

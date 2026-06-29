@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 import { IOwnable } from "../../lib/utils/Ownable.sol";
@@ -115,3 +115,4 @@ interface ITreasury is IUUPS, IOwnable {
     /// @param newGracePeriod The grace period
     function updateGracePeriod(uint256 newGracePeriod) external;
 }
+

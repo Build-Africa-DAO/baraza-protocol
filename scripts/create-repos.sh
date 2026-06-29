@@ -307,7 +307,7 @@ push_repo "baraza-contracts-stellar"
 # ──────────────────────────────────────────────────────────────
 
 create_repo "baraza-contracts-solana" \
-  "Anchor programs for Baraza Protocol — NFT membership, governance, vesting, referral, milestone distribution on Solana"
+  "Solana adapter work for Baraza Protocol — governance and membership modules implemented outside the Stellar reference chain"
 
 init_repo "baraza-contracts-solana"
 DIR="$REPOS_DIR/baraza-contracts-solana"
@@ -441,7 +441,7 @@ YAML
 
 cat > "$DIR/README.md" << 'MD'
 # baraza-contracts-solana
-Anchor programs for Baraza Protocol on Solana.
+Solana adapter work for Baraza Protocol.
 
 ## Programs
 | Program | Description | Status |
@@ -774,3 +774,4 @@ echo ""
 echo "Note: The Akili Council (formerly baraza-ai) now lives inline at"
 echo "      app/src/lib/akili/ in this repo — no separate scaffold."
 echo "======================================================"
+

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: BUSL-1.1
 
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -179,3 +180,4 @@ function run() {
 }
 
 run();
+

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
@@ -22,3 +22,4 @@ contract MockERC1155 is ERC1155 {
         _mintBatch(_to, _tokenIds, _amounts, "");
     }
 }
+

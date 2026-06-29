@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 import { IManager } from "../manager/IManager.sol";
@@ -262,3 +262,4 @@ contract L2MigrationDeployer {
         return (_token, _metadata, _auction, _treasury, _governor);
     }
 }
+

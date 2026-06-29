@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 /// @title TokenTypesV2
@@ -10,3 +10,4 @@ interface TokenTypesV2 {
         bool allowed;
     }
 }
+

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 /// @title IPausable
@@ -34,3 +34,4 @@ interface IPausable {
     /// @notice If the contract is paused
     function paused() external view returns (bool);
 }
+

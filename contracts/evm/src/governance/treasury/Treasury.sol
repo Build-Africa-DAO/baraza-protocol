@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.16;
 
 import { UUPS } from "../../lib/proxy/UUPS.sol";
@@ -277,3 +277,4 @@ contract Treasury is ITreasury, VersionedContract, UUPS, Ownable, ProposalHasher
         if (!manager.isRegisteredUpgrade(_getImplementation(), _newImpl)) revert INVALID_UPGRADE(_newImpl);
     }
 }
+

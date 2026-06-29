@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.13;
 
 // Source: https://github.com/ethereum-optimism/optimism/blob/96562692558e5c3851899488bcebe51fbe3b7f09/packages/contracts-bedrock/src/vendor/AddressAliasHelper.sol
@@ -25,3 +25,4 @@ library OPAddressAliasHelper {
         }
     }
 }
+

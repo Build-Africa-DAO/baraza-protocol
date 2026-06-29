@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: BUSL-1.1
 #![no_std]
 
 use soroban_sdk::{
@@ -442,3 +443,5 @@ mod test {
         assert_eq!(status, ProposalStatus::Failed);
     }
 }
+
+

@@ -1372,7 +1372,7 @@ Design:
 - Short treasury/governance tagline
 - Product links
 - Social or repository links
-- Built on Solana note
+- Stellar reference chain note
 
 Footer tagline:
 
@@ -1677,7 +1677,7 @@ Run your community fund with every vote and shilling visible.
 
 Subtitle:
 
-Baraza gives chamas, SACCOs, welfare groups, and co-operatives one shared workspace for contributions, proposals, votes, and treasury records, secured on Solana and built for phone-first participation.
+Baraza gives chamas, SACCOs, welfare groups, and co-operatives one shared workspace for contributions, proposals, votes, and treasury records, with Stellar as the reference chain and phone-first participation.
 
 Primary CTA:
 
@@ -1810,3 +1810,5 @@ Admin / Reconciliation:
 ### MCP Safety Note
 
 Keep Stitch MCP credentials outside this repository. Store MCP server configuration in the local Codex config file, not in `DESIGN.md`, `.env`, source files, or committed documentation.
+
+> Product-layer document. Retained in this repo pending the public/private split; only framing corrections are in scope here.
