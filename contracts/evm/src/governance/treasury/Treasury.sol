@@ -15,7 +15,7 @@ import { VersionedContract } from "../../VersionedContract.sol";
 /// @title Treasury
 /// @author Rohan Kulkarni
 /// @notice A DAO's treasury and transaction executor
-/// @custom:repo github.com/ourzora/baraza-protocol
+/// @custom:repo github.com/Build-Africa-DAO/baraza-protocol
 /// Modified from:
 /// - OpenZeppelin Contracts v4.7.3 (governance/TimelockController.sol)
 /// - BarazaDAOExecutor.sol commit 2cbe6c7 - licensed under the BSD-3-Clause license.

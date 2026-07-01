@@ -19,7 +19,7 @@ import { IVersionedContract } from "../lib/interfaces/IVersionedContract.sol";
 
 /// @title Manager
 /// @author Neokry & Rohan Kulkarni
-/// @custom:repo github.com/ourzora/baraza-protocol
+/// @custom:repo github.com/Build-Africa-DAO/baraza-protocol
 /// @notice The DAO deployer and upgrade manager
 contract Manager is IManager, VersionedContract, UUPS, Ownable, ManagerStorageV1 {
     ///                                                          ///

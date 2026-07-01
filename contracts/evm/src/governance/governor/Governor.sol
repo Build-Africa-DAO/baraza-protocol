@@ -18,7 +18,7 @@ import { VersionedContract } from "../../VersionedContract.sol";
 /// @title Governor
 /// @author Rohan Kulkarni
 /// @notice A DAO's proposal manager and transaction scheduler
-/// @custom:repo github.com/ourzora/baraza-protocol
+/// @custom:repo github.com/Build-Africa-DAO/baraza-protocol
 /// Modified from:
 /// - OpenZeppelin Contracts v4.7.3 (governance/extensions/GovernorTimelockControl.sol)
 /// - BarazaDAOLogicV1.sol commit 2cbe6c7 - licensed under the BSD-3-Clause license.

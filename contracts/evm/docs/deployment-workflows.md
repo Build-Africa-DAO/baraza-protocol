@@ -12,8 +12,6 @@ Only these network aliases are supported in this workspace:
 - `optimism_sepolia` (`11155420`)
 - `base` (`8453`)
 - `base_sepolia` (`84532`)
-- `zora` (`7777777`)
-- `zora_sepolia` (`999999999`)
 
 Deprecated networks `4` and `5` are removed.
 
@@ -37,8 +35,6 @@ Common env variables used by those sections:
 - `OPTIMISM_SEPOLIA_RPC_URL`
 - `BASE_RPC_URL`
 - `BASE_SEPOLIA_RPC_URL`
-- `ZORA_RPC_URL`
-- `ZORA_SEPOLIA_RPC_URL`
 - `ETHERSCAN_API_KEY`
 - `OPTIMISTIC_ETHERSCAN_API_KEY`
 - `BASESCAN_API_KEY`
@@ -74,10 +70,6 @@ Common env variables used by those sections:
 
   - Runs `DeployNewDAO.s.sol` sample DAO deployment flow.
   - Intended for controlled deployment/testing flows.
-
-- `yarn deploy:zora`
-  - Zora-specific deploy + verification command.
-  - Uses custom Blockscout verifier flow intentionally.
 
 ## Ownership and Address Maintenance
 

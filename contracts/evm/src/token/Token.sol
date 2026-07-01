@@ -17,7 +17,7 @@ import { VersionedContract } from "../VersionedContract.sol";
 
 /// @title Token
 /// @author Rohan Kulkarni & Neokry
-/// @custom:repo github.com/ourzora/baraza-protocol
+/// @custom:repo github.com/Build-Africa-DAO/baraza-protocol
 /// @notice A DAO's ERC-721 governance token
 contract Token is IToken, VersionedContract, UUPS, Ownable, ReentrancyGuard, ERC721Votes, TokenStorageV1, TokenStorageV2, TokenStorageV3 {
     ///                                                          ///

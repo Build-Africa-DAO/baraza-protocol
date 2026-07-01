@@ -22,7 +22,7 @@ import { VersionedContract } from "../../VersionedContract.sol";
 /// @title Metadata Renderer
 /// @author Iain Nash & Rohan Kulkarni
 /// @notice A DAO's artwork generator and renderer
-/// @custom:repo github.com/ourzora/baraza-protocol
+/// @custom:repo github.com/Build-Africa-DAO/baraza-protocol
 contract MetadataRenderer is
     IPropertyIPFSMetadataRenderer,
     VersionedContract,
