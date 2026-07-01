@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Users, ArrowLeft, CheckCircle2, Loader2, Phone, ShieldCheck, Wallet, Hash, Smartphone } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { COMMUNITY_TYPES, DAO_CREATION_FEE_KES, PAYBILL_ADDON_FEE_KES, USSD_ADDON_FEE_KES } from '@/lib/constants';
@@ -264,6 +264,7 @@ const CreateCommunity: React.FC = () => {
     path: "/create",
   });
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { requireWallet, isReady, address: founderAddress } = useWalletGuard({ action: 'launch a DAO' });
   const wallet = useWallet();
   const { toast } = useToast();
@@ -282,16 +283,20 @@ const CreateCommunity: React.FC = () => {
       ? chain
       : 'solana',
   );
-  const [form, setForm] = useState({
-    name: '',
-    type: '',
-    fee: '',
-    description: '',
-    phone: '',
-    quorum: '51',
-    approvalThreshold: '66',
-    votingPeriod: '7',
-    treasuryPolicy: 'multisig-ready',
+  const [form, setForm] = useState(() => {
+    const requestedType = searchParams.get('type') ?? '';
+    const preset = GOVERNANCE_PRESETS[requestedType];
+    return {
+      name: '',
+      type: preset ? requestedType : '',
+      fee: '',
+      description: '',
+      phone: '',
+      quorum: preset?.quorum ?? '51',
+      approvalThreshold: preset?.approvalThreshold ?? '66',
+      votingPeriod: preset?.votingPeriod ?? '7',
+      treasuryPolicy: preset?.treasuryPolicy ?? 'multisig-ready',
+    };
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {

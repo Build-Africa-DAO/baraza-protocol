@@ -146,7 +146,7 @@ export default function Index() {
                   <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
-                  to="/create"
+                  to="/create/purpose"
                   className="inline-flex items-center justify-center gap-2 rounded-xl border border-primary/35 bg-card/70 px-6 py-4 text-sm font-extrabold uppercase tracking-[0.14em] text-foreground transition-colors hover:border-primary hover:bg-primary/10"
                 >
                   Start a collective
@@ -365,7 +365,7 @@ export default function Index() {
               </p>
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                 <Link
-                  to="/create"
+                  to="/create/purpose"
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-background px-6 py-4 text-sm font-extrabold uppercase tracking-[0.14em] text-primary transition-transform hover:scale-[1.02]"
                 >
                   Launch your circle
