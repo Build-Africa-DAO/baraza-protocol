@@ -16,14 +16,13 @@ Baraza is a community finance and governance protocol for African groups. Commun
 
 - **Type:** Stellar custom asset
 - **Supply:** 1,000,000,000 (1B), 7 decimals
-- **Phase-0 price:** $0.02
 - **Issuer:** `VITE_BRZA_ISSUER_ADDRESS` (Stellar G-account)
 - **Distributor:** `VITE_BRZA_DISTRIBUTOR_ADDRESS` (Stellar G-account)
 - **Config:** `app/src/lib/brza/constants.ts` — all values are `as const`, never mutate at runtime
 - **Treasury reader:** `app/src/lib/brza/treasury.ts`
 - **TVL reader:** `app/src/lib/brza/tvl.ts`
 
-BRZA is separate from supported payment rails. Do not conflate "paying in BRZA" with "paying via Stellar XLM."
+BRZA is separate from supported payment rails. Do not conflate "paying in BRZA" with "paying via Stellar XLM." Public pricing and distribution details are intentionally omitted from repo docs pending counsel review.
 
 ---
 

@@ -23,9 +23,9 @@ export function getPhase(usd: number): TvlPhase {
 
 export function getNextTarget(usd: number) {
   const targets = [
-    { label: 'Launch BRZA/XLM on Stellar DEX', usd: BRZA_TVL_TARGETS.stellarPool },
-    { label: 'Bridge BRZA to Solana',           usd: BRZA_TVL_TARGETS.solanaPool },
-    { label: 'Open public IDO',                 usd: BRZA_TVL_TARGETS.ido },
+    { label: 'Expand Stellar treasury coverage', usd: BRZA_TVL_TARGETS.stellarPool },
+    { label: 'Prepare multi-chain treasury readiness', usd: BRZA_TVL_TARGETS.solanaPool },
+    { label: 'Complete the next protocol milestone', usd: BRZA_TVL_TARGETS.ido },
   ];
   const nextIdx = targets.findIndex(t => usd < t.usd);
   const next = nextIdx === -1 ? targets[targets.length - 1] : targets[nextIdx];
