@@ -239,7 +239,6 @@ Tracked top-level source tree:
 │   ├── membership/src/lib.rs
 │   ├── payment_attestation/src/lib.rs
 │   └── treasury_vault/src/lib.rs
-├── scripts/setup_baraza_evm.sh
 ├── supabase/migrations/
 │   ├── 001_communities_governance_columns.sql
 │   ├── 002_payment_orders.sql
