@@ -1,13 +1,14 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { CHAINS, type Chain, type ChainMeta } from '@/lib/chain';
+import { type Chain, type ChainMeta } from '@/lib/chain';
+import { formatAccountCurrency, formatAccountDate, readAccountCountry } from '@/lib/accountLocale';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
 export function formatKSh(amount: number): string {
-  return `KSh ${amount.toLocaleString('en-KE')}`;
+  return formatAccountCurrency(amount);
 }
 
 export function formatUSD(amount: number): string {
@@ -18,30 +19,14 @@ export function formatUSD(amount: number): string {
   });
 }
 
-function formatNativeRailAmountFromKes(amountKes: number, chainOrMeta: Chain | ChainMeta): string {
-  const meta = typeof chainOrMeta === 'string' ? CHAINS[chainOrMeta] : chainOrMeta;
-  const amount = amountKes / meta.currency.kesPerUnit;
-  const formatted = amount.toLocaleString(meta.currency.locale, {
-    minimumFractionDigits: amount >= 100 ? 0 : Math.min(2, meta.currency.decimals),
-    maximumFractionDigits: meta.currency.decimals,
-  });
-  return `${meta.currency.symbol} ${formatted}`;
-}
-
 export function formatRailAmountFromKes(amountKes: number, chainOrMeta: Chain | ChainMeta): string {
-  const meta = typeof chainOrMeta === 'string' ? CHAINS[chainOrMeta] : chainOrMeta;
-  return meta.id === 'solana' || meta.id === 'mpesa'
-    ? formatKSh(amountKes)
-    : formatNativeRailAmountFromKes(amountKes, meta);
+  void chainOrMeta;
+  return formatKSh(amountKes);
 }
 
 export function formatRailAmountWithKes(amountKes: number, chainOrMeta: Chain | ChainMeta): string {
-  const meta = typeof chainOrMeta === 'string' ? CHAINS[chainOrMeta] : chainOrMeta;
-  const nativeAmount = formatNativeRailAmountFromKes(amountKes, meta);
-  if (meta.id === 'mpesa') return formatKSh(amountKes);
-  return meta.id === 'solana'
-    ? `${formatKSh(amountKes)} (${nativeAmount} eq.)`
-    : `${nativeAmount} (${formatKSh(amountKes)} eq.)`;
+  void chainOrMeta;
+  return formatKSh(amountKes);
 }
 
 export function formatRailDate(
@@ -49,25 +34,21 @@ export function formatRailDate(
   chainOrMeta: Chain | ChainMeta,
   options: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'short', year: 'numeric' },
 ): string {
-  const meta = typeof chainOrMeta === 'string' ? CHAINS[chainOrMeta] : chainOrMeta;
-  return new Date(value).toLocaleDateString(meta.currency.locale, {
-    ...options,
-    timeZone: meta.timeZone,
-  });
+  void chainOrMeta;
+  return formatAccountDate(value, readAccountCountry(), options);
 }
 
 export function formatRailDateTime(
   value: string | number | Date,
   chainOrMeta: Chain | ChainMeta,
 ): string {
-  const meta = typeof chainOrMeta === 'string' ? CHAINS[chainOrMeta] : chainOrMeta;
-  return new Date(value).toLocaleString(meta.currency.locale, {
+  void chainOrMeta;
+  return new Date(value).toLocaleString(undefined, {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-    timeZone: meta.timeZone,
     timeZoneName: 'short',
   });
 }

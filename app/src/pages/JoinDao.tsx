@@ -11,17 +11,15 @@ import {
   Wallet,
 } from "lucide-react";
 import { storePaymentOrderActivationSecret } from "@/lib/payments";
-import { useWalletModal } from "@solana/wallet-adapter-react-ui";
-import { useWallet } from "@solana/wallet-adapter-react";
 import Layout from "@/components/Layout";
 import { useCommunity } from "@/hooks/useCommunities";
 import { useToast } from "@/hooks/use-toast";
-import { formatRailAmountWithKes } from "@/lib/utils";
+import { formatKSh } from "@/lib/utils";
 import { normaliseKenyanPhone } from "@/lib/phone";
 import CommunityBanner from "@/components/CommunityBanner";
 import { useSeo } from "@/lib/seo";
-import { useChain } from "@/hooks/useChain";
 import { PRODUCT_ENVIRONMENT } from "@/lib/network";
+import { useAccount } from "@/contexts/AccountContext";
 
 const joinSteps = [
   { label: "Invite opened", state: "current" },
@@ -80,15 +78,13 @@ function generateLocalOrderId(): string {
 export default function JoinDao() {
   const { id } = useParams<{ id: string }>();
   const { community } = useCommunity(id);
-  const { chainMeta } = useChain();
+  const account = useAccount();
   useSeo({
     title: community ? `Join ${community.name}` : "Join a DAO",
     description: "Verify your phone, pay membership dues via M-Pesa, and activate your membership.",
     path: id ? `/join/${id}` : undefined,
     noIndex: true,
   });
-  const { setVisible, visible: walletModalVisible } = useWalletModal();
-  const { connected, publicKey, connecting } = useWallet();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [phone, setPhone] = useState("");
@@ -105,7 +101,7 @@ export default function JoinDao() {
     Number(stellarAmountXlm) > 0 &&
     !isVerifyingStellar;
 
-  function startWalletJoin(walletAddress: string) {
+  function startAccountJoin(accountId: string) {
     if (!id || amount <= 0) return;
     // ord_local_ prefix: there is no server-side order for the wallet rail yet,
     // so JoinStatus must run its local progression instead of polling Supabase
@@ -113,26 +109,20 @@ export default function JoinDao() {
     const orderId = `ord_local_wallet_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     toast({
       title: "Account payment started",
-      description: `Membership dues will be signed from ${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}.`,
+      description: `Membership dues are linked to ${accountId.slice(0, 6)}...${accountId.slice(-4)}.`,
     });
     navigate(`/join/${id}/status?orderId=${encodeURIComponent(orderId)}&rail=wallet`);
   }
 
   useEffect(() => {
-    if (!pendingWalletJoin || !connected || !publicKey) return;
+    if (!pendingWalletJoin || !account.authenticated || !account.accountId) return;
     setPendingWalletJoin(false);
-    startWalletJoin(publicKey.toBase58());
+    startAccountJoin(account.accountId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connected, pendingWalletJoin, publicKey]);
+  }, [account.accountId, account.authenticated, pendingWalletJoin]);
 
   // Dismissing the wallet modal abandons the join intent — otherwise a later
   // connection (e.g. from the header) would silently restart the flow.
-  useEffect(() => {
-    if (!walletModalVisible && !connected && pendingWalletJoin) {
-      setPendingWalletJoin(false);
-    }
-  }, [walletModalVisible, connected, pendingWalletJoin]);
-
   async function handleMpesaSubmit() {
     if (!canSubmit || !id || !normalisedPhone) return;
     setIsSubmitting(true);
@@ -228,21 +218,21 @@ export default function JoinDao() {
       };
 
       if (!res.ok || !data.orderId) {
-        throw new Error(data.message ?? "Could not verify Stellar payment.");
+        throw new Error(data.message ?? "Could not verify this transfer.");
       }
 
       toast({
-        title: "Stellar payment verified",
+        title: "Transfer verified",
         description: data.persisted
-          ? `Ledger ${data.ledger ?? "confirmed"} - ${data.amountXlm ?? stellarAmountXlm} XLM recorded.`
-          : "Verified through Horizon. Supabase is offline, so this will continue in local demo mode.",
+          ? `Payment record ${data.ledger ?? "confirmed"} was accepted.`
+          : "The transfer was verified. This will continue in local preview mode.",
       });
 
       if (data.activationSecret) storePaymentOrderActivationSecret(data.orderId, data.activationSecret);
       navigate(`/join/${id}/status?orderId=${encodeURIComponent(data.orderId)}&rail=stellar`);
     } catch (err) {
       toast({
-        title: "Stellar verification failed",
+        title: "Transfer verification failed",
         description: err instanceof Error ? err.message : "Check the transaction hash and try again.",
         variant: "destructive",
       });
@@ -271,13 +261,13 @@ export default function JoinDao() {
                       {community?.name ?? "DAO"}
                     </h1>
                     <p className="mt-2 max-w-xl text-sm leading-6">
-                      Pay dues through M-Pesa or Stellar, then connect your {chainMeta.label} account to receive your membership record.
+                      Pay with mobile money, bank transfer, or your Privy account. Your membership record stays attached to one Baraza account.
                     </p>
                   </div>
                   <div className="w-full rounded-lg border px-4 py-3 md:w-auto md:text-right">
                     <p className="text-xs">Monthly Dues</p>
                     <p className="font-display text-lg font-bold">
-                      {amount > 0 ? formatRailAmountWithKes(amount, chainMeta) : "—"}
+                      {amount > 0 ? formatKSh(amount) : "-"}
                     </p>
                   </div>
                 </div>
@@ -338,15 +328,15 @@ export default function JoinDao() {
                       <Stars className="h-5 w-5" />
                     </div>
                     <div>
-                      <h2 className="font-display text-base font-semibold">Stellar XLM</h2>
-                      <p className="text-xs">Verify payment proof</p>
+                      <h2 className="font-display text-base font-semibold">Bank or international transfer</h2>
+                      <p className="text-xs">Verify transfer proof</p>
                     </div>
                   </div>
                   <p className="text-sm leading-6">
-                    Paste a Stellar transaction hash after sending XLM. Baraza verifies Horizon and records a payment order.
+                    Paste the transaction reference supplied by your transfer provider. Baraza verifies it before activating membership.
                   </p>
 
-                  <label htmlFor="stellar-amount" className="mb-2 mt-4 block text-xs font-semibold">Expected XLM</label>
+                  <label htmlFor="stellar-amount" className="mb-2 mt-4 block text-xs font-semibold">Transfer amount reference</label>
                   <input
                     id="stellar-amount"
                     value={stellarAmountXlm}
@@ -356,13 +346,13 @@ export default function JoinDao() {
                     placeholder="1"
                   />
 
-                  <label htmlFor="stellar-tx" className="mb-2 mt-3 block text-xs font-semibold">Transaction hash</label>
+                  <label htmlFor="stellar-tx" className="mb-2 mt-3 block text-xs font-semibold">Transaction reference</label>
                   <input
                     id="stellar-tx"
                     value={stellarTxHash}
                     onChange={(event) => setStellarTxHash(event.target.value)}
                     className="w-full rounded-lg border px-3 py-3 font-mono text-xs outline-none"
-                    placeholder="64-character tx hash"
+                    placeholder="64-character transaction reference"
                   />
 
                   <button
@@ -374,12 +364,12 @@ export default function JoinDao() {
                     {isVerifyingStellar ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        Verifying Stellar...
+                        Verifying transfer...
                       </>
                     ) : (
                       <>
                         <Stars className="h-4 w-4" />
-                        Verify Stellar Payment
+                        Verify transfer
                       </>
                     )}
                   </button>
@@ -391,31 +381,43 @@ export default function JoinDao() {
                       <Wallet className="h-5 w-5" />
                     </div>
                     <div>
-                      <h2 className="font-display text-base font-semibold">{chainMeta.label} account</h2>
-                      <p className="text-xs">Optional account path</p>
+                      <h2 className="font-display text-base font-semibold">Privy account</h2>
+                      <p className="text-xs">Private account access</p>
                     </div>
                   </div>
                   <p className="text-sm leading-6">
-                    Connect your {chainMeta.label} account for credentials and voting.
+                    Log in or create an account to pay, receive membership credentials, and vote.
                   </p>
                   <button
                     type="button"
                     onClick={() => {
-                      if (connected && publicKey) {
-                        startWalletJoin(publicKey.toBase58());
+                      if (account.authenticated && account.accountId) {
+                        startAccountJoin(account.accountId);
                         return;
                       }
                       setPendingWalletJoin(true);
-                      setVisible(true);
+                      account.login();
                     }}
-                    disabled={connecting || amount <= 0}
+                    disabled={!account.ready || !account.configured || amount <= 0}
                     className="btn-ghost mt-5 w-full justify-center gap-2 py-3 text-sm font-bold"
                   >
                     <Wallet className="h-4 w-4" />
-                    {connecting ? "Connecting..." : connected ? `Pay from connected ${chainMeta.label} account` : chainMeta.accountCta}
+                    {!account.ready ? "Loading..." : account.authenticated ? "Pay from Privy account" : "Log in with Privy"}
                   </button>
+                  {!account.authenticated && account.configured && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPendingWalletJoin(true);
+                        account.createAccount();
+                      }}
+                      className="mt-3 w-full text-center text-xs font-semibold"
+                    >
+                      Create a Privy account
+                    </button>
+                  )}
                   <Link to="/profile" className="mt-3 inline-flex text-xs font-semibold">
-                    Manage linked Stellar account
+                    Manage Baraza account
                   </Link>
                 </div>
               </div>

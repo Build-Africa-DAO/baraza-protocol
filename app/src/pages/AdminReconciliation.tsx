@@ -18,7 +18,7 @@ import {
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import Layout from "@/components/Layout";
-import { cn, formatRailAmountFromKes, truncateAddress } from "@/lib/utils";
+import { cn, formatKSh, formatRailAmountFromKes, truncateAddress } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useSeo } from "@/lib/seo";
 import { getAdminWallets, isAdminWallet } from "@/lib/access";
@@ -37,10 +37,10 @@ const ADMIN_WALLETS = getAdminWallets();
 const ADMIN_NFT_THRESHOLD = Number(import.meta.env.VITE_ADMIN_NFT_THRESHOLD ?? 0);
 const ADMIN_NFT_COUNT = Number(import.meta.env.VITE_ADMIN_NFT_COUNT ?? 0);
 
-const paymentOrders = [
-  ["ORD-8942A", "Kibera Youth Collective", "KES 15,000", "PAYMENT_PENDING", "2026-05-13 08:02 UTC", "Reconcile proof"],
-  ["ORD-8941B", "Mama Mboga Association", "KES 5,000", "PAYMENT_CONFIRMED", "2026-05-13 07:45 UTC", "-"],
-  ["ORD-8939X", "Mwanzo Housing Sacco", "KES 100,000", "MANUAL_REVIEW", "2026-05-13 06:20 UTC", "Approve refund"],
+const paymentOrders: Array<[string, string, number, string, string, string]> = [
+  ["ORD-8942A", "Kibera Youth Collective", 15_000, "PAYMENT_PENDING", "2026-05-13 08:02 UTC", "Reconcile proof"],
+  ["ORD-8941B", "Mama Mboga Association", 5_000, "PAYMENT_CONFIRMED", "2026-05-13 07:45 UTC", "-"],
+  ["ORD-8939X", "Mwanzo Housing Sacco", 100_000, "MANUAL_REVIEW", "2026-05-13 06:20 UTC", "Approve refund"],
 ];
 
 const mintJobs = [
@@ -185,7 +185,7 @@ export default function AdminReconciliation() {
                 onClick={() => setVisible(true)}
                 className="btn-warm mt-6 inline-flex items-center gap-2 text-sm"
               >
-                Connect {chainMeta.label}
+                Connect operator account
               </button>
             )}
             {!allowlistConfigured && (
@@ -231,7 +231,7 @@ export default function AdminReconciliation() {
             <MetricCard icon={Users} label="Communities" value={isLoading ? "..." : communities.length.toString()} note="Groups visible to the registry" />
             <MetricCard icon={BriefcaseBusiness} label="Open bounty pool" value={formatRailAmountFromKes(rewardPool, chainMeta)} note={`${openBounties.length} open tasks`} />
             <MetricCard icon={FileWarning} label="Needs review" value={(flaggedReviews.length + reviewBounties.length).toString()} note="Security flags and submitted bounty work" />
-            <MetricCard icon={ShieldCheck} label="Admin rail" value={chainMeta.label} note="Selected account and review rail" />
+            <MetricCard icon={ShieldCheck} label="Admin access" value="Connected" note="Authorised operator account" />
             <MetricCard
               icon={Network}
               label="Knowledge graph"
@@ -379,7 +379,7 @@ export default function AdminReconciliation() {
                     <tr key={id} className="border-b last:border-b-0">
                       <td className="py-4 font-mono">{id}</td>
                       <td className="py-4">{group}</td>
-                      <td className="py-4">{amount}</td>
+                      <td className="py-4">{formatKSh(amount)}</td>
                       <td className="py-4"><StatusChip value={status} /></td>
                       <td className="py-4 text-right">
                         {action === "-" ? (
@@ -444,7 +444,7 @@ export default function AdminReconciliation() {
                 </div>
                 <h2 className="font-display text-xl font-semibold">Shared source of truth</h2>
                 <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                  Communities, proposals, bounties, chain rails, Akili checks, and readiness tasks are linked so admins can see what still blocks testnet.
+                  Communities, proposals, bounties, payment routes, Akili checks, and readiness tasks are linked so admins can see what still blocks launch.
                 </p>
                 {graphError && (
                   <p className="mt-2 text-xs text-accent">
@@ -479,13 +479,13 @@ export default function AdminReconciliation() {
               <div className="rounded-lg border p-4">
                 <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Testnet ready</p>
                 <p className="mt-2 text-sm font-semibold">
-                  {graphSummary.testnetReadyChains.length ? graphSummary.testnetReadyChains.join(", ") : "No rails marked ready"}
+                  {graphSummary.testnetReadyChains.length ? `${graphSummary.testnetReadyChains.length} routes ready` : "No routes marked ready"}
                 </p>
               </div>
               <div className="rounded-lg border p-4">
                 <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Coming soon</p>
                 <p className="mt-2 text-sm font-semibold">
-                  {graphSummary.comingSoonChains.length ? graphSummary.comingSoonChains.join(", ") : "No coming-soon rails"}
+                  {graphSummary.comingSoonChains.length ? `${graphSummary.comingSoonChains.length} routes planned` : "No planned routes"}
                 </p>
               </div>
               <div className="rounded-lg border p-4">

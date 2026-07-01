@@ -4,7 +4,7 @@ import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { Users, ArrowLeft, CheckCircle2, Loader2, Phone, ShieldCheck, Wallet, Hash, Smartphone, MessageCircle, Landmark } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { DAO_CREATION_FEE_KES, PAYBILL_ADDON_FEE_KES, USSD_ADDON_FEE_KES } from '@/lib/constants';
-import { formatKSh, formatRailAmountFromKes, formatRailAmountWithKes } from '@/lib/utils';
+import { formatKSh } from '@/lib/utils';
 import { normaliseKenyanPhone } from '@/lib/phone';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletGuard } from '@/hooks/useWalletGuard';
@@ -13,12 +13,13 @@ import { createCommunityRecord } from '@/lib/communities';
 import CommunityBanner from '@/components/CommunityBanner';
 import { useChain } from '@/hooks/useChain';
 import { useSeo } from '@/lib/seo';
-import { CHAINS, type Chain } from '@/lib/chain';
+import { type Chain } from '@/lib/chain';
 import { AskAkili } from '@/akili/AskAkili';
 import { useBarazaChain } from '@/hooks/useBarazaData';
 import { communityPda, toSlug } from '@/lib/programs';
 import { saveCommunityChainMapping } from '@/lib/chainMappings';
 import { buildWalletProofHeaders } from '@/lib/walletProof';
+import { useAccount } from '@/contexts/AccountContext';
 
 type TreasuryPolicy = 'multisig-ready' | 'proposal-only' | 'manual-review';
 type ChecklistState = 'complete' | 'active' | 'pending';
@@ -265,6 +266,7 @@ const CreateCommunity: React.FC = () => {
     path: "/create",
   });
   const navigate = useNavigate();
+  const account = useAccount();
   const [searchParams] = useSearchParams();
   const { address: founderAddress } = useWalletGuard({ action: 'launch a DAO' });
   const wallet = useWallet();
@@ -311,8 +313,6 @@ const CreateCommunity: React.FC = () => {
     (addPaybill ? PAYBILL_ADDON_FEE_KES : 0) +
     (addUssd ? USSD_ADDON_FEE_KES : 0);
   const selectedCommunityChain = walletChain;
-  const selectedCommunityChainMeta = CHAINS[selectedCommunityChain];
-  const selectedAccountMeta = CHAINS[walletChain];
   const selectedPreset = form.type ? GOVERNANCE_PRESETS[form.type] : null;
   const requiresPhone = paymentMethod === 'mobile-money' || paymentMethod === 'whatsapp';
   const isValid = !!(
@@ -471,9 +471,7 @@ const CreateCommunity: React.FC = () => {
         }
         setCreatedCommunityId(community.id);
         setIsCreated(true);
-        const launchFeeLabel = requiresPhone || paymentMethod === 'swift'
-          ? formatKSh(totalFeeKes)
-          : formatRailAmountWithKes(totalFeeKes, selectedAccountMeta);
+        const launchFeeLabel = formatKSh(totalFeeKes);
         toast({
           title: charge.persisted
             ? `${launchFeeLabel} payment received`
@@ -497,9 +495,7 @@ const CreateCommunity: React.FC = () => {
   };
 
   if (isCreated) {
-    const launchFeeLabel = requiresPhone || paymentMethod === 'swift'
-      ? formatKSh(totalFeeKes)
-      : formatRailAmountWithKes(totalFeeKes, selectedAccountMeta);
+    const launchFeeLabel = formatKSh(totalFeeKes);
     return (
       <Layout>
         <section className="py-20">
@@ -633,10 +629,10 @@ const CreateCommunity: React.FC = () => {
               {/* Fee */}
               <div>
                 <label className="block text-xs font-semibold mb-2">
-                  Monthly dues (KES)
+                  Monthly dues ({account.country.currency})
                 </label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium">KES</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium">{account.country.currency}</span>
                   <input
                     type="number"
                     name="fee"
@@ -647,11 +643,6 @@ const CreateCommunity: React.FC = () => {
                     className="w-full rounded-xl pl-14 pr-4 py-3 text-sm outline-none border"
                   />
                 </div>
-                {Number(form.fee) > 0 && (
-                  <p className="mt-1.5 text-xs text-muted-foreground">
-                    Shows as {formatRailAmountFromKes(Number(form.fee), selectedCommunityChainMeta)} on {selectedCommunityChainMeta.label}.
-                  </p>
-                )}
               </div>
 
               {/* Description */}
@@ -934,7 +925,7 @@ const CreateCommunity: React.FC = () => {
                     >
                       <p className="text-sm font-semibold">Pay from your secure Baraza wallet</p>
                       <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                        Privy keeps the blockchain account behind your Baraza sign-in. You will confirm the payment before anything is submitted.
+                        Privy keeps the payment account behind your Baraza sign-in. You will confirm the payment before anything is submitted.
                       </p>
                     </motion.div>
                   ) : (
@@ -975,7 +966,7 @@ const CreateCommunity: React.FC = () => {
                   <div className="flex items-center justify-between gap-4 border-t pt-2">
                     <p className="text-xs font-semibold">Total charge</p>
                     <span className="font-display text-lg font-bold tabular-nums">
-                      {paymentMethod === 'privy' ? formatRailAmountWithKes(totalFeeKes, selectedAccountMeta) : formatKSh(totalFeeKes)}
+                      {formatKSh(totalFeeKes)}
                     </span>
                   </div>
                 </div>

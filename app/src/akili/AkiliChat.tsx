@@ -91,7 +91,7 @@ const GREETING_BY_ROUTE: Record<RouteContext, string> = {
   communities:
     "Habari! I'm Akili. I can help you compare DAOs, decide which one to join, or describe how each group is structured.",
   bounties:
-    "Habari! I'm Akili. Browsing bounties? I can explain rewards in KES vs BRZA, what verifiers check, and how to start a submission.",
+    "Habari! I'm Akili. Browsing bounties? I can explain rewards in your account currency, what verifiers check, and how to start a submission.",
   evaluate:
     "Habari! I'm Akili. Use the checklist on this page; ask me whenever a question deserves a longer answer than a checkbox.",
   admin:
@@ -160,7 +160,7 @@ const QUICK_REPLIES_BY_ROUTE: Record<RouteContext, string[]> = {
     'How do I join one?',
   ],
   bounties: [
-    'Which bounties pay in KES vs BRZA?',
+    'How are bounty rewards paid?',
     'How do I submit work for review?',
     'What do verifiers check?',
     'How are disputes resolved?',
@@ -189,27 +189,27 @@ const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
   {
     keywords: ['ai', 'asha', 'akili', 'guide', 'copilot', 'assistant', 'platform', 'use baraza'],
     reply:
-      'Baraza combines the website, the operating platform, and Akili AI in one flow. Use the website to understand the model, Explore to find DAOs, Launch to create one, dashboards to manage KES treasury and votes, and ask me when you need help choosing settings or explaining the next action.',
+      'Baraza combines the website, the operating platform, and Akili AI in one flow. Use Explore to find communities, Launch to create one, dashboards to manage the shared treasury and votes, and ask me when you need help choosing settings or explaining the next action.',
   },
   {
     keywords: ['plan', 'setup', 'best setup', 'rules', 'quorum', 'threshold'],
     reply:
-      'A solid setup starts with your group type, monthly dues in KES, quorum, approval threshold, and voting period. For most welfare groups, start with 51% quorum, 66% approval, a 7-day vote window, and clear rules for emergency spending. Then invite members to review before joining.',
+      'A solid setup starts with your group type, monthly dues in your account currency, quorum, approval threshold, and voting period. For most welfare groups, start with 51% quorum, 66% approval, a 7-day vote window, and clear rules for emergency spending. Then invite members to review before joining.',
   },
   {
     keywords: ['create', 'start', 'new group', 'community', 'chama', 'sacco'],
     reply:
-      'To create a DAO, tap "Launch" in the menu. Fill in your group name, choose a community type (Savings Group, SACCO, Cooperative, etc.), set monthly dues in KES, and write a short description. Once created, share the link so members can join instantly.',
+      'To create a community, tap "Launch" in the menu. Choose what the group does, add its name, set monthly dues in your account currency, and write a short description. Once created, share the link so members can join.',
   },
   {
     keywords: ['vote', 'voting', 'decision', 'propose', 'proposal'],
     reply:
-      "Any member can create a proposal to spend DAO funds. Give it a title, description, and funding amount in KES, then set a voting window. All members vote Support or Object. When time's up, the majority wins. Simple, transparent, and fair.",
+      "Any member can create a proposal to spend shared funds. Give it a title, description, and funding amount in your account currency, then set a voting window. Members vote Support or Object, and the configured approval rule decides the result.",
   },
   {
     keywords: ['fund', 'money', 'KES', 'shilling', 'fee', 'pay', 'balance', 'treasury'],
     reply:
-      'Every DAO has a shared KES fund built from monthly membership dues. The balance is always visible to all members on the dashboard. When a Decision is approved, funds are released and every transaction is logged.',
+      'Every community has a shared fund built from membership dues. The balance is displayed in your account currency and stays visible to members on the dashboard.',
   },
   {
     keywords: ['join', 'member', 'membership', 'card', 'how to join'],
@@ -222,9 +222,9 @@ const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
       "The Community Dashboard is your group's control centre. It shows fund balance, total members, active decisions, and past decisions - all updating in real time.",
   },
   {
-    keywords: ['wallet', 'phantom', 'solflare', 'connect', 'sign in', 'login'],
+    keywords: ['account', 'privy', 'connect', 'sign in', 'login'],
     reply:
-      'Different rails use different accounts. Solana actions use Phantom, Solflare, or Backpack. Stellar uses Freighter, Lobstr, or Albedo. Base, Arbitrum, and Optimism use MetaMask, Coinbase Wallet, Rabby, or WalletConnect. Celo can use Valora or MetaMask.',
+      'Use your Privy-secured Baraza account to sign in with a verified phone number or email. Payment and governance infrastructure stays behind the account experience.',
   },
   {
     keywords: ['solana', 'blockchain', 'on-chain', 'web3', 'crypto'],
@@ -234,7 +234,7 @@ const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
   {
     keywords: ['mpesa', 'm-pesa', 'mobile money', 'phone', 'pay with phone'],
     reply:
-      "Baraza includes a phone-first M-Pesa flow for KES membership dues. In local preview it simulates the payment order, and in production it connects to payment confirmation and membership activation.",
+      "Baraza includes a phone-first M-Pesa flow for membership dues. Amounts display in your account currency, and payment confirmation remains separate from membership activation.",
   },
   {
     keywords: ['what is chama', 'chama meaning', 'what is a chama'],
@@ -249,7 +249,7 @@ const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
   {
     keywords: ['hello', 'hi', 'habari', 'hey', 'hola', 'sasa'],
     reply:
-      'Habari! Great to have you here. Ask me about launching a DAO, how voting works, managing KES funds, joining a group, or anything else. What would you like to know?',
+      'Habari! Great to have you here. Ask me about launching a community, how voting works, managing shared funds, joining a group, or anything else. What would you like to know?',
   },
   {
     keywords: ['thank', 'thanks', 'asante', 'awesome', 'great', 'perfect'],
@@ -263,7 +263,7 @@ const getStaticResponse = (input: string): string => {
   for (const { keywords, reply } of RESPONSES) {
     if (keywords.some((kw) => lower.includes(kw))) return reply;
   }
-  return 'Great question! Baraza helps DAOs and communities manage KES funds and make decisions together. Try asking me about launching a DAO, how voting works, the shared fund, or how to join an existing group.';
+  return 'Great question! Baraza helps communities manage shared funds and make decisions together. Try asking me about launching a community, voting, the shared fund, or how to join an existing group.';
 };
 
 /**

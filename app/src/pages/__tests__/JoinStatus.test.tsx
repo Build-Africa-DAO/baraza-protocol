@@ -3,10 +3,16 @@ import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import JoinStatus from '@/pages/JoinStatus';
-import ChainProvider from '@/components/ChainProvider';
 
 vi.mock('@solana/wallet-adapter-react', () => ({
   useWallet: () => ({ publicKey: null }),
+}));
+
+vi.mock('@/contexts/AccountContext', () => ({
+  useAccount: () => ({
+    authenticated: false,
+    accountId: null,
+  }),
 }));
 
 vi.mock('@/components/Layout', () => ({
@@ -32,13 +38,11 @@ vi.mock('@/lib/seo', () => ({
 
 function renderStatus(path: string) {
   return render(
-    <ChainProvider>
-      <MemoryRouter initialEntries={[path]}>
-        <Routes>
-          <Route path="/join/:id/status" element={<JoinStatus />} />
-        </Routes>
-      </MemoryRouter>
-    </ChainProvider>,
+    <MemoryRouter initialEntries={[path]}>
+      <Routes>
+        <Route path="/join/:id/status" element={<JoinStatus />} />
+      </Routes>
+    </MemoryRouter>,
   );
 }
 
@@ -48,18 +52,20 @@ afterEach(() => {
 });
 
 describe('JoinStatus payment rail copy', () => {
-  it('uses Stellar copy when the rail query param is stellar', () => {
+  it('uses generic transfer copy when the direct-transfer rail is selected', () => {
     renderStatus('/join/1/status?orderId=ord_local_stellar_demo&rail=stellar');
 
-    expect(screen.getByText('Stellar payment verified')).toBeInTheDocument();
-    expect(screen.getByText(/Stellar payment verification/)).toBeInTheDocument();
+    expect(screen.getByText('Transfer verified')).toBeInTheDocument();
+    expect(screen.getByText(/transfer verification/)).toBeInTheDocument();
+    expect(screen.queryByText(/Stellar|Solana/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/M-Pesa prompt/)).not.toBeInTheDocument();
   });
 
-  it('infers Stellar copy from Stellar order ids', () => {
+  it('keeps infrastructure names hidden when inferring a direct transfer', () => {
     renderStatus('/join/1/status?orderId=ord_stellar_demo');
 
-    expect(screen.getByText('Stellar payment verified')).toBeInTheDocument();
+    expect(screen.getByText('Transfer verified')).toBeInTheDocument();
+    expect(screen.queryByText(/Stellar|Solana/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/M-Pesa prompt/)).not.toBeInTheDocument();
   });
 
@@ -68,15 +74,13 @@ describe('JoinStatus payment rail copy', () => {
 
     expect(screen.getByText('Check your phone for the M-Pesa prompt')).toBeInTheDocument();
     expect(screen.getByText(/M-Pesa confirmation/)).toBeInTheDocument();
-    expect(screen.queryByText('Stellar payment verified')).not.toBeInTheDocument();
+    expect(screen.queryByText('Transfer verified')).not.toBeInTheDocument();
   });
 
-  it('uses the community chain for membership submission copy even when another chain is selected globally', () => {
-    window.localStorage.setItem('baraza:chain', 'base');
-
+  it('uses account-first membership submission copy', () => {
     renderStatus('/join/1/status?orderId=ord_mpesa_demo');
 
-    expect(screen.getByText('Submitting to Solana')).toBeInTheDocument();
-    expect(screen.queryByText('Submitting to Base')).not.toBeInTheDocument();
+    expect(screen.getByText('Recording your membership')).toBeInTheDocument();
+    expect(screen.queryByText(/Stellar|Solana|Base/i)).not.toBeInTheDocument();
   });
 });

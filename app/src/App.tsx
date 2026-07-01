@@ -8,6 +8,7 @@ import { AkiliChatProvider } from '@/akili/AkiliChatContext';
 import { OfflineProvider } from '@/contexts/OfflineContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import AkiliChat from '@/akili/AkiliChat';
+import { AccountProvider } from '@/contexts/AccountContext';
 
 const Index = lazy(() => import('./pages/Index'));
 const Communities = lazy(() => import('./pages/Communities'));
@@ -36,8 +37,9 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 const App: React.FC = () => {
   return (
     <ThemeProvider>
-      <ChainProvider>
-        <WalletProviders>
+      <AccountProvider>
+        <ChainProvider>
+          <WalletProviders>
           <OfflineProvider>
           <AkiliChatProvider>
             <Suspense fallback={<PageLoader />}>
@@ -77,8 +79,9 @@ const App: React.FC = () => {
             <Toaster />
           </AkiliChatProvider>
           </OfflineProvider>
-        </WalletProviders>
-      </ChainProvider>
+          </WalletProviders>
+        </ChainProvider>
+      </AccountProvider>
     </ThemeProvider>
   );
 };

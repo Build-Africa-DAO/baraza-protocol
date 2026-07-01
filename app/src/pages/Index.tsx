@@ -14,11 +14,12 @@ import {
   Wallet,
 } from "lucide-react";
 import Layout from "@/components/Layout";
+import { formatKSh } from "@/lib/utils";
 import { useSeo } from "@/lib/seo";
 
 const highlights = [
   { label: "Members active", value: "42" },
-  { label: "Treasury visible", value: "KES 450K" },
+  { label: "Treasury visible", value: formatKSh(450000) },
   { label: "Open bounties", value: "08" },
 ];
 
@@ -99,7 +100,7 @@ export default function Index() {
   useSeo({
     title: "Community treasury and governance, built for collective trust",
     description:
-      "Baraza helps savings groups, SACCOs, and community collectives run transparent treasury, voting, and contribution workflows without exposing members to blockchain complexity.",
+      "Baraza helps savings groups, SACCOs, and community collectives run transparent treasury, voting, and contribution workflows without exposing members to technical complexity.",
     path: "/",
   });
 
@@ -133,7 +134,7 @@ export default function Index() {
               </h1>
               <p className="rise rise-4 mt-5 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
                 Track treasury, contributions, governance, and shared work in one warm, visible
-                community surface. Members stay focused on the group, not on wallets, gas, or
+                community surface. Members stay focused on the group, not on infrastructure or
                 hidden back-office steps.
               </p>
 
@@ -181,7 +182,7 @@ export default function Index() {
                     Total community treasury
                   </p>
                   <div className="mt-2 flex items-end gap-3">
-                    <p className="font-display text-4xl font-black text-primary">KES 450,000</p>
+                    <p className="font-display text-4xl font-black text-primary">{formatKSh(450000)}</p>
                     <span className="pb-1 text-sm font-bold text-confirmed">+12.4%</span>
                   </div>
                   <div className="mt-5 h-24 rounded-[0.9rem] bg-[linear-gradient(180deg,hsl(var(--surface-hover))_0%,transparent_100%)] p-3">
