@@ -15,6 +15,7 @@ const Bounties = lazy(() => import('./pages/Bounties'));
 const BountyDetail = lazy(() => import('./pages/BountyDetail'));
 const Evaluate = lazy(() => import('./pages/Evaluate'));
 const CreateCommunity = lazy(() => import('./pages/CreateCommunity'));
+const CommunityPurpose = lazy(() => import('./pages/CommunityPurpose'));
 const CommunityDashboard = lazy(() => import('./pages/CommunityDashboard'));
 const CreateDecision = lazy(() => import('./pages/CreateDecision'));
 const JoinDao = lazy(() => import('./pages/JoinDao'));
@@ -48,6 +49,7 @@ const App: React.FC = () => {
               <Route path="/bounties/:bountyId" element={<BountyDetail />} />
               <Route path="/evaluate" element={<Evaluate />} />
               <Route path="/create" element={<CreateCommunity />} />
+              <Route path="/create/purpose" element={<CommunityPurpose />} />
               <Route path="/dao/:id" element={<CommunityDashboard />} />
               <Route path="/dao/:id/proposals" element={<CommunityDashboard />} />
               <Route path="/dao/:id/vote" element={<CommunityDashboard />} />
