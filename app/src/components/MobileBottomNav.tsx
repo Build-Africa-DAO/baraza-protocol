@@ -3,7 +3,6 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { Compass, Home, PlusCircle, UserRound, Wallet, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useChain } from '@/hooks/useChain';
 
 interface NavItem {
   path: string;
@@ -50,7 +49,6 @@ function NavLink({ item, location }: { item: NavItem; location: ReturnType<typeo
 function WalletAction() {
   const { connected, publicKey } = useWallet();
   const { setVisible } = useWalletModal();
-  const { chainMeta } = useChain();
   const label = connected && publicKey ? 'Account' : 'Join';
 
   return (
@@ -61,7 +59,7 @@ function WalletAction() {
         'col-start-5 flex flex-col items-center gap-1 rounded-md px-2 py-2 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70',
         connected ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
       )}
-      aria-label={connected ? `${chainMeta.label} account connected. Change account` : chainMeta.accountCta}
+      aria-label={connected ? 'Account connected. Change account' : 'Connect an account to join'}
     >
       <Wallet className="h-5 w-5" />
       {label}

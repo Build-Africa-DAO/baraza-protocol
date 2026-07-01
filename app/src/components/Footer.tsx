@@ -14,7 +14,7 @@ const links: Record<string, FooterLink[]> = {
     { label: "Browse DAOs", to: "/communities" },
     { label: "Evaluate Best Practice", to: "/evaluate" },
     { label: "Launch a DAO", to: "/create" },
-    { label: "How it Works", to: "/#features" },
+    { label: "How it Works", to: "/#how-it-works" },
   ],
 };
 
