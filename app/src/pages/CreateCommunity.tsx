@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Users, ArrowLeft, CheckCircle2, Loader2, Phone, ShieldCheck, Wallet, Hash, Smartphone } from 'lucide-react';
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { Users, ArrowLeft, CheckCircle2, Loader2, Phone, ShieldCheck, Wallet, Hash, Smartphone, MessageCircle, Landmark } from 'lucide-react';
 import Layout from '@/components/Layout';
-import { COMMUNITY_TYPES, DAO_CREATION_FEE_KES, PAYBILL_ADDON_FEE_KES, USSD_ADDON_FEE_KES } from '@/lib/constants';
+import { DAO_CREATION_FEE_KES, PAYBILL_ADDON_FEE_KES, USSD_ADDON_FEE_KES } from '@/lib/constants';
 import { formatKSh, formatRailAmountFromKes, formatRailAmountWithKes } from '@/lib/utils';
 import { normaliseKenyanPhone } from '@/lib/phone';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -22,6 +22,7 @@ import { buildWalletProofHeaders } from '@/lib/walletProof';
 
 type TreasuryPolicy = 'multisig-ready' | 'proposal-only' | 'manual-review';
 type ChecklistState = 'complete' | 'active' | 'pending';
+type PaymentMethod = 'mobile-money' | 'whatsapp' | 'privy' | 'swift';
 
 interface SetupChecklistItem {
   label: string;
@@ -265,7 +266,7 @@ const CreateCommunity: React.FC = () => {
   });
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { requireWallet, isReady, address: founderAddress } = useWalletGuard({ action: 'launch a DAO' });
+  const { address: founderAddress } = useWalletGuard({ action: 'launch a DAO' });
   const wallet = useWallet();
   const { toast } = useToast();
   const { chain } = useChain();
@@ -273,7 +274,7 @@ const CreateCommunity: React.FC = () => {
   const [isPending, setIsPending] = useState(false);
   const [isCreated, setIsCreated] = useState(false);
   const [createdCommunityId, setCreatedCommunityId] = useState<string | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<'mpesa' | 'wallet'>('mpesa');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('mobile-money');
   const [addPaybill, setAddPaybill] = useState(false);
   const [addUssd, setAddUssd] = useState(false);
   const [assignedPaybill, setAssignedPaybill] = useState<string | null>(null);
@@ -301,22 +302,6 @@ const CreateCommunity: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    if (name === 'type') {
-      const preset = GOVERNANCE_PRESETS[value];
-      setForm((current) => ({
-        ...current,
-        type: value,
-        ...(preset
-          ? {
-              quorum: preset.quorum,
-              approvalThreshold: preset.approvalThreshold,
-              votingPeriod: preset.votingPeriod,
-              treasuryPolicy: preset.treasuryPolicy,
-            }
-          : {}),
-      }));
-      return;
-    }
     setForm({ ...form, [name]: value });
   };
 
@@ -329,28 +314,26 @@ const CreateCommunity: React.FC = () => {
   const selectedCommunityChainMeta = CHAINS[selectedCommunityChain];
   const selectedAccountMeta = CHAINS[walletChain];
   const selectedPreset = form.type ? GOVERNANCE_PRESETS[form.type] : null;
-  const needsSolanaAccount = walletChain === 'solana';
+  const requiresPhone = paymentMethod === 'mobile-money' || paymentMethod === 'whatsapp';
   const isValid = !!(
     form.name.trim() &&
     form.type &&
     form.fee &&
     form.description.trim() &&
-    (paymentMethod === 'wallet' || normalisedPhone !== null)
+    (!requiresPhone || normalisedPhone !== null)
   );
   const setupChecklistItems: SetupChecklistItem[] = [
     {
       label: 'Community account',
       detail: form.name.trim() && form.type
         ? `${form.name.trim()} is ready from form details`
-        : 'Add group name and setup model',
+        : 'Add the group name from your questionnaire',
       state: form.name.trim() && form.type ? 'complete' : form.name.trim() || form.type ? 'active' : 'pending',
     },
     {
       label: 'Treasury account',
-      detail: needsSolanaAccount && !isReady
-        ? 'Import or connect a wallet to prepare the treasury'
-        : `${selectedAccountMeta.label} funding path selected`,
-      state: needsSolanaAccount ? (isReady ? 'complete' : 'active') : 'complete',
+      detail: 'Settlement path selected',
+      state: 'complete',
     },
     {
       label: 'Membership tier',
@@ -364,14 +347,18 @@ const CreateCommunity: React.FC = () => {
     },
     {
       label: 'Membership credential',
-      detail: paymentMethod === 'mpesa'
+      detail: requiresPhone
         ? normalisedPhone
-          ? 'M-Pesa contact ready for payment attestation'
-          : 'Add member payment contact'
-        : isReady
-          ? 'Wallet ready for credential minting'
-          : 'Wallet import required before launch',
-      state: paymentMethod === 'mpesa' ? (normalisedPhone ? 'complete' : 'active') : (isReady ? 'complete' : 'active'),
+          ? paymentMethod === 'whatsapp'
+            ? 'WhatsApp payment contact ready'
+            : 'Mobile money contact ready'
+          : 'Add a mobile payment contact'
+        : paymentMethod === 'privy'
+          ? 'Privy wallet path selected'
+          : 'SWIFT payment instructions selected',
+      state: requiresPhone
+        ? (normalisedPhone ? 'complete' : 'active')
+        : 'complete',
     },
   ];
   const setupChecklistSummary = isValid
@@ -420,13 +407,13 @@ const CreateCommunity: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isValid) return;
-    if (paymentMethod === 'mpesa' && !normalisedPhone) return;
+    if (requiresPhone && !normalisedPhone) return;
 
     const launchCommunity = async () => {
       setIsPending(true);
       try {
         // Step 1: charge the setup fee
-        const charge = paymentMethod === 'mpesa'
+        const charge = requiresPhone
           ? await chargeCreationFee()
           : { orderId: `ord_${walletChain}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`, persisted: false };
 
@@ -484,7 +471,7 @@ const CreateCommunity: React.FC = () => {
         }
         setCreatedCommunityId(community.id);
         setIsCreated(true);
-        const launchFeeLabel = paymentMethod === 'mpesa'
+        const launchFeeLabel = requiresPhone || paymentMethod === 'swift'
           ? formatKSh(totalFeeKes)
           : formatRailAmountWithKes(totalFeeKes, selectedAccountMeta);
         toast({
@@ -506,16 +493,11 @@ const CreateCommunity: React.FC = () => {
       }
     };
 
-    if (needsSolanaAccount) {
-      await requireWallet(launchCommunity);
-      return;
-    }
-
     await launchCommunity();
   };
 
   if (isCreated) {
-    const launchFeeLabel = paymentMethod === 'mpesa'
+    const launchFeeLabel = requiresPhone || paymentMethod === 'swift'
       ? formatKSh(totalFeeKes)
       : formatRailAmountWithKes(totalFeeKes, selectedAccountMeta);
     return (
@@ -581,6 +563,10 @@ const CreateCommunity: React.FC = () => {
     );
   }
 
+  if (!selectedPreset) {
+    return <Navigate to="/create/purpose" replace />;
+  }
+
   return (
     <Layout>
       <section className="py-10 md:py-16">
@@ -644,29 +630,6 @@ const CreateCommunity: React.FC = () => {
                 />
               </div>
 
-              {/* Type */}
-              <div>
-                <label className="block text-xs font-semibold mb-2">
-                  Setup model
-                </label>
-                <select
-                  name="type"
-                  value={form.type}
-                  onChange={handleChange}
-                  className="w-full rounded-xl px-4 py-3 text-sm outline-none border cursor-pointer appearance-none"
-                >
-                  <option value="" disabled>Select a setup model</option>
-                  {COMMUNITY_TYPES.map((t) => (
-                    <option key={t.value} value={t.value}>{t.label}</option>
-                  ))}
-                </select>
-                {selectedPreset && (
-                  <p className="mt-1.5 text-xs text-muted-foreground">
-                    Preset applied: {selectedPreset.label}
-                  </p>
-                )}
-              </div>
-
               {/* Fee */}
               <div>
                 <label className="block text-xs font-semibold mb-2">
@@ -708,13 +671,16 @@ const CreateCommunity: React.FC = () => {
 
               <div className="grid gap-5 rounded-lg border p-5 md:grid-cols-3">
                 <div className="md:col-span-3">
-                  <h2 className="font-mono text-xs font-semibold uppercase tracking-widest">
-                    Governance model
-                  </h2>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h2 className="font-mono text-xs font-semibold uppercase tracking-widest">
+                      Governance model
+                    </h2>
+                    <span className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[10px] font-bold text-primary">
+                      Suggested starting example
+                    </span>
+                  </div>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {selectedPreset
-                      ? selectedPreset.summary
-                      : 'Select a group type to apply recommended quorum, approval, and treasury controls.'}
+                    {selectedPreset.summary} These are the lowest recommended starting values for this setup; your community can raise them before launch.
                   </p>
                 </div>
 
@@ -892,46 +858,44 @@ const CreateCommunity: React.FC = () => {
                   Payment
                 </h2>
 
-                {/* Method toggle */}
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('mpesa')}
-                    className={`flex items-center justify-center gap-2 rounded-lg border px-4 py-3 text-sm font-semibold transition-colors ${
-                      paymentMethod === 'mpesa'
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'
-                    }`}
-                  >
-                    <Phone className="h-4 w-4" />
-                    M-Pesa
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('wallet')}
-                    className={`flex items-center justify-center gap-2 rounded-lg border px-4 py-3 text-sm font-semibold transition-colors ${
-                      paymentMethod === 'wallet'
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'
-                    }`}
-                  >
-                    <Wallet className="h-4 w-4" />
-                    Account rail
-                  </button>
+                <div className="grid grid-cols-2 gap-2" role="group" aria-label="Payment method">
+                  {([
+                    { id: 'mobile-money', label: 'Mobile money', icon: Smartphone },
+                    { id: 'whatsapp', label: 'WhatsApp', icon: MessageCircle },
+                    { id: 'privy', label: 'Privy wallet', icon: Wallet },
+                    { id: 'swift', label: 'Bank / SWIFT', icon: Landmark },
+                  ] as const).map(({ id, label, icon: Icon }) => (
+                    <button
+                      key={id}
+                      type="button"
+                      aria-pressed={paymentMethod === id}
+                      onClick={() => setPaymentMethod(id)}
+                      className={`flex min-h-12 items-center justify-center gap-2 rounded-lg border px-3 py-3 text-sm font-semibold transition-colors ${
+                        paymentMethod === id
+                          ? 'border-primary bg-primary/10 text-primary'
+                          : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                      }`}
+                    >
+                      <Icon className="h-4 w-4 shrink-0" />
+                      <span>{label}</span>
+                    </button>
+                  ))}
                 </div>
 
                 <AnimatePresence mode="wait" initial={false}>
-                  {paymentMethod === 'mpesa' ? (
+                  {requiresPhone ? (
                     <motion.div
-                      key="mpesa"
+                      key={paymentMethod}
                       initial={{ opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -6 }}
                       transition={{ duration: 0.18, ease: 'easeOut' }}
                     >
                       <label htmlFor="create-phone" className="mb-2 flex items-center gap-1.5 text-xs font-semibold">
-                        <Phone className="h-3.5 w-3.5" />
-                        M-Pesa number for the {formatKSh(totalFeeKes)} launch charge
+                        {paymentMethod === 'whatsapp' ? <MessageCircle className="h-3.5 w-3.5" /> : <Phone className="h-3.5 w-3.5" />}
+                        {paymentMethod === 'whatsapp'
+                          ? `WhatsApp number for the ${formatKSh(totalFeeKes)} payment`
+                          : `Mobile money number for the ${formatKSh(totalFeeKes)} launch charge`}
                       </label>
                       <div className="flex rounded-lg border focus-within:border-current">
                         <span className="border-r px-3 py-2.5 text-sm">+254</span>
@@ -953,54 +917,39 @@ const CreateCommunity: React.FC = () => {
                           Enter a valid Kenyan mobile number (07XX, 7XX, or +254 7XX).
                         </p>
                       )}
+                      <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+                        {paymentMethod === 'whatsapp'
+                          ? 'Payment guidance and status updates will use this WhatsApp number. Settlement continues through a supported mobile money provider.'
+                          : 'Use the number registered with your supported mobile money provider.'}
+                      </p>
                     </motion.div>
-                  ) : (
+                  ) : paymentMethod === 'privy' ? (
                     <motion.div
-                      key="wallet"
+                      key="privy"
                       initial={{ opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -6 }}
                       transition={{ duration: 0.18, ease: 'easeOut' }}
-                      className="grid gap-3"
+                      className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3"
                     >
-                      <label htmlFor="wallet-chain" className="text-xs font-semibold">
-                        Choose account rail
-                      </label>
-                      <div className="relative">
-                        <span
-                          className="pointer-events-none absolute left-3 top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full"
-                          style={{ background: CHAINS[walletChain].badgeBg }}
-                        />
-                        <select
-                          id="wallet-chain"
-                          value={walletChain}
-                          onChange={(e) => setWalletChain(e.target.value as typeof walletChain)}
-                          className="w-full appearance-none rounded-lg border py-3 pl-8 pr-4 text-sm font-semibold outline-none cursor-pointer"
-                        >
-                          <option value="solana">Solana - Phantom / Solflare</option>
-                          <option value="stellar">Stellar - Freighter / Lobstr</option>
-                          <option value="base">Base - MetaMask / Coinbase Wallet</option>
-                          <option value="arbitrum">Arbitrum - MetaMask / Rabby</option>
-                          <option value="optimism">Optimism - MetaMask / Rabby</option>
-                          <option value="celo">Celo - Valora / MetaMask</option>
-                        </select>
-                      </div>
-                      <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm">
-                        {needsSolanaAccount && isReady ? (
-                          <p>
-                            <span className="font-semibold">{selectedAccountMeta.currency.code} estimate:</span>{' '}
-                            {formatRailAmountWithKes(DAO_CREATION_FEE_KES, selectedAccountMeta)} will be recorded against the launch order.
-                          </p>
-                        ) : needsSolanaAccount ? (
-                          <p className="text-muted-foreground">
-                            {selectedAccountMeta.accountCta} with {selectedAccountMeta.suggestedWallet} on {selectedAccountMeta.testnet.label}. Other options: {selectedAccountMeta.walletExamples}.
-                          </p>
-                        ) : (
-                          <p className="text-muted-foreground">
-                            Suggested for {selectedAccountMeta.label}: {selectedAccountMeta.suggestedWallet} on {selectedAccountMeta.testnet.label}. Other options: {selectedAccountMeta.walletExamples}. This launch records the selected rail for review; direct connection is next.
-                          </p>
-                        )}
-                      </div>
+                      <p className="text-sm font-semibold">Pay from your secure Baraza wallet</p>
+                      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                        Privy keeps the blockchain account behind your Baraza sign-in. You will confirm the payment before anything is submitted.
+                      </p>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="swift"
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.18, ease: 'easeOut' }}
+                      className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3"
+                    >
+                      <p className="text-sm font-semibold">International bank transfer</p>
+                      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                        Continue to receive the SWIFT payment reference and bank instructions for your launch order.
+                      </p>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -1026,53 +975,37 @@ const CreateCommunity: React.FC = () => {
                   <div className="flex items-center justify-between gap-4 border-t pt-2">
                     <p className="text-xs font-semibold">Total charge</p>
                     <span className="font-display text-lg font-bold tabular-nums">
-                      {paymentMethod === 'mpesa' ? formatKSh(totalFeeKes) : formatRailAmountWithKes(totalFeeKes, selectedAccountMeta)}
+                      {paymentMethod === 'privy' ? formatRailAmountWithKes(totalFeeKes, selectedAccountMeta) : formatKSh(totalFeeKes)}
                     </span>
                   </div>
                 </div>
 
-                <div className="grid gap-2 text-xs sm:grid-cols-[1fr_auto] sm:items-center sm:gap-x-4">
-                  <span>Recorded on</span>
-                  <span className="inline-flex items-center gap-1.5 font-semibold">
-                    <span
-                      aria-hidden
-                      className="h-1.5 w-1.5 rounded-full"
-                      style={{ background: selectedCommunityChainMeta.badgeBg }}
-                    />
-                    {selectedCommunityChainMeta.label}
-                  </span>
-                </div>
+                <p className="text-xs text-muted-foreground">
+                  Your payment route is confirmed before the community goes live.
+                </p>
               </div>
 
               {/* Submit */}
-              {needsSolanaAccount && !isReady ? (
-                <button
-                  type="button"
-                  onClick={() => requireWallet(async () => undefined)}
-                  className="w-full btn-warm text-sm py-3.5 flex items-center justify-center gap-2"
-                >
-                  {selectedAccountMeta.accountCta}
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  disabled={!isValid || isPending}
-                  className="w-full btn-warm text-sm py-3.5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {isPending ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Processing payment...
-                    </>
-                  ) : paymentMethod === 'mpesa' ? (
-                    `Pay ${formatKSh(totalFeeKes)} via M-Pesa`
-                  ) : (
-                    needsSolanaAccount
-                      ? `Pay from ${selectedAccountMeta.short} & launch group`
-                      : `Record ${selectedAccountMeta.label} rail & launch group`
-                  )}
-                </button>
-              )}
+              <button
+                type="submit"
+                disabled={!isValid || isPending}
+                className="w-full btn-warm text-sm py-3.5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Processing payment...
+                  </>
+                ) : paymentMethod === 'mobile-money' ? (
+                  `Pay ${formatKSh(totalFeeKes)} with mobile money`
+                ) : paymentMethod === 'whatsapp' ? (
+                  'Continue with WhatsApp payment'
+                ) : paymentMethod === 'privy' ? (
+                  'Continue with Privy wallet'
+                ) : (
+                  'Get SWIFT instructions'
+                )}
+              </button>
             </form>
             </div>
 

@@ -44,10 +44,10 @@ describe('CommunityPurpose', () => {
     );
   });
 
-  it('lets experienced organizers skip directly to setup', () => {
+  it('keeps the questionnaire as the only path into setup', () => {
     renderPurpose();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
-    expect(screen.getByTestId('setup-location')).toHaveTextContent('/create');
+    expect(screen.queryByRole('button', { name: 'Skip' })).not.toBeInTheDocument();
+    expect(screen.getByText('Step 1 of 2')).toBeInTheDocument();
   });
 });
