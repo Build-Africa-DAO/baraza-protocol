@@ -208,7 +208,8 @@ export default function JoinStatus() {
 
   const isFailed = isFailureStatus(status);
   const isComplete = status === "RECONCILED";
-  const displayReference = orderId ? orderId.split("_").at(-1) : "(none)";
+  const referenceParts = orderId.split("_");
+  const displayReference = orderId ? referenceParts[referenceParts.length - 1] : "(none)";
 
   return (
     <Layout>
