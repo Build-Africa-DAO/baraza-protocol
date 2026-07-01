@@ -99,19 +99,12 @@ export default function CommunityPurpose() {
             <span className="hidden sm:inline">Back</span>
           </button>
           <BrandLogo size="sm" />
-          <button
-            type="button"
-            onClick={() => navigate('/create')}
-            className="min-h-11 rounded-md px-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
-          >
-            Skip
-          </button>
+          <span className="text-sm font-semibold text-muted-foreground">Step 1 of 2</span>
         </nav>
       </header>
 
       <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 py-8 sm:px-6 sm:py-12">
         <div className="mx-auto w-full max-w-xl text-center">
-          <p className="text-sm font-semibold text-primary">Step 1 of 2</p>
           <h1 className="mt-3 text-balance font-display text-3xl font-bold leading-tight sm:text-4xl">
             What does your group do together?
           </h1>
