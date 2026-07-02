@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
-  AlertTriangle,
   ArrowLeft,
   Check,
   CreditCard,
@@ -16,7 +15,7 @@ import Layout from "@/components/Layout";
 import { useCommunity } from "@/hooks/useCommunities";
 import { useToast } from "@/hooks/use-toast";
 import { useExternalWallet } from "@/hooks/useExternalWallet";
-import { formatKSh } from "@/lib/utils";
+import { cn, formatKes, formatKSh } from "@/lib/utils";
 import { normaliseKenyanPhone } from "@/lib/phone";
 import CommunityBanner from "@/components/CommunityBanner";
 import { useSeo } from "@/lib/seo";
@@ -29,8 +28,8 @@ import {
 } from "@/components/payments/BuyerPaymentFlow";
 
 const joinSteps = [
-  { label: "Invite opened", state: "current" },
-  { label: "Payment method selected", state: "pending" },
+  { label: "Invite opened", state: "done" },
+  { label: "Choose payment method", state: "current" },
   { label: "Payment proof submitted", state: "pending" },
   { label: "Payment confirmed", state: "pending" },
   { label: "Credential minted", state: "pending" },
@@ -38,43 +37,61 @@ const joinSteps = [
 ];
 
 function ActivationTracker() {
+  const currentStep = joinSteps.findIndex((step) => step.state === "current");
+
   return (
-    <div className="baraza-card p-4 md:p-5">
-      <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+    <section className="baraza-card p-5 md:p-6" aria-labelledby="membership-progress-title">
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="font-display text-base font-semibold">Membership activation</h2>
-          <p className="mt-1 text-xs">Payment proof and membership approval stay separate.</p>
+          <h2 id="membership-progress-title" className="text-base font-semibold">
+            Joining progress
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Complete payment first. Membership activates after confirmation.
+          </p>
         </div>
-        <span className="rounded-full border px-3 py-1 text-[11px] font-semibold">
-          Step 1 of {joinSteps.length}
+        <span className="shrink-0 rounded-full border px-3 py-1 text-xs font-semibold">
+          Step {currentStep + 1} of {joinSteps.length}
         </span>
       </div>
-      <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
+
+      <div className="relative mt-6">
+        <div className="absolute left-[8.33%] right-[8.33%] top-4 h-px bg-border" />
+        <ol className="relative grid grid-cols-6">
         {joinSteps.map((step, index) => (
-          <div
+          <li
             key={step.label}
-            className={
-              step.state === "current"
-                ? "rounded-lg border border-primary bg-primary/10 p-3"
-                : "rounded-lg border p-3"
-            }
+            className="flex min-w-0 flex-col items-center px-1 text-center"
+            aria-current={step.state === "current" ? "step" : undefined}
+            aria-label={`Step ${index + 1}: ${step.label}`}
           >
             <div
-              className={
-                step.state === "current"
-                  ? "mb-2 grid h-7 w-7 place-items-center rounded-full"
-                  : "mb-2 grid h-7 w-7 place-items-center rounded-full border"
-              }
+              className={cn(
+                "relative grid h-8 w-8 place-items-center rounded-full border bg-card text-xs font-bold",
+                step.state === "done" && "border-primary bg-primary text-primary-foreground",
+                step.state === "current" && "border-primary text-primary ring-4 ring-primary/10",
+              )}
             >
-              {step.state === "done" ? <Check className="h-4 w-4" /> : <span className="text-[11px] font-bold">{index + 1}</span>}
+              {step.state === "done" ? <Check className="h-4 w-4" /> : index + 1}
             </div>
-            <span className="block text-[11px] font-bold uppercase tracking-widest">
+            <span className="mt-3 hidden text-[11px] font-semibold leading-4 text-muted-foreground lg:block">
               {step.label}
             </span>
-          </div>
+          </li>
         ))}
+        </ol>
       </div>
-    </div>
+
+      <div className="mt-5 flex items-start justify-between gap-4 rounded-lg bg-primary/5 px-4 py-3 lg:hidden">
+        <div>
+          <p className="text-xs font-semibold text-muted-foreground">Current step</p>
+          <p className="mt-1 text-sm font-semibold">{joinSteps[currentStep]?.label}</p>
+        </div>
+        <p className="max-w-40 text-right text-xs leading-5 text-muted-foreground">
+          Next: submit your payment proof
+        </p>
+      </div>
+    </section>
   );
 }
 
@@ -105,6 +122,11 @@ export default function JoinDao() {
   const [pendingWalletJoin, setPendingWalletJoin] = useState(false);
 
   const amount = community?.membershipFee ?? 0;
+  const paymentAmount = amount > 0
+    ? paymentMethod === "mobile-money"
+      ? formatKes(amount)
+      : formatKSh(amount)
+    : "-";
   const externalWalletAddress = externalWallet.address;
   const normalisedPhone = normaliseKenyanPhone(phone);
   const canSubmit = normalisedPhone !== null && amount > 0 && !isSubmitting;
@@ -277,190 +299,198 @@ export default function JoinDao() {
                     </p>
                   </div>
                   <div className="w-full rounded-lg border px-4 py-3 md:w-auto md:text-right">
-                    <p className="text-xs">Monthly Dues</p>
-                    <p className="font-display text-lg font-bold">
-                      {amount > 0 ? formatKSh(amount) : "-"}
-                    </p>
+                    <p className="text-xs">Monthly dues</p>
+                    <p className="font-display text-lg font-bold">{paymentAmount}</p>
+                    {paymentMethod === "mobile-money" && (
+                      <p className="mt-1 text-[11px] font-semibold">M-Pesa charge in KES</p>
+                    )}
                   </div>
                 </div>
               </div>
               </CommunityBanner>
 
-              <div className="grid gap-6 p-5 md:p-6 lg:grid-cols-[minmax(0,0.42fr)_minmax(0,0.58fr)]">
+              <div className="p-5 md:p-6">
                 <PaymentMethodSelector
                   value={paymentMethod}
                   onChange={setPaymentMethod}
-                  accountLabel="Account or crypto wallet"
+                  legend="1. Choose how to pay"
+                  accountLabel="Baraza / crypto wallet"
                   accountDescription="Use your Baraza account or connect an approved external wallet."
+                  showDescriptions={false}
                 />
 
-                <div className="min-w-0 space-y-5 lg:border-l lg:pl-6">
-                  {paymentMethod === "mobile-money" && (
-                    <div>
-                      <div className="mb-4 flex items-center gap-3">
-                        <Phone className="h-5 w-5 text-primary" />
-                        <div>
-                          <h2 className="text-base font-semibold">Pay with M-Pesa</h2>
-                          <p className="text-xs text-muted-foreground">A payment prompt will appear on your phone.</p>
+                <div className="mt-6 grid gap-6 border-t pt-6 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.72fr)]">
+                  <div className="min-w-0">
+                    {paymentMethod === "mobile-money" && (
+                      <div>
+                        <div className="mb-4 flex items-center gap-3">
+                          <Phone className="h-5 w-5 text-primary" />
+                          <div>
+                            <h2 className="text-base font-semibold">2. Enter your M-Pesa number</h2>
+                            <p className="text-sm text-muted-foreground">
+                              We will send a {paymentAmount} payment prompt to your phone.
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <label htmlFor="join-phone" className="mb-2 block text-sm font-semibold">M-Pesa phone number</label>
-                      <div className="flex rounded-lg border focus-within:border-primary">
-                        <span className="border-r px-3 py-3 text-sm">+254</span>
-                        <input
-                          id="join-phone"
-                          value={phone}
-                          onChange={(event) => setPhone(event.target.value)}
-                          className="min-w-0 flex-1 px-3 py-3 text-base outline-none"
-                          placeholder="0712 345 678"
-                          type="tel"
-                          inputMode="numeric"
-                          autoComplete="tel-national"
-                        />
-                      </div>
-                      <p className="mt-2 text-xs leading-5 text-muted-foreground">Use the number registered to your M-Pesa account.</p>
-                    </div>
-                  )}
-
-                  {paymentMethod === "bank-transfer" && (
-                    <div>
-                      <div className="mb-4 flex items-center gap-3">
-                        <Landmark className="h-5 w-5 text-primary" />
-                        <div>
-                          <h2 className="text-base font-semibold">Confirm a bank transfer</h2>
-                          <p className="text-xs text-muted-foreground">For buyers who already received transfer instructions.</p>
+                        <label htmlFor="join-phone" className="mb-2 block text-sm font-semibold">
+                          M-Pesa phone number
+                        </label>
+                        <div className="flex rounded-lg border focus-within:border-primary">
+                          <span className="border-r px-3 py-3 text-sm">+254</span>
+                          <input
+                            id="join-phone"
+                            value={phone}
+                            onChange={(event) => setPhone(event.target.value)}
+                            className="min-w-0 flex-1 px-3 py-3 text-base outline-none"
+                            placeholder="0712 345 678"
+                            type="tel"
+                            inputMode="numeric"
+                            autoComplete="tel-national"
+                          />
                         </div>
-                      </div>
-                      <label htmlFor="transfer-reference" className="mb-2 block text-sm font-semibold">Payment reference</label>
-                      <input
-                        id="transfer-reference"
-                        value={transactionReference}
-                        onChange={(event) => setTransactionReference(event.target.value)}
-                        className="w-full rounded-lg border px-3 py-3 text-base outline-none focus:border-primary"
-                        placeholder="Enter the reference from your receipt"
-                        autoComplete="off"
-                      />
-                      <p className="mt-2 text-xs leading-5 text-muted-foreground">
-                        Bank instructions are issued before payment. Baraza checks the reference before activating membership.
-                      </p>
-                    </div>
-                  )}
-
-                  {paymentMethod === "privy" && (
-                    <div>
-                      <div className="mb-4 flex items-center gap-3">
-                        <Wallet className="h-5 w-5 text-primary" />
-                        <div>
-                          <h2 className="text-base font-semibold">Pay from an account or crypto wallet</h2>
-                          <p className="text-xs text-muted-foreground">
-                            Choose the account that should hold your membership record.
-                          </p>
-                        </div>
-                      </div>
-                      <p className="text-sm leading-6">
-                        Your payment and membership stay linked to the account you choose, so you
-                        can return later to vote and view receipts.
-                      </p>
-                      {!account.configured && !externalWalletAddress && (
-                        <p className="mt-3 rounded-lg border px-3 py-2 text-xs leading-5 text-muted-foreground">
-                          Baraza account payments are not configured in this preview. You can still
-                          connect an external wallet.
+                        <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                          Use the number registered to your M-Pesa account.
                         </p>
-                      )}
-                    </div>
-                  )}
+                      </div>
+                    )}
 
-                  <PaymentSummary
-                    lines={[{ label: "Monthly membership dues", value: amount > 0 ? formatKSh(amount) : "-" }]}
-                    total={amount > 0 ? formatKSh(amount) : "-"}
-                    totalLabel="Pay now"
-                  />
+                    {paymentMethod === "bank-transfer" && (
+                      <div>
+                        <div className="mb-4 flex items-center gap-3">
+                          <Landmark className="h-5 w-5 text-primary" />
+                          <div>
+                            <h2 className="text-base font-semibold">2. Confirm your bank transfer</h2>
+                            <p className="text-sm text-muted-foreground">
+                              Enter the reference from your transfer receipt.
+                            </p>
+                          </div>
+                        </div>
+                        <label htmlFor="transfer-reference" className="mb-2 block text-sm font-semibold">
+                          Payment reference
+                        </label>
+                        <input
+                          id="transfer-reference"
+                          value={transactionReference}
+                          onChange={(event) => setTransactionReference(event.target.value)}
+                          className="w-full rounded-lg border px-3 py-3 text-base outline-none focus:border-primary"
+                          placeholder="Enter the reference from your receipt"
+                          autoComplete="off"
+                        />
+                        <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                          Baraza checks the reference before activating membership.
+                        </p>
+                      </div>
+                    )}
 
-                  {paymentMethod === "mobile-money" ? (
-                    <button
-                      type="button"
-                      onClick={handleMpesaSubmit}
-                      disabled={!canSubmit}
-                      className="btn-warm min-h-12 w-full justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
-                      {isSubmitting ? "Sending payment prompt..." : `Pay ${formatKSh(amount)} with M-Pesa`}
-                    </button>
-                  ) : paymentMethod === "bank-transfer" ? (
-                    <button
-                      type="button"
-                      onClick={() => void handleTransferSubmit()}
-                      disabled={!canVerifyTransfer}
-                      className="btn-warm min-h-12 w-full justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {isVerifyingTransfer ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
-                      {isVerifyingTransfer ? "Checking payment..." : "Check bank payment"}
-                    </button>
-                  ) : (
-                    <div className="space-y-3">
+                    {paymentMethod === "privy" && (
+                      <div>
+                        <div className="mb-4 flex items-center gap-3">
+                          <Wallet className="h-5 w-5 text-primary" />
+                          <div>
+                            <h2 className="text-base font-semibold">2. Choose an account</h2>
+                            <p className="text-sm text-muted-foreground">
+                              Use a Baraza account or an approved external wallet.
+                            </p>
+                          </div>
+                        </div>
+                        <p className="text-sm leading-6 text-muted-foreground">
+                          Your membership, receipts, and future votes stay linked to the account you
+                          choose.
+                        </p>
+                        {!account.configured && !externalWalletAddress && (
+                          <p className="mt-3 rounded-lg border px-3 py-2 text-xs leading-5 text-muted-foreground">
+                            Baraza account access is not configured on this deployment. External
+                            wallet access is still available.
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="min-w-0 space-y-4 lg:border-l lg:pl-6">
+                    <PaymentSummary
+                      lines={[{ label: "Monthly membership dues", value: paymentAmount }]}
+                      total={paymentAmount}
+                      totalLabel="Pay now"
+                    />
+
+                    {paymentMethod === "mobile-money" ? (
                       <button
                         type="button"
-                        onClick={() => {
-                          if (account.authenticated && account.accountId) {
-                            startAccountJoin(account.accountId);
-                            return;
-                          }
-                          setPendingWalletJoin(true);
-                          account.login();
-                        }}
-                        disabled={!account.ready || !account.configured || amount <= 0}
+                        onClick={handleMpesaSubmit}
+                        disabled={!canSubmit}
                         className="btn-warm min-h-12 w-full justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        <Wallet className="h-4 w-4" />
-                        {!account.ready
-                          ? "Preparing account..."
-                          : account.authenticated
-                            ? `Pay ${formatKSh(amount)} from Baraza account`
-                            : "Log in with Baraza account"}
+                        {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+                        {isSubmitting ? "Sending payment prompt..." : `Pay ${paymentAmount} with M-Pesa`}
                       </button>
+                    ) : paymentMethod === "bank-transfer" ? (
                       <button
                         type="button"
-                        onClick={() => {
-                          if (externalWalletAddress) {
-                            startAccountJoin(externalWalletAddress);
-                            return;
-                          }
-                          externalWallet.openSelector();
-                        }}
-                        disabled={amount <= 0}
-                        className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border px-4 py-3 text-sm font-semibold transition-colors hover:border-primary hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-50"
+                        onClick={() => void handleTransferSubmit()}
+                        disabled={!canVerifyTransfer}
+                        className="btn-warm min-h-12 w-full justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        <Wallet className="h-4 w-4" />
-                        {externalWalletAddress
-                          ? `Pay ${formatKSh(amount)} from external wallet`
-                          : "Connect external crypto wallet"}
+                        {isVerifyingTransfer ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+                        {isVerifyingTransfer ? "Checking payment..." : "Check bank payment"}
                       </button>
-                      {!account.authenticated && account.configured && (
+                    ) : (
+                      <div className="space-y-3">
                         <button
                           type="button"
                           onClick={() => {
+                            if (account.authenticated && account.accountId) {
+                              startAccountJoin(account.accountId);
+                              return;
+                            }
                             setPendingWalletJoin(true);
-                            account.createAccount();
+                            account.login();
                           }}
-                          className="min-h-11 w-full text-center text-sm font-semibold"
+                          disabled={!account.ready || !account.configured || amount <= 0}
+                          className="btn-warm min-h-12 w-full justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                          Create a Baraza account
+                          <Wallet className="h-4 w-4" />
+                          {!account.ready
+                            ? "Preparing account..."
+                            : account.authenticated
+                              ? `Pay ${paymentAmount} from Baraza account`
+                              : "Log in with Baraza account"}
                         </button>
-                      )}
-                      <Link to="/profile" className="inline-flex min-h-11 items-center text-sm font-semibold">
-                        Manage Baraza account
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="mx-5 mb-5 rounded-lg border p-4 md:mx-6 md:mb-6">
-                <div className="flex gap-3">
-                  <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
-                  <p className="text-sm leading-6">
-                    <strong>Payment confirmed is not membership activation.</strong> Your membership activates after proof review and approval.
-                  </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (externalWalletAddress) {
+                              startAccountJoin(externalWalletAddress);
+                              return;
+                            }
+                            externalWallet.openSelector();
+                          }}
+                          disabled={amount <= 0}
+                          className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border px-4 py-3 text-sm font-semibold transition-colors hover:border-primary hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <Wallet className="h-4 w-4" />
+                          {externalWalletAddress
+                            ? `Pay ${paymentAmount} from external wallet`
+                            : "Connect external crypto wallet"}
+                        </button>
+                        {!account.authenticated && account.configured && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPendingWalletJoin(true);
+                              account.createAccount();
+                            }}
+                            className="min-h-11 w-full text-center text-sm font-semibold"
+                          >
+                            Create a Baraza account
+                          </button>
+                        )}
+                        <Link to="/profile" className="inline-flex min-h-11 items-center text-sm font-semibold">
+                          Manage Baraza account
+                        </Link>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

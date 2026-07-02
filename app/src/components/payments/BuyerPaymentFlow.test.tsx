@@ -35,6 +35,19 @@ describe('PaymentMethodSelector', () => {
     expect(screen.getByRole('radio', { name: /account or crypto wallet/i })).toBeChecked();
     expect(screen.getByText(/connect an approved external wallet/i)).toBeInTheDocument();
   });
+
+  it('can render a compact selector without helper descriptions', () => {
+    render(
+      <PaymentMethodSelector
+        value="mobile-money"
+        onChange={() => undefined}
+        showDescriptions={false}
+      />,
+    );
+
+    expect(screen.getByRole('radio', { name: 'Mobile money' })).toBeChecked();
+    expect(screen.queryByText(/pay from your phone where supported/i)).not.toBeInTheDocument();
+  });
 });
 
 describe('PaymentSummary', () => {

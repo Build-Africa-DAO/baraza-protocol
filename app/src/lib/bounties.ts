@@ -153,15 +153,15 @@ const SEED_BOUNTIES: Bounty[] = [
   {
     id: 'b-tb-audit',
     communityId: '3',
-    title: 'Smart contract audit notes',
+    title: 'Governance rules audit',
     category: 'Dev',
     rewardKes: 64500,
     deadline: '2026-06-10',
     submissions: 3,
     status: 'open',
     postedBy: 'TechBridge Nairobi',
-    summary: 'Review governance contract assumptions and produce issue-ranked audit notes.',
-    skills: ['Solana', 'Rust', 'Security'],
+    summary: 'Review governance automation assumptions and produce issue-ranked audit notes.',
+    skills: ['Governance', 'Audit', 'Security'],
     access: 'community-restricted',
     rewardToken: 'SOL',
   },
@@ -184,15 +184,15 @@ const SEED_BOUNTIES: Bounty[] = [
   {
     id: 'b-tb-onchain',
     communityId: '3',
-    title: 'Solana program deployment guide',
+    title: 'Community governance deployment guide',
     category: 'Dev',
     rewardKes: 35000,
     deadline: '2026-06-20',
     submissions: 2,
     status: 'in_progress',
     postedBy: 'TechBridge Nairobi',
-    summary: 'Write a step-by-step guide for deploying Anchor programs to devnet.',
-    skills: ['Solana', 'Anchor', 'Technical writing'],
+    summary: 'Write a step-by-step guide for deploying community governance tools to a test environment.',
+    skills: ['Governance', 'Testing', 'Technical writing'],
     assignee: 'Amara T.',
     roleGated: true,
     access: 'community-restricted',
@@ -246,15 +246,15 @@ const SEED_BOUNTIES: Bounty[] = [
   {
     id: 'b-kf-stellar',
     communityId: '5',
-    title: 'Stellar M-Pesa anchor integration guide',
+    title: 'M-Pesa treasury integration guide',
     category: 'Dev',
     rewardKes: 72000,
     deadline: '2026-06-25',
     submissions: 1,
     status: 'open',
     postedBy: 'Kakamega Farmers DAO',
-    summary: 'Document the SEP-24 flow for depositing KES via M-Pesa into the DAO treasury on Stellar testnet.',
-    skills: ['Stellar', 'SEP-24', 'M-Pesa', 'Technical writing'],
+    summary: 'Document the flow for depositing KES via M-Pesa into a community treasury.',
+    skills: ['M-Pesa', 'Payments', 'Technical writing'],
     access: 'community-restricted',
     rewardToken: 'XLM',
   },
@@ -292,29 +292,54 @@ const SEED_BOUNTIES: Bounty[] = [
   {
     id: 'b-ky-stellar-onboard',
     communityId: '1',
-    title: 'Stellar wallet onboarding workshop',
+    title: 'Digital wallet onboarding workshop',
     category: 'Events',
     rewardKes: 28000,
     deadline: '2026-06-28',
     submissions: 2,
     status: 'open',
     postedBy: 'Kibera Youth Collective',
-    summary: 'Run a hands-on workshop teaching members how to set up a Stellar wallet and receive KES payouts.',
-    skills: ['Stellar', 'Training', 'Community'],
+    summary: 'Run a hands-on workshop teaching members how to set up a wallet and receive payouts.',
+    skills: ['Wallets', 'Training', 'Community'],
     access: 'public',
     rewardToken: 'XLM',
   },
 ];
 
-function restoreTechnicalRailWording(bounty: Bounty): Bounty {
-  if (bounty.id !== 'b-tb-onchain') return bounty;
-  return {
-    ...bounty,
-    title: bounty.title === 'Baraza Token program deployment guide'
-      ? 'Solana program deployment guide'
-      : bounty.title,
-    skills: bounty.skills.map((skill) => skill === 'Baraza Token' ? 'Solana' : skill),
-  };
+function normalizePublicBountyWording(bounty: Bounty): Bounty {
+  if (bounty.id === 'b-tb-audit') {
+    return {
+      ...bounty,
+      title: 'Governance rules audit',
+      summary: 'Review governance automation assumptions and produce issue-ranked audit notes.',
+      skills: ['Governance', 'Audit', 'Security'],
+    };
+  }
+  if (bounty.id === 'b-tb-onchain') {
+    return {
+      ...bounty,
+      title: 'Community governance deployment guide',
+      summary: 'Write a step-by-step guide for deploying community governance tools to a test environment.',
+      skills: ['Governance', 'Testing', 'Technical writing'],
+    };
+  }
+  if (bounty.id === 'b-kf-stellar') {
+    return {
+      ...bounty,
+      title: 'M-Pesa treasury integration guide',
+      summary: 'Document the flow for depositing KES via M-Pesa into a community treasury.',
+      skills: ['M-Pesa', 'Payments', 'Technical writing'],
+    };
+  }
+  if (bounty.id === 'b-ky-stellar-onboard') {
+    return {
+      ...bounty,
+      title: 'Digital wallet onboarding workshop',
+      summary: 'Run a hands-on workshop teaching members how to set up a wallet and receive payouts.',
+      skills: ['Wallets', 'Training', 'Community'],
+    };
+  }
+  return bounty;
 }
 
 function readLocalBounties(): Bounty[] {
@@ -323,7 +348,7 @@ function readLocalBounties(): Bounty[] {
     const raw = window.localStorage.getItem(LOCAL_BOUNTIES_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
     if (!Array.isArray(parsed)) return [];
-    const restored = parsed.map((bounty) => restoreTechnicalRailWording(bounty));
+    const restored = parsed.map((bounty) => normalizePublicBountyWording(bounty));
     if (JSON.stringify(restored) !== JSON.stringify(parsed)) {
       writeLocalBounties(restored);
     }

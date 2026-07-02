@@ -13,7 +13,7 @@ describe('bounties', () => {
     expect(getBountiesForCommunity('1').length).toBeGreaterThan(0);
   });
 
-  it('restores technical Solana wording in the deployment bounty', () => {
+  it('normalizes infrastructure wording in the deployment bounty', () => {
     window.localStorage.setItem('baraza.bounties.v1', JSON.stringify([{
       id: 'b-tb-onchain',
       communityId: '3',
@@ -32,8 +32,9 @@ describe('bounties', () => {
 
     const bounty = listBounties().find((item) => item.id === 'b-tb-onchain');
 
-    expect(bounty?.title).toBe('Solana program deployment guide');
-    expect(bounty?.skills).toContain('Solana');
+    expect(bounty?.title).toBe('Community governance deployment guide');
+    expect(bounty?.skills).toContain('Governance');
+    expect(bounty?.skills).not.toContain('Solana');
   });
 
   it('creates a local bounty record', () => {

@@ -11,6 +11,10 @@ export function formatKSh(amount: number): string {
   return formatAccountCurrency(amount);
 }
 
+export function formatKes(amount: number): string {
+  return `KSh ${Math.round(amount).toLocaleString('en-KE')}`;
+}
+
 export function formatUSD(amount: number): string {
   return amount.toLocaleString('en-US', {
     style: 'currency',

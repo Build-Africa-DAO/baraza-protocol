@@ -30,6 +30,7 @@ interface PaymentMethodSelectorProps {
   legend?: string;
   accountLabel?: string;
   accountDescription?: string;
+  showDescriptions?: boolean;
 }
 
 export function PaymentMethodSelector({
@@ -38,12 +39,19 @@ export function PaymentMethodSelector({
   legend = 'Choose a payment method',
   accountLabel,
   accountDescription,
+  showDescriptions = true,
 }: PaymentMethodSelectorProps) {
   return (
     <fieldset>
       <legend className="mb-3 text-sm font-semibold">{legend}</legend>
-      <div className="overflow-hidden rounded-lg border" role="radiogroup">
-        {paymentMethods.map(({ id, label, description, icon: Icon }, index) => {
+      <div
+        className={cn(
+          'overflow-hidden rounded-lg border',
+          showDescriptions ? 'divide-y' : 'grid divide-y sm:grid-cols-3 sm:divide-x sm:divide-y-0',
+        )}
+        role="radiogroup"
+      >
+        {paymentMethods.map(({ id, label, description, icon: Icon }) => {
           const selected = value === id;
           const visibleLabel = id === 'privy' && accountLabel ? accountLabel : label;
           const visibleDescription = id === 'privy' && accountDescription
@@ -53,8 +61,8 @@ export function PaymentMethodSelector({
             <label
               key={id}
               className={cn(
-                'flex min-h-16 cursor-pointer items-center gap-3 px-4 py-3 transition-colors',
-                index > 0 && 'border-t',
+                'flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors',
+                showDescriptions ? 'min-h-16' : 'min-h-14',
                 selected ? 'bg-primary/10 text-foreground' : 'hover:bg-muted/45',
               )}
             >
@@ -78,9 +86,11 @@ export function PaymentMethodSelector({
               <Icon className={cn('h-5 w-5 shrink-0', selected ? 'text-primary' : 'text-muted-foreground')} />
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-semibold">{visibleLabel}</span>
-                <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">
-                  {visibleDescription}
-                </span>
+                {showDescriptions && (
+                  <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">
+                    {visibleDescription}
+                  </span>
+                )}
               </span>
             </label>
           );

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   cn,
   daysRemaining,
+  formatKes,
   formatKSh,
   formatRailAmountFromKes,
   formatRailAmountWithKes,
@@ -18,6 +19,13 @@ describe('formatKSh', () => {
   it('formats thousands', () => expect(formatKSh(234500)).toBe('KSh 234,500'));
   it('formats millions', () => expect(formatKSh(1248500)).toBe('KSh 1,248,500'));
   it('formats small fee', () => expect(formatKSh(500)).toBe('KSh 500'));
+});
+
+describe('formatKes', () => {
+  it('always formats the source amount in Kenyan shillings', () => {
+    writeAccountCountry('GB');
+    expect(formatKes(500)).toBe('KSh 500');
+  });
 });
 
 describe('formatUSD', () => {
