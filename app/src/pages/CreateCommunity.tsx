@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
-import { Users, ArrowLeft, CheckCircle2, Loader2, Phone, ShieldCheck, Wallet, Hash, Smartphone, MessageCircle, Landmark } from 'lucide-react';
+import { Users, ArrowLeft, CheckCircle2, Loader2, Phone, ShieldCheck, Wallet, Hash, Smartphone, MessageCircle } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { DAO_CREATION_FEE_KES, PAYBILL_ADDON_FEE_KES, USSD_ADDON_FEE_KES } from '@/lib/constants';
 import { formatKSh } from '@/lib/utils';
@@ -20,10 +20,15 @@ import { communityPda, toSlug } from '@/lib/programs';
 import { saveCommunityChainMapping } from '@/lib/chainMappings';
 import { buildWalletProofHeaders } from '@/lib/walletProof';
 import { useAccount } from '@/contexts/AccountContext';
+import {
+  PaymentMethodSelector,
+  PaymentSummary,
+  type BuyerPaymentMethod,
+} from '@/components/payments/BuyerPaymentFlow';
 
 type TreasuryPolicy = 'multisig-ready' | 'proposal-only' | 'manual-review';
 type ChecklistState = 'complete' | 'active' | 'pending';
-type PaymentMethod = 'mobile-money' | 'whatsapp' | 'privy' | 'swift';
+type MobileMoneyChannel = 'prompt' | 'whatsapp';
 
 interface SetupChecklistItem {
   label: string;
@@ -276,7 +281,10 @@ const CreateCommunity: React.FC = () => {
   const [isPending, setIsPending] = useState(false);
   const [isCreated, setIsCreated] = useState(false);
   const [createdCommunityId, setCreatedCommunityId] = useState<string | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('mobile-money');
+  const [paymentMethod, setPaymentMethod] = useState<BuyerPaymentMethod>(() =>
+    account.country.code === 'KE' ? 'mobile-money' : 'bank-transfer',
+  );
+  const [mobileMoneyChannel, setMobileMoneyChannel] = useState<MobileMoneyChannel>('prompt');
   const [addPaybill, setAddPaybill] = useState(false);
   const [addUssd, setAddUssd] = useState(false);
   const [assignedPaybill, setAssignedPaybill] = useState<string | null>(null);
@@ -314,7 +322,7 @@ const CreateCommunity: React.FC = () => {
     (addUssd ? USSD_ADDON_FEE_KES : 0);
   const selectedCommunityChain = walletChain;
   const selectedPreset = form.type ? GOVERNANCE_PRESETS[form.type] : null;
-  const requiresPhone = paymentMethod === 'mobile-money' || paymentMethod === 'whatsapp';
+  const requiresPhone = paymentMethod === 'mobile-money';
   const isValid = !!(
     form.name.trim() &&
     form.type &&
@@ -349,7 +357,7 @@ const CreateCommunity: React.FC = () => {
       label: 'Membership credential',
       detail: requiresPhone
         ? normalisedPhone
-          ? paymentMethod === 'whatsapp'
+          ? mobileMoneyChannel === 'whatsapp'
             ? 'WhatsApp payment contact ready'
             : 'Mobile money contact ready'
           : 'Add a mobile payment contact'
@@ -408,6 +416,33 @@ const CreateCommunity: React.FC = () => {
     e.preventDefault();
     if (!isValid) return;
     if (requiresPhone && !normalisedPhone) return;
+
+    if (paymentMethod === 'bank-transfer') {
+      toast({
+        title: 'Bank instructions are not connected yet',
+        description: 'Your form is saved on this screen. Choose mobile money to test a launch payment today.',
+      });
+      return;
+    }
+
+    if (paymentMethod === 'privy') {
+      if (!account.configured) {
+        toast({
+          title: 'Secure account payments are not configured',
+          description: 'Add the Privy app ID to enable sign-in and account payments.',
+        });
+        return;
+      }
+      if (!account.authenticated) {
+        account.login();
+        return;
+      }
+      toast({
+        title: 'Account payments are not connected yet',
+        description: 'Your community has not been launched or charged. Choose mobile money to test the current payment path.',
+      });
+      return;
+    }
 
     const launchCommunity = async () => {
       setIsPending(true);
@@ -845,33 +880,7 @@ const CreateCommunity: React.FC = () => {
 
               {/* Payment */}
               <div className="grid gap-4 rounded-lg border p-5">
-                <h2 className="font-mono text-xs font-semibold uppercase tracking-widest">
-                  Payment
-                </h2>
-
-                <div className="grid grid-cols-2 gap-2" role="group" aria-label="Payment method">
-                  {([
-                    { id: 'mobile-money', label: 'Mobile money', icon: Smartphone },
-                    { id: 'whatsapp', label: 'WhatsApp', icon: MessageCircle },
-                    { id: 'privy', label: 'Privy wallet', icon: Wallet },
-                    { id: 'swift', label: 'Bank / SWIFT', icon: Landmark },
-                  ] as const).map(({ id, label, icon: Icon }) => (
-                    <button
-                      key={id}
-                      type="button"
-                      aria-pressed={paymentMethod === id}
-                      onClick={() => setPaymentMethod(id)}
-                      className={`flex min-h-12 items-center justify-center gap-2 rounded-lg border px-3 py-3 text-sm font-semibold transition-colors ${
-                        paymentMethod === id
-                          ? 'border-primary bg-primary/10 text-primary'
-                          : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'
-                      }`}
-                    >
-                      <Icon className="h-4 w-4 shrink-0" />
-                      <span>{label}</span>
-                    </button>
-                  ))}
-                </div>
+                <PaymentMethodSelector value={paymentMethod} onChange={setPaymentMethod} />
 
                 <AnimatePresence mode="wait" initial={false}>
                   {requiresPhone ? (
@@ -882,11 +891,27 @@ const CreateCommunity: React.FC = () => {
                       exit={{ opacity: 0, y: -6 }}
                       transition={{ duration: 0.18, ease: 'easeOut' }}
                     >
-                      <label htmlFor="create-phone" className="mb-2 flex items-center gap-1.5 text-xs font-semibold">
-                        {paymentMethod === 'whatsapp' ? <MessageCircle className="h-3.5 w-3.5" /> : <Phone className="h-3.5 w-3.5" />}
-                        {paymentMethod === 'whatsapp'
-                          ? `WhatsApp number for the ${formatKSh(totalFeeKes)} payment`
-                          : `Mobile money number for the ${formatKSh(totalFeeKes)} launch charge`}
+                      <div className="mb-4 grid grid-cols-2 gap-2" role="group" aria-label="Mobile money contact method">
+                        <button
+                          type="button"
+                          aria-pressed={mobileMoneyChannel === 'prompt'}
+                          onClick={() => setMobileMoneyChannel('prompt')}
+                          className={`min-h-11 rounded-lg border px-3 py-2 text-xs font-semibold ${mobileMoneyChannel === 'prompt' ? 'border-primary bg-primary/10 text-primary' : 'text-muted-foreground'}`}
+                        >
+                          Payment prompt
+                        </button>
+                        <button
+                          type="button"
+                          aria-pressed={mobileMoneyChannel === 'whatsapp'}
+                          onClick={() => setMobileMoneyChannel('whatsapp')}
+                          className={`min-h-11 rounded-lg border px-3 py-2 text-xs font-semibold ${mobileMoneyChannel === 'whatsapp' ? 'border-primary bg-primary/10 text-primary' : 'text-muted-foreground'}`}
+                        >
+                          WhatsApp contact
+                        </button>
+                      </div>
+                      <label htmlFor="create-phone" className="mb-2 flex items-center gap-1.5 text-sm font-semibold">
+                        {mobileMoneyChannel === 'whatsapp' ? <MessageCircle className="h-4 w-4" /> : <Phone className="h-4 w-4" />}
+                        {mobileMoneyChannel === 'whatsapp' ? 'WhatsApp number' : 'Mobile money number'}
                       </label>
                       <div className="flex rounded-lg border focus-within:border-current">
                         <span className="border-r px-3 py-2.5 text-sm">+254</span>
@@ -909,8 +934,8 @@ const CreateCommunity: React.FC = () => {
                         </p>
                       )}
                       <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
-                        {paymentMethod === 'whatsapp'
-                          ? 'Payment guidance and status updates will use this WhatsApp number. Settlement continues through a supported mobile money provider.'
+                        {mobileMoneyChannel === 'whatsapp'
+                          ? 'We will use this number for payment guidance and status updates. The payment still completes through mobile money.'
                           : 'Use the number registered with your supported mobile money provider.'}
                       </p>
                     </motion.div>
@@ -923,9 +948,9 @@ const CreateCommunity: React.FC = () => {
                       transition={{ duration: 0.18, ease: 'easeOut' }}
                       className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3"
                     >
-                      <p className="text-sm font-semibold">Pay from your secure Baraza wallet</p>
+                      <p className="text-sm font-semibold">Pay from your secure Baraza account</p>
                       <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                        Privy keeps the payment account behind your Baraza sign-in. You will confirm the payment before anything is submitted.
+                        Secured by Privy. Sign in or create an account, then confirm the payment before anything is submitted.
                       </p>
                     </motion.div>
                   ) : (
@@ -945,31 +970,15 @@ const CreateCommunity: React.FC = () => {
                   )}
                 </AnimatePresence>
 
-                {/* Fee summary */}
-                <div className="grid gap-2 border-t pt-4 text-sm">
-                  <div className="flex items-center justify-between gap-4">
-                    <p className="text-xs text-muted-foreground">Setup fee</p>
-                    <span className="text-xs font-semibold tabular-nums">{formatKSh(DAO_CREATION_FEE_KES)}</span>
-                  </div>
-                  {addPaybill && (
-                    <div className="flex items-center justify-between gap-4">
-                      <p className="text-xs text-muted-foreground">Paybill add-on</p>
-                      <span className="text-xs font-semibold tabular-nums">+ {formatKSh(PAYBILL_ADDON_FEE_KES)}</span>
-                    </div>
-                  )}
-                  {addUssd && (
-                    <div className="flex items-center justify-between gap-4">
-                      <p className="text-xs text-muted-foreground">USSD add-on</p>
-                      <span className="text-xs font-semibold tabular-nums">+ {formatKSh(USSD_ADDON_FEE_KES)}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between gap-4 border-t pt-2">
-                    <p className="text-xs font-semibold">Total charge</p>
-                    <span className="font-display text-lg font-bold tabular-nums">
-                      {formatKSh(totalFeeKes)}
-                    </span>
-                  </div>
-                </div>
+                <PaymentSummary
+                  lines={[
+                    { label: 'Community setup', value: formatKSh(DAO_CREATION_FEE_KES) },
+                    ...(addPaybill ? [{ label: 'Paybill add-on', value: formatKSh(PAYBILL_ADDON_FEE_KES) }] : []),
+                    ...(addUssd ? [{ label: 'USSD add-on', value: formatKSh(USSD_ADDON_FEE_KES) }] : []),
+                  ]}
+                  total={formatKSh(totalFeeKes)}
+                  totalLabel="Launch total"
+                />
 
                 <p className="text-xs text-muted-foreground">
                   Your payment route is confirmed before the community goes live.
@@ -989,10 +998,8 @@ const CreateCommunity: React.FC = () => {
                   </>
                 ) : paymentMethod === 'mobile-money' ? (
                   `Pay ${formatKSh(totalFeeKes)} with mobile money`
-                ) : paymentMethod === 'whatsapp' ? (
-                  'Continue with WhatsApp payment'
                 ) : paymentMethod === 'privy' ? (
-                  'Continue with Privy wallet'
+                  'Continue with Baraza account'
                 ) : (
                   'Get SWIFT instructions'
                 )}

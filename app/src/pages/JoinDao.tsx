@@ -5,9 +5,10 @@ import {
   ArrowLeft,
   Check,
   CreditCard,
+  Landmark,
   Loader2,
   Phone,
-  Stars,
+  ShieldCheck,
   Wallet,
 } from "lucide-react";
 import { storePaymentOrderActivationSecret } from "@/lib/payments";
@@ -20,6 +21,11 @@ import CommunityBanner from "@/components/CommunityBanner";
 import { useSeo } from "@/lib/seo";
 import { PRODUCT_ENVIRONMENT } from "@/lib/network";
 import { useAccount } from "@/contexts/AccountContext";
+import {
+  PaymentMethodSelector,
+  PaymentSummary,
+  type BuyerPaymentMethod,
+} from "@/components/payments/BuyerPaymentFlow";
 
 const joinSteps = [
   { label: "Invite opened", state: "current" },
@@ -88,18 +94,20 @@ export default function JoinDao() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [phone, setPhone] = useState("");
-  const [stellarTxHash, setStellarTxHash] = useState("");
-  const [stellarAmountXlm, setStellarAmountXlm] = useState("1");
+  const [paymentMethod, setPaymentMethod] = useState<BuyerPaymentMethod>(() =>
+    account.country.code === "KE" ? "mobile-money" : "bank-transfer",
+  );
+  const [transactionReference, setTransactionReference] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isVerifyingStellar, setIsVerifyingStellar] = useState(false);
+  const [isVerifyingTransfer, setIsVerifyingTransfer] = useState(false);
   const [pendingWalletJoin, setPendingWalletJoin] = useState(false);
 
   const amount = community?.membershipFee ?? 0;
   const normalisedPhone = normaliseKenyanPhone(phone);
   const canSubmit = normalisedPhone !== null && amount > 0 && !isSubmitting;
-  const canVerifyStellar = /^[a-f0-9]{64}$/i.test(stellarTxHash.trim()) &&
-    Number(stellarAmountXlm) > 0 &&
-    !isVerifyingStellar;
+  const settlementAmount = 1;
+  const canVerifyTransfer = /^[a-f0-9]{64}$/i.test(transactionReference.trim()) &&
+    !isVerifyingTransfer;
 
   function startAccountJoin(accountId: string) {
     if (!id || amount <= 0) return;
@@ -170,9 +178,9 @@ export default function JoinDao() {
     navigate(`/join/${id}/status?orderId=${encodeURIComponent(orderId)}`);
   }
 
-  async function handleStellarSubmit() {
-    if (!id || !canVerifyStellar) return;
-    setIsVerifyingStellar(true);
+  async function handleTransferSubmit() {
+    if (!id || !canVerifyTransfer) return;
+    setIsVerifyingTransfer(true);
 
     try {
       let intentToken: string | null = null;
@@ -182,7 +190,7 @@ export default function JoinDao() {
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
             communityId: id,
-            amountXlm: Number(stellarAmountXlm),
+            amountXlm: settlementAmount,
             environment: PRODUCT_ENVIRONMENT,
           }),
         });
@@ -199,11 +207,11 @@ export default function JoinDao() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify(
           intentToken
-            ? { intentToken, txHash: stellarTxHash.trim().toLowerCase(), environment: PRODUCT_ENVIRONMENT }
+            ? { intentToken, txHash: transactionReference.trim().toLowerCase(), environment: PRODUCT_ENVIRONMENT }
             : {
                 communityId: id,
-                txHash: stellarTxHash.trim().toLowerCase(),
-                amountXlm: Number(stellarAmountXlm),
+                txHash: transactionReference.trim().toLowerCase(),
+                amountXlm: settlementAmount,
                 environment: PRODUCT_ENVIRONMENT,
               },
         ),
@@ -237,7 +245,7 @@ export default function JoinDao() {
         variant: "destructive",
       });
     } finally {
-      setIsVerifyingStellar(false);
+      setIsVerifyingTransfer(false);
     }
   }
 
@@ -274,151 +282,142 @@ export default function JoinDao() {
               </div>
               </CommunityBanner>
 
-              <div className="grid gap-4 p-5 lg:grid-cols-3 md:p-6">
-                <div className="rounded-lg border p-5">
-                  <div className="mb-4 flex items-center gap-3">
-                    <div className="grid h-10 w-10 place-items-center rounded-lg">
-                      <Phone className="h-5 w-5" />
-                    </div>
+              <div className="grid gap-6 p-5 md:p-6 lg:grid-cols-[minmax(0,0.42fr)_minmax(0,0.58fr)]">
+                <PaymentMethodSelector value={paymentMethod} onChange={setPaymentMethod} />
+
+                <div className="min-w-0 space-y-5 lg:border-l lg:pl-6">
+                  {paymentMethod === "mobile-money" && (
                     <div>
-                      <h2 className="font-display text-base font-semibold">Phone-first M-Pesa</h2>
-                      <p className="text-xs">Primary MVP path</p>
+                      <div className="mb-4 flex items-center gap-3">
+                        <Phone className="h-5 w-5 text-primary" />
+                        <div>
+                          <h2 className="text-base font-semibold">Pay with M-Pesa</h2>
+                          <p className="text-xs text-muted-foreground">A payment prompt will appear on your phone.</p>
+                        </div>
+                      </div>
+                      <label htmlFor="join-phone" className="mb-2 block text-sm font-semibold">M-Pesa phone number</label>
+                      <div className="flex rounded-lg border focus-within:border-primary">
+                        <span className="border-r px-3 py-3 text-sm">+254</span>
+                        <input
+                          id="join-phone"
+                          value={phone}
+                          onChange={(event) => setPhone(event.target.value)}
+                          className="min-w-0 flex-1 px-3 py-3 text-base outline-none"
+                          placeholder="0712 345 678"
+                          type="tel"
+                          inputMode="numeric"
+                          autoComplete="tel-national"
+                        />
+                      </div>
+                      <p className="mt-2 text-xs leading-5 text-muted-foreground">Use the number registered to your M-Pesa account.</p>
                     </div>
-                  </div>
+                  )}
 
-                  <label htmlFor="join-phone" className="mb-2 block text-xs font-semibold">M-Pesa phone number</label>
-                  <div className="flex rounded-lg border focus-within:border-current">
-                    <span className="border-r px-3 py-3 text-sm">+254</span>
-                    <input
-                      id="join-phone"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="min-w-0 flex-1 px-3 py-3 text-sm outline-none"
-                      placeholder="e.g. 0712 345 678"
-                      type="tel"
-                      inputMode="numeric"
-                      autoComplete="tel-national"
-                    />
-                  </div>
-                  <p className="mt-2 text-[11px]">We&apos;ll send a one-time code by SMS. Your number stays private.</p>
-
-                  <button
-                    type="button"
-                    onClick={handleMpesaSubmit}
-                    disabled={!canSubmit}
-                    className="btn-warm mt-5 w-full justify-center gap-2 py-3 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Sending prompt...
-                      </>
-                    ) : (
-                      <>
-                        <CreditCard className="h-4 w-4" />
-                        Request M-Pesa Prompt
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                <div className="rounded-lg border p-5">
-                  <div className="mb-4 flex items-center gap-3">
-                    <div className="grid h-10 w-10 place-items-center rounded-lg">
-                      <Stars className="h-5 w-5" />
-                    </div>
+                  {paymentMethod === "bank-transfer" && (
                     <div>
-                      <h2 className="font-display text-base font-semibold">Bank or international transfer</h2>
-                      <p className="text-xs">Verify transfer proof</p>
+                      <div className="mb-4 flex items-center gap-3">
+                        <Landmark className="h-5 w-5 text-primary" />
+                        <div>
+                          <h2 className="text-base font-semibold">Confirm a bank transfer</h2>
+                          <p className="text-xs text-muted-foreground">For buyers who already received transfer instructions.</p>
+                        </div>
+                      </div>
+                      <label htmlFor="transfer-reference" className="mb-2 block text-sm font-semibold">Payment reference</label>
+                      <input
+                        id="transfer-reference"
+                        value={transactionReference}
+                        onChange={(event) => setTransactionReference(event.target.value)}
+                        className="w-full rounded-lg border px-3 py-3 text-base outline-none focus:border-primary"
+                        placeholder="Enter the reference from your receipt"
+                        autoComplete="off"
+                      />
+                      <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                        Bank instructions are issued before payment. Baraza checks the reference before activating membership.
+                      </p>
                     </div>
-                  </div>
-                  <p className="text-sm leading-6">
-                    Paste the transaction reference supplied by your transfer provider. Baraza verifies it before activating membership.
-                  </p>
+                  )}
 
-                  <label htmlFor="stellar-amount" className="mb-2 mt-4 block text-xs font-semibold">Transfer amount reference</label>
-                  <input
-                    id="stellar-amount"
-                    value={stellarAmountXlm}
-                    onChange={(event) => setStellarAmountXlm(event.target.value)}
-                    className="w-full rounded-lg border px-3 py-3 text-sm outline-none"
-                    inputMode="decimal"
-                    placeholder="1"
+                  {paymentMethod === "privy" && (
+                    <div>
+                      <div className="mb-4 flex items-center gap-3">
+                        <Wallet className="h-5 w-5 text-primary" />
+                        <div>
+                          <h2 className="text-base font-semibold">Pay from your Baraza account</h2>
+                          <p className="text-xs text-muted-foreground">Sign in to use your private payment account.</p>
+                        </div>
+                      </div>
+                      <p className="text-sm leading-6">
+                        Your payment and membership stay linked to one account, so you can return later to vote and view receipts.
+                      </p>
+                      {!account.configured && (
+                        <p className="mt-3 rounded-lg border px-3 py-2 text-xs leading-5 text-muted-foreground">
+                          Secure account payments are not configured in this preview. You can still manage your profile.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  <PaymentSummary
+                    lines={[{ label: "Monthly membership dues", value: amount > 0 ? formatKSh(amount) : "-" }]}
+                    total={amount > 0 ? formatKSh(amount) : "-"}
+                    totalLabel="Pay now"
                   />
 
-                  <label htmlFor="stellar-tx" className="mb-2 mt-3 block text-xs font-semibold">Transaction reference</label>
-                  <input
-                    id="stellar-tx"
-                    value={stellarTxHash}
-                    onChange={(event) => setStellarTxHash(event.target.value)}
-                    className="w-full rounded-lg border px-3 py-3 font-mono text-xs outline-none"
-                    placeholder="64-character transaction reference"
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() => void handleStellarSubmit()}
-                    disabled={!canVerifyStellar}
-                    className="btn-warm mt-5 w-full justify-center gap-2 py-3 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {isVerifyingStellar ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Verifying transfer...
-                      </>
-                    ) : (
-                      <>
-                        <Stars className="h-4 w-4" />
-                        Verify transfer
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                <div className="rounded-lg border p-5">
-                  <div className="mb-4 flex items-center gap-3">
-                    <div className="grid h-10 w-10 place-items-center rounded-lg">
-                      <Wallet className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h2 className="font-display text-base font-semibold">Privy account</h2>
-                      <p className="text-xs">Private account access</p>
-                    </div>
-                  </div>
-                  <p className="text-sm leading-6">
-                    Log in or create an account to pay, receive membership credentials, and vote.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (account.authenticated && account.accountId) {
-                        startAccountJoin(account.accountId);
-                        return;
-                      }
-                      setPendingWalletJoin(true);
-                      account.login();
-                    }}
-                    disabled={!account.ready || !account.configured || amount <= 0}
-                    className="btn-ghost mt-5 w-full justify-center gap-2 py-3 text-sm font-bold"
-                  >
-                    <Wallet className="h-4 w-4" />
-                    {!account.ready ? "Loading..." : account.authenticated ? "Pay from Privy account" : "Log in with Privy"}
-                  </button>
-                  {!account.authenticated && account.configured && (
+                  {paymentMethod === "mobile-money" ? (
                     <button
                       type="button"
-                      onClick={() => {
-                        setPendingWalletJoin(true);
-                        account.createAccount();
-                      }}
-                      className="mt-3 w-full text-center text-xs font-semibold"
+                      onClick={handleMpesaSubmit}
+                      disabled={!canSubmit}
+                      className="btn-warm min-h-12 w-full justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      Create a Privy account
+                      {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+                      {isSubmitting ? "Sending payment prompt..." : `Pay ${formatKSh(amount)} with M-Pesa`}
                     </button>
+                  ) : paymentMethod === "bank-transfer" ? (
+                    <button
+                      type="button"
+                      onClick={() => void handleTransferSubmit()}
+                      disabled={!canVerifyTransfer}
+                      className="btn-warm min-h-12 w-full justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {isVerifyingTransfer ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+                      {isVerifyingTransfer ? "Checking payment..." : "Check bank payment"}
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (account.authenticated && account.accountId) {
+                            startAccountJoin(account.accountId);
+                            return;
+                          }
+                          setPendingWalletJoin(true);
+                          account.login();
+                        }}
+                        disabled={!account.ready || !account.configured || amount <= 0}
+                        className="btn-warm min-h-12 w-full justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <Wallet className="h-4 w-4" />
+                        {!account.ready ? "Preparing account..." : account.authenticated ? `Pay ${formatKSh(amount)} from account` : "Log in to continue"}
+                      </button>
+                      {!account.authenticated && account.configured && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPendingWalletJoin(true);
+                            account.createAccount();
+                          }}
+                          className="min-h-11 w-full text-center text-sm font-semibold"
+                        >
+                          Create a Baraza account
+                        </button>
+                      )}
+                      <Link to="/profile" className="inline-flex min-h-11 items-center text-sm font-semibold">
+                        Manage Baraza account
+                      </Link>
+                    </>
                   )}
-                  <Link to="/profile" className="mt-3 inline-flex text-xs font-semibold">
-                    Manage Baraza account
-                  </Link>
                 </div>
               </div>
 
