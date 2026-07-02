@@ -33,6 +33,22 @@ export default function Header() {
   const { theme, toggleTheme } = useTheme();
   const account = useAccount();
 
+  const handleLogin = () => {
+    if (account.configured) {
+      account.login();
+      return;
+    }
+    navigate("/profile");
+  };
+
+  const handleCreateAccount = () => {
+    if (account.configured) {
+      account.createAccount();
+      return;
+    }
+    navigate("/profile");
+  };
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -153,7 +169,7 @@ export default function Header() {
         </div>
 
         <div className="relative flex shrink-0 items-center gap-2">
-          <div className="hidden items-center gap-2 sm:flex">
+          <div className="hidden items-center gap-2 lg:flex">
             {account.authenticated ? (
               <Link
                 to="/profile"
@@ -167,25 +183,38 @@ export default function Header() {
                 <span className="hidden text-xs font-semibold text-muted-foreground xl:inline">Privy</span>
                 <button
                   type="button"
-                  onClick={account.login}
-                  disabled={!account.configured || !account.ready}
-                  className="inline-flex h-10 items-center gap-2 rounded-md border border-border/70 bg-surface/70 px-3 text-sm font-semibold text-foreground transition-colors hover:border-primary/45 disabled:cursor-not-allowed disabled:opacity-45"
+                  onClick={handleLogin}
+                  disabled={!account.ready}
+                  className="inline-flex h-10 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-semibold text-foreground transition-colors hover:border-primary/55 hover:bg-surface disabled:cursor-wait disabled:opacity-60"
                 >
                   <LogIn className="h-4 w-4" />
                   Log in
                 </button>
                 <button
                   type="button"
-                  onClick={account.createAccount}
-                  disabled={!account.configured || !account.ready}
-                  className="hidden h-10 items-center gap-2 rounded-md bg-primary px-3 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-45 lg:inline-flex"
+                  onClick={handleCreateAccount}
+                  disabled={!account.ready}
+                  className="inline-flex h-10 items-center gap-2 rounded-md bg-primary px-3 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-wait disabled:opacity-60"
                 >
                   <UserPlus className="h-4 w-4" />
-                  Create account
+                  Get started
                 </button>
               </>
             )}
           </div>
+
+          {!account.authenticated && (
+            <button
+              type="button"
+              onClick={handleCreateAccount}
+              disabled={!account.ready}
+              className="inline-flex h-10 items-center gap-1.5 rounded-md bg-primary px-3 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-wait disabled:opacity-60 lg:hidden"
+            >
+              <UserPlus className="h-4 w-4" />
+              <span className="hidden sm:inline">Get started</span>
+              <span className="sm:hidden">Join</span>
+            </button>
+          )}
 
           <div className="relative hidden md:block 2xl:hidden">
             <button
@@ -260,7 +289,7 @@ export default function Header() {
           <button
             type="button"
             onClick={toggleTheme}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-border/70 bg-surface/70 text-muted-foreground transition-colors hover:border-primary/45 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+            className="hidden h-10 w-10 items-center justify-center rounded-md border border-border/70 bg-surface/70 text-foreground transition-colors hover:border-primary/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 sm:inline-flex"
             aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
             title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
           >
@@ -269,7 +298,7 @@ export default function Header() {
 
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-surface hover:text-foreground md:hidden"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-md text-foreground transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 md:hidden"
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileOpen}
           >
@@ -320,6 +349,41 @@ export default function Header() {
       {mobileOpen && (
         <div className="animate-fade-in border-t border-border/50 bg-background/95 backdrop-blur-xl md:hidden">
           <nav className="container mx-auto flex flex-col gap-1 px-4 py-4" aria-label="Mobile navigation">
+            <div className="mb-3 border-b border-border/60 pb-4">
+              {account.authenticated ? (
+                <Link
+                  to="/profile"
+                  className="inline-flex min-h-11 w-full items-center gap-2 rounded-md bg-primary/10 px-3 text-sm font-semibold text-foreground"
+                >
+                  <CircleUserRound className="h-4 w-4 text-primary" />
+                  {account.displayName}
+                </Link>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={handleLogin}
+                    disabled={!account.ready}
+                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-border bg-background text-sm font-semibold text-foreground disabled:cursor-wait disabled:opacity-60"
+                  >
+                    <LogIn className="h-4 w-4" />
+                    Log in
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCreateAccount}
+                    disabled={!account.ready}
+                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-primary text-sm font-bold text-primary-foreground disabled:cursor-wait disabled:opacity-60"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    Get started
+                  </button>
+                  <p className="col-span-2 mt-1 text-xs leading-5 text-muted-foreground">
+                    Continue with your phone number or email.
+                  </p>
+                </div>
+              )}
+            </div>
             {navLinks.map((link) => {
               const isActive =
                 location.pathname === link.path ||
@@ -374,37 +438,6 @@ export default function Header() {
               />
             </form>
             <div className="mt-2 flex flex-col gap-2 border-t border-border/50 pt-3">
-              {account.authenticated ? (
-                <Link
-                  to="/profile"
-                  className="inline-flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-primary/10"
-                >
-                  <CircleUserRound className="h-4 w-4 text-primary" />
-                  {account.displayName}
-                </Link>
-              ) : (
-                <div className="grid grid-cols-2 gap-2 px-3 pb-2">
-                  <button
-                    type="button"
-                    onClick={account.login}
-                    disabled={!account.configured || !account.ready}
-                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border font-semibold disabled:opacity-45"
-                  >
-                    <LogIn className="h-4 w-4" />
-                    Log in
-                  </button>
-                  <button
-                    type="button"
-                    onClick={account.createAccount}
-                    disabled={!account.configured || !account.ready}
-                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-primary font-bold text-primary-foreground disabled:opacity-45"
-                  >
-                    <UserPlus className="h-4 w-4" />
-                    Sign up
-                  </button>
-                  <p className="col-span-2 text-xs text-muted-foreground">Account access secured by Privy.</p>
-                </div>
-              )}
               <button
                 type="button"
                 onClick={toggleTheme}
