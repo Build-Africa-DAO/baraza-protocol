@@ -22,6 +22,8 @@ const CreateDecision = lazy(() => import('./pages/CreateDecision'));
 const JoinDao = lazy(() => import('./pages/JoinDao'));
 const JoinStatus = lazy(() => import('./pages/JoinStatus'));
 const Profile = lazy(() => import('./pages/Profile'));
+const ProfileSettings = lazy(() => import('./pages/ProfileSettings'));
+const ProfileInvites = lazy(() => import('./pages/ProfileInvites'));
 const TreasuryDetail = lazy(() => import('./pages/TreasuryDetail'));
 const ProposalDetail = lazy(() => import('./pages/ProposalDetail'));
 const AdminReconciliation = lazy(() => import('./pages/AdminReconciliation'));
@@ -62,6 +64,8 @@ const App: React.FC = () => {
               <Route path="/join/:id" element={<JoinDao />} />
               <Route path="/join/:id/status" element={<JoinStatus />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/profile/settings" element={<ProfileSettings />} />
+              <Route path="/profile/invites" element={<ProfileInvites />} />
               <Route path="/dashboard/:id/treasury" element={<TreasuryDetail />} />
               <Route path="/dashboard/:id/decisions/:decisionId" element={<ProposalDetail />} />
               <Route path="/onboarding" element={<Onboarding />} />

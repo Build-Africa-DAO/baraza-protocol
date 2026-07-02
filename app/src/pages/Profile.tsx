@@ -1,6 +1,7 @@
 import { type ChangeEvent, type FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
+  AlertCircle,
   ArrowRight,
   AtSign,
   BriefcaseBusiness,
@@ -9,24 +10,22 @@ import {
   CircleUserRound,
   Compass,
   Globe2,
+  HeartHandshake,
   Loader2,
   LogIn,
-  LogOut,
   Pencil,
   PlusCircle,
+  Settings,
   ShieldCheck,
   UserPlus,
+  Vote,
   X,
 } from 'lucide-react';
 import Layout from '@/components/Layout';
-import CommunityBanner from '@/components/CommunityBanner';
 import { AskAkili } from '@/akili/AskAkili';
-import { MemberBadges } from '@/components/MemberBadges';
 import { DuesStreakChip } from '@/components/DuesStreakChip';
-import { ReferralProgress } from '@/components/ReferralProgress';
 import { useAccount } from '@/contexts/AccountContext';
 import { useCommunities } from '@/hooks/useCommunities';
-import { deriveBadges } from '@/lib/badges';
 import { getBountyStatsForCommunity, getOpenBountiesForCommunity } from '@/lib/bounties';
 import { dataStore } from '@/lib/dataStore';
 import { fetchDuesStreak, type StreakResult } from '@/lib/duesStreak';
@@ -35,6 +34,7 @@ import { useSeo } from '@/lib/seo';
 import { formatKSh } from '@/lib/utils';
 import { ACCOUNT_COUNTRIES, formatAccountDate, type AccountCountryCode } from '@/lib/accountLocale';
 import { prepareProfilePhoto, type MemberProfile } from '@/lib/memberProfile';
+import { filterProposalsToReview, getProposalDeadline } from '@/lib/memberActions';
 import { useToast } from '@/hooks/use-toast';
 
 const profileFieldClass = 'min-h-12 w-full rounded-md border bg-background px-3 py-2 text-base outline-none transition-colors placeholder:text-muted-foreground focus:border-primary';
@@ -130,7 +130,6 @@ export default function Profile() {
     lastPaidAt: null,
     perCommunity: {},
   });
-  const [badgeEvaluatedAt] = useState(() => Date.now());
 
   useEffect(() => {
     if (!address) return;
@@ -165,33 +164,15 @@ export default function Profile() {
     [myMemberships],
   );
 
-  const badgeSummary = useMemo(() => {
-    const joinedTimes = myMemberships
-      .map((membership) => new Date(membership.record.joinedAt).getTime())
-      .filter((time) => Number.isFinite(time));
-    const earliestJoinedAt = joinedTimes.length > 0
-      ? new Date(Math.min(...joinedTimes)).toISOString()
-      : null;
-    const ninetyDays = 90 * 24 * 60 * 60 * 1000;
-    const foundedSurvivingCommunityCount = address
-      ? communities.filter((community) => {
-          if (community.createdBy !== address) return false;
-          const createdAt = new Date(community.createdAt).getTime();
-          return Number.isFinite(createdAt) && badgeEvaluatedAt - createdAt >= ninetyDays;
-        }).length
-      : 0;
-    const proposalVoteCount = address ? dataStore.getVoteCountForWallet(address) : 0;
+  const proposalVoteCount = address ? dataStore.getVoteCountForWallet(address) : 0;
 
-    return {
-      badges: deriveBadges({
-        activeMembershipCount: myMemberships.length,
-        earliestJoinedAt,
-        foundedSurvivingCommunityCount,
-        proposalVoteCount,
-      }),
-      proposalVoteCount,
-    };
-  }, [address, badgeEvaluatedAt, communities, myMemberships]);
+  const proposalsToReview = useMemo(() => myMemberships
+    .flatMap(({ community }) => filterProposalsToReview(
+      dataStore.getDecisionsForCommunity(community.id),
+      address,
+    ).map((decision) => ({ decision, community })))
+    .sort((a, b) => new Date(a.decision.endsAt).getTime() - new Date(b.decision.endsAt).getTime()),
+  [address, myMemberships]);
 
   const memberBounties = useMemo(
     () => myMemberships.flatMap(({ community }) =>
@@ -288,306 +269,134 @@ export default function Profile() {
     );
   }
 
+  const hasPublicProfile = Boolean(
+    account.profile.avatarUrl
+    && account.profile.bio
+    && (account.profile.websiteUrl || account.profile.xUrl || account.profile.instagramUrl),
+  );
+
   return (
     <Layout>
-      <section className="py-10 md:py-14">
-        <div className="container mx-auto px-4">
-          <CommunityBanner className="mb-6 p-5 md:p-6">
-            <div className="flex flex-col justify-between gap-5 md:flex-row md:items-center">
-              <div className="flex min-w-0 items-center gap-4">
+      <section className="py-8 md:py-12">
+        <div className="container mx-auto max-w-6xl px-4">
+          <header className="mb-7 border-b border-border pb-7">
+            <div className="flex flex-col justify-between gap-5 md:flex-row md:items-start">
+              <div className="flex min-w-0 items-start gap-4">
                 {account.profile.avatarUrl ? (
-                  <img
-                    src={account.profile.avatarUrl}
-                    alt={`${account.displayName}'s profile`}
-                    className="h-16 w-16 shrink-0 rounded-md border border-primary/25 object-cover"
-                  />
+                  <img src={account.profile.avatarUrl} alt={`${account.displayName}'s profile`} className="h-20 w-20 shrink-0 rounded-md border object-cover" />
                 ) : (
-                  <div className="grid h-16 w-16 shrink-0 place-items-center rounded-md border border-primary/25 bg-primary/10 font-display text-xl font-bold text-primary">
+                  <div className="grid h-20 w-20 shrink-0 place-items-center rounded-md border bg-primary/10 font-display text-2xl font-bold text-primary">
                     {getInitials(account.displayName)}
                   </div>
                 )}
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-primary">Member profile</p>
-                  <h1 className="mt-1 break-words font-display text-2xl font-bold md:text-3xl">
-                    {account.displayName}
-                  </h1>
-                  {account.verifiedContact && (
-                    <p className="mt-1 truncate text-sm text-muted-foreground">{account.verifiedContact}</p>
-                  )}
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {account.country.name} · {account.country.currency}
-                  </p>
+                <div className="min-w-0 pt-1">
+                  <h1 className="break-words font-display text-2xl font-bold md:text-3xl">{account.displayName}</h1>
+                  {account.verifiedContact && <p className="mt-1 truncate text-sm text-muted-foreground">{account.verifiedContact}</p>}
+                  {account.profile.bio && <p className="mt-3 max-w-2xl text-sm leading-6 text-foreground/90">{account.profile.bio}</p>}
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {account.profile.websiteUrl && (
+                      <a href={account.profile.websiteUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold hover:border-primary/45"><Globe2 className="h-4 w-4" /> Website</a>
+                    )}
+                    {account.profile.xUrl && (
+                      <a href={account.profile.xUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold hover:border-primary/45"><AtSign className="h-4 w-4" /> X</a>
+                    )}
+                    {account.profile.instagramUrl && (
+                      <a href={account.profile.instagramUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold hover:border-primary/45"><Camera className="h-4 w-4" /> Instagram</a>
+                    )}
+                  </div>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsEditingProfile((current) => !current)}
-                  className="btn-warm inline-flex min-h-11 flex-1 items-center justify-center gap-2 text-sm sm:flex-none"
-                >
+
+              <div className="flex flex-wrap gap-2 md:justify-end">
+                <button type="button" onClick={() => setIsEditingProfile((current) => !current)} className="btn-warm inline-flex min-h-11 flex-1 items-center justify-center gap-2 text-sm sm:flex-none">
                   {isEditingProfile ? <X className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
-                  {isEditingProfile ? 'Close editor' : 'Edit profile'}
+                  {isEditingProfile ? 'Close editor' : 'Edit public profile'}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => void account.logout()}
-                  className="btn-ghost inline-flex min-h-11 flex-1 items-center justify-center gap-2 text-sm sm:flex-none"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Log out
-                </button>
+                <Link to="/profile/invites" className="btn-ghost inline-flex min-h-11 flex-1 items-center justify-center gap-2 text-sm sm:flex-none"><HeartHandshake className="h-4 w-4" /> Invites</Link>
+                <Link to="/profile/settings" className="btn-ghost inline-flex min-h-11 flex-1 items-center justify-center gap-2 text-sm sm:flex-none"><Settings className="h-4 w-4" /> Settings</Link>
               </div>
             </div>
-            {(account.profile.bio || account.profile.websiteUrl || account.profile.xUrl || account.profile.instagramUrl) && (
-              <div className="mt-5 border-t border-border/60 pt-4">
-                {account.profile.bio && (
-                  <p className="max-w-2xl text-sm leading-6 text-foreground/90">{account.profile.bio}</p>
-                )}
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {account.profile.websiteUrl && (
-                    <a href={account.profile.websiteUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold hover:border-primary/45">
-                      <Globe2 className="h-4 w-4" /> Website
-                    </a>
-                  )}
-                  {account.profile.xUrl && (
-                    <a href={account.profile.xUrl} target="_blank" rel="noreferrer" aria-label="X profile" className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-md border px-3 text-sm font-bold hover:border-primary/45">
-                      X
-                    </a>
-                  )}
-                  {account.profile.instagramUrl && (
-                    <a href={account.profile.instagramUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold hover:border-primary/45">
-                      <AtSign className="h-4 w-4" /> Instagram
-                    </a>
-                  )}
-                </div>
+          </header>
+
+          {!hasPublicProfile && !isEditingProfile && (
+            <div className="mb-7 flex flex-col gap-4 rounded-md border border-primary/30 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex gap-3">
+                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                <div><p className="text-sm font-bold">Finish your public profile</p><p className="mt-1 text-sm text-muted-foreground">Add a photo, short bio, and at least one social link so members can recognize you.</p></div>
               </div>
-            )}
-          </CommunityBanner>
+              <button type="button" onClick={() => setIsEditingProfile(true)} className="min-h-11 shrink-0 rounded-md border px-4 text-sm font-bold hover:border-primary/45">Set up profile</button>
+            </div>
+          )}
 
           {isEditingProfile && (
-            <form onSubmit={saveProfile} className="mb-6 border-y border-border bg-card/55 px-4 py-6 md:rounded-md md:border md:p-6" aria-labelledby="profile-editor-title">
-              <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+            <form onSubmit={saveProfile} className="mb-7 border-y border-border bg-card/55 py-6 md:rounded-md md:border md:p-6" aria-labelledby="profile-editor-title">
+              <div className="flex flex-col gap-6 px-4 md:px-0 lg:flex-row lg:items-start">
                 <div className="flex shrink-0 items-center gap-4 lg:w-48 lg:flex-col lg:items-start">
-                  {profileDraft.avatarUrl ? (
-                    <img src={profileDraft.avatarUrl} alt="Profile preview" className="h-24 w-24 rounded-md border object-cover" />
-                  ) : (
-                    <div className="grid h-24 w-24 place-items-center rounded-md border bg-primary/10 font-display text-2xl font-bold text-primary">
-                      {getInitials(profileDraft.displayName)}
-                    </div>
-                  )}
+                  {profileDraft.avatarUrl ? <img src={profileDraft.avatarUrl} alt="Profile preview" className="h-24 w-24 rounded-md border object-cover" /> : <div className="grid h-24 w-24 place-items-center rounded-md border bg-primary/10 font-display text-2xl font-bold text-primary">{getInitials(profileDraft.displayName)}</div>}
                   <div className="flex flex-col gap-2">
-                    <label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold transition-colors hover:border-primary/45">
-                      {isPreparingPhoto ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
-                      {isPreparingPhoto ? 'Preparing...' : 'Choose photo'}
+                    <label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold hover:border-primary/45">
+                      {isPreparingPhoto ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}{isPreparingPhoto ? 'Preparing...' : 'Choose photo'}
                       <input type="file" accept="image/*" className="sr-only" onChange={(event) => void handlePhoto(event)} disabled={isPreparingPhoto} />
                     </label>
-                    {profileDraft.avatarUrl && (
-                      <button type="button" onClick={() => updateDraft('avatarUrl', '')} className="min-h-10 text-left text-sm text-muted-foreground hover:text-foreground">
-                        Remove photo
-                      </button>
-                    )}
+                    {profileDraft.avatarUrl && <button type="button" onClick={() => updateDraft('avatarUrl', '')} className="min-h-10 text-left text-sm text-muted-foreground hover:text-foreground">Remove photo</button>}
                   </div>
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <div className="mb-5">
-                    <h2 id="profile-editor-title" className="font-display text-xl font-bold">Edit profile</h2>
-                    <p className="mt-1 text-sm text-muted-foreground">Use the name and details you want other members to see.</p>
-                  </div>
-
+                  <div className="mb-5"><h2 id="profile-editor-title" className="font-display text-xl font-bold">Edit public profile</h2><p className="mt-1 text-sm text-muted-foreground">These details help other community members know who they are working with.</p></div>
                   <div className="grid gap-5 md:grid-cols-2">
-                    <label className="block md:col-span-2">
-                      <span className="mb-2 block text-sm font-semibold">Profile name</span>
-                      <input value={profileDraft.displayName} onChange={(event) => updateDraft('displayName', event.target.value)} maxLength={60} autoComplete="name" className={profileFieldClass} placeholder="Aziz Motomoto" />
-                    </label>
-                    <label className="block md:col-span-2">
-                      <span className="mb-2 block text-sm font-semibold">Bio</span>
-                      <textarea value={profileDraft.bio} onChange={(event) => updateDraft('bio', event.target.value)} maxLength={280} rows={4} className={`${profileFieldClass} resize-y`} placeholder="Tell members what you build, organize, or care about." />
-                      <span className="mt-1 block text-right text-xs text-muted-foreground">{profileDraft.bio.length}/280</span>
-                    </label>
-                    <label className="block">
-                      <span className="mb-2 block text-sm font-semibold">Website</span>
-                      <input value={profileDraft.websiteUrl} onChange={(event) => updateDraft('websiteUrl', event.target.value)} inputMode="url" autoComplete="url" className={profileFieldClass} placeholder="buildadao.io" />
-                    </label>
-                    <label className="block">
-                      <span className="mb-2 block text-sm font-semibold">X</span>
-                      <input value={profileDraft.xUrl} onChange={(event) => updateDraft('xUrl', event.target.value)} inputMode="url" className={profileFieldClass} placeholder="x.com/yourname" />
-                    </label>
-                    <label className="block md:col-span-2">
-                      <span className="mb-2 block text-sm font-semibold">Instagram</span>
-                      <input value={profileDraft.instagramUrl} onChange={(event) => updateDraft('instagramUrl', event.target.value)} inputMode="url" className={profileFieldClass} placeholder="instagram.com/yourname" />
-                    </label>
+                    <label className="block md:col-span-2"><span className="mb-2 block text-sm font-semibold">Profile name</span><input value={profileDraft.displayName} onChange={(event) => updateDraft('displayName', event.target.value)} maxLength={60} autoComplete="name" className={profileFieldClass} placeholder="Example: Aziz Motomoto" /></label>
+                    <label className="block md:col-span-2"><span className="mb-2 block text-sm font-semibold">Bio</span><textarea value={profileDraft.bio} onChange={(event) => updateDraft('bio', event.target.value)} maxLength={280} rows={4} className={`${profileFieldClass} resize-y`} placeholder="Example: I organize youth savings groups and build community finance tools." /><span className="mt-1 block text-right text-xs text-muted-foreground">{profileDraft.bio.length}/280</span></label>
                   </div>
 
+                  <div className="my-6 border-t border-border pt-5"><h3 className="text-sm font-bold">Connect social profiles</h3><p className="mt-1 text-sm text-muted-foreground">Add links members can use to verify and contact you.</p></div>
+                  <div className="grid gap-5 md:grid-cols-2">
+                    <label className="block"><span className="mb-2 flex items-center gap-2 text-sm font-semibold"><Globe2 className="h-4 w-4" /> Website</span><input value={profileDraft.websiteUrl} onChange={(event) => updateDraft('websiteUrl', event.target.value)} inputMode="url" autoComplete="url" className={profileFieldClass} placeholder="Example: buildadao.io" /></label>
+                    <label className="block"><span className="mb-2 flex items-center gap-2 text-sm font-semibold"><AtSign className="h-4 w-4" /> X</span><input value={profileDraft.xUrl} onChange={(event) => updateDraft('xUrl', event.target.value)} inputMode="url" className={profileFieldClass} placeholder="Example: x.com/yourname" /></label>
+                    <label className="block md:col-span-2"><span className="mb-2 flex items-center gap-2 text-sm font-semibold"><Camera className="h-4 w-4" /> Instagram</span><input value={profileDraft.instagramUrl} onChange={(event) => updateDraft('instagramUrl', event.target.value)} inputMode="url" className={profileFieldClass} placeholder="Example: instagram.com/yourname" /></label>
+                  </div>
                   <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                    <button type="button" onClick={() => { setProfileDraft(account.profile); setIsEditingProfile(false); }} className="btn-ghost min-h-11 justify-center">
-                      Cancel
-                    </button>
-                    <button type="submit" disabled={isPreparingPhoto} className="btn-warm min-h-11 justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50">
-                      <Check className="h-4 w-4" /> Save profile
-                    </button>
+                    <button type="button" onClick={() => { setProfileDraft(account.profile); setIsEditingProfile(false); }} className="btn-ghost min-h-11 justify-center">Cancel</button>
+                    <button type="submit" disabled={isPreparingPhoto} className="btn-warm min-h-11 justify-center gap-2 disabled:opacity-50"><Check className="h-4 w-4" /> Save profile</button>
                   </div>
                 </div>
               </div>
             </form>
           )}
 
-          <div className="grid gap-6 lg:grid-cols-[0.34fr_0.66fr]">
-            <aside className="space-y-6">
-              <div className="baraza-card p-5">
-                <div className="mb-3 flex items-center justify-between">
-                  <h2 className="text-sm font-bold">Participation balance</h2>
-                  <DuesStreakChip streakMonths={streak.consecutiveMonthsPaid} />
-                </div>
-                <p className="text-4xl font-black tabular-nums leading-none">{participationBalance}</p>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Your current voting weight across active memberships.
-                </p>
+          <div className="mb-7 grid grid-cols-2 border-y border-border md:grid-cols-4">
+            <div className="p-4"><p className="text-xs text-muted-foreground">Memberships</p><p className="mt-1 text-xl font-bold tabular-nums">{myMemberships.length}</p></div>
+            <div className="border-l border-border p-4"><p className="text-xs text-muted-foreground">Voting weight</p><p className="mt-1 text-xl font-bold tabular-nums">{participationBalance}</p></div>
+            <div className="border-t border-border p-4 md:border-l md:border-t-0"><p className="text-xs text-muted-foreground">Dues streak</p><div className="mt-2"><DuesStreakChip streakMonths={streak.consecutiveMonthsPaid} /></div></div>
+            <div className="border-l border-t border-border p-4 md:border-t-0"><p className="text-xs text-muted-foreground">Votes cast</p><p className="mt-1 text-xl font-bold tabular-nums">{proposalVoteCount}</p></div>
+          </div>
+
+          <section className="baraza-card mb-7 p-5 md:p-6" aria-labelledby="votes-needed-title">
+            <div className="mb-5 flex items-center justify-between gap-3"><div><h2 id="votes-needed-title" className="font-display text-lg font-bold">Decisions needing your vote</h2><p className="mt-1 text-sm text-muted-foreground">Open proposals from communities you belong to.</p></div><Vote className="h-5 w-5 text-primary" /></div>
+            {proposalsToReview.length > 0 ? (
+              <div className="divide-y divide-border rounded-md border">
+                {proposalsToReview.slice(0, 5).map(({ decision, community }) => {
+                  const deadline = getProposalDeadline(decision.endsAt);
+                  return <Link key={decision.id} to={`/dashboard/${community.id}/decisions/${decision.id}`} className="flex flex-col gap-3 p-4 transition-colors hover:bg-surface sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><p className="font-display text-sm font-bold">{decision.title}</p><p className="mt-1 text-xs text-muted-foreground">{community.name} · {decision.votesFor + decision.votesAgainst + (decision.votesAbstain ?? 0)} votes cast</p></div><div className="flex shrink-0 items-center gap-3"><span className={deadline.urgent ? 'rounded-full bg-primary/15 px-2.5 py-1 text-xs font-bold text-primary' : 'text-xs font-semibold text-muted-foreground'}>{deadline.label}</span><span className="inline-flex items-center gap-1 text-sm font-bold text-primary">Review <ArrowRight className="h-4 w-4" /></span></div></Link>;
+                })}
               </div>
+            ) : myMemberships.length > 0 ? (
+              <div className="rounded-md border border-dashed p-6 text-center"><Check className="mx-auto h-5 w-5 text-primary" /><p className="mt-2 text-sm font-bold">You are caught up</p><p className="mt-1 text-sm text-muted-foreground">No community decisions are waiting for your vote.</p></div>
+            ) : (
+              <div className="rounded-md border border-dashed p-6 text-center"><p className="text-sm font-bold">Join a community to receive proposals</p><p className="mt-1 text-sm text-muted-foreground">New votes will appear here with their closing date and urgency.</p><Link to="/communities" className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-md border px-4 text-sm font-bold hover:border-primary/45"><Compass className="h-4 w-4" /> Explore communities</Link></div>
+            )}
+          </section>
 
-              <div className="baraza-card p-5">
-                <h2 className="mb-4 text-sm font-bold">Country and currency</h2>
-                {countryControl}
-              </div>
+          <div className="grid gap-7 lg:grid-cols-2">
+            <section className="baraza-card p-5" aria-labelledby="memberships-title">
+              <div className="mb-5 flex items-center justify-between"><h2 id="memberships-title" className="font-display text-base font-bold">Your memberships</h2><Link to="/communities" className="text-sm font-bold text-primary hover:underline">Browse</Link></div>
+              {myMemberships.length > 0 ? <div className="divide-y divide-border rounded-md border">{myMemberships.map(({ record, community }) => <Link key={community.id} to={`/dashboard/${community.id}`} className="flex items-center gap-3 p-4 hover:bg-surface"><div className="grid h-11 w-11 shrink-0 place-items-center rounded-md border font-display text-sm font-bold">{community.image}</div><div className="min-w-0 flex-1"><div className="flex items-center gap-2"><p className="truncate text-sm font-bold">{community.name}</p><ShieldCheck className="h-3.5 w-3.5 text-primary" /></div><p className="mt-1 text-xs text-muted-foreground">Joined {formatAccountDate(record.joinedAt, account.country.code)} · {formatKSh(community.membershipFee)}/mo</p></div><ArrowRight className="h-4 w-4" /></Link>)}</div> : <div className="rounded-md border border-dashed p-6 text-center"><p className="text-sm font-bold">No memberships yet</p><p className="mt-1 text-sm text-muted-foreground">Explore a community or launch one with your group.</p><div className="mt-4 flex flex-col justify-center gap-2 sm:flex-row"><Link to="/communities" className="btn-warm justify-center gap-2"><Compass className="h-4 w-4" /> Explore</Link><Link to="/create/purpose" className="btn-ghost justify-center gap-2"><PlusCircle className="h-4 w-4" /> Launch</Link></div><div className="mt-4"><AskAkili prompt="Help me choose a community for a youth savings group of around 15 members" label="Ask Akili" variant="chip" /></div></div>}
+            </section>
 
-              <div className="baraza-card p-5">
-                <div className="mb-3 flex items-center justify-between">
-                  <h2 className="text-sm font-bold">Badges</h2>
-                  <span className="text-xs font-semibold text-muted-foreground">
-                    {badgeSummary.badges.earned.length} earned
-                  </span>
-                </div>
-                <MemberBadges result={badgeSummary.badges} variant="compact" />
-              </div>
-
-              <div className="baraza-card p-5">
-                <ReferralProgress />
-              </div>
-            </aside>
-
-            <div className="space-y-6">
-              <div className="baraza-card p-5">
-                <div className="mb-5 flex items-center justify-between gap-3">
-                  <h2 className="text-sm font-bold">
-                    Your memberships {myMemberships.length > 0 && `(${myMemberships.length})`}
-                  </h2>
-                  <Link to="/communities" className="text-sm font-semibold text-primary hover:underline">
-                    Browse
-                  </Link>
-                </div>
-
-                {myMemberships.length > 0 ? (
-                  <div className="space-y-3">
-                    {myMemberships.map(({ record, community }) => (
-                      <Link
-                        key={community.id}
-                        to={`/dashboard/${community.id}`}
-                        className="group flex items-center gap-4 rounded-md border p-4 transition-colors hover:border-primary/45"
-                      >
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md border font-display text-base font-bold">
-                          {community.image}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <p className="truncate font-display text-sm font-bold">{community.name}</p>
-                            <span className="inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase">
-                              <ShieldCheck className="h-3 w-3" />
-                              {record.status}
-                            </span>
-                          </div>
-                          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                            <span className="capitalize">{community.type}</span>
-                            <span>Joined {formatAccountDate(record.joinedAt, account.country.code)}</span>
-                            <span>{formatKSh(community.membershipFee)}/mo</span>
-                            <DuesStreakChip streakMonths={streak.perCommunity[community.id]} />
-                          </div>
-                        </div>
-                        <ArrowRight className="h-4 w-4 shrink-0" />
-                      </Link>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="rounded-md border border-dashed p-8 text-center">
-                    <p className="font-display text-base font-semibold">No memberships yet</p>
-                    <p className="mt-2 text-sm text-muted-foreground">
-                      Explore a community or launch one with your group.
-                    </p>
-                    <div className="mt-5 flex flex-col items-center justify-center gap-2 sm:flex-row">
-                      <Link to="/communities" className="btn-warm inline-flex items-center gap-2 text-sm">
-                        <Compass className="h-4 w-4" />
-                        Explore communities
-                      </Link>
-                      <Link to="/create/purpose" className="btn-ghost inline-flex items-center gap-2 text-sm">
-                        <PlusCircle className="h-4 w-4" />
-                        Launch a community
-                      </Link>
-                    </div>
-                    <div className="mt-4 flex items-center justify-center gap-2">
-                      <AskAkili
-                        prompt="Help me choose a community for a youth savings group of around 15 members"
-                        label="Ask Akili"
-                        variant="chip"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="baraza-card p-5">
-                <div className="mb-5 flex items-center justify-between">
-                  <h2 className="text-sm font-bold">
-                    Bounty announcements {memberBounties.length > 0 && `(${memberBounties.length})`}
-                  </h2>
-                  <BriefcaseBusiness className="h-4 w-4 text-primary" />
-                </div>
-
-                {memberBounties.length > 0 ? (
-                  <div className="space-y-3">
-                    {memberBounties.slice(0, 4).map(({ bounty, community }) => {
-                      const stats = getBountyStatsForCommunity(community.id);
-                      return (
-                        <Link
-                          key={bounty.id}
-                          to={`/bounties/${bounty.id}`}
-                          className="group flex items-start gap-4 rounded-md border p-4 transition-colors hover:border-primary/45"
-                        >
-                          <div className="min-w-0 flex-1">
-                            <p className="font-display text-sm font-bold">{bounty.title}</p>
-                            <p className="mt-1 text-xs text-muted-foreground">
-                              {community.name} · {formatKSh(bounty.rewardKes)} · {bounty.submissions} submissions
-                            </p>
-                            <p className="mt-2 text-xs text-muted-foreground">
-                              {stats.open} open bounties in this community.
-                            </p>
-                          </div>
-                          <ArrowRight className="mt-1 h-4 w-4 shrink-0" />
-                        </Link>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
-                    Join a community to see paid events and contributor work here.
-                  </p>
-                )}
-              </div>
-
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="baraza-card p-5">
-                  <h2 className="mb-4 text-sm font-bold">Voting history</h2>
-                  <p className="text-3xl font-black tabular-nums">{badgeSummary.proposalVoteCount}</p>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Decisions you have voted on across your communities.
-                  </p>
-                </div>
-                <div className="baraza-card p-5">
-                  <h2 className="mb-4 text-sm font-bold">Account security</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Privy secures sign-in and recovery through your verified phone number or email.
-                  </p>
-                </div>
-              </div>
-            </div>
+            <section className="baraza-card p-5" aria-labelledby="bounties-title">
+              <div className="mb-5 flex items-center justify-between"><h2 id="bounties-title" className="font-display text-base font-bold">Paid work from your communities</h2><BriefcaseBusiness className="h-5 w-5 text-primary" /></div>
+              {memberBounties.length > 0 ? <div className="divide-y divide-border rounded-md border">{memberBounties.slice(0, 4).map(({ bounty, community }) => { const stats = getBountyStatsForCommunity(community.id); return <Link key={bounty.id} to={`/bounties/${bounty.id}`} className="flex items-start gap-3 p-4 hover:bg-surface"><div className="min-w-0 flex-1"><p className="text-sm font-bold">{bounty.title}</p><p className="mt-1 text-xs text-muted-foreground">{community.name} · {formatKSh(bounty.rewardKes)} · {stats.open} open</p></div><ArrowRight className="mt-1 h-4 w-4" /></Link>; })}</div> : <div className="rounded-md border border-dashed p-6 text-center"><p className="text-sm font-bold">No community work yet</p><p className="mt-1 text-sm text-muted-foreground">Bounties from communities you join will appear here.</p><Link to="/bounties" className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-md border px-4 text-sm font-bold hover:border-primary/45"><BriefcaseBusiness className="h-4 w-4" /> Browse bounties</Link></div>}
+            </section>
           </div>
         </div>
       </section>
