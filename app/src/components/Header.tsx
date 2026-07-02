@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { CircleUserRound, LogIn, Menu, Moon, MoreHorizontal, PlayCircle, Search, Sparkles, Sun, UserPlus, X } from "lucide-react";
+import { ChevronDown, CircleUserRound, LogIn, LogOut, Menu, Moon, MoreHorizontal, PlayCircle, Search, Sparkles, Sun, UserPlus, X } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { useAkiliChat } from "@/akili/useAkiliChat";
 import { useTheme } from "@/hooks/useTheme";
@@ -25,6 +25,8 @@ const quickSearches = ["DAO", "SACCO", "co-operative", "governance", "savings"];
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -34,6 +36,7 @@ export default function Header() {
   const { open: openAkili } = useAkiliChat();
   const { theme, toggleTheme } = useTheme();
   const account = useAccount();
+  const accountMenuRef = useRef<HTMLDivElement>(null);
 
   const handleLogin = () => {
     if (account.configured) {
@@ -51,6 +54,18 @@ export default function Header() {
     navigate("/profile");
   };
 
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await account.logout();
+      setAccountOpen(false);
+      setMobileOpen(false);
+      navigate("/");
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -60,8 +75,27 @@ export default function Header() {
   // Close mobile menu on route change
   useEffect(() => {
     setMobileOpen(false);
+    setAccountOpen(false);
     setMoreOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    const closeAccountMenu = (event: MouseEvent) => {
+      if (accountMenuRef.current && !accountMenuRef.current.contains(event.target as Node)) {
+        setAccountOpen(false);
+      }
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setAccountOpen(false);
+    };
+
+    document.addEventListener("mousedown", closeAccountMenu);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("mousedown", closeAccountMenu);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, []);
 
   const submitSearch = (value = query) => {
     const trimmed = value.trim();
@@ -173,13 +207,44 @@ export default function Header() {
         <div className="relative flex shrink-0 items-center gap-2">
           <div className="hidden items-center gap-2 lg:flex">
             {account.authenticated ? (
-              <Link
-                to="/profile"
-                className="inline-flex h-10 max-w-44 items-center gap-2 rounded-md border border-primary/35 bg-primary/10 px-3 text-sm font-semibold text-foreground transition-colors hover:bg-primary/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
-              >
-                <CircleUserRound className="h-4 w-4 shrink-0 text-primary" />
-                <span className="truncate">{account.displayName}</span>
-              </Link>
+              <div className="relative" ref={accountMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => setAccountOpen((open) => !open)}
+                  className="inline-flex h-10 max-w-48 items-center gap-2 rounded-md border border-primary/35 bg-primary/10 px-3 text-sm font-semibold text-foreground transition-colors hover:bg-primary/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+                  aria-expanded={accountOpen}
+                  aria-controls="header-account-menu"
+                >
+                  <CircleUserRound className="h-4 w-4 shrink-0 text-primary" />
+                  <span className="truncate">{account.displayName}</span>
+                  <ChevronDown className={cn("h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform", accountOpen && "rotate-180")} />
+                </button>
+
+                {accountOpen && (
+                  <div
+                    id="header-account-menu"
+                    className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-52 rounded-md border border-border/70 bg-card p-2 shadow-[var(--shadow-deep)]"
+                  >
+                    <Link
+                      to="/profile"
+                      className="flex min-h-10 items-center gap-2 rounded-md px-3 text-sm font-semibold text-foreground transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+                    >
+                      <CircleUserRound className="h-4 w-4 text-muted-foreground" />
+                      Profile
+                    </Link>
+                    <div className="my-1 border-t border-border/60" />
+                    <button
+                      type="button"
+                      onClick={() => void handleLogout()}
+                      disabled={isLoggingOut}
+                      className="flex min-h-10 w-full items-center gap-2 rounded-md px-3 text-left text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/70 disabled:cursor-wait disabled:opacity-60"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      {isLoggingOut ? "Logging out..." : "Log out"}
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
               <>
                 <span className="hidden text-xs font-semibold text-muted-foreground xl:inline">Privy</span>
@@ -353,13 +418,24 @@ export default function Header() {
           <nav className="container mx-auto flex flex-col gap-1 px-4 py-4" aria-label="Mobile navigation">
             <div className="mb-3 border-b border-border/60 pb-4">
               {account.authenticated ? (
-                <Link
-                  to="/profile"
-                  className="inline-flex min-h-11 w-full items-center gap-2 rounded-md bg-primary/10 px-3 text-sm font-semibold text-foreground"
-                >
-                  <CircleUserRound className="h-4 w-4 text-primary" />
-                  {account.displayName}
-                </Link>
+                <div className="space-y-2">
+                  <Link
+                    to="/profile"
+                    className="inline-flex min-h-11 w-full items-center gap-2 rounded-md bg-primary/10 px-3 text-sm font-semibold text-foreground"
+                  >
+                    <CircleUserRound className="h-4 w-4 text-primary" />
+                    <span className="min-w-0 flex-1 truncate">{account.displayName}</span>
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => void handleLogout()}
+                    disabled={isLoggingOut}
+                    className="inline-flex min-h-11 w-full items-center gap-2 rounded-md px-3 text-left text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/70 disabled:cursor-wait disabled:opacity-60"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    {isLoggingOut ? "Logging out..." : "Log out"}
+                  </button>
+                </div>
               ) : (
                 <div className="grid grid-cols-2 gap-2">
                   <button
