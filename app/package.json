@@ -9,8 +9,6 @@
     "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.node.json",
     "lint": "eslint .",
     "test": "vitest run",
-    "test:contracts:drift": "node ../tests/anchor-smoke.mjs --drift-only",
-    "test:contracts:smoke": "node ../tests/anchor-smoke.mjs",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "preview": "vite preview",

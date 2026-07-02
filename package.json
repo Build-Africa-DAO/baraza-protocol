@@ -1,0 +1,19 @@
+{
+  "name": "baraza-protocol-public",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "protocol:artifacts:sync": "node scripts/sync-protocol-artifacts.mjs",
+    "protocol:artifacts:check": "node scripts/sync-protocol-artifacts.mjs --check",
+    "test:contracts:smoke": "node tests/anchor-smoke.mjs",
+    "test:contracts:drift": "node tests/anchor-smoke.mjs --drift-only"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.32.1",
+    "@solana/web3.js": "^1.98.4"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  }
+}
