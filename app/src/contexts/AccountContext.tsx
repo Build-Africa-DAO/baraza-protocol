@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { PrivyProvider, usePrivy } from '@privy-io/react-auth';
 import {
   getAccountCountry,
@@ -8,13 +8,22 @@ import {
   type AccountCountryCode,
 } from '@/lib/accountLocale';
 import { getPrivyAppId } from '@/lib/wallet/mpc';
+import {
+  createMemberProfile,
+  readMemberProfile,
+  writeMemberProfile,
+  type MemberProfile,
+} from '@/lib/memberProfile';
 
 interface AccountContextValue {
   configured: boolean;
   ready: boolean;
   authenticated: boolean;
   accountId: string | null;
+  verifiedContact: string | null;
   displayName: string;
+  profile: MemberProfile;
+  updateProfile: (profile: MemberProfile) => void;
   country: AccountCountry;
   setCountry: (country: AccountCountryCode) => void;
   login: () => void;
@@ -32,21 +41,37 @@ interface AccountBridgeProps {
 
 function AccountBridge({ country, setCountry, children }: AccountBridgeProps) {
   const { ready, authenticated, user, login, logout } = usePrivy();
-  const displayName = user?.email?.address ?? user?.phone?.number ?? 'Baraza member';
+  const verifiedContact = user?.email?.address ?? user?.phone?.number ?? null;
   const accountId = user?.wallet?.address ?? user?.id ?? null;
+  const profileId = user?.id ?? accountId;
+  const [profile, setProfile] = useState<MemberProfile>(() => createMemberProfile(verifiedContact));
+
+  useEffect(() => {
+    setProfile(profileId
+      ? readMemberProfile(profileId, verifiedContact)
+      : createMemberProfile(verifiedContact));
+  }, [profileId, verifiedContact]);
+
+  const updateProfile = useCallback((nextProfile: MemberProfile) => {
+    if (!profileId) return;
+    setProfile(writeMemberProfile(profileId, nextProfile));
+  }, [profileId]);
 
   const value = useMemo<AccountContextValue>(() => ({
     configured: true,
     ready,
     authenticated,
     accountId,
-    displayName,
+    verifiedContact,
+    displayName: profile.displayName,
+    profile,
+    updateProfile,
     country,
     setCountry,
     login: () => login({ loginMethods: ['email', 'sms'] }),
     createAccount: () => login({ loginMethods: ['email', 'sms'] }),
     logout,
-  }), [accountId, authenticated, country, displayName, login, logout, ready, setCountry]);
+  }), [accountId, authenticated, country, login, logout, profile, ready, setCountry, updateProfile, verifiedContact]);
 
   return <AccountContext.Provider value={value}>{children}</AccountContext.Provider>;
 }
@@ -67,7 +92,10 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
         ready: true,
         authenticated: false,
         accountId: null,
+        verifiedContact: null,
         displayName: 'Baraza member',
+        profile: createMemberProfile(),
+        updateProfile: () => undefined,
         country,
         setCountry,
         login: () => undefined,

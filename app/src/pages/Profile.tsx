@@ -1,16 +1,22 @@
-import { useEffect, useMemo, useState } from 'react';
+import { type ChangeEvent, type FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
+  AtSign,
   BriefcaseBusiness,
+  Camera,
+  Check,
   CircleUserRound,
   Compass,
+  Globe2,
   Loader2,
   LogIn,
   LogOut,
+  Pencil,
   PlusCircle,
   ShieldCheck,
   UserPlus,
+  X,
 } from 'lucide-react';
 import Layout from '@/components/Layout';
 import CommunityBanner from '@/components/CommunityBanner';
@@ -28,6 +34,19 @@ import { fetchMembershipsForWallet, listMembershipsForWallet } from '@/lib/membe
 import { useSeo } from '@/lib/seo';
 import { formatKSh } from '@/lib/utils';
 import { ACCOUNT_COUNTRIES, formatAccountDate, type AccountCountryCode } from '@/lib/accountLocale';
+import { prepareProfilePhoto, type MemberProfile } from '@/lib/memberProfile';
+import { useToast } from '@/hooks/use-toast';
+
+const profileFieldClass = 'min-h-12 w-full rounded-md border bg-background px-3 py-2 text-base outline-none transition-colors placeholder:text-muted-foreground focus:border-primary';
+
+function getInitials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('') || 'B';
+}
 
 export default function Profile() {
   useSeo({
@@ -38,8 +57,55 @@ export default function Profile() {
   });
 
   const account = useAccount();
+  const { toast } = useToast();
   const { communities } = useCommunities();
   const address = account.accountId ?? '';
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [isPreparingPhoto, setIsPreparingPhoto] = useState(false);
+  const [profileDraft, setProfileDraft] = useState<MemberProfile>(account.profile);
+
+  useEffect(() => {
+    if (!isEditingProfile) setProfileDraft(account.profile);
+  }, [account.profile, isEditingProfile]);
+
+  const updateDraft = (field: keyof MemberProfile, value: string) => {
+    setProfileDraft((current) => ({ ...current, [field]: value }));
+  };
+
+  const handlePhoto = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    setIsPreparingPhoto(true);
+    try {
+      updateDraft('avatarUrl', await prepareProfilePhoto(file));
+    } catch (error) {
+      toast({
+        title: 'Photo not added',
+        description: error instanceof Error ? error.message : 'Choose another image and try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsPreparingPhoto(false);
+    }
+  };
+
+  const saveProfile = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!profileDraft.displayName.trim()) {
+      toast({ title: 'Add your name', description: 'Your profile needs a name members can recognize.', variant: 'destructive' });
+      return;
+    }
+
+    try {
+      account.updateProfile(profileDraft);
+      setIsEditingProfile(false);
+      toast({ title: 'Profile updated', description: 'Your name and profile details are now visible in Baraza.' });
+    } catch {
+      toast({ title: 'Profile not saved', description: 'Your browser could not save these changes. Try a smaller photo.', variant: 'destructive' });
+    }
+  };
 
   type MembershipPair = {
     record: ReturnType<typeof listMembershipsForWallet>[number];
@@ -228,30 +294,143 @@ export default function Profile() {
         <div className="container mx-auto px-4">
           <CommunityBanner className="mb-6 p-5 md:p-6">
             <div className="flex flex-col justify-between gap-5 md:flex-row md:items-center">
-              <div className="flex items-center gap-4">
-                <div className="grid h-16 w-16 shrink-0 place-items-center rounded-md border border-primary/25 bg-primary/10 text-primary">
-                  <CircleUserRound className="h-8 w-8" />
-                </div>
+              <div className="flex min-w-0 items-center gap-4">
+                {account.profile.avatarUrl ? (
+                  <img
+                    src={account.profile.avatarUrl}
+                    alt={`${account.displayName}'s profile`}
+                    className="h-16 w-16 shrink-0 rounded-md border border-primary/25 object-cover"
+                  />
+                ) : (
+                  <div className="grid h-16 w-16 shrink-0 place-items-center rounded-md border border-primary/25 bg-primary/10 font-display text-xl font-bold text-primary">
+                    {getInitials(account.displayName)}
+                  </div>
+                )}
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-primary">Privy account</p>
-                  <h1 className="mt-1 truncate font-display text-2xl font-bold md:text-3xl">
+                  <p className="text-sm font-semibold text-primary">Member profile</p>
+                  <h1 className="mt-1 break-words font-display text-2xl font-bold md:text-3xl">
                     {account.displayName}
                   </h1>
+                  {account.verifiedContact && (
+                    <p className="mt-1 truncate text-sm text-muted-foreground">{account.verifiedContact}</p>
+                  )}
                   <p className="mt-1 text-sm text-muted-foreground">
                     {account.country.name} · {account.country.currency}
                   </p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => void account.logout()}
-                className="btn-ghost inline-flex items-center justify-center gap-2 text-sm"
-              >
-                <LogOut className="h-4 w-4" />
-                Log out
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsEditingProfile((current) => !current)}
+                  className="btn-warm inline-flex min-h-11 flex-1 items-center justify-center gap-2 text-sm sm:flex-none"
+                >
+                  {isEditingProfile ? <X className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
+                  {isEditingProfile ? 'Close editor' : 'Edit profile'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void account.logout()}
+                  className="btn-ghost inline-flex min-h-11 flex-1 items-center justify-center gap-2 text-sm sm:flex-none"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Log out
+                </button>
+              </div>
             </div>
+            {(account.profile.bio || account.profile.websiteUrl || account.profile.xUrl || account.profile.instagramUrl) && (
+              <div className="mt-5 border-t border-border/60 pt-4">
+                {account.profile.bio && (
+                  <p className="max-w-2xl text-sm leading-6 text-foreground/90">{account.profile.bio}</p>
+                )}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {account.profile.websiteUrl && (
+                    <a href={account.profile.websiteUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold hover:border-primary/45">
+                      <Globe2 className="h-4 w-4" /> Website
+                    </a>
+                  )}
+                  {account.profile.xUrl && (
+                    <a href={account.profile.xUrl} target="_blank" rel="noreferrer" aria-label="X profile" className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-md border px-3 text-sm font-bold hover:border-primary/45">
+                      X
+                    </a>
+                  )}
+                  {account.profile.instagramUrl && (
+                    <a href={account.profile.instagramUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold hover:border-primary/45">
+                      <AtSign className="h-4 w-4" /> Instagram
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
           </CommunityBanner>
+
+          {isEditingProfile && (
+            <form onSubmit={saveProfile} className="mb-6 border-y border-border bg-card/55 px-4 py-6 md:rounded-md md:border md:p-6" aria-labelledby="profile-editor-title">
+              <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+                <div className="flex shrink-0 items-center gap-4 lg:w-48 lg:flex-col lg:items-start">
+                  {profileDraft.avatarUrl ? (
+                    <img src={profileDraft.avatarUrl} alt="Profile preview" className="h-24 w-24 rounded-md border object-cover" />
+                  ) : (
+                    <div className="grid h-24 w-24 place-items-center rounded-md border bg-primary/10 font-display text-2xl font-bold text-primary">
+                      {getInitials(profileDraft.displayName)}
+                    </div>
+                  )}
+                  <div className="flex flex-col gap-2">
+                    <label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold transition-colors hover:border-primary/45">
+                      {isPreparingPhoto ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                      {isPreparingPhoto ? 'Preparing...' : 'Choose photo'}
+                      <input type="file" accept="image/*" className="sr-only" onChange={(event) => void handlePhoto(event)} disabled={isPreparingPhoto} />
+                    </label>
+                    {profileDraft.avatarUrl && (
+                      <button type="button" onClick={() => updateDraft('avatarUrl', '')} className="min-h-10 text-left text-sm text-muted-foreground hover:text-foreground">
+                        Remove photo
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="mb-5">
+                    <h2 id="profile-editor-title" className="font-display text-xl font-bold">Edit profile</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">Use the name and details you want other members to see.</p>
+                  </div>
+
+                  <div className="grid gap-5 md:grid-cols-2">
+                    <label className="block md:col-span-2">
+                      <span className="mb-2 block text-sm font-semibold">Profile name</span>
+                      <input value={profileDraft.displayName} onChange={(event) => updateDraft('displayName', event.target.value)} maxLength={60} autoComplete="name" className={profileFieldClass} placeholder="Aziz Motomoto" />
+                    </label>
+                    <label className="block md:col-span-2">
+                      <span className="mb-2 block text-sm font-semibold">Bio</span>
+                      <textarea value={profileDraft.bio} onChange={(event) => updateDraft('bio', event.target.value)} maxLength={280} rows={4} className={`${profileFieldClass} resize-y`} placeholder="Tell members what you build, organize, or care about." />
+                      <span className="mt-1 block text-right text-xs text-muted-foreground">{profileDraft.bio.length}/280</span>
+                    </label>
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-semibold">Website</span>
+                      <input value={profileDraft.websiteUrl} onChange={(event) => updateDraft('websiteUrl', event.target.value)} inputMode="url" autoComplete="url" className={profileFieldClass} placeholder="buildadao.io" />
+                    </label>
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-semibold">X</span>
+                      <input value={profileDraft.xUrl} onChange={(event) => updateDraft('xUrl', event.target.value)} inputMode="url" className={profileFieldClass} placeholder="x.com/yourname" />
+                    </label>
+                    <label className="block md:col-span-2">
+                      <span className="mb-2 block text-sm font-semibold">Instagram</span>
+                      <input value={profileDraft.instagramUrl} onChange={(event) => updateDraft('instagramUrl', event.target.value)} inputMode="url" className={profileFieldClass} placeholder="instagram.com/yourname" />
+                    </label>
+                  </div>
+
+                  <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                    <button type="button" onClick={() => { setProfileDraft(account.profile); setIsEditingProfile(false); }} className="btn-ghost min-h-11 justify-center">
+                      Cancel
+                    </button>
+                    <button type="submit" disabled={isPreparingPhoto} className="btn-warm min-h-11 justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50">
+                      <Check className="h-4 w-4" /> Save profile
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          )}
 
           <div className="grid gap-6 lg:grid-cols-[0.34fr_0.66fr]">
             <aside className="space-y-6">
