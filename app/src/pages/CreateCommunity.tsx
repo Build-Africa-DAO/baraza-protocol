@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
-import { Users, ArrowLeft, CheckCircle2, Loader2, Phone, ShieldCheck, Wallet, Hash, Smartphone, MessageCircle } from 'lucide-react';
+import { Users, ArrowLeft, CheckCircle2, Loader2, Phone, ShieldCheck, Hash, Smartphone, MessageCircle } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { DAO_CREATION_FEE_KES, PAYBILL_ADDON_FEE_KES, USSD_ADDON_FEE_KES } from '@/lib/constants';
 import { formatKSh } from '@/lib/utils';
