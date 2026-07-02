@@ -45,7 +45,7 @@ const scoreRows = [
 
 const aiReviewRows = [
   ["Community rules", "Checks dues, quorum, approval threshold, voting period, and visible treasury records."],
-  ["Bounties", "Flags unclear briefs, expired deadlines, missing KES reward, and closed tasks."],
+  ["Bounties", "Flags unclear briefs, expired deadlines, missing local-currency rewards, and closed tasks."],
   ["Proposals", "Reviews funding amount, treasury impact, voting window, quorum, and member participation."],
   ["Treasury releases", "Keeps approved votes and payment records together for member review."],
 ];

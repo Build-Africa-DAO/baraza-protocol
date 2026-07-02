@@ -8,7 +8,6 @@ import {
   Loader2,
   ShieldCheck,
 } from "lucide-react";
-import { useWallet } from "@solana/wallet-adapter-react";
 import Layout from "@/components/Layout";
 import { useCommunity } from "@/hooks/useCommunities";
 import { isSupabaseConfigured } from "@/lib/communities";
@@ -23,7 +22,7 @@ import {
 } from "@/lib/payments";
 import { recordActiveMembership } from "@/lib/memberships";
 import { getPhoneAuthSession } from "@/lib/phoneAuth";
-import { useChain } from "@/hooks/useChain";
+import { useAccount } from "@/contexts/AccountContext";
 
 interface DisplayStep {
   code: string;
@@ -31,10 +30,10 @@ interface DisplayStep {
   minStatus: PaymentOrderStatus;
 }
 
-function getDisplaySteps(railLabel: string): DisplayStep[] {
+function getDisplaySteps(): DisplayStep[] {
   return [
     { code: "mint-queued", label: "Preparing your membership credential", minStatus: "MINT_QUEUED" },
-    { code: "mint-submitted", label: `Submitting to ${railLabel}`, minStatus: "MINT_SUBMITTED" },
+    { code: "mint-submitted", label: "Recording your membership", minStatus: "MINT_SUBMITTED" },
     { code: "indexer-confirmed", label: "Membership verified", minStatus: "INDEXER_CONFIRMED" },
     { code: "reconciled", label: "Active member", minStatus: "RECONCILED" },
   ];
@@ -71,8 +70,7 @@ export default function JoinStatus() {
   const { id } = useParams<{ id: string }>();
   const [params] = useSearchParams();
   const { community } = useCommunity(id);
-  const { publicKey } = useWallet();
-  const { chainMeta } = useChain();
+  const account = useAccount();
   const orderId = params.get("orderId") ?? "";
   const activationSecret = getPaymentOrderActivationSecret(orderId);
   const rail = params.get("rail") ?? (orderId.startsWith("ord_stellar_") || orderId.startsWith("ord_local_stellar_") ? "stellar" : "mpesa");
@@ -80,9 +78,7 @@ export default function JoinStatus() {
 
   useSeo({
     title: community ? `Join status - ${community.name}` : "Join status",
-    description: isStellarRail
-      ? "Track Stellar payment verification and membership activation."
-      : "Track M-Pesa payment and membership activation.",
+    description: "Track payment verification and membership activation.",
     path: id ? `/join/${id}/status` : undefined,
     noIndex: true,
   });
@@ -133,7 +129,7 @@ export default function JoinStatus() {
         const order = await fetchPaymentOrder(orderId, activationSecret);
         if (cancelled) return;
         if (!order) {
-          setErrorMessage(`Order ${orderId} not found in Supabase. Verify migrations + service role key.`);
+          setErrorMessage(`Payment order ${orderId} was not found. Contact support if the payment has left your account.`);
           return;
         }
         setErrorMessage(null);
@@ -163,11 +159,11 @@ export default function JoinStatus() {
     if (status !== "RECONCILED" && status !== "INDEXER_CONFIRMED") return;
     if (!id) return;
 
-    const walletAddr = publicKey?.toBase58() ?? null;
+    const accountId = account.accountId;
     const phoneAddr = getPhoneAuthSession().phone
       ? `phone:${getPhoneAuthSession().phone}`
       : null;
-    const identity = walletAddr ?? phoneAddr;
+    const identity = accountId ?? phoneAddr;
     if (!identity) return;
 
     recordActiveMembership(id, identity);
@@ -181,37 +177,39 @@ export default function JoinStatus() {
       body: JSON.stringify({
         orderId,
         communityId: id,
-        walletAddress: walletAddr,
-        phoneIdentifier: walletAddr ? null : phoneAddr,
+        walletAddress: accountId,
+        phoneIdentifier: accountId ? null : phoneAddr,
         activationSecret,
       }),
     }).catch(() => {
       // Server endpoint unreachable; localStorage write is the source of truth.
     });
-  }, [status, publicKey, id, orderId, activationSecret]);
+  }, [status, account.accountId, id, orderId, activationSecret]);
 
   const stepStates = useMemo(
     () => {
       const paymentSteps: DisplayStep[] = isStellarRail
         ? [
-            { code: "payment-requested", label: "Submit Stellar transaction hash", minStatus: "PAYMENT_REQUESTED" },
-            { code: "payment-confirmed", label: "Stellar payment verified", minStatus: "PAYMENT_CONFIRMED" },
+            { code: "payment-requested", label: "Submit transfer reference", minStatus: "PAYMENT_REQUESTED" },
+            { code: "payment-confirmed", label: "Transfer verified", minStatus: "PAYMENT_CONFIRMED" },
           ]
         : [
             { code: "payment-requested", label: "Check your phone for the M-Pesa prompt", minStatus: "PAYMENT_REQUESTED" },
             { code: "payment-confirmed", label: "Payment received - activating membership", minStatus: "PAYMENT_CONFIRMED" },
           ];
 
-      return [...paymentSteps, ...getDisplaySteps(chainMeta.label)].map((step) => ({
+      return [...paymentSteps, ...getDisplaySteps()].map((step) => ({
         ...step,
         state: deriveStepState(step.minStatus, status),
       }));
     },
-    [chainMeta.label, isStellarRail, status],
+    [isStellarRail, status],
   );
 
   const isFailed = isFailureStatus(status);
   const isComplete = status === "RECONCILED";
+  const referenceParts = orderId.split("_");
+  const displayReference = orderId ? referenceParts[referenceParts.length - 1] : "(none)";
 
   return (
     <Layout>
@@ -228,9 +226,9 @@ export default function JoinStatus() {
                     : "Activating your membership"}
               </h1>
               <p className="mt-2 text-sm">
-                Order <span className="font-mono">{orderId || "(none)"}</span> for{" "}
+                Payment reference <span className="font-mono">{displayReference}</span> for{" "}
                 {community?.name ?? "Chama"} is moving from{" "}
-                {isStellarRail ? "Stellar payment verification" : "M-Pesa confirmation"} to active membership.
+                {isStellarRail ? "transfer verification" : "M-Pesa confirmation"} to active membership.
               </p>
             </div>
 
@@ -297,10 +295,10 @@ export default function JoinStatus() {
                   </p>
                 </div>
 
-                {!publicKey && isComplete && (
+                {!account.authenticated && isComplete && (
                   <div className="rounded-lg border p-5">
                     <p className="text-sm leading-6">
-                      {chainMeta.accountCta} to bind this membership to your account.
+                      Log in with Privy to attach this membership to your Baraza account.
                     </p>
                   </div>
                 )}

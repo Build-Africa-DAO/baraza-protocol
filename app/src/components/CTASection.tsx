@@ -5,7 +5,7 @@ import { ShimmerButton } from "@/components/ui/shimmer-button";
 
 const steps = [
   { icon: Link2, title: "Choose how you sign in", desc: "Use your phone number for M-Pesa flows, or connect a supported account. No seed phrases needed to join." },
-  { icon: ShieldCheck, title: "Set basics & rules", desc: "Name your DAO, pick a community type, set monthly dues in KES, and define quorum, approval, and voting period." },
+  { icon: ShieldCheck, title: "Set basics & rules", desc: "Name your community, set monthly dues in your account currency, and define quorum, approval, and voting period." },
   { icon: Users, title: "Invite members", desc: "Share the join link. Members can join with M-Pesa or a connected account." },
   { icon: Coins, title: "Govern transparently", desc: "Members propose, vote, and release funds. Every action stays visible in one shared record." },
 ];

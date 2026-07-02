@@ -197,7 +197,7 @@ export default function HeroSection() {
             </h1>
 
             <p className="rise rise-3 mt-5 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
-              Collect dues in KES, vote on proposals, and keep the treasury visible to every member.
+              Collect dues in your local currency, vote on proposals, and keep the treasury visible to every member.
             </p>
 
             <div className="rise rise-4 mt-6 flex flex-col gap-2 sm:mt-8 sm:flex-row sm:gap-3 min-[860px]:flex-col min-[1040px]:flex-row">

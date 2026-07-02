@@ -1,7 +1,6 @@
 import React from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import WalletStatus from '@/components/WalletStatus';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import BackendStatus from '@/components/BackendStatus';
 
@@ -18,7 +17,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       >
         Skip to main content
       </a>
-      <Header walletSlot={<WalletStatus />} />
+      <Header />
       <main
         id="main-content"
         className="flex-1 pt-14 pb-24 md:pb-0"

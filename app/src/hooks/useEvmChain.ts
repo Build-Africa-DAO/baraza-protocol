@@ -21,10 +21,10 @@ interface EthereumProvider {
   isCoinbaseWallet?: boolean;
 }
 
-declare global {
-  interface Window {
-    ethereum?: EthereumProvider;
-  }
+type EthereumWindow = Window & { ethereum?: EthereumProvider };
+
+function getEthereumProvider(): EthereumProvider | undefined {
+  return typeof window === 'undefined' ? undefined : (window as EthereumWindow).ethereum;
 }
 
 export interface UseEvmChainResult {
@@ -58,12 +58,12 @@ export function useEvmChain(): UseEvmChainResult {
   const [evmCommunityInfo, setEvmCommunityInfo] = useState<EvmCommunityInfo | null>(null);
   const [isLoadingEvmInfo, setIsLoadingEvmInfo] = useState(false);
 
-  const isEvmAvailable = typeof window !== 'undefined' && !!window.ethereum;
+  const isEvmAvailable = !!getEthereumProvider();
 
   useEffect(() => {
     if (!isEvmAvailable) return;
 
-    const eth = window.ethereum!;
+    const eth = getEthereumProvider()!;
 
     const handleAccountsChanged = (accounts: unknown) => {
       const list = accounts as string[];
@@ -79,7 +79,7 @@ export function useEvmChain(): UseEvmChainResult {
 
     eth
       .request({ method: 'eth_accounts' })
-      .then((accounts) => {
+      .then((accounts: unknown) => {
         const list = accounts as string[];
         if (list.length > 0) setEvmAddress(list[0]);
       })
@@ -89,7 +89,7 @@ export function useEvmChain(): UseEvmChainResult {
 
     eth
       .request({ method: 'eth_chainId' })
-      .then((id) => setEvmChainId(parseInt(id as string, 16)))
+      .then((id: unknown) => setEvmChainId(parseInt(id as string, 16)))
       .catch(() => {
         // Rail lookup can fail before the account app is approved.
       });
@@ -119,11 +119,11 @@ export function useEvmChain(): UseEvmChainResult {
     setIsConnecting(true);
     setEvmError(null);
     try {
-      const accounts = (await window.ethereum!.request({
+      const accounts = (await getEthereumProvider()!.request({
         method: 'eth_requestAccounts',
       })) as string[];
       setEvmAddress(accounts[0] ?? null);
-      const chainId = (await window.ethereum!.request({ method: 'eth_chainId' })) as string;
+      const chainId = (await getEthereumProvider()!.request({ method: 'eth_chainId' })) as string;
       setEvmChainId(parseInt(chainId, 16));
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Connection rejected';
@@ -149,7 +149,7 @@ export function useEvmChain(): UseEvmChainResult {
       const hexId = `0x${targetId.toString(16)}`;
       setEvmError(null);
       try {
-        await window.ethereum!.request({
+        await getEthereumProvider()!.request({
           method: 'wallet_switchEthereumChain',
           params: [{ chainId: hexId }],
         });
@@ -157,7 +157,7 @@ export function useEvmChain(): UseEvmChainResult {
         const code = (err as { code?: number })?.code;
         if (code === 4902) {
           try {
-            await window.ethereum!.request({
+            await getEthereumProvider()!.request({
               method: 'wallet_addEthereumChain',
               params: [{
                 chainId: hexId,

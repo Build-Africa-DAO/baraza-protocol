@@ -86,7 +86,7 @@ export default function CommunityLeaderboard({ communityId }: Props) {
           <div className="grid gap-2 sm:grid-cols-3 text-xs">
             {[
               ['Bounty completed', '+10 rep', 'Per awarded / paid task'],
-              ['KES earned', '+1 rep / KES 1,000', 'From confirmed payouts'],
+              ['Local currency earned', '+1 rep / 1,000', 'From confirmed payouts'],
               ['Governance vote', '+2 rep (coming soon)', 'Participating in proposals'],
             ].map(([action, score, note]) => (
               <div key={action} className="rounded-lg border border-border/50 p-3">
@@ -178,7 +178,7 @@ export default function CommunityLeaderboard({ communityId }: Props) {
         <div className="grid gap-2 sm:grid-cols-3 text-xs">
           {[
             ['Bounty completed', '+10 rep', 'Per awarded / paid task'],
-            ['KES earned', '+1 rep / KES 1,000', 'From confirmed payouts'],
+            ['Local currency earned', '+1 rep / 1,000', 'From confirmed payouts'],
             ['Governance vote', '+2 rep (coming soon)', 'Participating in proposals'],
           ].map(([action, score, note]) => (
             <div key={action} className="rounded-lg border border-border/50 p-3">

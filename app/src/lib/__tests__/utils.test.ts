@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   cn,
   daysRemaining,
@@ -9,6 +9,9 @@ import {
   formatUSD,
   truncateAddress,
 } from '@/lib/utils';
+import { writeAccountCountry } from '@/lib/accountLocale';
+
+beforeEach(() => writeAccountCountry('KE'));
 
 describe('formatKSh', () => {
   it('formats zero', () => expect(formatKSh(0)).toBe('KSh 0'));
@@ -23,21 +26,21 @@ describe('formatUSD', () => {
 });
 
 describe('rail formatting', () => {
-  it('formats KES source amounts in selected rail currency', () => {
+  it('formats source amounts in the account currency regardless of payment route', () => {
     expect(formatRailAmountFromKes(2600, 'solana')).toBe('KSh 2,600');
     expect(formatRailAmountFromKes(2600, 'mpesa')).toBe('KSh 2,600');
-    expect(formatRailAmountFromKes(1600, 'stellar')).toBe('XLM 100');
-    expect(formatRailAmountFromKes(450000, 'base')).toBe('ETH 1.00');
+    expect(formatRailAmountFromKes(1600, 'stellar')).toBe('KSh 1,600');
+    expect(formatRailAmountFromKes(450000, 'base')).toBe('KSh 450,000');
   });
 
-  it('keeps KES equivalent visible for reconciled amounts', () => {
-    expect(formatRailAmountWithKes(6500, 'solana')).toBe('KSh 6,500 (BRZA 2,500 eq.)');
+  it('does not expose route-native amounts', () => {
+    expect(formatRailAmountWithKes(6500, 'solana')).toBe('KSh 6,500');
     expect(formatRailAmountWithKes(6500, 'mpesa')).toBe('KSh 6,500');
-    expect(formatRailAmountWithKes(6500, 'base')).toContain('KSh 6,500');
+    expect(formatRailAmountWithKes(6500, 'base')).toBe('KSh 6,500');
   });
 
-  it('formats dates in the selected rail timezone', () => {
-    expect(formatRailDate('2026-05-26T00:30:00.000Z', 'solana', { day: '2-digit', month: 'short', year: 'numeric' })).toBe('25 May 2026');
+  it('formats dates in the account country timezone', () => {
+    expect(formatRailDate('2026-05-26T00:30:00.000Z', 'solana', { day: '2-digit', month: 'short', year: 'numeric' })).toBe('26 May 2026');
     expect(formatRailDate('2026-05-26T00:30:00.000Z', 'celo', { day: '2-digit', month: 'short', year: 'numeric' })).toBe('26 May 2026');
   });
 });

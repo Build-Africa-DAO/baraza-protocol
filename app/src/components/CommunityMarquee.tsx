@@ -1,13 +1,14 @@
 import { Marquee } from "@/components/ui/marquee";
 import { Banknote, CheckCircle2, Clock3, TrendingUp, Users, Vote } from "lucide-react";
+import { formatKSh } from "@/lib/utils";
 
 const communities = [
-  { name: "Kilimani Chama", type: "Savings", members: 48, fund: "KSh 2.4M", signal: "+12%" },
-  { name: "Westlands SACCO", type: "Co-op", members: 120, fund: "KSh 8.1M", signal: "+31%" },
-  { name: "Techies Welfare", type: "Welfare", members: 32, fund: "KSh 640K", signal: "+8%" },
-  { name: "Mama Mboga Fund", type: "Investment", members: 65, fund: "KSh 1.8M", signal: "+18%" },
-  { name: "Estate Owners", type: "Housing", members: 90, fund: "KSh 12M", signal: "+24%" },
-  { name: "Green Farms Co-op", type: "Co-op", members: 78, fund: "KSh 3.2M", signal: "+15%" },
+  { name: "Kilimani Chama", type: "Savings", members: 48, fundKes: 2_400_000, signal: "+12%" },
+  { name: "Westlands SACCO", type: "Co-op", members: 120, fundKes: 8_100_000, signal: "+31%" },
+  { name: "Techies Welfare", type: "Welfare", members: 32, fundKes: 640_000, signal: "+8%" },
+  { name: "Mama Mboga Fund", type: "Investment", members: 65, fundKes: 1_800_000, signal: "+18%" },
+  { name: "Estate Owners", type: "Housing", members: 90, fundKes: 12_000_000, signal: "+24%" },
+  { name: "Green Farms Co-op", type: "Co-op", members: 78, fundKes: 3_200_000, signal: "+15%" },
 ];
 
 const recentActivity = [
@@ -32,7 +33,7 @@ function CommunityChip({ community }: { community: (typeof communities)[number] 
         </p>
       </div>
       <div className="text-right">
-        <p className="text-sm font-bold tabular-nums text-accent">{community.fund}</p>
+        <p className="text-sm font-bold tabular-nums text-accent">{formatKSh(community.fundKes)}</p>
         <p className="text-[11px] font-semibold tabular-nums text-primary">{community.signal}</p>
       </div>
     </div>

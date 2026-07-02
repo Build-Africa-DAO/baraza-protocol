@@ -8,7 +8,7 @@ import {
   LockKeyhole,
   Vote,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatKSh } from "@/lib/utils";
 
 const workflow = [
   {
@@ -50,10 +50,10 @@ const workflow = [
 ];
 
 const ledgerRows = [
-  { item: "Monthly dues", status: "Confirmed", value: "+ KSh 168,000", tone: "text-primary" },
+  { item: "Monthly dues", status: "Confirmed", valueKes: 168000, prefix: "+", tone: "text-primary" },
   { item: "Maize mill vote", status: "In quorum", value: "78%", tone: "text-accent" },
-  { item: "Supplier payout", status: "Approved", value: "- KSh 48,000", tone: "text-orange" },
-  { item: "Emergency fund", status: "Locked", value: "KSh 210,000", tone: "text-secondary" },
+  { item: "Supplier payout", status: "Approved", valueKes: 48000, prefix: "-", tone: "text-orange" },
+  { item: "Emergency fund", status: "Locked", valueKes: 210000, prefix: "", tone: "text-secondary" },
 ];
 
 function WorkflowCard({ step, index }: { step: (typeof workflow)[number]; index: number }) {
@@ -172,7 +172,7 @@ export default function FeaturesSection() {
                     </p>
                   </div>
                   <p className={cn("self-center text-sm font-bold tabular-nums", row.tone)}>
-                    {row.value}
+                    {'valueKes' in row ? `${row.prefix} ${formatKSh(row.valueKes ?? 0)}`.trim() : row.value}
                   </p>
                 </div>
               ))}

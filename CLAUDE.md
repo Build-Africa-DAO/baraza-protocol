@@ -4,8 +4,8 @@
 
 Baraza is a multi-chain community governance and treasury protocol for African DAOs, chamas, SACCOs, cooperatives, and stokvels. Primary market: Kenya, Tanzania, Uganda, Ethiopia, Nigeria.
 
-**Products:** Baraza Protocol · Baraza TV
-**Founder:** Aziz Mohammed (@azizke) — `wethem2022@gmail.com`
+**Products:** BAD · Baraza · Soko AI · Akili
+**Founder:** Aziz Mohammed (@azizke)
 **Live:** baraza-protocol.vercel.app · GitHub: github.com/Azizudinly/baraza-protocol
 
 ---
@@ -56,7 +56,7 @@ Stellar launches first. Never treat EVM or Solana as launch blockers.
 - BRZA ≠ XLM — never conflate the token with the payment rail.
 - `withdrawals_enabled` stays `false` until multisig handoff is tested on devnet.
 - Update `app/src/lib/knowledgeGraph.ts` when adding chain rails, contracts, or settlement routes.
-- Do not reference Builder Protocol or Nouns in UI, docs, or comments — use Aragon OSx.
+- Keep public product naming within the BAD DAO ecosystem: BAD, Baraza, Soko AI, and Akili.
 - Do not add Magic UI or heavy animation libraries.
 
 ---
@@ -140,4 +140,4 @@ Rules for keeping it that way:
 - Set `withdrawals_enabled = true` before multisig handoff
 - Relax `intentToken` requirement for Stellar mainnet
 - Bypass activation secret gate in `membership/activate.ts`
-- Reference Builder Protocol, Nouns DAO, or noun.wtf anywhere
+- Introduce external protocol branding as Baraza product identity

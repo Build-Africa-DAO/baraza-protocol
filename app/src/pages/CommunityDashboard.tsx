@@ -20,8 +20,7 @@ import Layout from '@/components/Layout';
 import DecisionCard from '@/components/DecisionCard';
 import { formatRailAmountFromKes, formatRailDate, cn } from '@/lib/utils';
 import { useDecisions } from '@/hooks/useBarazaData';
-import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { useCommunity } from '@/hooks/useCommunities';
 import { getActiveMembership } from '@/lib/memberships';
 import CommunityBanner from '@/components/CommunityBanner';
@@ -34,6 +33,7 @@ import AkiliSecurityReview from '@/akili/AkiliSecurityReview';
 import { reviewCommunity } from '@/lib/securityReview';
 import { useChain } from '@/hooks/useChain';
 import { getTokenGateStatus } from '@/lib/tokenGate';
+import { useAccount } from '@/contexts/AccountContext';
 
 // ─── Tab definition ───────────────────────────────────────────────────────────
 
@@ -166,11 +166,10 @@ const CommunityDashboard: React.FC = () => {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { publicKey } = useWallet();
-  const { connection } = useConnection();
+  const account = useAccount();
   const { chain } = useChain();
   const [activeTab, setActiveTab] = useState<DashboardTab>(() => getDashboardTab(searchParams, location.pathname));
   const [isMember, setIsMember] = useState(false);
-  const [walletSol, setWalletSol] = useState<number | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const { community, isLoading, error } = useCommunity(id);
@@ -184,18 +183,10 @@ const CommunityDashboard: React.FC = () => {
   });
 
   useEffect(() => {
-    if (!publicKey) { setWalletSol(null); return; }
-    let cancelled = false;
-    connection.getBalance(publicKey)
-      .then((lamports) => { if (!cancelled) setWalletSol(lamports / LAMPORTS_PER_SOL); })
-      .catch(() => { if (!cancelled) setWalletSol(null); });
-    return () => { cancelled = true; };
-  }, [connection, publicKey]);
-
-  useEffect(() => {
-    if (!community || !publicKey) { setIsMember(false); return; }
-    setIsMember(!!getActiveMembership(community.id, publicKey.toBase58()));
-  }, [community, publicKey]);
+    const identity = account.accountId ?? publicKey?.toBase58();
+    if (!community || !identity) { setIsMember(false); return; }
+    setIsMember(!!getActiveMembership(community.id, identity));
+  }, [account.accountId, community, publicKey]);
 
   useEffect(() => {
     setActiveTab(getDashboardTab(searchParams, location.pathname));
@@ -272,7 +263,6 @@ const CommunityDashboard: React.FC = () => {
   const securityReview = reviewCommunity(community);
   const communityChain = community.chain ?? chain;
   const communityChainMeta = CHAINS[communityChain];
-  const activeRailLabel = communityChainMeta.testnet.label;
   const tokenGateStatus = getTokenGateStatus(community.id, publicKey?.toBase58(), 'proposal');
 
   return (
@@ -304,16 +294,8 @@ const CommunityDashboard: React.FC = () => {
                     <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-medium capitalize">
                       {community.type}
                     </span>
-                    <span
-                      aria-label={`Treasury rail: ${communityChainMeta.label}`}
-                      className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-medium"
-                    >
-                      <span
-                        aria-hidden
-                        className="h-1.5 w-1.5 rounded-full"
-                        style={{ background: communityChainMeta.badgeBg }}
-                      />
-                      {communityChainMeta.label}
+                    <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-medium">
+                      Community treasury
                     </span>
                     <span className="inline-flex items-center gap-1">
                       <Calendar className="h-3.5 w-3.5" />
@@ -401,7 +383,7 @@ const CommunityDashboard: React.FC = () => {
                         </div>
                         <span className="hidden rounded-full border px-3 py-1 text-xs font-semibold sm:inline-flex">
                           <Activity className="mr-1 h-3 w-3" />
-                          {activeRailLabel}
+                          Live
                         </span>
                       </div>
                       <div className="grid gap-3 sm:grid-cols-3">
@@ -441,7 +423,7 @@ const CommunityDashboard: React.FC = () => {
                         </div>
                       ) : (
                         <>
-                          <p className="text-xs">Join to receive a {communityChainMeta.label} membership record and vote on proposals.</p>
+                          <p className="text-xs">Join to receive a membership record and vote on proposals.</p>
                           <Link to={`/join/${community.id}`} className="btn-warm mt-4 w-full justify-center text-sm">Join group</Link>
                         </>
                       )}
@@ -643,11 +625,8 @@ const CommunityDashboard: React.FC = () => {
                     </div>
                     <div className="space-y-3 text-sm">
                       <div className="flex items-center justify-between border-b pb-3">
-                        <span>Treasury rail</span>
-                        <span className="inline-flex items-center gap-1.5 font-semibold">
-                          <span aria-hidden className="h-1.5 w-1.5 rounded-full" style={{ background: communityChainMeta.badgeBg }} />
-                          {activeRailLabel}
-                        </span>
+                        <span>Payment status</span>
+                        <span className="font-semibold">Active</span>
                       </div>
                       <div className="flex items-center justify-between border-b pb-3">
                         <span>Recorded balance</span>
@@ -672,24 +651,22 @@ const CommunityDashboard: React.FC = () => {
 
                   <div className="premium-glass rounded-xl p-5">
                     <div className="mb-4 flex items-center justify-between">
-                      <h3 className="font-display text-base font-semibold">Your {communityChainMeta.label} account</h3>
+                      <h3 className="font-display text-base font-semibold">Your Baraza account</h3>
                       <WalletIcon className="h-4 w-4" />
                     </div>
-                    {communityChain === 'solana' && publicKey ? (
+                    {account.authenticated ? (
                       <div className="space-y-3 text-sm">
                         <div className="rounded-lg border p-3">
-                          <p className="text-[10px] uppercase tracking-widest">Address</p>
-                          <p className="mt-1 font-mono text-xs break-all">{publicKey.toBase58()}</p>
+                          <p className="text-[10px] uppercase tracking-widest">Privy account</p>
+                          <p className="mt-1 text-sm font-semibold break-all">{account.displayName}</p>
                         </div>
                         <div className="flex items-center justify-between border-b pb-3">
-                          <span>Network fee balance</span>
-                          <span className="font-display text-lg font-bold tabular-nums">
-                            {walletSol === null ? '-' : `${walletSol.toFixed(4)} native units`}
-                          </span>
+                          <span>Country and currency</span>
+                          <span className="font-semibold">{account.country.name} · {account.country.currency}</span>
                         </div>
                         <div className="flex items-center justify-between border-b pb-3">
-                          <span>Cluster</span>
-                          <span className="text-xs font-semibold">{activeRailLabel}</span>
+                          <span>Account status</span>
+                          <span className="text-xs font-semibold">Connected</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span>Membership</span>
@@ -701,7 +678,7 @@ const CommunityDashboard: React.FC = () => {
                         <WalletIcon className="mx-auto mb-3 h-8 w-8" />
                         <p className="text-sm font-semibold">Account not connected</p>
                         <p className="mt-1 text-xs">
-                          {communityChainMeta.accountCta} from the header to see account status for this rail.
+                          Log in with Privy from the header to see your account status.
                         </p>
                       </div>
                     )}

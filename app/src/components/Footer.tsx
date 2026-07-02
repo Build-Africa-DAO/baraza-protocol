@@ -14,7 +14,7 @@ const links: Record<string, FooterLink[]> = {
     { label: "Browse DAOs", to: "/communities" },
     { label: "Evaluate Best Practice", to: "/evaluate" },
     { label: "Launch a DAO", to: "/create" },
-    { label: "How it Works", to: "/#features" },
+    { label: "How it Works", to: "/#how-it-works" },
   ],
 };
 
@@ -63,7 +63,7 @@ export default function Footer() {
           <div>
             <BrandLogo size="md" className="mb-4" />
             <p className="mb-5 max-w-xs text-sm leading-relaxed text-muted-foreground">
-              A KES treasury layer for DAOs and communities that collect dues, vote on proposals,
+              A local-currency treasury layer for communities that collect dues, vote on proposals,
               and move funds with shared visibility.
             </p>
             <div className="flex items-center gap-2">
@@ -103,7 +103,7 @@ export default function Footer() {
           <p className="text-xs text-muted-foreground">
             &copy; {new Date().getFullYear()} Baraza Protocol. All rights reserved.
           </p>
-          <p className="text-xs text-muted-foreground">Built for Kenyan DAOs &amp; communities</p>
+          <p className="text-xs text-muted-foreground">Built for communities everywhere</p>
         </div>
       </div>
     </footer>

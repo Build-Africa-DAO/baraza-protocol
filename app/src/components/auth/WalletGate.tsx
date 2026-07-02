@@ -1,8 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Wallet, Shield, Users, Vote } from 'lucide-react';
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { LogIn, Shield, Users, Vote } from 'lucide-react';
+import { useAccount } from '@/contexts/AccountContext';
 
 interface WalletGateProps {
   children: React.ReactNode;
@@ -21,9 +20,9 @@ const WalletGate: React.FC<WalletGateProps> = ({
   title = 'Sign in to continue',
   description = 'Connect your Baraza account to access this page.',
 }) => {
-  const { connected } = useWallet();
+  const account = useAccount();
 
-  if (connected) return <>{children}</>;
+  if (account.authenticated) return <>{children}</>;
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-20">
@@ -42,7 +41,7 @@ const WalletGate: React.FC<WalletGateProps> = ({
             {/* Icon */}
             <div className="w-14 h-14 rounded-2xl mx-auto mb-6 flex items-center justify-center"
               style={{ background: 'var(--gradient-primary)' }}>
-              <Wallet className="w-7 h-7 text-white" />
+              <LogIn className="w-7 h-7 text-white" />
             </div>
 
             {/* Heading */}
@@ -66,21 +65,21 @@ const WalletGate: React.FC<WalletGateProps> = ({
             </ul>
 
             {/* Account button */}
-            <div className="flex justify-center">
-              <WalletMultiButton>Connect your Baraza account</WalletMultiButton>
+            <div className="grid grid-cols-2 gap-3">
+              <button type="button" onClick={account.login} disabled={!account.configured || !account.ready} className="btn-warm justify-center">
+                Log in
+              </button>
+              <button type="button" onClick={account.createAccount} disabled={!account.configured || !account.ready} className="btn-ghost justify-center">
+                Create account
+              </button>
             </div>
 
             <p className="text-[10px] text-muted-foreground text-center mt-4">
-              Supports Phantom, Solflare, and Backpack
+              Secure account access powered by Privy
             </p>
           </div>
         </div>
 
-        {/* Decorative background blobs */}
-        <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-          <div className="absolute -top-32 -left-32 w-80 h-80 rounded-full bg-primary/5 blur-3xl" />
-          <div className="absolute -bottom-32 -right-32 w-80 h-80 rounded-full bg-accent/5 blur-3xl" />
-        </div>
       </motion.div>
     </div>
   );

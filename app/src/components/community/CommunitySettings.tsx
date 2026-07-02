@@ -34,7 +34,7 @@ export default function CommunitySettings({ community, isMember }: Props) {
           {[
             ['Name', community.name],
             ['Type', community.type],
-            ['Treasury rail', chainMeta.label],
+            ['Payment setup', 'Active'],
             ['Founded', formatRailDate(community.createdAt, chainMeta, { month: 'long', year: 'numeric' })],
           ].map(([label, value]) => (
             <div key={label} className="rounded-lg border border-border/50 p-3">

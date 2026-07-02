@@ -58,10 +58,10 @@ const reelVideos: ReelVideo[] = [
   {
     youtubeId: "QdBZY2fkU-0",
     tag: "Payments",
-    title: "M-Pesa to on-chain in one tap",
+    title: "M-Pesa to shared records in one tap",
     description:
       "Mobile-money confirmation attaches to the shared ledger before the SMS clears. No reconciliation gap.",
-    community: "Stellar Settlement",
+    community: "Payment settlement",
     host: "Protocol demo",
     date: "May 2026",
   },

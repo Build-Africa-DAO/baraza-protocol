@@ -1,188 +1,85 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   ArrowRight,
   BriefcaseBusiness,
+  CircleUserRound,
   Compass,
-  Link2,
   Loader2,
+  LogIn,
+  LogOut,
   PlusCircle,
-  RefreshCw,
-  ReceiptText,
   ShieldCheck,
-  Trash2,
-  UserRound,
-  Wallet,
-} from "lucide-react";
-import { useWallet } from "@solana/wallet-adapter-react";
-import { useWalletModal } from "@solana/wallet-adapter-react-ui";
-import Layout from "@/components/Layout";
-import { formatRailAmountFromKes, formatRailDate, truncateAddress } from "@/lib/utils";
-import CommunityBanner from "@/components/CommunityBanner";
-import { fetchMembershipsForWallet, listMembershipsForWallet } from "@/lib/memberships";
-import { AskAkili } from "@/akili/AskAkili";
-import { MemberBadges } from "@/components/MemberBadges";
-import { DuesStreakChip } from "@/components/DuesStreakChip";
-import { ReferralProgress } from "@/components/ReferralProgress";
-import { deriveBadges } from "@/lib/badges";
-import { fetchDuesStreak, type StreakResult } from "@/lib/duesStreak";
-import { dataStore } from "@/lib/dataStore";
-import { useCommunities } from "@/hooks/useCommunities";
-import { CHAINS } from "@/lib/chain";
-import { useSeo } from "@/lib/seo";
-import { useChain } from "@/hooks/useChain";
-import { getBountyStatsForCommunity, getOpenBountiesForCommunity } from "@/lib/bounties";
-import {
-  confirmStellarTransaction,
-  fetchStellarBalances,
-  getStellarConfig,
-  isValidStellarPublicKey,
-  type StellarBalance,
-} from "@/lib/stellar";
-import {
-  clearLinkedStellarAccount,
-  getLinkedStellarAccount,
-  saveLinkedStellarAccount,
-} from "@/lib/stellarAccounts";
-import {
-  listStellarSettlements,
-  recordStellarSettlement,
-  type StellarSettlementRecord,
-} from "@/lib/stellarSettlements";
+  UserPlus,
+} from 'lucide-react';
+import Layout from '@/components/Layout';
+import CommunityBanner from '@/components/CommunityBanner';
+import { AskAkili } from '@/akili/AskAkili';
+import { MemberBadges } from '@/components/MemberBadges';
+import { DuesStreakChip } from '@/components/DuesStreakChip';
+import { ReferralProgress } from '@/components/ReferralProgress';
+import { useAccount } from '@/contexts/AccountContext';
+import { useCommunities } from '@/hooks/useCommunities';
+import { deriveBadges } from '@/lib/badges';
+import { getBountyStatsForCommunity, getOpenBountiesForCommunity } from '@/lib/bounties';
+import { dataStore } from '@/lib/dataStore';
+import { fetchDuesStreak, type StreakResult } from '@/lib/duesStreak';
+import { fetchMembershipsForWallet, listMembershipsForWallet } from '@/lib/memberships';
+import { useSeo } from '@/lib/seo';
+import { formatKSh } from '@/lib/utils';
+import { ACCOUNT_COUNTRIES, formatAccountDate, type AccountCountryCode } from '@/lib/accountLocale';
 
 export default function Profile() {
-  const { chainMeta } = useChain();
   useSeo({
-    title: "Your Baraza profile",
-    description: "Your community memberships, account, and contribution history on Baraza.",
-    path: "/profile",
+    title: 'Your Baraza account',
+    description: 'Your community memberships, account, and contribution history on Baraza.',
+    path: '/profile',
     noIndex: true,
   });
-  const { publicKey, connected, wallet } = useWallet();
-  const { setVisible } = useWalletModal();
+
+  const account = useAccount();
   const { communities } = useCommunities();
-  const stellarConfig = useMemo(() => getStellarConfig(), []);
-  const [stellarAccount, setStellarAccount] = useState<string | null>(null);
-  const [stellarInput, setStellarInput] = useState("");
-  const [stellarBalances, setStellarBalances] = useState<StellarBalance[]>([]);
-  const [stellarMessage, setStellarMessage] = useState<string | null>(null);
-  const [isLoadingStellar, setIsLoadingStellar] = useState(false);
-  const [stellarTxHash, setStellarTxHash] = useState("");
-  const [settlementMessage, setSettlementMessage] = useState<string | null>(null);
-  const [isCheckingSettlement, setIsCheckingSettlement] = useState(false);
-  const [stellarSettlements, setStellarSettlements] = useState<StellarSettlementRecord[]>([]);
+  const address = account.accountId ?? '';
 
-  // Address is only needed below the early-return, but `useMemo` MUST be called
-  // unconditionally on every render - so compute it here (defaulting to "")
-  // and skip the lookup when no wallet is connected.
-  const address = publicKey?.toBase58() ?? "";
+  type MembershipPair = {
+    record: ReturnType<typeof listMembershipsForWallet>[number];
+    community: (typeof communities)[number];
+  };
 
-  type MembershipPair = { record: ReturnType<typeof listMembershipsForWallet>[number]; community: typeof communities[number] };
-
-  // Prime synchronously so the Badges card never flashes "0 earned" between
-  // mount and the first effect tick — matches the join → recognition flow.
   const initialMemberships = useMemo<MembershipPair[]>(() => {
     if (!address) return [];
     return listMembershipsForWallet(address)
-      .map((r) => {
-        const c = communities.find((c) => c.id === r.communityId);
-        return c ? { record: r, community: c } : null;
+      .map((record) => {
+        const community = communities.find((item) => item.id === record.communityId);
+        return community ? { record, community } : null;
       })
-      .filter((e): e is MembershipPair => e !== null);
-    // Intentionally ignore communities/address changes here — this only seeds
-    // the very first render. The effect below keeps the list current.
+      .filter((entry): entry is MembershipPair => entry !== null);
+    // This only seeds the first authenticated render; the effect below refreshes it.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const [myMemberships, setMyMemberships] = useState<MembershipPair[]>(initialMemberships);
-
-  useEffect(() => {
-    if (!address) { setMyMemberships([]); return; }
-    // Optimistic sync read
-    const syncRecords = listMembershipsForWallet(address);
-    setMyMemberships(
-      syncRecords
-        .map((r) => { const c = communities.find((c) => c.id === r.communityId); return c ? { record: r, community: c } : null; })
-        .filter((e): e is NonNullable<typeof e> => e !== null),
-    );
-    // Then async Supabase read for fresh voting_weight
-    fetchMembershipsForWallet(address).then((records) => {
-      setMyMemberships(
-        records
-          .map((r) => { const c = communities.find((c) => c.id === r.communityId); return c ? { record: r, community: c } : null; })
-          .filter((e): e is NonNullable<typeof e> => e !== null),
-      );
-    }).catch(() => undefined);
-  }, [address, communities]);
-
-  // Total BRZA across all memberships — derived from `myMemberships` so we
-  // don't double-fetch the same rows the membership effect already loaded.
-  // `MembershipRecord.brzaBalance` is set from row.voting_weight in rowToRecord.
-  const totalBrza = useMemo(
-    () => myMemberships.reduce((sum, m) => sum + m.record.brzaBalance, 0),
-    [myMemberships],
-  );
-
-  const [badgeEvaluatedAt] = useState(() => Date.now());
-
-  // Badges derive from already-loaded membership data — no extra fetches.
-  const badgeResult_ = useMemo(() => {
-    const joinedTimes = myMemberships
-      .map((m) => new Date(m.record.joinedAt).getTime())
-      .filter((t) => Number.isFinite(t));
-    const earliest = joinedTimes.length > 0 ? new Date(Math.min(...joinedTimes)).toISOString() : null;
-
-    // Founder — communities this wallet created that are ≥90 days old.
-    const NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000;
-    const foundedSurvivingCommunityCount = address
-      ? communities.filter((c) => {
-          if (c.createdBy !== address) return false;
-          const createdAt = new Date(c.createdAt).getTime();
-          return Number.isFinite(createdAt) && badgeEvaluatedAt - createdAt >= NINETY_DAYS_MS;
-        }).length
-      : 0;
-
-    // Quorum-keeper — proposals this wallet has voted on (across all communities).
-    const proposalVoteCount = address ? dataStore.getVoteCountForWallet(address) : 0;
-
-    return {
-      result: deriveBadges({
-        activeMembershipCount: myMemberships.length,
-        earliestJoinedAt: earliest,
-        foundedSurvivingCommunityCount,
-        proposalVoteCount,
-      }),
-      proposalVoteCount,
-      foundedSurvivingCommunityCount,
-    };
-  }, [myMemberships, communities, address, badgeEvaluatedAt]);
-
-  const badgeResult = badgeResult_.result;
-  const proposalVoteCount = badgeResult_.proposalVoteCount;
-
-  const memberBounties = useMemo(
-    () => myMemberships.flatMap(({ community }) =>
-      getOpenBountiesForCommunity(community.id).map((bounty) => ({ bounty, community })),
-    ),
-    [myMemberships],
-  );
-
-  useEffect(() => {
-    if (!address) return;
-    const linked = getLinkedStellarAccount(address);
-    setStellarAccount(linked);
-    setStellarInput(linked ?? "");
-    setStellarBalances([]);
-    setStellarMessage(null);
-    setSettlementMessage(null);
-    setStellarSettlements(listStellarSettlements(address));
-  }, [address]);
-
   const [streak, setStreak] = useState<StreakResult>({
     consecutiveMonthsPaid: 0,
     lastPaidAt: null,
     perCommunity: {},
   });
+  const [badgeEvaluatedAt] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (!address) return;
+    const toPairs = (records: ReturnType<typeof listMembershipsForWallet>) => records
+      .map((record) => {
+        const community = communities.find((item) => item.id === record.communityId);
+        return community ? { record, community } : null;
+      })
+      .filter((entry): entry is MembershipPair => entry !== null);
+
+    setMyMemberships(toPairs(listMembershipsForWallet(address)));
+    fetchMembershipsForWallet(address)
+      .then((records) => setMyMemberships(toPairs(records)))
+      .catch(() => undefined);
+  }, [address, communities]);
 
   useEffect(() => {
     if (!address) return;
@@ -192,106 +89,133 @@ export default function Profile() {
         if (!cancelled) setStreak(result);
       })
       .catch(() => undefined);
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [address]);
 
-  const refreshStellarBalances = async (account = stellarAccount) => {
-    if (!account) return;
-    if (!stellarConfig.enabled) {
-      setStellarMessage("Set VITE_STELLAR_NETWORK or VITE_STELLAR_HORIZON_URL to enable live Stellar balance checks.");
-      return;
-    }
+  const participationBalance = useMemo(
+    () => myMemberships.reduce((sum, membership) => sum + membership.record.brzaBalance, 0),
+    [myMemberships],
+  );
 
-    setIsLoadingStellar(true);
-    setStellarMessage(null);
-    try {
-      const balances = await fetchStellarBalances(account, stellarConfig);
-      setStellarBalances(balances);
-    } catch (err) {
-      setStellarBalances([]);
-      setStellarMessage(err instanceof Error ? err.message : "Could not load Stellar balances.");
-    } finally {
-      setIsLoadingStellar(false);
-    }
-  };
+  const badgeSummary = useMemo(() => {
+    const joinedTimes = myMemberships
+      .map((membership) => new Date(membership.record.joinedAt).getTime())
+      .filter((time) => Number.isFinite(time));
+    const earliestJoinedAt = joinedTimes.length > 0
+      ? new Date(Math.min(...joinedTimes)).toISOString()
+      : null;
+    const ninetyDays = 90 * 24 * 60 * 60 * 1000;
+    const foundedSurvivingCommunityCount = address
+      ? communities.filter((community) => {
+          if (community.createdBy !== address) return false;
+          const createdAt = new Date(community.createdAt).getTime();
+          return Number.isFinite(createdAt) && badgeEvaluatedAt - createdAt >= ninetyDays;
+        }).length
+      : 0;
+    const proposalVoteCount = address ? dataStore.getVoteCountForWallet(address) : 0;
 
-  const handleSaveStellar = () => {
-    if (!address) return;
-    if (!isValidStellarPublicKey(stellarInput.trim())) {
-      setStellarMessage("Enter a valid Stellar public key.");
-      return;
-    }
-    const saved = saveLinkedStellarAccount(address, stellarInput);
-    setStellarAccount(saved);
-    setStellarInput(saved);
-    setStellarBalances([]);
-    setStellarMessage("Stellar account linked.");
-    void refreshStellarBalances(saved);
-  };
+    return {
+      badges: deriveBadges({
+        activeMembershipCount: myMemberships.length,
+        earliestJoinedAt,
+        foundedSurvivingCommunityCount,
+        proposalVoteCount,
+      }),
+      proposalVoteCount,
+    };
+  }, [address, badgeEvaluatedAt, communities, myMemberships]);
 
-  const handleClearStellar = () => {
-    if (!address) return;
-    clearLinkedStellarAccount(address);
-    setStellarAccount(null);
-    setStellarInput("");
-    setStellarBalances([]);
-    setStellarMessage(null);
-    setSettlementMessage(null);
-  };
+  const memberBounties = useMemo(
+    () => myMemberships.flatMap(({ community }) =>
+      getOpenBountiesForCommunity(community.id).map((bounty) => ({ bounty, community })),
+    ),
+    [myMemberships],
+  );
 
-  const handleVerifySettlement = async () => {
-    if (!address || !stellarAccount) return;
-    const txHash = stellarTxHash.trim().toLowerCase();
-    if (!/^[a-f0-9]{64}$/.test(txHash)) {
-      setSettlementMessage("Enter a valid 64-character Stellar transaction hash.");
-      return;
-    }
-    if (!stellarConfig.enabled) {
-      setSettlementMessage("Set Stellar Horizon env vars to verify transactions.");
-      return;
-    }
+  const countryControl = (
+    <div>
+      <label htmlFor="account-country" className="mb-2 block text-xs font-semibold">
+        Account country
+      </label>
+      <select
+        id="account-country"
+        value={account.country.code}
+        onChange={(event) => account.setCountry(event.target.value as AccountCountryCode)}
+        className="w-full rounded-md border bg-background px-3 py-3 text-sm font-semibold outline-none focus:border-primary"
+      >
+        {ACCOUNT_COUNTRIES.map((country) => (
+          <option key={country.code} value={country.code}>
+            {country.name} - {country.currency}
+          </option>
+        ))}
+      </select>
+      <p className="mt-2 text-xs text-muted-foreground">
+        Amounts are displayed in {account.country.currency}. Settlement providers confirm the final rate before payment.
+      </p>
+    </div>
+  );
 
-    setIsCheckingSettlement(true);
-    setSettlementMessage(null);
-    try {
-      const confirmation = await confirmStellarTransaction(txHash, stellarConfig);
-      const record = recordStellarSettlement({
-        ownerWallet: address,
-        stellarAccount,
-        txHash,
-        confirmation,
-      });
-      setStellarSettlements(listStellarSettlements(address));
-      setSettlementMessage(
-        record.status === 'CONFIRMED'
-          ? `Settlement confirmed in ledger ${record.ledger}.`
-          : record.status === 'FAILED'
-            ? "Transaction was found but did not succeed."
-            : "Transaction was not found on this Stellar network.",
-      );
-      if (record.status === 'CONFIRMED') setStellarTxHash("");
-    } catch (err) {
-      setSettlementMessage(err instanceof Error ? err.message : "Could not verify Stellar transaction.");
-    } finally {
-      setIsCheckingSettlement(false);
-    }
-  };
-
-  if (!connected || !publicKey) {
+  if (!account.ready) {
     return (
       <Layout>
         <section className="py-20">
-          <div className="mx-auto max-w-md px-4 text-center">
-            <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl">
-              <Wallet className="h-7 w-7" />
+          <div className="mx-auto flex max-w-md items-center justify-center gap-2 px-4 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Loading your account
+          </div>
+        </section>
+      </Layout>
+    );
+  }
+
+  if (!account.authenticated) {
+    return (
+      <Layout>
+        <section className="py-16 md:py-20">
+          <div className="mx-auto max-w-xl px-4">
+            <div className="text-center">
+              <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-md border border-primary/30 bg-primary/10 text-primary">
+                <CircleUserRound className="h-7 w-7" />
+              </div>
+              <p className="text-sm font-bold text-primary">Privy account</p>
+              <h1 className="mt-2 text-balance font-display text-3xl font-bold">Your Baraza account</h1>
+              <p className="mx-auto mt-3 max-w-md text-pretty text-sm leading-6 text-muted-foreground">
+                Log in to review memberships and decisions, or create an account with your phone number or email.
+              </p>
             </div>
-            <h1 className="font-display text-2xl font-bold">{chainMeta.accountCta}</h1>
-            <p className="mt-3 text-sm">
-              Your profile shows your memberships, voting history, and credentials across every DAO you join.
-            </p>
-            <button onClick={() => setVisible(true)} className="btn-warm mt-6 inline-flex items-center gap-2 text-sm">
-              Connect {chainMeta.label}
-            </button>
+
+            <div className="mt-8 grid gap-3 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={account.login}
+                disabled={!account.configured}
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-border bg-surface px-5 text-sm font-bold transition-colors hover:border-primary/45 disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                <LogIn className="h-4 w-4" />
+                Log in
+              </button>
+              <button
+                type="button"
+                onClick={account.createAccount}
+                disabled={!account.configured}
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-primary px-5 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                <UserPlus className="h-4 w-4" />
+                Create account
+              </button>
+            </div>
+
+            {!account.configured && (
+              <p className="mt-3 rounded-md border border-primary/25 bg-primary/5 px-4 py-3 text-center text-xs text-muted-foreground">
+                Account access is temporarily unavailable on this deployment.
+              </p>
+            )}
+
+            <div className="mt-8 border-t border-border/60 pt-6">
+              {countryControl}
+            </div>
           </div>
         </section>
       </Layout>
@@ -304,323 +228,125 @@ export default function Profile() {
         <div className="container mx-auto px-4">
           <CommunityBanner className="mb-6 p-5 md:p-6">
             <div className="flex flex-col justify-between gap-5 md:flex-row md:items-center">
-              <div className="flex items-center gap-5">
-                <div className="grid h-20 w-20 place-items-center rounded-lg border">
-                  <UserRound className="h-9 w-9" />
+              <div className="flex items-center gap-4">
+                <div className="grid h-16 w-16 shrink-0 place-items-center rounded-md border border-primary/25 bg-primary/10 text-primary">
+                  <CircleUserRound className="h-8 w-8" />
                 </div>
-                <div>
-                  <p className="font-mono text-xs uppercase tracking-widest">Your profile</p>
-                  <h1 className="mt-2 font-display font-mono text-2xl font-bold md:text-3xl">
-                    {truncateAddress(address)}
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-primary">Privy account</p>
+                  <h1 className="mt-1 truncate font-display text-2xl font-bold md:text-3xl">
+                    {account.displayName}
                   </h1>
-                  <p className="mt-1 text-sm">
-                    {wallet ? `Connected via ${wallet.adapter.name}` : "Account connected"}
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {account.country.name} · {account.country.currency}
                   </p>
                 </div>
               </div>
+              <button
+                type="button"
+                onClick={() => void account.logout()}
+                className="btn-ghost inline-flex items-center justify-center gap-2 text-sm"
+              >
+                <LogOut className="h-4 w-4" />
+                Log out
+              </button>
             </div>
           </CommunityBanner>
 
           <div className="grid gap-6 lg:grid-cols-[0.34fr_0.66fr]">
             <aside className="space-y-6">
-              {/* BRZA balance summary */}
               <div className="baraza-card p-5">
                 <div className="mb-3 flex items-center justify-between">
-                  <h2 className="font-mono text-xs uppercase tracking-widest">BRZA balance</h2>
+                  <h2 className="text-sm font-bold">Participation balance</h2>
                   <DuesStreakChip streakMonths={streak.consecutiveMonthsPaid} />
                 </div>
-                <div className="flex items-end gap-2">
-                  <span className="font-display text-4xl font-black tabular-nums leading-none">
-                    {address ? totalBrza : '—'}
-                  </span>
-                  <span className="mb-1 text-sm font-semibold text-muted-foreground">BRZA</span>
-                </div>
+                <p className="text-4xl font-black tabular-nums leading-none">{participationBalance}</p>
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Voting weight across all active memberships. Increases with governance participation.
+                  Your current voting weight across active memberships.
                 </p>
               </div>
 
-              {/* Member badges — derived from membership history. Earned chips
-                  render in full color, in-progress and locked render dimmed. */}
+              <div className="baraza-card p-5">
+                <h2 className="mb-4 text-sm font-bold">Country and currency</h2>
+                {countryControl}
+              </div>
+
               <div className="baraza-card p-5">
                 <div className="mb-3 flex items-center justify-between">
-                  <h2 className="font-mono text-xs uppercase tracking-widest">Badges</h2>
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    {badgeResult.earned.length} earned
+                  <h2 className="text-sm font-bold">Badges</h2>
+                  <span className="text-xs font-semibold text-muted-foreground">
+                    {badgeSummary.badges.earned.length} earned
                   </span>
                 </div>
-                <MemberBadges result={badgeResult} variant="compact" />
-                <p className="mt-3 text-xs text-muted-foreground">
-                  Badges show what you've done in Baraza communities. Locked badges show what's still possible.
-                </p>
+                <MemberBadges result={badgeSummary.badges} variant="compact" />
               </div>
 
-              {/* Referrer progress — Nia filing 2026-06-19 (id 4c43).
-                  The relationship, named. No BRZA amount during lock.
-                  Data source pending Phase 6 referrals schema; renders the
-                  "coming soon" slot for now so the slot exists. */}
               <div className="baraza-card p-5">
                 <ReferralProgress />
               </div>
-
-              <div className="baraza-card p-5">
-                <h2 className="mb-4 font-mono text-xs uppercase tracking-widest">
-                  Linked accounts
-                </h2>
-                <div className="rounded-lg border p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="flex items-center gap-2 font-mono text-xs">
-                      <Wallet className="h-4 w-4" />
-                      {truncateAddress(address)}
-                    </span>
-                    <span className="rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider">
-                      Primary
-                    </span>
-                  </div>
-                </div>
-                <p className="mt-3 text-xs">
-                  Linking a second account lets you sign from multiple devices.{" "}
-                  <span>Not yet available.</span>
-                </p>
-              </div>
-
-              <div className="baraza-card p-5">
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <h2 className="font-mono text-xs uppercase tracking-widest">
-                    Stellar settlement
-                  </h2>
-                  <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider">
-                    <span
-                      aria-hidden
-                      className="h-1.5 w-1.5 rounded-full"
-                      style={{ background: CHAINS.stellar.badgeBg }}
-                    />
-                    {stellarConfig.network}
-                  </span>
-                </div>
-
-                <label htmlFor="stellar-account" className="mb-2 block text-xs font-semibold">
-                  Stellar public key
-                </label>
-                <div className="flex rounded-lg border focus-within:border-current">
-                  <span className="grid w-10 place-items-center border-r">
-                    <Link2 className="h-4 w-4" />
-                  </span>
-                  <input
-                    id="stellar-account"
-                    value={stellarInput}
-                    onChange={(e) => {
-                      setStellarInput(e.target.value);
-                      setStellarMessage(null);
-                    }}
-                    className="min-w-0 flex-1 px-3 py-2.5 font-mono text-xs outline-none"
-                    placeholder="G..."
-                    autoComplete="off"
-                    spellCheck={false}
-                  />
-                </div>
-
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={handleSaveStellar}
-                    disabled={!stellarInput.trim()}
-                    className="btn-primary gap-2 px-3 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <Link2 className="h-3.5 w-3.5" />
-                    Link
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void refreshStellarBalances()}
-                    disabled={!stellarAccount || isLoadingStellar}
-                    className="btn-ghost gap-2 px-3 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {isLoadingStellar ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
-                    Refresh
-                  </button>
-                  {stellarAccount && (
-                    <button
-                      type="button"
-                      onClick={handleClearStellar}
-                      className="btn-ghost gap-2 px-3 py-2 text-xs"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                      Remove
-                    </button>
-                  )}
-                </div>
-
-                {stellarMessage && (
-                  <p className="mt-3 text-xs leading-5">
-                    {stellarMessage}
-                  </p>
-                )}
-
-                {stellarBalances.length > 0 && (
-                  <div className="mt-4 space-y-2">
-                    {stellarBalances.slice(0, 3).map((balance) => (
-                      <div key={`${balance.type}:${balance.assetCode}:${balance.assetIssuer ?? 'native'}`} className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-xs">
-                        <span className="font-semibold">{balance.assetCode}</span>
-                        <span className="font-mono">{balance.balance}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="baraza-card p-5">
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <h2 className="font-mono text-xs uppercase tracking-widest">
-                    Stellar tx check
-                  </h2>
-                  <ReceiptText className="h-4 w-4" />
-                </div>
-
-                <label htmlFor="stellar-tx" className="mb-2 block text-xs font-semibold">
-                  Transaction hash
-                </label>
-                <input
-                  id="stellar-tx"
-                  value={stellarTxHash}
-                  onChange={(e) => {
-                    setStellarTxHash(e.target.value);
-                    setSettlementMessage(null);
-                  }}
-                  className="w-full rounded-lg border px-3 py-2.5 font-mono text-xs outline-none"
-                  placeholder="64-character hash"
-                  autoComplete="off"
-                  spellCheck={false}
-                />
-
-                <button
-                  type="button"
-                  onClick={() => void handleVerifySettlement()}
-                  disabled={!stellarAccount || !stellarTxHash.trim() || isCheckingSettlement}
-                  className="btn-primary mt-3 w-full justify-center gap-2 px-3 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {isCheckingSettlement ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ReceiptText className="h-3.5 w-3.5" />}
-                  Verify settlement
-                </button>
-
-                {!stellarAccount && (
-                  <p className="mt-3 text-xs leading-5">
-                    Link a Stellar account before recording settlements.
-                  </p>
-                )}
-                {settlementMessage && (
-                  <p className="mt-3 text-xs leading-5">
-                    {settlementMessage}
-                  </p>
-                )}
-
-                {stellarSettlements.length > 0 && (
-                  <div className="mt-4 space-y-2">
-                    {stellarSettlements.slice(0, 3).map((record) => (
-                      <div key={record.settlementId} className="rounded-lg border px-3 py-2 text-xs">
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="font-semibold">{record.status}</span>
-                          <span className="font-mono">{record.assetCode}</span>
-                        </div>
-                        <p className="mt-1 break-all font-mono text-[10px]">
-                          {record.txHash}
-                        </p>
-                        <p className="mt-1 text-[10px]">
-                          {record.ledger ? `Ledger ${record.ledger}` : "No ledger confirmation"}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="baraza-card p-5">
-                <h2 className="mb-4 font-mono text-xs uppercase tracking-widest">
-                  Active roles
-                </h2>
-                <p className="text-sm">
-                  No group roles yet. Join a DAO or launch one to receive your first role.
-                </p>
-              </div>
             </aside>
 
-            <main className="space-y-6">
+            <div className="space-y-6">
               <div className="baraza-card p-5">
-                <div className="mb-5 flex items-center justify-between">
-                  <h2 className="font-mono text-xs uppercase tracking-widest">
+                <div className="mb-5 flex items-center justify-between gap-3">
+                  <h2 className="text-sm font-bold">
                     Your memberships {myMemberships.length > 0 && `(${myMemberships.length})`}
                   </h2>
-                  <Link to="/communities" className="text-sm hover:underline">
-                    Browse DAOs
+                  <Link to="/communities" className="text-sm font-semibold text-primary hover:underline">
+                    Browse
                   </Link>
                 </div>
 
                 {myMemberships.length > 0 ? (
                   <div className="space-y-3">
                     {myMemberships.map(({ record, community }) => (
-                        <Link
-                          key={community.id}
-                          to={`/dashboard/${community.id}`}
-                          className="group flex items-center gap-4 rounded-lg border p-4"
-                        >
-                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border font-display text-base font-bold">
-                            {community.image}
+                      <Link
+                        key={community.id}
+                        to={`/dashboard/${community.id}`}
+                        className="group flex items-center gap-4 rounded-md border p-4 transition-colors hover:border-primary/45"
+                      >
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md border font-display text-base font-bold">
+                          {community.image}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="truncate font-display text-sm font-bold">{community.name}</p>
+                            <span className="inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase">
+                              <ShieldCheck className="h-3 w-3" />
+                              {record.status}
+                            </span>
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
-                              <p className="truncate font-display text-sm font-bold">
-                                {community.name}
-                              </p>
-                              <span className="inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider">
-                                <ShieldCheck className="h-3 w-3" />
-                                {record.status}
-                              </span>
-                            </div>
-                            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-                              <span className="capitalize">{community.type}</span>
-                              <span className="inline-flex items-center gap-1">
-                                <span
-                                  aria-hidden
-                                  className="h-1.5 w-1.5 rounded-full"
-                                  style={{ background: chainMeta.badgeBg }}
-                                />
-                                {chainMeta.label}
-                              </span>
-                              <span>Joined {formatRailDate(record.joinedAt, chainMeta, { month: 'short', year: 'numeric' })}</span>
-                              <span>{formatRailAmountFromKes(community.membershipFee, chainMeta)}/mo</span>
-                              <span className="font-semibold text-primary">
-                                {record.brzaBalance} BRZA
-                              </span>
-                              <DuesStreakChip streakMonths={streak.perCommunity[community.id]} />
-                            </div>
+                          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                            <span className="capitalize">{community.type}</span>
+                            <span>Joined {formatAccountDate(record.joinedAt, account.country.code)}</span>
+                            <span>{formatKSh(community.membershipFee)}/mo</span>
+                            <DuesStreakChip streakMonths={streak.perCommunity[community.id]} />
                           </div>
-                          <ArrowRight className="h-4 w-4 shrink-0" />
-                        </Link>
+                        </div>
+                        <ArrowRight className="h-4 w-4 shrink-0" />
+                      </Link>
                     ))}
                   </div>
                 ) : (
-                  <div className="rounded-lg border border-dashed p-8 text-center">
-                    <p className="font-display text-base font-semibold">
-                      Not a member of any DAO yet
-                    </p>
-                    <p className="mt-2 text-sm">
-                      Join a DAO to receive your membership credential and vote on proposals.
+                  <div className="rounded-md border border-dashed p-8 text-center">
+                    <p className="font-display text-base font-semibold">No memberships yet</p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Explore a community or launch one with your group.
                     </p>
                     <div className="mt-5 flex flex-col items-center justify-center gap-2 sm:flex-row">
                       <Link to="/communities" className="btn-warm inline-flex items-center gap-2 text-sm">
                         <Compass className="h-4 w-4" />
-                        Browse DAOs
+                        Explore communities
                       </Link>
-                      <Link to="/create" className="btn-ghost inline-flex items-center gap-2 text-sm">
+                      <Link to="/create/purpose" className="btn-ghost inline-flex items-center gap-2 text-sm">
                         <PlusCircle className="h-4 w-4" />
-                        Launch a DAO
+                        Launch a community
                       </Link>
                     </div>
                     <div className="mt-4 flex items-center justify-center gap-2">
-                      <span className="text-[11px] text-muted-foreground">Not sure which?</span>
                       <AskAkili
-                        prompt="Help me pick a DAO that fits a youth savings group of around 15 members"
-                        label="Ask Akili to suggest one"
+                        prompt="Help me choose a community for a youth savings group of around 15 members"
+                        label="Ask Akili"
                         variant="chip"
                       />
                     </div>
@@ -630,10 +356,10 @@ export default function Profile() {
 
               <div className="baraza-card p-5">
                 <div className="mb-5 flex items-center justify-between">
-                  <h2 className="font-mono text-xs uppercase tracking-widest">
+                  <h2 className="text-sm font-bold">
                     Bounty announcements {memberBounties.length > 0 && `(${memberBounties.length})`}
                   </h2>
-                  <BriefcaseBusiness className="h-4 w-4 text-secondary" />
+                  <BriefcaseBusiness className="h-4 w-4 text-primary" />
                 </div>
 
                 {memberBounties.length > 0 ? (
@@ -644,20 +370,12 @@ export default function Profile() {
                         <Link
                           key={bounty.id}
                           to={`/bounties/${bounty.id}`}
-                          className="group flex items-start gap-4 rounded-lg border p-4 transition-colors hover:border-secondary/40"
+                          className="group flex items-start gap-4 rounded-md border p-4 transition-colors hover:border-primary/45"
                         >
-                          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border bg-secondary/10">
-                            <BriefcaseBusiness className="h-4 w-4 text-secondary" />
-                          </div>
                           <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <p className="font-display text-sm font-bold">{bounty.title}</p>
-                              <span className="rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
-                                {bounty.category}
-                              </span>
-                            </div>
+                            <p className="font-display text-sm font-bold">{bounty.title}</p>
                             <p className="mt-1 text-xs text-muted-foreground">
-                              {community.name} - {formatRailAmountFromKes(bounty.rewardKes, chainMeta)} - {bounty.submissions} submissions
+                              {community.name} · {formatKSh(bounty.rewardKes)} · {bounty.submissions} submissions
                             </p>
                             <p className="mt-2 text-xs text-muted-foreground">
                               {stats.open} open bounties in this community.
@@ -669,51 +387,28 @@ export default function Profile() {
                     })}
                   </div>
                 ) : (
-                  <div className="rounded-lg border border-dashed p-6 text-center">
-                    <p className="font-display text-base font-semibold">No bounty announcements yet</p>
-                    <p className="mt-2 text-sm text-muted-foreground">
-                      Join a community to see paid events, integrations, and contributor tasks here.
-                    </p>
-                  </div>
+                  <p className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
+                    Join a community to see paid events and contributor work here.
+                  </p>
                 )}
               </div>
 
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="baraza-card p-5">
-                  <h2 className="mb-4 font-mono text-xs uppercase tracking-widest">
-                    Voting history
-                  </h2>
-                  {proposalVoteCount > 0 ? (
-                    <div>
-                      <p className="font-display text-3xl font-black tabular-nums leading-none">
-                        {proposalVoteCount}
-                      </p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        proposal{proposalVoteCount === 1 ? '' : 's'} voted on across your communities
-                      </p>
-                      <p className="mt-3 text-xs text-muted-foreground">
-                        {proposalVoteCount >= 5
-                          ? 'Quorum-keeper standing earned.'
-                          : `${5 - proposalVoteCount} more vote${5 - proposalVoteCount === 1 ? '' : 's'} to earn Quorum-keeper.`}
-                      </p>
-                    </div>
-                  ) : (
-                    <p className="text-sm">
-                      No votes yet. Once you join a group and vote on a proposal, your record appears here.
-                    </p>
-                  )}
+                  <h2 className="mb-4 text-sm font-bold">Voting history</h2>
+                  <p className="text-3xl font-black tabular-nums">{badgeSummary.proposalVoteCount}</p>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Decisions you have voted on across your communities.
+                  </p>
                 </div>
-
                 <div className="baraza-card p-5">
-                  <h2 className="mb-4 font-mono text-xs uppercase tracking-widest">
-                    Membership credentials
-                  </h2>
-                  <p className="text-sm">
-                    Your membership credentials appear here once you join a group.
+                  <h2 className="mb-4 text-sm font-bold">Account security</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Privy secures sign-in and recovery through your verified phone number or email.
                   </p>
                 </div>
               </div>
-            </main>
+            </div>
           </div>
         </div>
       </section>

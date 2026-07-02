@@ -37,7 +37,7 @@ const flows: Record<FlowKey, { label: string; title: string; steps: FlowStep[] }
         title: "Pay dues",
         detail: "Members can pay by M-Pesa or their account, then attach proof to the membership request.",
         icon: CircleDollarSign,
-        stat: "KES",
+        stat: "Local",
       },
       {
         title: "Vote",

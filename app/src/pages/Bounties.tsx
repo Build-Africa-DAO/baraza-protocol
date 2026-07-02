@@ -4,6 +4,7 @@ import { ArrowRight, BriefcaseBusiness, CalendarDays, CheckCircle2, Clock, Colum
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import Layout from '@/components/Layout';
+import { useAccount } from '@/contexts/AccountContext';
 import {
   createBountyRecordAsync,
   listBounties,
@@ -15,7 +16,7 @@ import {
   type BountyStatus,
 } from '@/lib/bounties';
 import { useCommunities } from '@/hooks/useCommunities';
-import { formatRailAmountFromKes, formatRailAmountWithKes, cn } from '@/lib/utils';
+import { formatKSh, cn } from '@/lib/utils';
 import { useSeo } from '@/lib/seo';
 import { bountyCreateAccessMessage, getBountyCreateAccess } from '@/lib/access';
 import { useChain } from '@/hooks/useChain';
@@ -87,7 +88,8 @@ export default function Bounties() {
   });
 
   const { communities } = useCommunities();
-  const { chain, chainMeta } = useChain();
+  const { chain } = useChain();
+  const account = useAccount();
   const { publicKey, connected } = useWallet();
   const { setVisible } = useWalletModal();
   const [search, setSearch] = useState('');
@@ -183,7 +185,7 @@ export default function Bounties() {
     }
     if (memberCommunities.length === 0) {
       setShowPostForm(false);
-      setFormMessage(`Join a ${chainMeta.label} group first. Only active group members can post bounties.`);
+      setFormMessage('Join a community first. Only active members can post bounties.');
       return;
     }
     setShowPostForm((value) => !value);
@@ -303,12 +305,12 @@ export default function Bounties() {
                     <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Open tasks</p>
                   </div>
                   <div className="rounded-lg border border-border/70 bg-background/58 p-3 backdrop-blur">
-                    <p className="font-display text-xl font-bold text-primary">{formatRailAmountFromKes(openRewardPool, chainMeta)}</p>
+                    <p className="font-display text-xl font-bold text-primary">{formatKSh(openRewardPool)}</p>
                     <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Open rewards</p>
                   </div>
                   <div className="rounded-lg border border-border/70 bg-background/58 p-3 backdrop-blur">
-                    <p className="font-display text-xl font-bold">{chainMeta.label}</p>
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Active rail</p>
+                    <p className="font-display text-xl font-bold">{account.country.currency}</p>
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Account currency</p>
                   </div>
                 </div>
               </div>
@@ -335,7 +337,7 @@ export default function Bounties() {
                   </select>
                   {memberCommunities.length === 0 && (
                     <p className="mt-1 text-[11px] text-muted-foreground">
-                      Join a group on {chainMeta.label} before posting a bounty.
+                      Join a community before posting a bounty.
                     </p>
                   )}
                 </div>
@@ -358,7 +360,7 @@ export default function Bounties() {
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-xs font-semibold">Reward source (KES)</label>
+                  <label className="mb-2 block text-xs font-semibold">Reward ({account.country.currency})</label>
                   <input
                     value={newBounty.rewardKes}
                     onChange={(event) => setNewBounty((current) => ({ ...current, rewardKes: event.target.value }))}
@@ -367,11 +369,6 @@ export default function Bounties() {
                     className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none"
                     placeholder="25000"
                   />
-                  {Number(newBounty.rewardKes) > 0 && (
-                    <p className="mt-1 text-[11px] text-muted-foreground">
-                      Shows as {formatRailAmountFromKes(Number(newBounty.rewardKes), chainMeta)} on {chainMeta.label}.
-                    </p>
-                  )}
                 </div>
                 <div>
                   <label className="mb-2 block text-xs font-semibold">Deadline</label>
@@ -579,7 +576,7 @@ export default function Bounties() {
                                 <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/70">
                                   {bounty.category}
                                 </span>
-                                <span className="ml-auto text-xs font-bold text-accent">{formatRailAmountFromKes(bounty.rewardKes, chainMeta)}</span>
+                                <span className="ml-auto text-xs font-bold text-accent">{formatKSh(bounty.rewardKes)}</span>
                               </div>
 
                               {/* Title */}
@@ -718,7 +715,7 @@ export default function Bounties() {
                             {daysLeft(bounty.deadline)}
                           </span>
                           <div className="flex items-center justify-between gap-3 md:justify-end">
-                            <span className="font-display text-sm font-bold text-accent">{formatRailAmountFromKes(bounty.rewardKes, chainMeta)}</span>
+                            <span className="font-display text-sm font-bold text-accent">{formatKSh(bounty.rewardKes)}</span>
                             <Link to={`/bounties/${bounty.id}`} className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline">
                               Open
                               <ArrowRight className="h-3 w-3" />
@@ -769,7 +766,7 @@ export default function Bounties() {
                       <p className="mt-2 text-sm leading-6 text-muted-foreground">{bounty.summary}</p>
                     </div>
                     <div className="shrink-0 text-right">
-                      <p className="font-display text-xl font-bold text-accent">{formatRailAmountWithKes(bounty.rewardKes, chainMeta)}</p>
+                      <p className="font-display text-xl font-bold text-accent">{formatKSh(bounty.rewardKes)}</p>
                       <p className="mt-1 text-[10px] text-muted-foreground">{bounty.submissions} submissions</p>
                     </div>
                   </div>

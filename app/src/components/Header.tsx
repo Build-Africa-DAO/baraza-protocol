@@ -1,32 +1,27 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, Moon, MoreHorizontal, PlayCircle, Search, Sparkles, Sun, X } from "lucide-react";
+import { CircleUserRound, LogIn, Menu, Moon, MoreHorizontal, PlayCircle, Search, Sparkles, Sun, UserPlus, X } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
-import ChainSelector from "@/components/ChainSelector";
-import EnvironmentSelector from "@/components/EnvironmentSelector";
 import { useAkiliChat } from "@/akili/useAkiliChat";
 import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
+import { useAccount } from "@/contexts/AccountContext";
 
 const navLinks = [
   { path: "/", label: "Home" },
   { path: "/communities", label: "Explore" },
   { path: "/bounties", label: "Bounties" },
   { path: "/evaluate", label: "Evaluate" },
-  { path: "/create", label: "Launch" },
+  { path: "/create/purpose", label: "Launch" },
   { path: "/profile", label: "Profile" },
 ];
 
-const primaryNavLinks = navLinks.filter((link) => ["/", "/communities", "/create"].includes(link.path));
+const primaryNavLinks = navLinks.filter((link) => ["/", "/communities", "/create/purpose"].includes(link.path));
 const overflowNavLinks = navLinks.filter((link) => !primaryNavLinks.includes(link));
 
 const quickSearches = ["DAO", "SACCO", "co-operative", "governance", "savings"];
 
-interface HeaderProps {
-  walletSlot?: ReactNode;
-}
-
-export default function Header({ walletSlot }: HeaderProps) {
+export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -36,6 +31,7 @@ export default function Header({ walletSlot }: HeaderProps) {
   const navigate = useNavigate();
   const { open: openAkili } = useAkiliChat();
   const { theme, toggleTheme } = useTheme();
+  const account = useAccount();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -157,6 +153,40 @@ export default function Header({ walletSlot }: HeaderProps) {
         </div>
 
         <div className="relative flex shrink-0 items-center gap-2">
+          <div className="hidden items-center gap-2 sm:flex">
+            {account.authenticated ? (
+              <Link
+                to="/profile"
+                className="inline-flex h-10 max-w-44 items-center gap-2 rounded-md border border-primary/35 bg-primary/10 px-3 text-sm font-semibold text-foreground transition-colors hover:bg-primary/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+              >
+                <CircleUserRound className="h-4 w-4 shrink-0 text-primary" />
+                <span className="truncate">{account.displayName}</span>
+              </Link>
+            ) : (
+              <>
+                <span className="hidden text-xs font-semibold text-muted-foreground xl:inline">Privy</span>
+                <button
+                  type="button"
+                  onClick={account.login}
+                  disabled={!account.configured || !account.ready}
+                  className="inline-flex h-10 items-center gap-2 rounded-md border border-border/70 bg-surface/70 px-3 text-sm font-semibold text-foreground transition-colors hover:border-primary/45 disabled:cursor-not-allowed disabled:opacity-45"
+                >
+                  <LogIn className="h-4 w-4" />
+                  Log in
+                </button>
+                <button
+                  type="button"
+                  onClick={account.createAccount}
+                  disabled={!account.configured || !account.ready}
+                  className="hidden h-10 items-center gap-2 rounded-md bg-primary px-3 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-45 lg:inline-flex"
+                >
+                  <UserPlus className="h-4 w-4" />
+                  Create account
+                </button>
+              </>
+            )}
+          </div>
+
           <div className="relative hidden md:block 2xl:hidden">
             <button
               type="button"
@@ -226,15 +256,6 @@ export default function Header({ walletSlot }: HeaderProps) {
           >
             <Search className="h-4 w-4" />
           </button>
-
-          <div className="hidden sm:block">
-            <ChainSelector />
-          </div>
-          <div className="hidden 2xl:block">
-            <EnvironmentSelector />
-          </div>
-
-          {walletSlot && <div className="hidden 2xl:block">{walletSlot}</div>}
 
           <button
             type="button"
@@ -353,6 +374,37 @@ export default function Header({ walletSlot }: HeaderProps) {
               />
             </form>
             <div className="mt-2 flex flex-col gap-2 border-t border-border/50 pt-3">
+              {account.authenticated ? (
+                <Link
+                  to="/profile"
+                  className="inline-flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-primary/10"
+                >
+                  <CircleUserRound className="h-4 w-4 text-primary" />
+                  {account.displayName}
+                </Link>
+              ) : (
+                <div className="grid grid-cols-2 gap-2 px-3 pb-2">
+                  <button
+                    type="button"
+                    onClick={account.login}
+                    disabled={!account.configured || !account.ready}
+                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border font-semibold disabled:opacity-45"
+                  >
+                    <LogIn className="h-4 w-4" />
+                    Log in
+                  </button>
+                  <button
+                    type="button"
+                    onClick={account.createAccount}
+                    disabled={!account.configured || !account.ready}
+                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-primary font-bold text-primary-foreground disabled:opacity-45"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    Sign up
+                  </button>
+                  <p className="col-span-2 text-xs text-muted-foreground">Account access secured by Privy.</p>
+                </div>
+              )}
               <button
                 type="button"
                 onClick={toggleTheme}
@@ -362,9 +414,6 @@ export default function Header({ walletSlot }: HeaderProps) {
                 {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                 {theme === "dark" ? "Light mode" : "Dark mode"}
               </button>
-              <ChainSelector variant="mobile" />
-              <EnvironmentSelector variant="mobile" />
-              {walletSlot}
             </div>
           </nav>
         </div>
