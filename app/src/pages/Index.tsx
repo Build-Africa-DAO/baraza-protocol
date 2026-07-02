@@ -18,9 +18,9 @@ import { formatKSh } from "@/lib/utils";
 import { useSeo } from "@/lib/seo";
 
 const highlights = [
-  { label: "Members active", value: "42" },
-  { label: "Treasury visible", value: formatKSh(450000) },
-  { label: "Open bounties", value: "08" },
+  { label: "Active members", value: "42" },
+  { label: "Community balance", value: formatKSh(450000) },
+  { label: "Open tasks", value: "08" },
 ];
 
 const votes = [
@@ -28,36 +28,36 @@ const votes = [
     title: "Solar microgrid contribution",
     status: "2 days left",
     progress: 78,
-    summary: "Quorum reached · 32 votes",
+    summary: "32 of 42 members voted",
   },
   {
-    title: "New membership threshold",
-    status: "Needs 5 more",
+    title: "Update monthly contribution",
+    status: "5 votes needed",
     progress: 45,
-    summary: "Critical proposal · still open",
+    summary: "Voting is still open",
   },
 ];
 
-const contributors = [
-  { name: "Zara Mwangi", role: "Operations lead", points: "2.4k" },
-  { name: "Samuel Okafor", role: "Audit steward", points: "1.9k" },
-  { name: "Kofi Mensah", role: "Strategy committee", points: "1.7k" },
+const stewards = [
+  { name: "Zara Mwangi", role: "Treasurer", focus: "Contributions" },
+  { name: "Samuel Okafor", role: "Records steward", focus: "Records" },
+  { name: "Kofi Mensah", role: "Secretary", focus: "Meetings" },
 ];
 
 const bounties = [
   {
     title: "Draft the monthly update",
-    meta: "500 pts · 2 slots left",
+    meta: "2 volunteer places",
     detail: "Summarize savings progress, treasury moves, and community wins.",
   },
   {
     title: "Audit transaction records",
-    meta: "1200 pts · high priority",
+    meta: "Treasurer review",
     detail: "Verify internal notes against the public community history.",
   },
   {
     title: "Organize the next meetup",
-    meta: "800 pts · event",
+    meta: "Before the next meeting",
     detail: "Coordinate venue, attendance, and volunteer roles for the gathering.",
   },
 ];
@@ -69,18 +69,18 @@ const onboardingChoices = [
     icon: Wallet,
   },
   {
-    title: "Community service",
-    detail: "Organize care work, events, and mutual support.",
+    title: "Community support",
+    detail: "Manage welfare requests, care work, and mutual support.",
     icon: HandCoins,
   },
   {
-    title: "Social gathering",
-    detail: "Coordinate meetups, milestones, and community rituals.",
+    title: "Meetings and events",
+    detail: "Plan gatherings, assign tasks, and record what members agree.",
     icon: Flame,
   },
   {
-    title: "Business ventures",
-    detail: "Track shared investments and commercial activity together.",
+    title: "Shared business",
+    detail: "Track pooled investments, expenses, and group decisions.",
     icon: Landmark,
   },
 ];
@@ -98,7 +98,7 @@ function StatPill({ label, value }: { label: string; value: string }) {
 
 export default function Index() {
   useSeo({
-    title: "Community treasury and governance, built for collective trust",
+    title: "Community contributions, decisions, and shared funds",
     description:
       "Baraza helps savings groups, SACCOs, and community collectives run transparent treasury, voting, and contribution workflows without exposing members to technical complexity.",
     path: "/",
@@ -113,7 +113,7 @@ export default function Index() {
             <div>
               <p className="font-display text-base font-bold text-primary">Baraza</p>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Community collective dashboard
+                Community finance and governance
               </p>
             </div>
             <div className="flex items-center gap-3 text-muted-foreground">
@@ -127,15 +127,14 @@ export default function Index() {
           <div className="grid min-w-0 grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1.02fr)_minmax(20rem,0.98fr)] lg:items-start">
             <div className="min-w-0 max-w-2xl">
               <div className="rise rise-2 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-primary">
-                Digital hearth for community money
+                Shared money, clear decisions
               </div>
-              <h1 className="rise rise-3 mt-5 max-w-[11ch] font-display text-4xl font-black leading-[0.94] tracking-[-0.03em] text-foreground sm:text-6xl xl:text-7xl">
-                Run your community with trust built in.
+              <h1 className="rise rise-3 mt-5 max-w-[11ch] font-display text-[1.9rem] font-black leading-[0.98] tracking-[-0.03em] text-foreground min-[360px]:text-4xl sm:text-6xl xl:text-7xl">
+                Manage contributions, decisions, and shared funds in one place.
               </h1>
               <p className="rise rise-4 mt-5 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
-                Track treasury, contributions, governance, and shared work in one warm, visible
-                community surface. Members stay focused on the group, not on infrastructure or
-                hidden back-office steps.
+                Baraza helps savings groups, SACCOs, cooperatives, and community organizations
+                collect dues, vote on proposals, and keep every member informed.
               </p>
 
               <div className="rise rise-5 mt-7 flex flex-col gap-3 sm:flex-row">
@@ -143,14 +142,14 @@ export default function Index() {
                   to="/communities"
                   className="btn-warm inline-flex items-center justify-center gap-2 rounded-xl px-6 py-4 text-sm font-extrabold uppercase tracking-[0.14em]"
                 >
-                  Explore communities
+                  Find a community
                   <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
                   to="/create/purpose"
                   className="inline-flex items-center justify-center gap-2 rounded-xl border border-primary/35 bg-card/70 px-6 py-4 text-sm font-extrabold uppercase tracking-[0.14em] text-foreground transition-colors hover:border-primary hover:bg-primary/10"
                 >
-                  Start a collective
+                  Create a community
                 </Link>
               </div>
 
@@ -166,24 +165,24 @@ export default function Index() {
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                      Nairobi Community Collective
+                      Example community
                     </p>
                     <h2 className="mt-2 font-display text-2xl font-black text-foreground">
-                      Treasury visible to every member
+                      Every member sees the same records
                     </h2>
                   </div>
                   <div className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-primary">
-                    Read only
+                    Member view
                   </div>
                 </div>
 
                 <div className="mt-6 rounded-[1rem] border border-border/70 bg-background/80 p-4">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Total community treasury
+                    Available community balance
                   </p>
                   <div className="mt-2 flex items-end gap-3">
                     <p className="font-display text-4xl font-black text-primary">{formatKSh(450000)}</p>
-                    <span className="pb-1 text-sm font-bold text-confirmed">+12.4%</span>
+                    <span className="pb-1 text-sm font-bold text-confirmed">Updated today</span>
                   </div>
                   <div className="mt-5 h-24 rounded-[0.9rem] bg-[linear-gradient(180deg,hsl(var(--surface-hover))_0%,transparent_100%)] p-3">
                     <div className="flex h-full items-end gap-2">
@@ -236,14 +235,14 @@ export default function Index() {
           <div className="rise rise-2 flex items-center justify-between gap-4">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Onboarding language
+                Choose your starting point
               </p>
               <h2 className="mt-2 font-display text-2xl font-black text-foreground sm:text-3xl">
-                Start from what the group actually does together.
+                What does your community need to manage?
               </h2>
             </div>
             <div className="hidden rounded-full border border-border/70 bg-card px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground sm:block">
-              4 core paths
+              Start here
             </div>
           </div>
 
@@ -282,11 +281,11 @@ export default function Index() {
             <div className="flex items-center gap-3">
               <Medal className="h-5 w-5 text-secondary" />
               <h2 className="font-display text-2xl font-black text-foreground">
-                Top contributors
+                Community stewards
               </h2>
             </div>
             <div className="mt-6 space-y-5">
-              {contributors.map((person, index) => (
+              {stewards.map((person, index) => (
                 <div key={person.name} className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <div className="grid h-11 w-11 place-items-center rounded-full border border-border/70 bg-surface text-sm font-black text-primary">
@@ -300,9 +299,9 @@ export default function Index() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-display text-xl font-bold text-primary">{person.points}</p>
+                    <p className="font-display text-base font-bold text-primary">{person.focus}</p>
                     <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                      Points
+                      Current focus
                     </p>
                   </div>
                 </div>
@@ -314,7 +313,9 @@ export default function Index() {
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <Coins className="h-5 w-5 text-primary" />
-                <h2 className="font-display text-2xl font-black text-foreground">Open bounties</h2>
+                <h2 className="font-display text-2xl font-black text-foreground">
+                  Open community tasks
+                </h2>
               </div>
               <Link
                 to="/bounties"
@@ -355,28 +356,28 @@ export default function Index() {
             </div>
             <div className="relative z-10 max-w-2xl">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary-foreground/80">
-                Shared milestone
+                One shared record
               </p>
               <h2 className="mt-3 font-display text-3xl font-black leading-tight sm:text-4xl">
-                Turn community treasury, governance, and participation into one living surface.
+                Give every member a clear view of the community.
               </h2>
               <p className="mt-4 max-w-xl text-sm leading-6 text-primary-foreground/88 sm:text-base sm:leading-7">
-                Baraza brings member actions, treasury visibility, contribution pathways, and
-                accountable decisions together so the collective can keep moving with confidence.
+                Keep contributions, balances, proposals, votes, and assigned work together so
+                members can understand what happened and what comes next.
               </p>
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                 <Link
                   to="/create/purpose"
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-background px-6 py-4 text-sm font-extrabold uppercase tracking-[0.14em] text-primary transition-transform hover:scale-[1.02]"
                 >
-                  Launch your circle
+                  Create a community
                   <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
                   to="/communities"
                   className="inline-flex items-center justify-center gap-2 rounded-xl border border-primary-foreground/30 px-6 py-4 text-sm font-extrabold uppercase tracking-[0.14em] text-primary-foreground transition-colors hover:bg-primary-foreground/10"
                 >
-                  Browse live examples
+                  View communities
                 </Link>
               </div>
             </div>
