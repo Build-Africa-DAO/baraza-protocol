@@ -5,7 +5,7 @@ import { WalletModalContext } from "@solana/wallet-adapter-react-ui";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const PREFERRED_WALLETS = ["Phantom", "Solflare", "Coinbase Wallet", "Backpack", "Ledger", "Trezor"];
+const PREFERRED_WALLETS = ["Phantom", "Solflare", "Coinbase Wallet"];
 
 interface BarazaWalletModalProviderProps {
   children: React.ReactNode;
@@ -127,10 +127,10 @@ export default function BarazaWalletModalProvider({ children }: BarazaWalletModa
             </button>
 
             <h2 id="baraza-wallet-modal-title" className="mx-auto mt-8 max-w-xs text-center font-display text-xl font-bold leading-snug">
-              Connect your Baraza account to continue
+              Connect an external wallet
             </h2>
             <p className="mx-auto mt-3 max-w-xs text-center text-sm leading-6">
-              Use Phantom, Solflare, Backpack, Coinbase Wallet, Ledger, or Trezor for Baraza actions.
+              Choose Phantom, Solflare, or Coinbase Wallet to continue.
             </p>
 
             <div className="mt-7 max-h-[60vh] space-y-2 overflow-y-auto pr-1">

@@ -28,12 +28,16 @@ interface PaymentMethodSelectorProps {
   value: BuyerPaymentMethod;
   onChange: (method: BuyerPaymentMethod) => void;
   legend?: string;
+  accountLabel?: string;
+  accountDescription?: string;
 }
 
 export function PaymentMethodSelector({
   value,
   onChange,
   legend = 'Choose a payment method',
+  accountLabel,
+  accountDescription,
 }: PaymentMethodSelectorProps) {
   return (
     <fieldset>
@@ -41,6 +45,10 @@ export function PaymentMethodSelector({
       <div className="overflow-hidden rounded-lg border" role="radiogroup">
         {paymentMethods.map(({ id, label, description, icon: Icon }, index) => {
           const selected = value === id;
+          const visibleLabel = id === 'privy' && accountLabel ? accountLabel : label;
+          const visibleDescription = id === 'privy' && accountDescription
+            ? accountDescription
+            : description;
           return (
             <label
               key={id}
@@ -69,8 +77,10 @@ export function PaymentMethodSelector({
               </span>
               <Icon className={cn('h-5 w-5 shrink-0', selected ? 'text-primary' : 'text-muted-foreground')} />
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-semibold">{label}</span>
-                <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">{description}</span>
+                <span className="block text-sm font-semibold">{visibleLabel}</span>
+                <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">
+                  {visibleDescription}
+                </span>
               </span>
             </label>
           );

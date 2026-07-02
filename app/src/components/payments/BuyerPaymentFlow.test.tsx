@@ -21,6 +21,20 @@ describe('PaymentMethodSelector', () => {
     await user.click(screen.getByRole('radio', { name: /baraza account/i }));
     expect(onChange).toHaveBeenCalledWith('privy');
   });
+
+  it('can describe the account method as an external wallet option', () => {
+    render(
+      <PaymentMethodSelector
+        value="privy"
+        onChange={() => undefined}
+        accountLabel="Account or crypto wallet"
+        accountDescription="Use your Baraza account or connect an approved external wallet."
+      />,
+    );
+
+    expect(screen.getByRole('radio', { name: /account or crypto wallet/i })).toBeChecked();
+    expect(screen.getByText(/connect an approved external wallet/i)).toBeInTheDocument();
+  });
 });
 
 describe('PaymentSummary', () => {

@@ -15,6 +15,7 @@ import { storePaymentOrderActivationSecret } from "@/lib/payments";
 import Layout from "@/components/Layout";
 import { useCommunity } from "@/hooks/useCommunities";
 import { useToast } from "@/hooks/use-toast";
+import { useExternalWallet } from "@/hooks/useExternalWallet";
 import { formatKSh } from "@/lib/utils";
 import { normaliseKenyanPhone } from "@/lib/phone";
 import CommunityBanner from "@/components/CommunityBanner";
@@ -85,6 +86,7 @@ export default function JoinDao() {
   const { id } = useParams<{ id: string }>();
   const { community } = useCommunity(id);
   const account = useAccount();
+  const externalWallet = useExternalWallet();
   useSeo({
     title: community ? `Join ${community.name}` : "Join a DAO",
     description: "Verify your phone, pay membership dues via M-Pesa, and activate your membership.",
@@ -103,6 +105,7 @@ export default function JoinDao() {
   const [pendingWalletJoin, setPendingWalletJoin] = useState(false);
 
   const amount = community?.membershipFee ?? 0;
+  const externalWalletAddress = externalWallet.address;
   const normalisedPhone = normaliseKenyanPhone(phone);
   const canSubmit = normalisedPhone !== null && amount > 0 && !isSubmitting;
   const settlementAmount = 1;
@@ -269,7 +272,8 @@ export default function JoinDao() {
                       {community?.name ?? "DAO"}
                     </h1>
                     <p className="mt-2 max-w-xl text-sm leading-6">
-                      Pay with mobile money, bank transfer, or your Privy account. Your membership record stays attached to one Baraza account.
+                      Pay with mobile money, bank transfer, your Baraza account, or an external
+                      crypto wallet. Your membership record stays attached to the account you use.
                     </p>
                   </div>
                   <div className="w-full rounded-lg border px-4 py-3 md:w-auto md:text-right">
@@ -283,7 +287,12 @@ export default function JoinDao() {
               </CommunityBanner>
 
               <div className="grid gap-6 p-5 md:p-6 lg:grid-cols-[minmax(0,0.42fr)_minmax(0,0.58fr)]">
-                <PaymentMethodSelector value={paymentMethod} onChange={setPaymentMethod} />
+                <PaymentMethodSelector
+                  value={paymentMethod}
+                  onChange={setPaymentMethod}
+                  accountLabel="Account or crypto wallet"
+                  accountDescription="Use your Baraza account or connect an approved external wallet."
+                />
 
                 <div className="min-w-0 space-y-5 lg:border-l lg:pl-6">
                   {paymentMethod === "mobile-money" && (
@@ -342,16 +351,20 @@ export default function JoinDao() {
                       <div className="mb-4 flex items-center gap-3">
                         <Wallet className="h-5 w-5 text-primary" />
                         <div>
-                          <h2 className="text-base font-semibold">Pay from your Baraza account</h2>
-                          <p className="text-xs text-muted-foreground">Sign in to use your private payment account.</p>
+                          <h2 className="text-base font-semibold">Pay from an account or crypto wallet</h2>
+                          <p className="text-xs text-muted-foreground">
+                            Choose the account that should hold your membership record.
+                          </p>
                         </div>
                       </div>
                       <p className="text-sm leading-6">
-                        Your payment and membership stay linked to one account, so you can return later to vote and view receipts.
+                        Your payment and membership stay linked to the account you choose, so you
+                        can return later to vote and view receipts.
                       </p>
-                      {!account.configured && (
+                      {!account.configured && !externalWalletAddress && (
                         <p className="mt-3 rounded-lg border px-3 py-2 text-xs leading-5 text-muted-foreground">
-                          Secure account payments are not configured in this preview. You can still manage your profile.
+                          Baraza account payments are not configured in this preview. You can still
+                          connect an external wallet.
                         </p>
                       )}
                     </div>
@@ -384,7 +397,7 @@ export default function JoinDao() {
                       {isVerifyingTransfer ? "Checking payment..." : "Check bank payment"}
                     </button>
                   ) : (
-                    <>
+                    <div className="space-y-3">
                       <button
                         type="button"
                         onClick={() => {
@@ -399,7 +412,28 @@ export default function JoinDao() {
                         className="btn-warm min-h-12 w-full justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <Wallet className="h-4 w-4" />
-                        {!account.ready ? "Preparing account..." : account.authenticated ? `Pay ${formatKSh(amount)} from account` : "Log in to continue"}
+                        {!account.ready
+                          ? "Preparing account..."
+                          : account.authenticated
+                            ? `Pay ${formatKSh(amount)} from Baraza account`
+                            : "Log in with Baraza account"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (externalWalletAddress) {
+                            startAccountJoin(externalWalletAddress);
+                            return;
+                          }
+                          externalWallet.openSelector();
+                        }}
+                        disabled={amount <= 0}
+                        className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border px-4 py-3 text-sm font-semibold transition-colors hover:border-primary hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <Wallet className="h-4 w-4" />
+                        {externalWalletAddress
+                          ? `Pay ${formatKSh(amount)} from external wallet`
+                          : "Connect external crypto wallet"}
                       </button>
                       {!account.authenticated && account.configured && (
                         <button
@@ -416,7 +450,7 @@ export default function JoinDao() {
                       <Link to="/profile" className="inline-flex min-h-11 items-center text-sm font-semibold">
                         Manage Baraza account
                       </Link>
-                    </>
+                    </div>
                   )}
                 </div>
               </div>
