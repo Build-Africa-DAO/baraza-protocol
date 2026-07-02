@@ -384,7 +384,7 @@ function splitSkills(raw: string[]): string[] {
 }
 
 function bountyFromRow(row: BountyRow, submissions = 0): Bounty {
-  return restoreTechnicalRailWording({
+  return normalizePublicBountyWording({
     id: row.id,
     communityId: row.community_id,
     title: row.title,
