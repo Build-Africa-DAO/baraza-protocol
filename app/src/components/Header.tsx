@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ChevronDown, CircleUserRound, LogIn, LogOut, Menu, Moon, MoreHorizontal, PlayCircle, Search, Sparkles, Sun, UserPlus, X } from "lucide-react";
+import { ChevronDown, CircleUserRound, LogIn, LogOut, Menu, Moon, MoreHorizontal, PlayCircle, RefreshCw, Search, Sparkles, Sun, UserPlus, Wallet, X } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { useAkiliChat } from "@/akili/useAkiliChat";
 import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
 import { useAccount } from "@/contexts/AccountContext";
+import { useAccountBalance } from "@/hooks/useAccountBalance";
 
 const navLinks = [
   { path: "/", label: "Home" },
@@ -36,6 +37,7 @@ export default function Header() {
   const { open: openAkili } = useAkiliChat();
   const { theme, toggleTheme } = useTheme();
   const account = useAccount();
+  const accountBalance = useAccountBalance(account.walletAddress, account.country);
   const accountMenuRef = useRef<HTMLDivElement>(null);
 
   const handleLogin = () => {
@@ -223,8 +225,40 @@ export default function Header() {
                 {accountOpen && (
                   <div
                     id="header-account-menu"
-                    className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-52 rounded-md border border-border/70 bg-card p-2 shadow-[var(--shadow-deep)]"
+                    className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-64 rounded-md border border-border/70 bg-card p-2 shadow-[var(--shadow-deep)]"
                   >
+                    <div className="mb-2 rounded-md border border-border/60 bg-surface/55 p-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+                          <Wallet className="h-3.5 w-3.5" />
+                          Wallet balance
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => void accountBalance.refresh()}
+                          disabled={!account.walletAddress || accountBalance.loading}
+                          className="grid h-7 w-7 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-background hover:text-foreground disabled:cursor-wait disabled:opacity-50"
+                          aria-label="Refresh wallet balance"
+                          title="Refresh wallet balance"
+                        >
+                          <RefreshCw className={cn("h-3.5 w-3.5", accountBalance.loading && "animate-spin")} />
+                        </button>
+                      </div>
+                      <p className="mt-1 font-display text-lg font-bold tabular-nums">
+                        {accountBalance.loading && !accountBalance.formatted
+                          ? 'Loading...'
+                          : accountBalance.formatted ?? 'Balance unavailable'}
+                      </p>
+                      <p className="mt-1 text-[11px] leading-4 text-muted-foreground">
+                        {!account.walletReady
+                          ? 'Preparing your secure wallet.'
+                          : !account.walletAddress
+                            ? 'Your secure wallet is still being created.'
+                            : accountBalance.error
+                              ? 'Could not refresh the estimated local value.'
+                              : 'Estimated in your account currency.'}
+                      </p>
+                    </div>
                     <Link
                       to="/profile"
                       className="flex min-h-10 items-center gap-2 rounded-md px-3 text-sm font-semibold text-foreground transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
@@ -419,6 +453,13 @@ export default function Header() {
             <div className="mb-3 border-b border-border/60 pb-4">
               {account.authenticated ? (
                 <div className="space-y-2">
+                  <div className="rounded-md border border-border/60 bg-surface/55 p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground"><Wallet className="h-3.5 w-3.5" /> Wallet balance</span>
+                      <button type="button" onClick={() => void accountBalance.refresh()} disabled={!account.walletAddress || accountBalance.loading} className="grid h-7 w-7 place-items-center rounded-md text-muted-foreground disabled:cursor-wait disabled:opacity-50" aria-label="Refresh wallet balance"><RefreshCw className={cn("h-3.5 w-3.5", accountBalance.loading && "animate-spin")} /></button>
+                    </div>
+                    <p className="mt-1 font-display text-lg font-bold tabular-nums">{accountBalance.loading && !accountBalance.formatted ? 'Loading...' : accountBalance.formatted ?? 'Balance unavailable'}</p>
+                  </div>
                   <Link
                     to="/profile"
                     className="inline-flex min-h-11 w-full items-center gap-2 rounded-md bg-primary/10 px-3 text-sm font-semibold text-foreground"

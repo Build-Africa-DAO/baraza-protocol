@@ -25,10 +25,15 @@ import {
   PaymentSummary,
   type BuyerPaymentMethod,
 } from '@/components/payments/BuyerPaymentFlow';
+import { ENDOWMENT_FEE_RATE, getPaymentFeeQuote } from '@/lib/paymentFees';
 
 type TreasuryPolicy = 'multisig-ready' | 'proposal-only' | 'manual-review';
 type ChecklistState = 'complete' | 'active' | 'pending';
 type MobileMoneyChannel = 'prompt' | 'whatsapp';
+
+function createOrderId(prefix: string): string {
+  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
 
 interface SetupChecklistItem {
   label: string;
@@ -316,10 +321,12 @@ const CreateCommunity: React.FC = () => {
   };
 
   const normalisedPhone = normaliseKenyanPhone(form.phone);
-  const totalFeeKes =
+  const setupSubtotalKes =
     DAO_CREATION_FEE_KES +
     (addPaybill ? PAYBILL_ADDON_FEE_KES : 0) +
     (addUssd ? USSD_ADDON_FEE_KES : 0);
+  const paymentFeeQuote = getPaymentFeeQuote(setupSubtotalKes, paymentMethod);
+  const totalFeeKes = paymentFeeQuote.barazaTotalKes;
   const selectedCommunityChain = walletChain;
   const selectedPreset = form.type ? GOVERNANCE_PRESETS[form.type] : null;
   const requiresPhone = paymentMethod === 'mobile-money';
@@ -407,7 +414,7 @@ const CreateCommunity: React.FC = () => {
       // network/CORS/local-dev - fall through
     }
     return {
-      orderId: `ord_local_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      orderId: createOrderId('ord_local'),
       persisted: false,
     };
   }
@@ -450,7 +457,7 @@ const CreateCommunity: React.FC = () => {
         // Step 1: charge the setup fee
         const charge = requiresPhone
           ? await chargeCreationFee()
-          : { orderId: `ord_${walletChain}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`, persisted: false };
+          : { orderId: createOrderId(`ord_${walletChain}`), persisted: false };
 
         // Step 2: create the community record
         let chainResult: { slug: string; communityAddress: string; signature: string } | null = null;
@@ -975,13 +982,27 @@ const CreateCommunity: React.FC = () => {
                     { label: 'Community setup', value: formatKSh(DAO_CREATION_FEE_KES) },
                     ...(addPaybill ? [{ label: 'Paybill add-on', value: formatKSh(PAYBILL_ADDON_FEE_KES) }] : []),
                     ...(addUssd ? [{ label: 'USSD add-on', value: formatKSh(USSD_ADDON_FEE_KES) }] : []),
+                    {
+                      label: `Endowment fee (${Math.round(ENDOWMENT_FEE_RATE * 100)}%)`,
+                      value: formatKSh(paymentFeeQuote.endowmentFeeKes),
+                      description: 'Allocated to the BAD DAO endowment.',
+                    },
+                    {
+                      label: paymentMethod === 'mobile-money'
+                        ? 'Carrier transaction fee'
+                        : paymentMethod === 'bank-transfer'
+                          ? 'Bank / SWIFT fee'
+                          : 'Account transaction fee',
+                      value: paymentFeeQuote.providerFeeLabel,
+                      description: paymentFeeQuote.providerFeeDescription,
+                    },
                   ]}
                   total={formatKSh(totalFeeKes)}
-                  totalLabel="Launch total"
+                  totalLabel="Charged by Baraza"
                 />
 
                 <p className="text-xs text-muted-foreground">
-                  Your payment route is confirmed before the community goes live.
+                  External provider fees are not included in the Baraza total. You will see them before authorizing payment.
                 </p>
               </div>
 

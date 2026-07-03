@@ -1,7 +1,8 @@
 import { Check, Landmark, Smartphone, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import type { PaymentRail } from '@/lib/paymentFees';
 
-export type BuyerPaymentMethod = 'mobile-money' | 'privy' | 'bank-transfer';
+export type BuyerPaymentMethod = PaymentRail;
 
 const paymentMethods = [
   {
@@ -103,6 +104,7 @@ export function PaymentMethodSelector({
 export interface PaymentSummaryLine {
   label: string;
   value: string;
+  description?: string;
 }
 
 interface PaymentSummaryProps {
@@ -118,7 +120,14 @@ export function PaymentSummary({ lines, total, totalLabel = 'Total' }: PaymentSu
       <dl className="space-y-2 text-sm">
         {lines.map((line) => (
           <div key={line.label} className="flex items-start justify-between gap-4">
-            <dt className="text-muted-foreground">{line.label}</dt>
+            <dt className="max-w-[70%] text-muted-foreground">
+              <span className="block">{line.label}</span>
+              {line.description && (
+                <span className="mt-0.5 block text-xs leading-5 text-muted-foreground/85">
+                  {line.description}
+                </span>
+              )}
+            </dt>
             <dd className="text-right font-medium tabular-nums">{line.value}</dd>
           </div>
         ))}

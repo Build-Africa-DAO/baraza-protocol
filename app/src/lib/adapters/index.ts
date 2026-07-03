@@ -29,6 +29,10 @@ export interface IdentityAdapter {
   check(input: { accountAddress: string }): Promise<boolean>;
 }
 
+export interface BalanceAdapter {
+  getNative(accountAddress: string): Promise<number>;
+}
+
 export interface ChainAdapter {
   chain: Chain;
   governance?: GovernanceAdapter;
@@ -36,6 +40,7 @@ export interface ChainAdapter {
   bounty?: BountyAdapter;
   membership?: MembershipAdapter;
   identity?: IdentityAdapter;
+  balance?: BalanceAdapter;
 }
 
 const adapters: Partial<Record<Chain, ChainAdapter>> = {

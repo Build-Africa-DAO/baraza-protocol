@@ -20,6 +20,8 @@ interface AccountContextValue {
   ready: boolean;
   authenticated: boolean;
   accountId: string | null;
+  walletAddress: string | null;
+  walletReady: boolean;
   verifiedContact: string | null;
   displayName: string;
   profile: MemberProfile;
@@ -42,7 +44,9 @@ interface AccountBridgeProps {
 function AccountBridge({ country, setCountry, children }: AccountBridgeProps) {
   const { ready, authenticated, user, login, logout } = usePrivy();
   const verifiedContact = user?.email?.address ?? user?.phone?.number ?? null;
-  const accountId = user?.wallet?.address ?? user?.id ?? null;
+  const walletAddress = user?.wallet?.chainType === 'solana' ? user.wallet.address : null;
+  const walletReady = ready;
+  const accountId = walletAddress ?? user?.wallet?.address ?? user?.id ?? null;
   const profileId = user?.id ?? accountId;
   const [profile, setProfile] = useState<MemberProfile>(() => createMemberProfile(verifiedContact));
 
@@ -62,6 +66,8 @@ function AccountBridge({ country, setCountry, children }: AccountBridgeProps) {
     ready,
     authenticated,
     accountId,
+    walletAddress,
+    walletReady,
     verifiedContact,
     displayName: profile.displayName,
     profile,
@@ -71,7 +77,7 @@ function AccountBridge({ country, setCountry, children }: AccountBridgeProps) {
     login: () => login({ loginMethods: ['email', 'sms'] }),
     createAccount: () => login({ loginMethods: ['email', 'sms'] }),
     logout,
-  }), [accountId, authenticated, country, login, logout, profile, ready, setCountry, updateProfile, verifiedContact]);
+  }), [accountId, authenticated, country, login, logout, profile, ready, setCountry, updateProfile, verifiedContact, walletAddress, walletReady]);
 
   return <AccountContext.Provider value={value}>{children}</AccountContext.Provider>;
 }
@@ -92,6 +98,8 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
         ready: true,
         authenticated: false,
         accountId: null,
+        walletAddress: null,
+        walletReady: true,
         verifiedContact: null,
         displayName: 'Baraza member',
         profile: createMemberProfile(),
