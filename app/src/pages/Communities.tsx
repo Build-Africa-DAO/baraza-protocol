@@ -68,7 +68,7 @@ export default function Communities() {
 
       <section className="pb-16">
         <div className="container mx-auto px-4">
-          <div className="mb-8 rounded-lg border border-border/70 bg-card/55 p-3 md:p-4">
+          <div className="mb-8 rounded-lg border border-border/70 bg-card/55 p-4">
           <div className="mb-3">
             <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
               Browse groups
@@ -105,7 +105,7 @@ export default function Communities() {
             </div>
 
             {/* Filter row: type selector + layout toggle side-by-side on mobile */}
-            <div className="flex gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row">
               {/* Type filter */}
               <div className="relative flex-1 lg:flex-none">
                 <SlidersHorizontal className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" />
@@ -127,7 +127,7 @@ export default function Communities() {
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 rounded-lg border border-border/70 bg-background/60 p-1 shrink-0" aria-label="Choose layout">
+              <div className="grid shrink-0 grid-cols-2 rounded-lg border border-border/70 bg-background/60 p-1 sm:w-auto" aria-label="Choose layout">
                 {[
                   { value: "grid" as const, label: "Grid", icon: Grid2X2 },
                   { value: "list" as const, label: "List", icon: List },

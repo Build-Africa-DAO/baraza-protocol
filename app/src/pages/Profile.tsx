@@ -1,5 +1,5 @@
 import { type ChangeEvent, type FormEvent, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import {
   AlertCircle,
   ArrowRight,
@@ -7,17 +7,14 @@ import {
   BriefcaseBusiness,
   Camera,
   Check,
-  CircleUserRound,
   Compass,
   Globe2,
   HeartHandshake,
   Loader2,
-  LogIn,
   Pencil,
   PlusCircle,
   Settings,
   ShieldCheck,
-  UserPlus,
   Vote,
   X,
 } from 'lucide-react';
@@ -32,7 +29,7 @@ import { fetchDuesStreak, type StreakResult } from '@/lib/duesStreak';
 import { fetchMembershipsForWallet, listMembershipsForWallet } from '@/lib/memberships';
 import { useSeo } from '@/lib/seo';
 import { formatKSh } from '@/lib/utils';
-import { ACCOUNT_COUNTRIES, formatAccountDate, type AccountCountryCode } from '@/lib/accountLocale';
+import { formatAccountDate } from '@/lib/accountLocale';
 import { prepareProfilePhoto, type MemberProfile } from '@/lib/memberProfile';
 import { filterProposalsToReview, getProposalDeadline } from '@/lib/memberActions';
 import { useToast } from '@/hooks/use-toast';
@@ -181,29 +178,6 @@ export default function Profile() {
     [myMemberships],
   );
 
-  const countryControl = (
-    <div>
-      <label htmlFor="account-country" className="mb-2 block text-xs font-semibold">
-        Account country
-      </label>
-      <select
-        id="account-country"
-        value={account.country.code}
-        onChange={(event) => account.setCountry(event.target.value as AccountCountryCode)}
-        className="w-full rounded-md border bg-background px-3 py-3 text-sm font-semibold outline-none focus:border-primary"
-      >
-        {ACCOUNT_COUNTRIES.map((country) => (
-          <option key={country.code} value={country.code}>
-            {country.name} - {country.currency}
-          </option>
-        ))}
-      </select>
-      <p className="mt-2 text-xs text-muted-foreground">
-        Amounts are displayed in {account.country.currency}. Settlement providers confirm the final rate before payment.
-      </p>
-    </div>
-  );
-
   if (!account.ready) {
     return (
       <Layout>
@@ -218,55 +192,7 @@ export default function Profile() {
   }
 
   if (!account.authenticated) {
-    return (
-      <Layout>
-        <section className="py-16 md:py-20">
-          <div className="mx-auto max-w-xl px-4">
-            <div className="text-center">
-              <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-md border border-primary/30 bg-primary/10 text-primary">
-                <CircleUserRound className="h-7 w-7" />
-              </div>
-              <p className="text-sm font-bold text-primary">Privy account</p>
-              <h1 className="mt-2 text-balance font-display text-3xl font-bold">Your Baraza account</h1>
-              <p className="mx-auto mt-3 max-w-md text-pretty text-sm leading-6 text-muted-foreground">
-                Log in to review memberships and decisions, or create an account with your phone number or email.
-              </p>
-            </div>
-
-            <div className="mt-8 grid gap-3 sm:grid-cols-2">
-              <button
-                type="button"
-                onClick={account.login}
-                disabled={!account.configured}
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-border bg-surface px-5 text-sm font-bold transition-colors hover:border-primary/45 disabled:cursor-not-allowed disabled:opacity-45"
-              >
-                <LogIn className="h-4 w-4" />
-                Log in
-              </button>
-              <button
-                type="button"
-                onClick={account.createAccount}
-                disabled={!account.configured}
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-primary px-5 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-45"
-              >
-                <UserPlus className="h-4 w-4" />
-                Create account
-              </button>
-            </div>
-
-            {!account.configured && (
-              <p className="mt-3 rounded-md border border-primary/25 bg-primary/5 px-4 py-3 text-center text-xs text-muted-foreground">
-                Account access is temporarily unavailable on this deployment.
-              </p>
-            )}
-
-            <div className="mt-8 border-t border-border/60 pt-6">
-              {countryControl}
-            </div>
-          </div>
-        </section>
-      </Layout>
-    );
+    return <Navigate to="/login" replace />;
   }
 
   const hasPublicProfile = Boolean(

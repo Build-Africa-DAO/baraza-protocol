@@ -14,7 +14,6 @@ const navLinks = [
   { path: "/bounties", label: "Bounties" },
   { path: "/evaluate", label: "Evaluate" },
   { path: "/create/purpose", label: "Launch" },
-  { path: "/profile", label: "Profile" },
 ];
 
 const primaryNavLinks = navLinks.filter((link) =>
@@ -41,19 +40,13 @@ export default function Header() {
   const accountMenuRef = useRef<HTMLDivElement>(null);
 
   const handleLogin = () => {
-    if (account.configured) {
-      account.login();
-      return;
-    }
-    navigate("/profile");
+    setMobileOpen(false);
+    navigate("/login");
   };
 
   const handleCreateAccount = () => {
-    if (account.configured) {
-      account.createAccount();
-      return;
-    }
-    navigate("/profile");
+    setMobileOpen(false);
+    navigate("/login?mode=create");
   };
 
   const handleLogout = async () => {
@@ -498,7 +491,7 @@ export default function Header() {
                     Get started
                   </button>
                   <p className="col-span-2 mt-1 text-xs leading-5 text-muted-foreground">
-                    Continue with your phone number or email.
+                    Confirm your country, then continue with an available secure sign-in method.
                   </p>
                 </div>
               )}

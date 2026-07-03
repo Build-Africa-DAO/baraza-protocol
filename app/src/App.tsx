@@ -21,6 +21,7 @@ const CommunityDashboard = lazy(() => import('./pages/CommunityDashboard'));
 const CreateDecision = lazy(() => import('./pages/CreateDecision'));
 const JoinDao = lazy(() => import('./pages/JoinDao'));
 const JoinStatus = lazy(() => import('./pages/JoinStatus'));
+const Login = lazy(() => import('./pages/Login'));
 const Profile = lazy(() => import('./pages/Profile'));
 const ProfileSettings = lazy(() => import('./pages/ProfileSettings'));
 const ProfileInvites = lazy(() => import('./pages/ProfileInvites'));
@@ -63,6 +64,7 @@ const App: React.FC = () => {
               <Route path="/dashboard/:id/decisions/create" element={<CreateDecision />} />
               <Route path="/join/:id" element={<JoinDao />} />
               <Route path="/join/:id/status" element={<JoinStatus />} />
+              <Route path="/login" element={<Login />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/profile/settings" element={<ProfileSettings />} />
               <Route path="/profile/invites" element={<ProfileInvites />} />

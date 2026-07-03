@@ -29,6 +29,7 @@ interface ImportMetaEnv {
   // Wallets
   readonly VITE_WALLETCONNECT_PROJECT_ID: string | undefined;
   readonly VITE_PRIVY_APP_ID: string | undefined;
+  readonly VITE_PRIVY_SMS_ENABLED: string | undefined;
 
   // EVM RPC endpoints
   readonly VITE_ETH_RPC_URL: string | undefined;

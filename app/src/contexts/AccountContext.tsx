@@ -7,7 +7,7 @@ import {
   type AccountCountry,
   type AccountCountryCode,
 } from '@/lib/accountLocale';
-import { getPrivyAppId } from '@/lib/wallet/mpc';
+import { getPrivyAppId, isPrivySmsEnabled } from '@/lib/wallet/mpc';
 import {
   createMemberProfile,
   readMemberProfile,
@@ -38,10 +38,11 @@ const AccountContext = createContext<AccountContextValue | null>(null);
 interface AccountBridgeProps {
   country: AccountCountry;
   setCountry: (country: AccountCountryCode) => void;
+  smsEnabled: boolean;
   children: React.ReactNode;
 }
 
-function AccountBridge({ country, setCountry, children }: AccountBridgeProps) {
+function AccountBridge({ country, setCountry, smsEnabled, children }: AccountBridgeProps) {
   const { ready, authenticated, user, login, logout } = usePrivy();
   const verifiedContact = user?.email?.address ?? user?.phone?.number ?? null;
   const walletAddress = user?.wallet?.chainType === 'solana' ? user.wallet.address : null;
@@ -74,16 +75,17 @@ function AccountBridge({ country, setCountry, children }: AccountBridgeProps) {
     updateProfile,
     country,
     setCountry,
-    login: () => login({ loginMethods: ['email', 'sms'] }),
-    createAccount: () => login({ loginMethods: ['email', 'sms'] }),
+    login: () => login({ loginMethods: smsEnabled ? ['email', 'sms'] : ['email'] }),
+    createAccount: () => login({ loginMethods: smsEnabled ? ['email', 'sms'] : ['email'] }),
     logout,
-  }), [accountId, authenticated, country, login, logout, profile, ready, setCountry, updateProfile, verifiedContact, walletAddress, walletReady]);
+  }), [accountId, authenticated, country, login, logout, profile, ready, setCountry, smsEnabled, updateProfile, verifiedContact, walletAddress, walletReady]);
 
   return <AccountContext.Provider value={value}>{children}</AccountContext.Provider>;
 }
 
 export function AccountProvider({ children }: { children: React.ReactNode }) {
   const appId = getPrivyAppId();
+  const smsEnabled = isPrivySmsEnabled();
   const [countryCode, setCountryCode] = useState<AccountCountryCode>(() => readAccountCountry());
   const country = getAccountCountry(countryCode);
   const setCountry = useCallback((nextCountry: AccountCountryCode) => {
@@ -119,13 +121,15 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     <PrivyProvider
       appId={appId}
       config={{
-        loginMethods: ['email', 'sms'],
+        loginMethods: smsEnabled ? ['email', 'sms'] : ['email'],
         intl: { defaultCountry: country.code },
         appearance: {
           theme: 'dark',
           accentColor: '#f97316',
           landingHeader: 'Welcome to Baraza',
-          loginMessage: 'Use your phone number or email to continue.',
+          loginMessage: smsEnabled
+            ? 'Use your phone number or email to continue.'
+            : 'Use your email to continue securely.',
           showWalletLoginFirst: false,
         },
         embeddedWallets: {
@@ -135,7 +139,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
         },
       }}
     >
-      <AccountBridge country={country} setCountry={setCountry}>
+      <AccountBridge country={country} setCountry={setCountry} smsEnabled={smsEnabled}>
         {children}
       </AccountBridge>
     </PrivyProvider>

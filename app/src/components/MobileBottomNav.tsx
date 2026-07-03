@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Compass, Home, PlusCircle, UserRound, Wallet, type LucideIcon } from 'lucide-react';
+import { BriefcaseBusiness, Compass, Home, PlusCircle, Wallet, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAccount } from '@/contexts/AccountContext';
 
@@ -17,7 +17,7 @@ const leftItems: NavItem[] = [
 ];
 
 const rightItems: NavItem[] = [
-  { path: '/profile', label: 'Profile', icon: UserRound, colClass: 'col-start-4' },
+  { path: '/bounties', label: 'Bounties', icon: BriefcaseBusiness, colClass: 'col-start-4' },
 ];
 
 function isPathActive(currentPath: string, target: string): boolean {
@@ -48,18 +48,23 @@ function NavLink({ item, location }: { item: NavItem; location: ReturnType<typeo
 function WalletAction() {
   const account = useAccount();
   const navigate = useNavigate();
+  const location = useLocation();
   const label = account.authenticated ? 'Account' : 'Log in';
+  const active = account.authenticated
+    ? isPathActive(location.pathname, '/profile')
+    : isPathActive(location.pathname, '/login');
 
   return (
     <button
       type="button"
-      onClick={account.authenticated ? () => navigate('/profile') : account.login}
+      onClick={() => navigate(account.authenticated ? '/profile' : '/login')}
       disabled={!account.ready || !account.configured}
       className={cn(
         'col-start-5 flex flex-col items-center gap-1 rounded-md px-2 py-2 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70',
-        account.authenticated ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
+        active ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
       )}
-      aria-label={account.authenticated ? 'Privy account connected' : 'Log in with Privy'}
+      aria-current={active ? 'page' : undefined}
+      aria-label={account.authenticated ? 'Open account' : 'Log in'}
     >
       <Wallet className="h-5 w-5" />
       {label}

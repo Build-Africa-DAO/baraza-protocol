@@ -160,29 +160,29 @@ export default function Index() {
               </div>
             </div>
 
-            <div className="rise rise-4 min-w-0 rounded-[1.5rem] border border-border/80 bg-card/78 p-4 shadow-[var(--shadow-deep)] backdrop-blur sm:p-5">
-              <div className="rounded-[1.25rem] border border-border/70 bg-surface p-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
+            <div className="rise rise-4 min-w-0 overflow-hidden rounded-[1.5rem] border border-border/80 bg-card/78 p-3 shadow-[var(--shadow-deep)] backdrop-blur sm:p-5">
+              <div className="min-w-0 rounded-[1.25rem] border border-border/70 bg-surface p-4 sm:p-5">
+                <div className="flex min-w-0 flex-col items-start gap-3 sm:flex-row sm:justify-between sm:gap-4">
+                  <div className="min-w-0">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                       Example community
                     </p>
-                    <h2 className="mt-2 font-display text-2xl font-black text-foreground">
+                    <h2 className="mt-2 text-balance font-display text-xl font-black leading-tight text-foreground sm:text-2xl">
                       Every member sees the same records
                     </h2>
                   </div>
-                  <div className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-primary">
+                  <div className="shrink-0 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-primary">
                     Member view
                   </div>
                 </div>
 
-                <div className="mt-6 rounded-[1rem] border border-border/70 bg-background/80 p-4">
+                <div className="mt-5 min-w-0 overflow-hidden rounded-[1rem] border border-border/70 bg-background/80 p-4 sm:mt-6">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                     Available community balance
                   </p>
-                  <div className="mt-2 flex items-end gap-3">
-                    <p className="font-display text-4xl font-black text-primary">{formatKSh(450000)}</p>
-                    <span className="pb-1 text-sm font-bold text-confirmed">Updated today</span>
+                  <div className="mt-2 flex min-w-0 flex-col gap-1 sm:flex-row sm:items-end sm:gap-3">
+                    <p className="max-w-full whitespace-nowrap font-display text-2xl font-black tabular-nums text-primary min-[390px]:text-3xl sm:text-4xl">{formatKSh(450000)}</p>
+                    <span className="text-sm font-bold text-confirmed sm:pb-1">Updated today</span>
                   </div>
                   <div className="mt-5 h-24 rounded-[0.9rem] bg-[linear-gradient(180deg,hsl(var(--surface-hover))_0%,transparent_100%)] p-3">
                     <div className="flex h-full items-end gap-2">
@@ -309,17 +309,17 @@ export default function Index() {
             </div>
           </div>
 
-          <div className="rise rise-3 rounded-[1.4rem] border border-border/70 bg-card p-6 shadow-[var(--shadow-card)]">
-            <div className="flex items-center justify-between gap-3">
+          <div className="rise rise-3 min-w-0 rounded-[1.4rem] border border-border/70 bg-card p-5 shadow-[var(--shadow-card)] sm:p-6">
+            <div className="flex min-w-0 items-start justify-between gap-3">
               <div className="flex items-center gap-3">
                 <Coins className="h-5 w-5 text-primary" />
-                <h2 className="font-display text-2xl font-black text-foreground">
+                <h2 className="text-balance font-display text-xl font-black leading-tight text-foreground sm:text-2xl">
                   Open community tasks
                 </h2>
               </div>
               <Link
                 to="/bounties"
-                className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-[0.16em] text-primary transition-colors hover:text-foreground"
+                className="inline-flex min-h-10 shrink-0 items-center gap-1 rounded-md px-2 text-xs font-bold uppercase tracking-[0.12em] text-primary transition-colors hover:bg-primary/10 hover:text-foreground"
               >
                 View all
                 <ChevronRight className="h-3.5 w-3.5" />
