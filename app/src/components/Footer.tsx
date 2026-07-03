@@ -11,9 +11,9 @@ type FooterLink =
 const links: Record<string, FooterLink[]> = {
   Product: [
     { label: "Home", to: "/" },
-    { label: "Browse DAOs", to: "/communities" },
+    { label: "Browse groups", to: "/communities" },
     { label: "Evaluate Best Practice", to: "/evaluate" },
-    { label: "Launch a DAO", to: "/create" },
+    { label: "Launch a group", to: "/create" },
     { label: "How it Works", to: "/#how-it-works" },
   ],
 };
@@ -63,7 +63,7 @@ export default function Footer() {
           <div>
             <BrandLogo size="md" className="mb-4" />
             <p className="mb-5 max-w-xs text-sm leading-relaxed text-muted-foreground">
-              A local-currency treasury layer for communities that collect dues, vote on proposals,
+              A local-currency layer for community groups that collect dues, vote on proposals,
               and move funds with shared visibility.
             </p>
             <div className="flex items-center gap-2">
