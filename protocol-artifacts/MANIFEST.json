@@ -1,0 +1,21 @@
+{
+  "version": "org-main-6bd7819",
+  "sourceRepo": "Build-Africa-DAO/baraza-protocol",
+  "artifacts": {
+    "solanaIdl": [
+      "protocol-artifacts/solana/idl/community_registry.ts",
+      "protocol-artifacts/solana/idl/governance.ts",
+      "protocol-artifacts/solana/idl/membership.ts",
+      "protocol-artifacts/solana/idl/payment_attestation.ts",
+      "protocol-artifacts/solana/idl/treasury_vault.ts"
+    ],
+    "evmAddresses": "protocol-artifacts/evm/evmAddresses.ts",
+    "evmAbis": "protocol-artifacts/evm/abis.ts",
+    "interfaceSpec": "protocol-artifacts/interface/SPEC.md"
+  },
+  "vendoredAppCopies": {
+    "solanaIdl": "app/src/lib/programs/idl/",
+    "evmAddresses": "app/src/lib/programs/evmAddresses.ts",
+    "evmAbis": "app/src/lib/evm/abis.ts"
+  }
+}

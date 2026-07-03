@@ -1,0 +1,6 @@
+{
+  "version": "org-main-6bd7819",
+  "sourceRepo": "Build-Africa-DAO/baraza-protocol",
+  "sourceDir": "protocol-artifacts",
+  "notes": "These files are vendored copies so the app can build after it moves to a private repo."
+}

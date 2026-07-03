@@ -1,0 +1,460 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Baraza Design System v7: Black + Dark Orange + White */
+    /* Light surfaces use the brand hue 22 at low saturation so the page
+       reads as warm/intentional, not the AI-default cream-on-cream. */
+
+    --background: 22 30% 97%;
+    --foreground: 0 0% 7%;
+
+    --card: 22 20% 99%;
+    --card-foreground: 0 0% 7%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 7%;
+
+    /* Brand: dark orange */
+    --primary: 22 90% 42%;
+    --primary-foreground: 0 0% 98%;
+
+    /* Secondary: near-black */
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 22 12% 93%;
+    --muted-foreground: 0 0% 38%;
+
+    /* Accent: burnt orange */
+    --accent: 22 90% 42%;
+    --accent-foreground: 0 0% 98%;
+
+    /* Destructive */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 96%;
+
+    --border: 22 18% 84%;
+    --input: 22 12% 93%;
+    --ring: 22 90% 42%;
+
+    --radius: 0.25rem;
+
+    /* Extended semantic tokens */
+    --warm: 22 90% 42%;
+    --warm-foreground: 0 0% 98%;
+    --orange: 22 90% 42%;
+
+    /* DAO / governance: keep distinct */
+    --dao: 22 90% 35%;
+    --dao-foreground: 0 0% 98%;
+
+    /* Network: dark orange tint */
+    --network: 30 80% 40%;
+    --network-foreground: 0 0% 98%;
+
+    /* Confirmed / trusted: deep amber-green */
+    --confirmed: 38 75% 38%;
+    --confirmed-foreground: 0 0% 98%;
+
+    --surface: 22 10% 95%;
+    --surface-hover: 22 10% 90%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(22 90% 36%) 0%, hsl(22 90% 48%) 52%, hsl(18 88% 36%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(22 90% 42%) 0%, hsl(18 88% 35%) 100%);
+    --gradient-dao: linear-gradient(135deg, hsl(22 90% 35%) 0%, hsl(30 80% 40%) 100%);
+    --gradient-surface: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(0 0% 98%) 100%);
+    --gradient-hero: radial-gradient(ellipse 52% 42% at 78% 6%, hsl(22 90% 46% / 0.34) 0%, transparent 64%),
+                     radial-gradient(ellipse 44% 36% at 14% 16%, hsl(18 88% 38% / 0.18) 0%, transparent 66%),
+                     radial-gradient(ellipse 34% 26% at 55% 0%, hsl(30 84% 44% / 0.14) 0%, transparent 72%),
+                     linear-gradient(150deg, hsl(0 0% 100%) 0%, hsl(24 28% 96%) 48%, hsl(22 36% 91%) 100%);
+
+    /* Shadows */
+    --shadow-card:  0 16px 42px -28px hsl(0 0% 0% / 0.24);
+    --shadow-glow:  0 0 34px hsl(22 90% 42% / 0.22);
+    --shadow-warm:  0 8px 28px hsl(22 90% 42% / 0.24);
+    --shadow-dao:   0 0 34px hsl(22 90% 35% / 0.16);
+    --shadow-deep:  0 28px 80px -30px hsl(0 0% 0% / 0.38);
+  }
+
+  .dark {
+    /* Baraza Design System v8: Warm Obsidian + Signature Orange + Success Yellow
+       Tonal layering on a warm near-black base (#181303) — replaces the
+       achromatic grey-black v7 dark theme. Hue 46 = warm brown/orange base,
+       hue 25 = signature orange (#f97316), hue 45 = success yellow (#ffe083). */
+
+    --background: 46 78% 5%;
+    --foreground: 43 58% 85%;
+
+    --card: 46 61% 8%;
+    --card-foreground: 43 58% 85%;
+
+    --popover: 46 61% 8%;
+    --popover-foreground: 43 58% 85%;
+
+    --primary: 25 95% 53%;
+    --primary-foreground: 46 78% 5%;
+
+    --secondary: 43 30% 70%;
+    --secondary-foreground: 46 78% 5%;
+
+    --muted: 46 54% 9%;
+    --muted-foreground: 43 28% 62%;
+
+    --accent: 25 95% 53%;
+    --accent-foreground: 46 78% 5%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 96%;
+
+    --border: 44 39% 14%;
+    --input: 46 54% 9%;
+    --ring: 25 95% 53%;
+
+    --warm: 25 95% 53%;
+    --warm-foreground: 46 78% 5%;
+    --orange: 25 95% 53%;
+
+    --dao: 22 85% 45%;
+    --dao-foreground: 0 0% 96%;
+
+    --network: 30 80% 48%;
+    --network-foreground: 0 0% 5%;
+
+    --confirmed: 45 100% 76%;
+    --confirmed-foreground: 46 78% 5%;
+
+    --surface: 46 54% 9%;
+    --surface-hover: 44 39% 14%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(25 95% 45%) 0%, hsl(25 95% 58%) 55%, hsl(20 90% 45%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(25 95% 53%) 0%, hsl(20 90% 45%) 100%);
+    --gradient-dao: linear-gradient(135deg, hsl(22 85% 42%) 0%, hsl(30 80% 48%) 100%);
+    --gradient-surface: linear-gradient(180deg, hsl(46 61% 8%) 0%, hsl(46 78% 5%) 100%);
+    --gradient-hero: radial-gradient(ellipse 55% 42% at 72% 10%, hsl(25 95% 53% / 0.18) 0%, transparent 58%),
+                     radial-gradient(ellipse 44% 36% at 22% 20%, hsl(20 90% 45% / 0.10) 0%, transparent 65%),
+                     linear-gradient(135deg, hsl(46 78% 5%) 0%, hsl(46 65% 7%) 50%, hsl(44 30% 8%) 100%);
+
+    --shadow-card:  0 4px 24px -4px hsl(0 0% 0% / 0.80);
+    --shadow-glow:  0 0 40px hsl(25 95% 53% / 0.28);
+    --shadow-warm:  0 4px 24px hsl(25 95% 53% / 0.28);
+    --shadow-dao:   0 0 40px hsl(22 85% 45% / 0.20);
+    --shadow-deep:  0 20px 60px -10px hsl(0 0% 0% / 0.92);
+  }
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  @supports not (overflow: clip) {
+    html,
+    body,
+    #root {
+      overflow-x: hidden;
+    }
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: 'DM Sans', system-ui, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Syne', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  /* Buttons */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    background: var(--gradient-primary);
+    color: hsl(var(--primary-foreground));
+    border-radius: var(--radius);
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+    cursor: pointer;
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 34px hsl(25 95% 53% / 0.38);
+  }
+  .btn-primary:active { transform: translateY(0) scale(0.98); }
+
+  .btn-warm {
+    display: inline-flex;
+    align-items: center;
+    background: var(--gradient-warm);
+    color: hsl(var(--warm-foreground));
+    border-radius: var(--radius);
+    font-weight: 700;
+    font-size: 0.875rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+    cursor: pointer;
+  }
+  .btn-warm:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 34px hsl(25 95% 53% / 0.38);
+  }
+  .btn-warm:active { transform: translateY(0) scale(0.98); }
+
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    background: transparent;
+    color: hsl(var(--foreground));
+    border-radius: var(--radius);
+    font-weight: 500;
+    font-size: 0.875rem;
+    padding: 0.75rem 1.5rem;
+    border: 1px solid hsl(var(--border));
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  .btn-ghost:hover {
+    background: hsl(var(--surface));
+    border-color: hsl(var(--primary) / 0.5);
+    color: hsl(var(--foreground));
+  }
+
+  /* Cards */
+  .baraza-card {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+  .baraza-card:hover {
+    border-color: hsl(var(--primary) / 0.40);
+    box-shadow: var(--shadow-glow);
+  }
+
+  .glass-surface {
+    background: hsl(var(--card) / 0.65);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid hsl(var(--border) / 0.5);
+    border-radius: var(--radius);
+  }
+
+  .premium-glass {
+    background: hsl(var(--card) / 0.72);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid hsl(var(--primary) / 0.16);
+    box-shadow: 0 24px 80px hsl(var(--background) / 0.72);
+  }
+
+  .ambient-globe-layer {
+    background-image:
+      radial-gradient(circle at 74% 34%, hsl(var(--primary) / 0.2), transparent 25rem),
+      radial-gradient(circle at 82% 58%, hsl(var(--confirmed) / 0.12), transparent 20rem),
+      radial-gradient(circle at 50% 12%, hsl(var(--dao) / 0.10), transparent 22rem);
+  }
+
+  /* Text Gradients */
+  .text-gradient-primary {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .text-gradient-warm {
+    background: var(--gradient-warm);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Glow helpers */
+  .glow-primary { box-shadow: var(--shadow-glow); }
+  .glow-warm    { box-shadow: var(--shadow-warm); }
+
+  /* Progress */
+  .baraza-progress {
+    height: 6px;
+    border-radius: 9999px;
+    background: hsl(var(--muted));
+    overflow: hidden;
+  }
+  .baraza-progress-fill {
+    height: 100%;
+    border-radius: 9999px;
+    background: var(--gradient-primary);
+    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  /* Wallet adapter overrides */
+  .wallet-adapter-button-trigger {
+    background: var(--gradient-primary) !important;
+    color: hsl(var(--primary-foreground)) !important;
+    border-radius: var(--radius) !important;
+    font-family: 'DM Sans', system-ui, sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+    height: 2.5rem !important;
+    padding: 0 1.25rem !important;
+    transition: all 0.25s cubic-bezier(0.4,0,0.2,1) !important;
+    border: none !important;
+  }
+  .wallet-adapter-button-trigger:hover {
+    opacity: 0.9 !important;
+    box-shadow: var(--shadow-glow) !important;
+  }
+  .wallet-adapter-button-trigger:not([disabled]):hover {
+    background: var(--gradient-primary) !important;
+  }
+  .wallet-adapter-modal-wrapper {
+    background: hsl(var(--card)) !important;
+    border: 1px solid hsl(var(--border)) !important;
+    border-radius: 1rem !important;
+    font-family: 'DM Sans', system-ui, sans-serif !important;
+  }
+  .wallet-adapter-modal-title {
+    font-family: 'Syne', system-ui, sans-serif !important;
+    color: hsl(var(--foreground)) !important;
+  }
+  .wallet-adapter-modal-list li {
+    background: hsl(var(--surface)) !important;
+    border-radius: var(--radius) !important;
+    margin-bottom: 0.5rem !important;
+  }
+  .wallet-adapter-modal-list li:hover {
+    background: hsl(var(--surface-hover)) !important;
+  }
+  .wallet-adapter-modal-button-close {
+    background: hsl(var(--surface)) !important;
+  }
+  .wallet-adapter-modal-overlay {
+    background: hsl(0, 0%, 2%, 0.92) !important;
+  }
+  .wallet-adapter-dropdown-list {
+    background: hsl(var(--card)) !important;
+    border: 1px solid hsl(var(--border)) !important;
+    border-radius: var(--radius) !important;
+  }
+  .wallet-adapter-dropdown-list-item {
+    color: hsl(var(--foreground)) !important;
+    font-family: 'DM Sans', system-ui, sans-serif !important;
+  }
+  .wallet-adapter-dropdown-list-item:hover {
+    background: hsl(var(--surface)) !important;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: hsl(var(--background)); }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted));
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary) / 0.5);
+  }
+}
+
+/* Keyframes */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-10px); }
+}
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px hsl(var(--primary) / 0.22); }
+  50%       { box-shadow: 0 0 50px hsl(var(--primary) / 0.50); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes shining {
+  0%   { background-position: 0 0; }
+  100% { background-position: -200% 0; }
+}
+@keyframes shimmer-spin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes border-beam {
+  0%   { offset-distance: 0%; }
+  100% { offset-distance: 100%; }
+}
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(calc(-100% - var(--gap, 1rem))); }
+}
+@keyframes marquee-vertical {
+  from { transform: translateY(0); }
+  to   { transform: translateY(calc(-100% - var(--gap, 1rem))); }
+}
+@keyframes gradient-move {
+  0%, 100% { background-position: 0% 50%; }
+  50%       { background-position: 100% 50%; }
+}
+@keyframes ripple {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50%       { transform: translate(-50%, -50%) scale(0.92); }
+}
+@keyframes community-banner-slide {
+  from {
+    opacity: 0.36;
+    transform: scale(1.04);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.community-banner-slide {
+  animation: community-banner-slide 0.72s ease-out both;
+}
+
+/* Entrance: staggered rise for hero / above-the-fold content */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rise {
+  animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.rise-1 { animation-delay: 0.05s; }
+.rise-2 { animation-delay: 0.14s; }
+.rise-3 { animation-delay: 0.23s; }
+.rise-4 { animation-delay: 0.32s; }
+.rise-5 { animation-delay: 0.45s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .community-banner-slide,
+  .rise {
+    animation: none;
+  }
+}

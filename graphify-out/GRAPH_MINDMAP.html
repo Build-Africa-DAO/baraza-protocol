@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>baraza-protocol — graphify mind map</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0; padding: 0;
+      background: #f4f6f9;
+      color: #333;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 24px 8px;
+      background: #1e3a56;
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,.25);
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: .02em;
+      flex: 1;
+    }
+    .pill {
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.3);
+      color: #fff;
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: .82rem;
+      cursor: pointer;
+      transition: background .18s;
+      white-space: nowrap;
+    }
+    .pill:hover { background: rgba(255,255,255,.28); }
+    #map-container {
+      width: 100vw;
+      height: calc(100vh - 56px);
+      overflow: hidden;
+      cursor: grab;
+    }
+    #map-container:active { cursor: grabbing; }
+    svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    .node circle {
+      stroke-width: 2px;
+      transition: r .2s;
+    }
+    .node circle:hover { r: 11px; }
+    .node text {
+      font: 12px 'Segoe UI', Arial, sans-serif;
+      paint-order: stroke fill;
+      stroke: rgba(255,255,255,.85);
+      stroke-width: 3px;
+      stroke-linejoin: round;
+      fill: #222;
+      pointer-events: none;
+    }
+    .link {
+      fill: none;
+      stroke-opacity: .55;
+      stroke-width: 1.6px;
+    }
+    .tooltip {
+      position: fixed;
+      background: rgba(30,58,86,.92);
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: .78rem;
+      pointer-events: none;
+      white-space: nowrap;
+      display: none;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 id="page-title">baraza-protocol — Mind Map</h1>
+    <button class="pill" onclick="expandAll()">Expand All</button>
+    <button class="pill" onclick="collapseAll()">Collapse All</button>
+    <button class="pill" onclick="resetView()">Reset View</button>
+  </header>
+  <div id="map-container">
+    <svg id="mindmap-svg"></svg>
+  </div>
+  <div class="tooltip" id="tooltip"></div>
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script>
+    const RAW = {"name":"baraza-protocol","total_count":199,"children":[{"name":"Anchor.toml","total_count":1,"children":[{"name":"Anchor.toml","total_count":1,"children":[]}]},{"name":"app","total_count":158,"children":[{"name":"api","total_count":5,"children":[{"name":"cron","total_count":1,"children":[{"name":"promote-orders.ts","total_count":1,"children":[{"name":"promote-orders.ts","total_count":1,"children":[]}]}]},{"name":"membership","total_count":1,"children":[{"name":"activate.ts","total_count":1,"children":[{"name":"activate.ts","total_count":1,"children":[]}]}]},{"name":"mpesa","total_count":1,"children":[{"name":"simulate.ts","total_count":1,"children":[{"name":"simulate.ts","total_count":1,"children":[]}]}]},{"name":"payment-orders","total_count":1,"children":[{"name":"status.ts","total_count":1,"children":[{"name":"status.ts","total_count":1,"children":[]}]}]},{"name":"stellar","total_count":1,"children":[{"name":"verify-payment.ts","total_count":1,"children":[{"name":"verify-payment.ts","total_count":1,"children":[]}]}]}]},{"name":"docs","total_count":12,"children":[{"name":"BRAND_GUIDELINES.md","total_count":1,"children":[{"name":"BRAND_GUIDELINES.md","total_count":1,"children":[]}]},{"name":"CONTRACT_INTEGRATION.md","total_count":1,"children":[{"name":"CONTRACT_INTEGRATION.md","total_count":1,"children":[]}]},{"name":"CROSS_CHAIN_DEPLOYMENT_CHECKLIST.md","total_count":1,"children":[{"name":"CROSS_CHAIN_DEPLOYMENT_CHECKLIST.md","total_count":1,"children":[]}]},{"name":"DAO_LOGIC_REFERENCE.md","total_count":1,"children":[{"name":"DAO_LOGIC_REFERENCE.md","total_count":1,"children":[]}]},{"name":"DEMO_SCRIPT.md","total_count":1,"children":[{"name":"DEMO_SCRIPT.md","total_count":1,"children":[]}]},{"name":"DEPLOYMENT.md","total_count":1,"children":[{"name":"DEPLOYMENT.md","total_count":1,"children":[]}]},{"name":"DESIGN.md","total_count":1,"children":[{"name":"DESIGN.md","total_count":1,"children":[]}]},{"name":"DESIGN_SPEC.md","total_count":1,"children":[{"name":"DESIGN_SPEC.md","total_count":1,"children":[]}]},{"name":"GOVERNANCE_CONTRACT_ROADMAP.md","total_count":1,"children":[{"name":"GOVERNANCE_CONTRACT_ROADMAP.md","total_count":1,"children":[]}]},{"name":"HIGGSFIELD_PROMPTS.md","total_count":1,"children":[{"name":"HIGGSFIELD_PROMPTS.md","total_count":1,"children":[]}]},{"name":"MVP_ARCHITECTURE.md","total_count":1,"children":[{"name":"MVP_ARCHITECTURE.md","total_count":1,"children":[]}]},{"name":"PRD.md","total_count":1,"children":[{"name":"PRD.md","total_count":1,"children":[]}]}]},{"name":"package-lock.json","total_count":1,"children":[{"name":"package-lock.json","total_count":1,"children":[]}]},{"name":"package.json","total_count":1,"children":[{"name":"package.json","total_count":1,"children":[]}]},{"name":"scripts","total_count":1,"children":[{"name":"higgsfield","total_count":1,"children":[{"name":"shots.json","total_count":1,"children":[{"name":"shots.json","total_count":1,"children":[]}]}]}]},{"name":"src","total_count":132,"children":[{"name":"App.tsx","total_count":1,"children":[{"name":"App.tsx","total_count":1,"children":[]}]},{"name":"components","total_count":45,"children":[{"name":"__tests__","total_count":2,"children":[{"name":"ChainSelector.test.tsx","total_count":1,"children":[{"name":"ChainSelector.test.tsx","total_count":1,"children":[]}]},{"name":"DecisionCard.test.tsx","total_count":1,"children":[{"name":"DecisionCard.test.tsx","total_count":1,"children":[]}]}]},{"name":"AIPlatformSection.tsx","total_count":1,"children":[{"name":"AIPlatformSection.tsx","total_count":1,"children":[]}]},{"name":"auth","total_count":1,"children":[{"name":"WalletGate.tsx","total_count":1,"children":[{"name":"WalletGate.tsx","total_count":1,"children":[]}]}]},{"name":"BackendStatus.tsx","total_count":1,"children":[{"name":"BackendStatus.tsx","total_count":1,"children":[]}]},{"name":"BarazaWalletModalProvider.tsx","total_count":1,"children":[{"name":"BarazaWalletModalProvider.tsx","total_count":1,"children":[]}]},{"name":"BountyBoard.tsx","total_count":1,"children":[{"name":"BountyBoard.tsx","total_count":1,"children":[]}]},{"name":"BrandLogo.tsx","total_count":1,"children":[{"name":"BrandLogo.tsx","total_count":1,"children":[]}]},{"name":"ChainProvider.tsx","total_count":1,"children":[{"name":"ChainProvider.tsx","total_count":1,"children":[]}]},{"name":"ChainSelector.tsx","total_count":1,"children":[{"name":"ChainSelector.tsx","total_count":1,"children":[]}]},{"name":"chat","total_count":1,"children":[{"name":"AshaChat.tsx","total_count":1,"children":[{"name":"AshaChat.tsx","total_count":1,"children":[]}]}]},{"name":"community","total_count":9,"children":[{"name":"ActivityFeed.tsx","total_count":1,"children":[{"name":"ActivityFeed.tsx","total_count":1,"children":[]}]},{"name":"CombinedBoard.tsx","total_count":1,"children":[{"name":"CombinedBoard.tsx","total_count":1,"children":[]}]},{"name":"CommunityLeaderboard.tsx","total_count":1,"children":[{"name":"CommunityLeaderboard.tsx","total_count":1,"children":[]}]},{"name":"CommunityRoadmap.tsx","total_count":1,"children":[{"name":"CommunityRoadmap.tsx","total_count":1,"children":[]}]},{"name":"CommunityRoles.tsx","total_count":1,"children":[{"name":"CommunityRoles.tsx","total_count":1,"children":[]}]},{"name":"CommunitySettings.tsx","total_count":1,"children":[{"name":"CommunitySettings.tsx","total_count":1,"children":[]}]},{"name":"CommunitySuggestions.tsx","total_count":1,"children":[{"name":"CommunitySuggestions.tsx","total_count":1,"children":[]}]},{"name":"LiveStatCard.tsx","total_count":1,"children":[{"name":"LiveStatCard.tsx","total_count":1,"children":[]}]},{"name":"MemberDirectory.tsx","total_count":1,"children":[{"name":"MemberDirectory.tsx","total_count":1,"children":[]}]}]},{"name":"CommunityBanner.tsx","total_count":1,"children":[{"name":"CommunityBanner.tsx","total_count":1,"children":[]}]},{"name":"CommunityCard.tsx","total_count":1,"children":[{"name":"CommunityCard.tsx","total_count":1,"children":[]}]},{"name":"CommunityGallery.tsx","total_count":1,"children":[{"name":"CommunityGallery.tsx","total_count":1,"children":[]}]},{"name":"CommunityMarquee.tsx","total_count":1,"children":[{"name":"CommunityMarquee.tsx","total_count":1,"children":[]}]},{"name":"CTASection.tsx","total_count":1,"children":[{"name":"CTASection.tsx","total_count":1,"children":[]}]},{"name":"DecisionCard.tsx","total_count":1,"children":[{"name":"DecisionCard.tsx","total_count":1,"children":[]}]},{"name":"FeaturesSection.tsx","total_count":1,"children":[{"name":"FeaturesSection.tsx","total_count":1,"children":[]}]},{"name":"FlowWalkthrough.tsx","total_count":1,"children":[{"name":"FlowWalkthrough.tsx","total_count":1,"children":[]}]},{"name":"Footer.tsx","total_count":1,"children":[{"name":"Footer.tsx","total_count":1,"children":[]}]},{"name":"Header.tsx","total_count":1,"children":[{"name":"Header.tsx","total_count":1,"children":[]}]},{"name":"HeroSection.tsx","total_count":1,"children":[{"name":"HeroSection.tsx","total_count":1,"children":[]}]},{"name":"Layout.tsx","total_count":1,"children":[{"name":"Layout.tsx","total_count":1,"children":[]}]},{"name":"MembershipCard.tsx","total_count":1,"children":[{"name":"MembershipCard.tsx","total_count":1,"children":[]}]},{"name":"MobileBottomNav.tsx","total_count":1,"children":[{"name":"MobileBottomNav.tsx","total_count":1,"children":[]}]},{"name":"PageLoader.tsx","total_count":1,"children":[{"name":"PageLoader.tsx","total_count":1,"children":[]}]},{"name":"security","total_count":1,"children":[{"name":"AshaSecurityReview.tsx","total_count":1,"children":[{"name":"AshaSecurityReview.tsx","total_count":1,"children":[]}]}]},{"name":"ui","total_count":7,"children":[{"name":"dot-pattern.tsx","total_count":1,"children":[{"name":"dot-pattern.tsx","total_count":1,"children":[]}]},{"name":"magic-card.tsx","total_count":1,"children":[{"name":"magic-card.tsx","total_count":1,"children":[]}]},{"name":"marquee.tsx","total_count":1,"children":[{"name":"marquee.tsx","total_count":1,"children":[]}]},{"name":"shimmer-button.tsx","total_count":1,"children":[{"name":"shimmer-button.tsx","total_count":1,"children":[]}]},{"name":"skeleton.tsx","total_count":1,"children":[{"name":"skeleton.tsx","total_count":1,"children":[]}]},{"name":"toast.tsx","total_count":1,"children":[{"name":"toast.tsx","total_count":1,"children":[]}]},{"name":"toaster.tsx","total_count":1,"children":[{"name":"toaster.tsx","total_count":1,"children":[]}]}]},{"name":"WalletProviders.tsx","total_count":1,"children":[{"name":"WalletProviders.tsx","total_count":1,"children":[]}]},{"name":"WalletStatus.tsx","total_count":1,"children":[{"name":"WalletStatus.tsx","total_count":1,"children":[]}]}]},{"name":"contexts","total_count":5,"children":[{"name":"asha-chat-context.ts","total_count":1,"children":[{"name":"asha-chat-context.ts","total_count":1,"children":[]}]},{"name":"AshaChatContext.tsx","total_count":1,"children":[{"name":"AshaChatContext.tsx","total_count":1,"children":[]}]},{"name":"chain-context.ts","total_count":1,"children":[{"name":"chain-context.ts","total_count":1,"children":[]}]},{"name":"theme-context.ts","total_count":1,"children":[{"name":"theme-context.ts","total_count":1,"children":[]}]},{"name":"ThemeContext.tsx","total_count":1,"children":[{"name":"ThemeContext.tsx","total_count":1,"children":[]}]}]},{"name":"hooks","total_count":12,"children":[{"name":"__tests__","total_count":3,"children":[{"name":"useBarazaContract.test.ts","total_count":1,"children":[{"name":"useBarazaContract.test.ts","total_count":1,"children":[]}]},{"name":"useCommunities.test.ts","total_count":1,"children":[{"name":"useCommunities.test.ts","total_count":1,"children":[]}]},{"name":"useWalletGuard.test.ts","total_count":1,"children":[{"name":"useWalletGuard.test.ts","total_count":1,"children":[]}]}]},{"name":"use-toast.ts","total_count":1,"children":[{"name":"use-toast.ts","total_count":1,"children":[]}]},{"name":"useAshaChat.ts","total_count":1,"children":[{"name":"useAshaChat.ts","total_count":1,"children":[]}]},{"name":"useBarazaContract.ts","total_count":1,"children":[{"name":"useBarazaContract.ts","total_count":1,"children":[]}]},{"name":"useBarazaData.ts","total_count":1,"children":[{"name":"useBarazaData.ts","total_count":1,"children":[]}]},{"name":"useChain.ts","total_count":1,"children":[{"name":"useChain.ts","total_count":1,"children":[]}]},{"name":"useCommunities.ts","total_count":1,"children":[{"name":"useCommunities.ts","total_count":1,"children":[]}]},{"name":"useEvmChain.ts","total_count":1,"children":[{"name":"useEvmChain.ts","total_count":1,"children":[]}]},{"name":"useTheme.ts","total_count":1,"children":[{"name":"useTheme.ts","total_count":1,"children":[]}]},{"name":"useWalletGuard.ts","total_count":1,"children":[{"name":"useWalletGuard.ts","total_count":1,"children":[]}]}]},{"name":"lib","total_count":49,"children":[{"name":"__tests__","total_count":14,"children":[{"name":"access.test.ts","total_count":1,"children":[{"name":"access.test.ts","total_count":1,"children":[]}]},{"name":"bounties.test.ts","total_count":1,"children":[{"name":"bounties.test.ts","total_count":1,"children":[]}]},{"name":"chain.test.ts","total_count":1,"children":[{"name":"chain.test.ts","total_count":1,"children":[]}]},{"name":"chainMappings.test.ts","total_count":1,"children":[{"name":"chainMappings.test.ts","total_count":1,"children":[]}]},{"name":"communities.test.ts","total_count":1,"children":[{"name":"communities.test.ts","total_count":1,"children":[]}]},{"name":"memberships.test.ts","total_count":1,"children":[{"name":"memberships.test.ts","total_count":1,"children":[]}]},{"name":"phone.test.ts","total_count":1,"children":[{"name":"phone.test.ts","total_count":1,"children":[]}]},{"name":"proposalStatus.test.ts","total_count":1,"children":[{"name":"proposalStatus.test.ts","total_count":1,"children":[]}]},{"name":"securityReview.test.ts","total_count":1,"children":[{"name":"securityReview.test.ts","total_count":1,"children":[]}]},{"name":"stellar.test.ts","total_count":1,"children":[{"name":"stellar.test.ts","total_count":1,"children":[]}]},{"name":"stellarAccounts.test.ts","total_count":1,"children":[{"name":"stellarAccounts.test.ts","total_count":1,"children":[]}]},{"name":"stellarSettlements.test.ts","total_count":1,"children":[{"name":"stellarSettlements.test.ts","total_count":1,"children":[]}]},{"name":"tokenGate.test.ts","total_count":1,"children":[{"name":"tokenGate.test.ts","total_count":1,"children":[]}]},{"name":"utils.test.ts","total_count":1,"children":[{"name":"utils.test.ts","total_count":1,"children":[]}]}]},{"name":"access.ts","total_count":1,"children":[{"name":"access.ts","total_count":1,"children":[]}]},{"name":"bounties.ts","total_count":1,"children":[{"name":"bounties.ts","total_count":1,"children":[]}]},{"name":"chain.ts","total_count":1,"children":[{"name":"chain.ts","total_count":1,"children":[]}]},{"name":"chainMappings.ts","total_count":1,"children":[{"name":"chainMappings.ts","total_count":1,"children":[]}]},{"name":"communities.ts","total_count":1,"children":[{"name":"communities.ts","total_count":1,"children":[]}]},{"name":"communityVisuals.ts","total_count":1,"children":[{"name":"communityVisuals.ts","total_count":1,"children":[]}]},{"name":"constants.ts","total_count":1,"children":[{"name":"constants.ts","total_count":1,"children":[]}]},{"name":"dataStore.ts","total_count":1,"children":[{"name":"dataStore.ts","total_count":1,"children":[]}]},{"name":"env.ts","total_count":1,"children":[{"name":"env.ts","total_count":1,"children":[]}]},{"name":"evm","total_count":2,"children":[{"name":"abis.ts","total_count":1,"children":[{"name":"abis.ts","total_count":1,"children":[]}]},{"name":"index.ts","total_count":1,"children":[{"name":"index.ts","total_count":1,"children":[]}]}]},{"name":"memberships.ts","total_count":1,"children":[{"name":"memberships.ts","total_count":1,"children":[]}]},{"name":"network.ts","total_count":1,"children":[{"name":"network.ts","total_count":1,"children":[]}]},{"name":"payments.ts","total_count":1,"children":[{"name":"payments.ts","total_count":1,"children":[]}]},{"name":"phone.ts","total_count":1,"children":[{"name":"phone.ts","total_count":1,"children":[]}]},{"name":"phoneAuth.ts","total_count":1,"children":[{"name":"phoneAuth.ts","total_count":1,"children":[]}]},{"name":"programs","total_count":10,"children":[{"name":"client.ts","total_count":1,"children":[{"name":"client.ts","total_count":1,"children":[]}]},{"name":"evmAddresses.ts","total_count":1,"children":[{"name":"evmAddresses.ts","total_count":1,"children":[]}]},{"name":"evmClient.ts","total_count":1,"children":[{"name":"evmClient.ts","total_count":1,"children":[]}]},{"name":"idl","total_count":5,"children":[{"name":"community_registry.ts","total_count":1,"children":[{"name":"community_registry.ts","total_count":1,"children":[]}]},{"name":"governance.ts","total_count":1,"children":[{"name":"governance.ts","total_count":1,"children":[]}]},{"name":"membership.ts","total_count":1,"children":[{"name":"membership.ts","total_count":1,"children":[]}]},{"name":"payment_attestation.ts","total_count":1,"children":[{"name":"payment_attestation.ts","total_count":1,"children":[]}]},{"name":"treasury_vault.ts","total_count":1,"children":[{"name":"treasury_vault.ts","total_count":1,"children":[]}]}]},{"name":"index.ts","total_count":1,"children":[{"name":"index.ts","total_count":1,"children":[]}]},{"name":"pda.ts","total_count":1,"children":[{"name":"pda.ts","total_count":1,"children":[]}]}]},{"name":"proposalStatus.ts","total_count":1,"children":[{"name":"proposalStatus.ts","total_count":1,"children":[]}]},{"name":"rpc.ts","total_count":1,"children":[{"name":"rpc.ts","total_count":1,"children":[]}]},{"name":"securityReview.ts","total_count":1,"children":[{"name":"securityReview.ts","total_count":1,"children":[]}]},{"name":"seo.ts","total_count":1,"children":[{"name":"seo.ts","total_count":1,"children":[]}]},{"name":"stellar.ts","total_count":1,"children":[{"name":"stellar.ts","total_count":1,"children":[]}]},{"name":"stellarAccounts.ts","total_count":1,"children":[{"name":"stellarAccounts.ts","total_count":1,"children":[]}]},{"name":"stellarSettlements.ts","total_count":1,"children":[{"name":"stellarSettlements.ts","total_count":1,"children":[]}]},{"name":"tokenGate.ts","total_count":1,"children":[{"name":"tokenGate.ts","total_count":1,"children":[]}]},{"name":"utils.ts","total_count":1,"children":[{"name":"utils.ts","total_count":1,"children":[]}]}]},{"name":"main.tsx","total_count":1,"children":[{"name":"main.tsx","total_count":1,"children":[]}]},{"name":"pages","total_count":16,"children":[{"name":"__tests__","total_count":1,"children":[{"name":"JoinStatus.test.tsx","total_count":1,"children":[{"name":"JoinStatus.test.tsx","total_count":1,"children":[]}]}]},{"name":"AdminReconciliation.tsx","total_count":1,"children":[{"name":"AdminReconciliation.tsx","total_count":1,"children":[]}]},{"name":"Bounties.tsx","total_count":1,"children":[{"name":"Bounties.tsx","total_count":1,"children":[]}]},{"name":"BountyDetail.tsx","total_count":1,"children":[{"name":"BountyDetail.tsx","total_count":1,"children":[]}]},{"name":"Communities.tsx","total_count":1,"children":[{"name":"Communities.tsx","total_count":1,"children":[]}]},{"name":"CommunityDashboard.tsx","total_count":1,"children":[{"name":"CommunityDashboard.tsx","total_count":1,"children":[]}]},{"name":"CreateCommunity.tsx","total_count":1,"children":[{"name":"CreateCommunity.tsx","total_count":1,"children":[]}]},{"name":"CreateDecision.tsx","total_count":1,"children":[{"name":"CreateDecision.tsx","total_count":1,"children":[]}]},{"name":"Evaluate.tsx","total_count":1,"children":[{"name":"Evaluate.tsx","total_count":1,"children":[]}]},{"name":"Index.tsx","total_count":1,"children":[{"name":"Index.tsx","total_count":1,"children":[]}]},{"name":"JoinDao.tsx","total_count":1,"children":[{"name":"JoinDao.tsx","total_count":1,"children":[]}]},{"name":"JoinStatus.tsx","total_count":1,"children":[{"name":"JoinStatus.tsx","total_count":1,"children":[]}]},{"name":"NotFound.tsx","total_count":1,"children":[{"name":"NotFound.tsx","total_count":1,"children":[]}]},{"name":"Profile.tsx","total_count":1,"children":[{"name":"Profile.tsx","total_count":1,"children":[]}]},{"name":"ProposalDetail.tsx","total_count":1,"children":[{"name":"ProposalDetail.tsx","total_count":1,"children":[]}]},{"name":"TreasuryDetail.tsx","total_count":1,"children":[{"name":"TreasuryDetail.tsx","total_count":1,"children":[]}]}]},{"name":"polyfill.ts","total_count":1,"children":[{"name":"polyfill.ts","total_count":1,"children":[]}]},{"name":"test","total_count":1,"children":[{"name":"setup.ts","total_count":1,"children":[{"name":"setup.ts","total_count":1,"children":[]}]}]},{"name":"vite-env.d.ts","total_count":1,"children":[{"name":"vite-env.d.ts","total_count":1,"children":[]}]}]},{"name":"tsconfig.app.json","total_count":1,"children":[{"name":"tsconfig.app.json","total_count":1,"children":[]}]},{"name":"tsconfig.json","total_count":1,"children":[{"name":"tsconfig.json","total_count":1,"children":[]}]},{"name":"tsconfig.node.json","total_count":1,"children":[{"name":"tsconfig.node.json","total_count":1,"children":[]}]},{"name":"vercel.json","total_count":1,"children":[{"name":"vercel.json","total_count":1,"children":[]}]},{"name":"vite.config.ts","total_count":1,"children":[{"name":"vite.config.ts","total_count":1,"children":[]}]},{"name":"vitest.config.ts","total_count":1,"children":[{"name":"vitest.config.ts","total_count":1,"children":[]}]}]},{"name":"Cargo.toml","total_count":1,"children":[{"name":"Cargo.toml","total_count":1,"children":[]}]},{"name":"contracts","total_count":19,"children":[{"name":"evm","total_count":19,"children":[{"name":".solhint.json","total_count":1,"children":[{"name":".solhint.json","total_count":1,"children":[]}]},{"name":"addresses","total_count":8,"children":[{"name":"1.json","total_count":1,"children":[{"name":"1.json","total_count":1,"children":[]}]},{"name":"10.json","total_count":1,"children":[{"name":"10.json","total_count":1,"children":[]}]},{"name":"11155111.json","total_count":1,"children":[{"name":"11155111.json","total_count":1,"children":[]}]},{"name":"11155420.json","total_count":1,"children":[{"name":"11155420.json","total_count":1,"children":[]}]},{"name":"7777777.json","total_count":1,"children":[{"name":"7777777.json","total_count":1,"children":[]}]},{"name":"8453.json","total_count":1,"children":[{"name":"8453.json","total_count":1,"children":[]}]},{"name":"84532.json","total_count":1,"children":[{"name":"84532.json","total_count":1,"children":[]}]},{"name":"999999999.json","total_count":1,"children":[{"name":"999999999.json","total_count":1,"children":[]}]}]},{"name":"docs","total_count":4,"children":[{"name":"deployment-workflows.md","total_count":1,"children":[{"name":"deployment-workflows.md","total_count":1,"children":[]}]},{"name":"mainnet-v2-upgrade-runbook.md","total_count":1,"children":[{"name":"mainnet-v2-upgrade-runbook.md","total_count":1,"children":[]}]},{"name":"manager-ownership-runbook.md","total_count":1,"children":[{"name":"manager-ownership-runbook.md","total_count":1,"children":[]}]},{"name":"README.md","total_count":1,"children":[{"name":"README.md","total_count":1,"children":[]}]}]},{"name":"foundry.toml","total_count":1,"children":[{"name":"foundry.toml","total_count":1,"children":[]}]},{"name":"funding.json","total_count":1,"children":[{"name":"funding.json","total_count":1,"children":[]}]},{"name":"LICENSE.md","total_count":1,"children":[{"name":"LICENSE.md","total_count":1,"children":[]}]},{"name":"package.json","total_count":1,"children":[{"name":"package.json","total_count":1,"children":[]}]},{"name":"README.md","total_count":1,"children":[{"name":"README.md","total_count":1,"children":[]}]},{"name":"slither.config.json","total_count":1,"children":[{"name":"slither.config.json","total_count":1,"children":[]}]}]}]},{"name":"DEPLOY.md","total_count":1,"children":[{"name":"DEPLOY.md","total_count":1,"children":[]}]},{"name":"docs","total_count":1,"children":[{"name":"TESTNET_CONTRACT_API_REVIEW.md","total_count":1,"children":[{"name":"TESTNET_CONTRACT_API_REVIEW.md","total_count":1,"children":[]}]}]},{"name":"graphify-out","total_count":1,"children":[{"name":"graph.json","total_count":1,"children":[{"name":"graph.json","total_count":1,"children":[]}]}]},{"name":"programs","total_count":15,"children":[{"name":"community_registry","total_count":3,"children":[{"name":"Cargo.toml","total_count":1,"children":[{"name":"Cargo.toml","total_count":1,"children":[]}]},{"name":"src","total_count":1,"children":[{"name":"lib.rs","total_count":1,"children":[{"name":"lib.rs","total_count":1,"children":[]}]}]},{"name":"Xargo.toml","total_count":1,"children":[{"name":"Xargo.toml","total_count":1,"children":[]}]}]},{"name":"governance","total_count":3,"children":[{"name":"Cargo.toml","total_count":1,"children":[{"name":"Cargo.toml","total_count":1,"children":[]}]},{"name":"src","total_count":1,"children":[{"name":"lib.rs","total_count":1,"children":[{"name":"lib.rs","total_count":1,"children":[]}]}]},{"name":"Xargo.toml","total_count":1,"children":[{"name":"Xargo.toml","total_count":1,"children":[]}]}]},{"name":"membership","total_count":3,"children":[{"name":"Cargo.toml","total_count":1,"children":[{"name":"Cargo.toml","total_count":1,"children":[]}]},{"name":"src","total_count":1,"children":[{"name":"lib.rs","total_count":1,"children":[{"name":"lib.rs","total_count":1,"children":[]}]}]},{"name":"Xargo.toml","total_count":1,"children":[{"name":"Xargo.toml","total_count":1,"children":[]}]}]},{"name":"payment_attestation","total_count":3,"children":[{"name":"Cargo.toml","total_count":1,"children":[{"name":"Cargo.toml","total_count":1,"children":[]}]},{"name":"src","total_count":1,"children":[{"name":"lib.rs","total_count":1,"children":[{"name":"lib.rs","total_count":1,"children":[]}]}]},{"name":"Xargo.toml","total_count":1,"children":[{"name":"Xargo.toml","total_count":1,"children":[]}]}]},{"name":"treasury_vault","total_count":3,"children":[{"name":"Cargo.toml","total_count":1,"children":[{"name":"Cargo.toml","total_count":1,"children":[]}]},{"name":"src","total_count":1,"children":[{"name":"lib.rs","total_count":1,"children":[{"name":"lib.rs","total_count":1,"children":[]}]}]},{"name":"Xargo.toml","total_count":1,"children":[{"name":"Xargo.toml","total_count":1,"children":[]}]}]}]},{"name":"README.md","total_count":1,"children":[{"name":"README.md","total_count":1,"children":[]}]},{"name":"vercel.json","total_count":1,"children":[{"name":"vercel.json","total_count":1,"children":[]}]}]};
+
+    // ── colour palette (mirrors tree_html) ─────────────────────────
+    const PALETTE = [
+      ["#3498DB","#2980B9"],["#2ECC71","#27AE60"],["#E74C3C","#C0392B"],
+      ["#9B59B6","#8E44AD"],["#F39C12","#D68910"],["#1ABC9C","#117864"],
+      ["#34495E","#1B2631"],["#E67E22","#BA4A00"],["#16A085","#0E6655"],
+      ["#D35400","#A04000"],["#7F8C8D","#566573"],["#C0392B","#7B241C"],
+      ["#2E86C1","#1B4F72"],["#28B463","#196F3D"],["#AF7AC5","#6C3483"],
+    ];
+    const phaseColors = {};
+    (RAW.children || []).forEach((c, i) => {
+      const pal = PALETTE[i % PALETTE.length];
+      phaseColors[c.name] = { fill: pal[0], stroke: pal[1] };
+    });
+    const DEPTH_COLORS = [
+      { fill: "#1e3a56", stroke: "#0d2235" },  // depth 0 — root
+      null,                                         // depth 1 — from phaseColors
+      { fill: "#6ab04c", stroke: "#508a38" },
+      { fill: "#f0932b", stroke: "#d0730f" },
+      { fill: "#be2edd", stroke: "#a01cb3" },
+      { fill: "#00a8ff", stroke: "#007ac1" },
+      { fill: "#e55039", stroke: "#c23620" },
+    ];
+    const DEFAULT_COLOR = { fill: "#747d8c", stroke: "#57606f" };
+
+    function nodeColor(d) {
+      if (d.depth === 0) return DEPTH_COLORS[0];
+      if (d.depth === 1) return phaseColors[d.data.name] || DEFAULT_COLOR;
+      return DEPTH_COLORS[d.depth] || DEFAULT_COLOR;
+    }
+
+    // ── layout helpers ─────────────────────────────────────────────
+    const svg    = d3.select("#mindmap-svg");
+    const gMain  = svg.append("g").attr("class", "main-g");
+    const gLinks = gMain.append("g").attr("class", "links");
+    const gNodes = gMain.append("g").attr("class", "nodes");
+
+    const tooltip = document.getElementById("tooltip");
+
+    let W = svg.node().clientWidth  || window.innerWidth;
+    let H = svg.node().clientHeight || (window.innerHeight - 56);
+
+    // zoom
+    const zoom = d3.zoom().scaleExtent([.1, 8]).on("zoom", e => {
+      gMain.attr("transform", e.transform);
+    });
+    svg.call(zoom);
+
+    const duration = 450;
+    let uid = 0;
+
+    // Build initial D3 hierarchy
+    let root = d3.hierarchy(RAW, d => d.children);
+    root.x0 = 0; root.y0 = 0;
+
+    // Collapse all depth-1 children initially
+    (root.children || []).forEach(child => {
+      if (child.children) collapseBranch(child);
+    });
+
+    function collapseBranch(d) {
+      if (d.children) {
+        d._children = d.children;
+        d._children.forEach(collapseBranch);
+        d.children = null;
+      }
+    }
+    function expandBranch(d) {
+      if (d._children) { d.children = d._children; d._children = null; }
+      if (d.children) d.children.forEach(expandBranch);
+    }
+
+    window.expandAll  = () => { expandBranch(root); update(root); };
+    window.collapseAll = () => {
+      (root.children || []).forEach(collapseBranch);
+      update(root);
+    };
+    window.resetView = () => {
+      svg.transition().duration(duration)
+        .call(zoom.transform, d3.zoomIdentity);
+      collapseAll();
+    };
+
+    // ── radial layout ──────────────────────────────────────────────
+    function makeLayout() {
+      W = svg.node().clientWidth  || window.innerWidth;
+      H = svg.node().clientHeight || (window.innerHeight - 56);
+      const nLeaves = root.leaves().length;
+      // radius grows with leaf count so nodes don't overlap on large graphs
+      const radius  = Math.max(220, Math.min(Math.sqrt(nLeaves) * 55, 1200));
+      return {
+        layout: d3.cluster().size([2 * Math.PI, radius]),
+        radius,
+      };
+    }
+
+    // link path in radial coordinates
+    function radialLink(d) {
+      return d3.linkRadial()
+        .angle(n  => n.x)
+        .radius(n => n.y)(d);
+    }
+
+    // polar → cartesian
+    function px(d) { return d.y * Math.cos(d.x - Math.PI / 2); }
+    function py(d) { return d.y * Math.sin(d.x - Math.PI / 2); }
+
+    function update(source) {
+      const { layout, radius } = makeLayout();
+      layout(root);
+
+      const nodes = root.descendants();
+      const links = root.links();
+
+      // Centre the view on the root node
+      gMain.attr("transform", `translate(${W / 2},${H / 2})`);
+
+      // ── links ────────────────────────────────────────────────────
+      const link = gLinks.selectAll("path.link")
+        .data(links, d => d.target.data._uid || (d.target.data._uid = ++uid));
+
+      const linkEnter = link.enter().append("path")
+        .attr("class", "link")
+        .attr("d", () => {
+          const o = { x: source.x0 ?? 0, y: source.y0 ?? 0 };
+          return radialLink({ source: o, target: o });
+        })
+        .style("stroke", d => {
+          let n = d.target;
+          while (n.depth > 1 && n.parent) n = n.parent;
+          return (phaseColors[n.data.name] || DEFAULT_COLOR).stroke;
+        });
+
+      linkEnter.merge(link).transition().duration(duration)
+        .attr("d", radialLink);
+
+      link.exit().transition().duration(duration)
+        .attr("d", () => {
+          const o = { x: source.x ?? 0, y: source.y ?? 0 };
+          return radialLink({ source: o, target: o });
+        })
+        .remove();
+
+      // ── nodes ────────────────────────────────────────────────────
+      const node = gNodes.selectAll("g.node")
+        .data(nodes, d => d.data._uid || (d.data._uid = ++uid));
+
+      const nodeEnter = node.enter().append("g")
+        .attr("class", "node")
+        .attr("transform", () => `translate(${px({ x: source.x0 ?? 0, y: source.y0 ?? 0 })}, ${py({ x: source.x0 ?? 0, y: source.y0 ?? 0 })})`)
+        .style("cursor", d => (d.children || d._children) ? "pointer" : "default")
+        .on("click", (event, d) => {
+          if (d.children) { d._children = d.children; d.children = null; }
+          else if (d._children) { d.children = d._children; d._children = null; }
+          update(d);
+        })
+        .on("mouseover", (event, d) => {
+          const count = d.data.total_count;
+          tooltip.style.display = "block";
+          tooltip.textContent = count != null
+            ? `${d.data.name}  (nodes: ${count})`
+            : d.data.name;
+        })
+        .on("mousemove", event => {
+          tooltip.style.left = (event.clientX + 12) + "px";
+          tooltip.style.top  = (event.clientY - 8)  + "px";
+        })
+        .on("mouseout", () => { tooltip.style.display = "none"; });
+
+      nodeEnter.append("circle").attr("r", 0);
+
+      nodeEnter.append("text")
+        .attr("dy", "0.32em")
+        .style("fill-opacity", 0);
+
+      // merge enter + update
+      const nodeAll = nodeEnter.merge(node);
+
+      nodeAll.transition().duration(duration)
+        .attr("transform", d => `translate(${px(d)},${py(d)})`);
+
+      nodeAll.select("circle")
+        .transition().duration(duration)
+        .attr("r", d => d.depth === 0 ? 12 : d.children || d._children ? 8 : 5)
+        .style("fill", d => {
+          const c = nodeColor(d);
+          if (d.depth === 0) return c.fill;
+          return d._children ? c.fill + "aa" : d.children ? c.fill : "#fff";
+        })
+        .style("stroke", d => nodeColor(d).stroke);
+
+      nodeAll.select("text")
+        .transition().duration(duration)
+        .style("fill-opacity", 1)
+        .attr("text-anchor", d => {
+          if (d.depth === 0) return "middle";
+          return (d.x < Math.PI) ? "start" : "end";
+        })
+        .attr("transform", d => {
+          if (d.depth === 0) return "translate(0,-18)";
+          const flip = d.x >= Math.PI;
+          return `rotate(${(d.x * 180 / Math.PI - 90) * (flip ? -1 : 1)}) translate(${(d.children || d._children ? -12 : 10) * (flip ? -1 : 1)},0) rotate(${flip ? 180 : 0})`;
+        })
+        .text(d => {
+          const label = d.data.name || "";
+          return label.length > 30 ? label.slice(0, 28) + "…" : label;
+        })
+        .style("font-size", d => d.depth === 0 ? "14px" : d.depth === 1 ? "12px" : "11px")
+        .style("font-weight", d => d.depth <= 1 ? "600" : "normal");
+
+      node.exit().transition().duration(duration)
+        .attr("transform", () => `translate(${px(source)},${py(source)})`)
+        .remove()
+        .select("circle").attr("r", 0);
+
+      nodes.forEach(d => { d.x0 = d.x; d.y0 = d.y; });
+
+      // Auto-fit to view on first call
+      if (!update._fitted) {
+        update._fitted = true;
+        const bbox = gMain.node().getBBox();
+        if (bbox.width > 0 && bbox.height > 0) {
+          const scale = Math.min(.85 * W / bbox.width, .85 * H / bbox.height, 1);
+          const tx = W / 2 - scale * (bbox.x + bbox.width  / 2);
+          const ty = H / 2 - scale * (bbox.y + bbox.height / 2);
+          svg.call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+        }
+      }
+    }
+
+    update(root);
+    window.addEventListener("resize", () => update(root));
+  </script>
+</body>
+</html>

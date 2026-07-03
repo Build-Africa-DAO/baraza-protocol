@@ -1,0 +1,3826 @@
+{
+  "directed": true,
+  "multigraph": false,
+  "graph": {
+    "name": "baraza-protocol"
+  },
+  "nodes": [
+    {
+      "id": "Anchor_toml",
+      "label": "Anchor.toml",
+      "source_file": "/home/user/baraza-protocol/Anchor.toml",
+      "language": "config",
+      "tags": []
+    },
+    {
+      "id": "Cargo_toml",
+      "label": "Cargo.toml",
+      "source_file": "/home/user/baraza-protocol/Cargo.toml",
+      "language": "config",
+      "tags": []
+    },
+    {
+      "id": "DEPLOY_md",
+      "label": "DEPLOY.md",
+      "source_file": "/home/user/baraza-protocol/DEPLOY.md",
+      "language": "config",
+      "tags": []
+    },
+    {
+      "id": "README_md",
+      "label": "README.md",
+      "source_file": "/home/user/baraza-protocol/README.md",
+      "language": "config",
+      "tags": []
+    },
+    {
+      "id": "app:api:cron:promote-orders_ts",
+      "label": "promote-orders.ts",
+      "source_file": "/home/user/baraza-protocol/app/api/cron/promote-orders.ts",
+      "language": "typescript",
+      "tags": [
+        "api"
+      ]
+    },
+    {
+      "id": "app:api:membership:activate_ts",
+      "label": "activate.ts",
+      "source_file": "/home/user/baraza-protocol/app/api/membership/activate.ts",
+      "language": "typescript",
+      "tags": [
+        "api"
+      ]
+    },
+    {
+      "id": "app:api:mpesa:simulate_ts",
+      "label": "simulate.ts",
+      "source_file": "/home/user/baraza-protocol/app/api/mpesa/simulate.ts",
+      "language": "typescript",
+      "tags": [
+        "api"
+      ]
+    },
+    {
+      "id": "app:api:payment-orders:status_ts",
+      "label": "status.ts",
+      "source_file": "/home/user/baraza-protocol/app/api/payment-orders/status.ts",
+      "language": "typescript",
+      "tags": [
+        "api"
+      ]
+    },
+    {
+      "id": "app:api:stellar:verify-payment_ts",
+      "label": "verify-payment.ts",
+      "source_file": "/home/user/baraza-protocol/app/api/stellar/verify-payment.ts",
+      "language": "typescript",
+      "tags": [
+        "api"
+      ]
+    },
+    {
+      "id": "app:docs:BRAND_GUIDELINES_md",
+      "label": "BRAND_GUIDELINES.md",
+      "source_file": "/home/user/baraza-protocol/app/docs/BRAND_GUIDELINES.md",
+      "language": "config",
+      "tags": []
+    },
+    {
+      "id": "app:docs:CONTRACT_INTEGRATION_md",
+      "label": "CONTRACT_INTEGRATION.md",
+      "source_file": "/home/user/baraza-protocol/app/docs/CONTRACT_INTEGRATION.md",
+      "language": "config",
+      "tags": []
+    },
+    {
+      "id": "app:docs:CROSS_CHAIN_DEPLOYMENT_CHECKLIST_md",
+      "label": "CROSS_CHAIN_DEPLOYMENT_CHECKLIST.md",
+      "source_file": "/home/user/baraza-protocol/app/docs/CROSS_CHAIN_DEPLOYMENT_CHECKLIST.md",
+      "language": "config",
+      "tags": []
+    },
+    {
+      "id": "app:docs:DAO_LOGIC_REFERENCE_md",
+      "label": "DAO_LOGIC_REFERENCE.md",
+      "source_file": "/home/user/baraza-protocol/app/docs/DAO_LOGIC_REFERENCE.md",
+      "language": "config",
+      "tags": []
+    },
+    {
+      "id": "app:docs:DEMO_SCRIPT_md",
+      "label": "DEMO_SCRIPT.md",
+      "source_file": "/home/user/baraza-protocol/app/docs/DEMO_SCRIPT.md",
+      "language": "config",
+      "tags": []
+    },
+    {
+      "id": "app:docs:DEPLOYMENT_md",
+      "label": "DEPLOYMENT.md",
+      "source_file": "/home/user/baraza-protocol/app/docs/DEPLOYMENT.md",
+      "language": "config",
+      "tags": []
+    },
+    {
+      "id": "app:docs:DESIGN_md",
+      "label": "DESIGN.md",
+      "source_file": "/home/user/baraza-protocol/app/docs/DESIGN.md",
+      "language": "config",
+      "tags": []
+    },
+    {
+      "id": "app:docs:DESIGN_SPEC_md",
+      "label": "DESIGN_SPEC.md",
+      "source_file": "/home/user/baraza-protocol/app/docs/DESIGN_SPEC.md",
+      "language": "config",
+      "tags": []
+    },
+    {
+      "id": "app:docs:GOVERNANCE_CONTRACT_ROADMAP_md",
+      "label": "GOVERNANCE_CONTRACT_ROADMAP.md",
+      "source_file": "/home/user/baraza-protocol/app/docs/GOVERNANCE_CONTRACT_ROADMAP.md",
+      "language": "config",
+      "tags": []
+    },
+    {
+      "id": "app:docs:HIGGSFIELD_PROMPTS_md",
+      "label": "HIGGSFIELD_PROMPTS.md",
+      "source_file": "/home/user/baraza-protocol/app/docs/HIGGSFIELD_PROMPTS.md",
+      "language": "config",
+      "tags": []
+    },
+    {
+      "id": "app:docs:MVP_ARCHITECTURE_md",
+      "label": "MVP_ARCHITECTURE.md",
+      "source_file": "/home/user/baraza-protocol/app/docs/MVP_ARCHITECTURE.md",
+      "language": "config",
+      "tags": []
+    },
+    {
+      "id": "app:docs:PRD_md",
+      "label": "PRD.md",
+      "source_file": "/home/user/baraza-protocol/app/docs/PRD.md",
+      "language": "config",
+      "tags": []
+    },
+    {
+      "id": "app:package-lock_json",
+      "label": "package-lock.json",
+      "source_file": "/home/user/baraza-protocol/app/package-lock.json",
+      "language": "config",
+      "tags": []
+    },
+    {
+      "id": "app:package_json",
+      "label": "package.json",
+      "source_file": "/home/user/baraza-protocol/app/package.json",
+      "language": "config",
+      "tags": []
+    },
+    {
+      "id": "app:scripts:higgsfield:shots_json",
+      "label": "shots.json",
+      "source_file": "/home/user/baraza-protocol/app/scripts/higgsfield/shots.json",
+      "language": "config",
+      "tags": [
+        "script"
+      ]
+    },
+    {
+      "id": "app:src:App_tsx",
+      "label": "App.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/App.tsx",
+      "language": "typescript",
+      "tags": []
+    },
+    {
+      "id": "app:src:components:AIPlatformSection_tsx",
+      "label": "AIPlatformSection.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/AIPlatformSection.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:BackendStatus_tsx",
+      "label": "BackendStatus.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/BackendStatus.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:BarazaWalletModalProvider_tsx",
+      "label": "BarazaWalletModalProvider.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/BarazaWalletModalProvider.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:BountyBoard_tsx",
+      "label": "BountyBoard.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/BountyBoard.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:BrandLogo_tsx",
+      "label": "BrandLogo.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/BrandLogo.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:CTASection_tsx",
+      "label": "CTASection.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/CTASection.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:ChainProvider_tsx",
+      "label": "ChainProvider.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/ChainProvider.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:ChainSelector_tsx",
+      "label": "ChainSelector.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/ChainSelector.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:CommunityBanner_tsx",
+      "label": "CommunityBanner.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/CommunityBanner.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:CommunityCard_tsx",
+      "label": "CommunityCard.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/CommunityCard.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:CommunityGallery_tsx",
+      "label": "CommunityGallery.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/CommunityGallery.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:CommunityMarquee_tsx",
+      "label": "CommunityMarquee.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/CommunityMarquee.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:DecisionCard_tsx",
+      "label": "DecisionCard.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/DecisionCard.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:FeaturesSection_tsx",
+      "label": "FeaturesSection.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/FeaturesSection.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:FlowWalkthrough_tsx",
+      "label": "FlowWalkthrough.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/FlowWalkthrough.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:Footer_tsx",
+      "label": "Footer.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/Footer.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:Header_tsx",
+      "label": "Header.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/Header.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:HeroSection_tsx",
+      "label": "HeroSection.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/HeroSection.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:Layout_tsx",
+      "label": "Layout.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/Layout.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:MembershipCard_tsx",
+      "label": "MembershipCard.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/MembershipCard.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:MobileBottomNav_tsx",
+      "label": "MobileBottomNav.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/MobileBottomNav.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:PageLoader_tsx",
+      "label": "PageLoader.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/PageLoader.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:WalletProviders_tsx",
+      "label": "WalletProviders.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/WalletProviders.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:WalletStatus_tsx",
+      "label": "WalletStatus.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/WalletStatus.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:__tests__:ChainSelector_test_tsx",
+      "label": "ChainSelector.test.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/__tests__/ChainSelector.test.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui",
+        "test"
+      ]
+    },
+    {
+      "id": "app:src:components:__tests__:DecisionCard_test_tsx",
+      "label": "DecisionCard.test.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/__tests__/DecisionCard.test.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui",
+        "test"
+      ]
+    },
+    {
+      "id": "app:src:components:auth:WalletGate_tsx",
+      "label": "WalletGate.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/auth/WalletGate.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:chat:AshaChat_tsx",
+      "label": "AshaChat.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/chat/AshaChat.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:community:ActivityFeed_tsx",
+      "label": "ActivityFeed.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/community/ActivityFeed.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:community:CombinedBoard_tsx",
+      "label": "CombinedBoard.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/community/CombinedBoard.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:community:CommunityLeaderboard_tsx",
+      "label": "CommunityLeaderboard.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/community/CommunityLeaderboard.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:community:CommunityRoadmap_tsx",
+      "label": "CommunityRoadmap.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/community/CommunityRoadmap.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:community:CommunityRoles_tsx",
+      "label": "CommunityRoles.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/community/CommunityRoles.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:community:CommunitySettings_tsx",
+      "label": "CommunitySettings.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/community/CommunitySettings.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:community:CommunitySuggestions_tsx",
+      "label": "CommunitySuggestions.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/community/CommunitySuggestions.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:community:LiveStatCard_tsx",
+      "label": "LiveStatCard.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/community/LiveStatCard.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:community:MemberDirectory_tsx",
+      "label": "MemberDirectory.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/community/MemberDirectory.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:security:AshaSecurityReview_tsx",
+      "label": "AshaSecurityReview.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/security/AshaSecurityReview.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:ui:dot-pattern_tsx",
+      "label": "dot-pattern.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/ui/dot-pattern.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:ui:magic-card_tsx",
+      "label": "magic-card.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/ui/magic-card.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:ui:marquee_tsx",
+      "label": "marquee.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/ui/marquee.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:ui:shimmer-button_tsx",
+      "label": "shimmer-button.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/ui/shimmer-button.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:ui:skeleton_tsx",
+      "label": "skeleton.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/ui/skeleton.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:ui:toast_tsx",
+      "label": "toast.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/ui/toast.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:components:ui:toaster_tsx",
+      "label": "toaster.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/components/ui/toaster.tsx",
+      "language": "typescript",
+      "tags": [
+        "ui"
+      ]
+    },
+    {
+      "id": "app:src:contexts:AshaChatContext_tsx",
+      "label": "AshaChatContext.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/contexts/AshaChatContext.tsx",
+      "language": "typescript",
+      "tags": [
+        "context"
+      ]
+    },
+    {
+      "id": "app:src:contexts:ThemeContext_tsx",
+      "label": "ThemeContext.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/contexts/ThemeContext.tsx",
+      "language": "typescript",
+      "tags": [
+        "context"
+      ]
+    },
+    {
+      "id": "app:src:contexts:asha-chat-context_ts",
+      "label": "asha-chat-context.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/contexts/asha-chat-context.ts",
+      "language": "typescript",
+      "tags": [
+        "context"
+      ]
+    },
+    {
+      "id": "app:src:contexts:chain-context_ts",
+      "label": "chain-context.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/contexts/chain-context.ts",
+      "language": "typescript",
+      "tags": [
+        "context"
+      ]
+    },
+    {
+      "id": "app:src:contexts:theme-context_ts",
+      "label": "theme-context.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/contexts/theme-context.ts",
+      "language": "typescript",
+      "tags": [
+        "context"
+      ]
+    },
+    {
+      "id": "app:src:hooks:__tests__:useBarazaContract_test_ts",
+      "label": "useBarazaContract.test.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/hooks/__tests__/useBarazaContract.test.ts",
+      "language": "typescript",
+      "tags": [
+        "hook",
+        "test"
+      ]
+    },
+    {
+      "id": "app:src:hooks:__tests__:useCommunities_test_ts",
+      "label": "useCommunities.test.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/hooks/__tests__/useCommunities.test.ts",
+      "language": "typescript",
+      "tags": [
+        "hook",
+        "test"
+      ]
+    },
+    {
+      "id": "app:src:hooks:__tests__:useWalletGuard_test_ts",
+      "label": "useWalletGuard.test.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/hooks/__tests__/useWalletGuard.test.ts",
+      "language": "typescript",
+      "tags": [
+        "hook",
+        "test"
+      ]
+    },
+    {
+      "id": "app:src:hooks:use-toast_ts",
+      "label": "use-toast.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/hooks/use-toast.ts",
+      "language": "typescript",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "id": "app:src:hooks:useAshaChat_ts",
+      "label": "useAshaChat.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/hooks/useAshaChat.ts",
+      "language": "typescript",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "id": "app:src:hooks:useBarazaContract_ts",
+      "label": "useBarazaContract.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/hooks/useBarazaContract.ts",
+      "language": "typescript",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "id": "app:src:hooks:useBarazaData_ts",
+      "label": "useBarazaData.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/hooks/useBarazaData.ts",
+      "language": "typescript",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "id": "app:src:hooks:useChain_ts",
+      "label": "useChain.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/hooks/useChain.ts",
+      "language": "typescript",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "id": "app:src:hooks:useCommunities_ts",
+      "label": "useCommunities.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/hooks/useCommunities.ts",
+      "language": "typescript",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "id": "app:src:hooks:useEvmChain_ts",
+      "label": "useEvmChain.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/hooks/useEvmChain.ts",
+      "language": "typescript",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "id": "app:src:hooks:useTheme_ts",
+      "label": "useTheme.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/hooks/useTheme.ts",
+      "language": "typescript",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "id": "app:src:hooks:useWalletGuard_ts",
+      "label": "useWalletGuard.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/hooks/useWalletGuard.ts",
+      "language": "typescript",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "id": "app:src:lib:__tests__:access_test_ts",
+      "label": "access.test.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/__tests__/access.test.ts",
+      "language": "typescript",
+      "tags": [
+        "library",
+        "test"
+      ]
+    },
+    {
+      "id": "app:src:lib:__tests__:bounties_test_ts",
+      "label": "bounties.test.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/__tests__/bounties.test.ts",
+      "language": "typescript",
+      "tags": [
+        "library",
+        "test"
+      ]
+    },
+    {
+      "id": "app:src:lib:__tests__:chain_test_ts",
+      "label": "chain.test.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/__tests__/chain.test.ts",
+      "language": "typescript",
+      "tags": [
+        "library",
+        "test"
+      ]
+    },
+    {
+      "id": "app:src:lib:__tests__:chainMappings_test_ts",
+      "label": "chainMappings.test.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/__tests__/chainMappings.test.ts",
+      "language": "typescript",
+      "tags": [
+        "library",
+        "test"
+      ]
+    },
+    {
+      "id": "app:src:lib:__tests__:communities_test_ts",
+      "label": "communities.test.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/__tests__/communities.test.ts",
+      "language": "typescript",
+      "tags": [
+        "library",
+        "test"
+      ]
+    },
+    {
+      "id": "app:src:lib:__tests__:memberships_test_ts",
+      "label": "memberships.test.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/__tests__/memberships.test.ts",
+      "language": "typescript",
+      "tags": [
+        "library",
+        "test"
+      ]
+    },
+    {
+      "id": "app:src:lib:__tests__:phone_test_ts",
+      "label": "phone.test.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/__tests__/phone.test.ts",
+      "language": "typescript",
+      "tags": [
+        "library",
+        "test"
+      ]
+    },
+    {
+      "id": "app:src:lib:__tests__:proposalStatus_test_ts",
+      "label": "proposalStatus.test.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/__tests__/proposalStatus.test.ts",
+      "language": "typescript",
+      "tags": [
+        "library",
+        "test"
+      ]
+    },
+    {
+      "id": "app:src:lib:__tests__:securityReview_test_ts",
+      "label": "securityReview.test.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/__tests__/securityReview.test.ts",
+      "language": "typescript",
+      "tags": [
+        "library",
+        "test"
+      ]
+    },
+    {
+      "id": "app:src:lib:__tests__:stellar_test_ts",
+      "label": "stellar.test.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/__tests__/stellar.test.ts",
+      "language": "typescript",
+      "tags": [
+        "library",
+        "test"
+      ]
+    },
+    {
+      "id": "app:src:lib:__tests__:stellarAccounts_test_ts",
+      "label": "stellarAccounts.test.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/__tests__/stellarAccounts.test.ts",
+      "language": "typescript",
+      "tags": [
+        "library",
+        "test"
+      ]
+    },
+    {
+      "id": "app:src:lib:__tests__:stellarSettlements_test_ts",
+      "label": "stellarSettlements.test.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/__tests__/stellarSettlements.test.ts",
+      "language": "typescript",
+      "tags": [
+        "library",
+        "test"
+      ]
+    },
+    {
+      "id": "app:src:lib:__tests__:tokenGate_test_ts",
+      "label": "tokenGate.test.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/__tests__/tokenGate.test.ts",
+      "language": "typescript",
+      "tags": [
+        "library",
+        "test"
+      ]
+    },
+    {
+      "id": "app:src:lib:__tests__:utils_test_ts",
+      "label": "utils.test.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/__tests__/utils.test.ts",
+      "language": "typescript",
+      "tags": [
+        "library",
+        "test"
+      ]
+    },
+    {
+      "id": "app:src:lib:access_ts",
+      "label": "access.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/access.ts",
+      "language": "typescript",
+      "tags": [
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:bounties_ts",
+      "label": "bounties.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/bounties.ts",
+      "language": "typescript",
+      "tags": [
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:chain_ts",
+      "label": "chain.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/chain.ts",
+      "language": "typescript",
+      "tags": [
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:chainMappings_ts",
+      "label": "chainMappings.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/chainMappings.ts",
+      "language": "typescript",
+      "tags": [
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:communities_ts",
+      "label": "communities.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/communities.ts",
+      "language": "typescript",
+      "tags": [
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:communityVisuals_ts",
+      "label": "communityVisuals.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/communityVisuals.ts",
+      "language": "typescript",
+      "tags": [
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:constants_ts",
+      "label": "constants.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/constants.ts",
+      "language": "typescript",
+      "tags": [
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:dataStore_ts",
+      "label": "dataStore.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/dataStore.ts",
+      "language": "typescript",
+      "tags": [
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:env_ts",
+      "label": "env.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/env.ts",
+      "language": "typescript",
+      "tags": [
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:evm:abis_ts",
+      "label": "abis.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/evm/abis.ts",
+      "language": "typescript",
+      "tags": [
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:evm:index_ts",
+      "label": "index.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/evm/index.ts",
+      "language": "typescript",
+      "tags": [
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:memberships_ts",
+      "label": "memberships.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/memberships.ts",
+      "language": "typescript",
+      "tags": [
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:network_ts",
+      "label": "network.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/network.ts",
+      "language": "typescript",
+      "tags": [
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:payments_ts",
+      "label": "payments.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/payments.ts",
+      "language": "typescript",
+      "tags": [
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:phone_ts",
+      "label": "phone.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/phone.ts",
+      "language": "typescript",
+      "tags": [
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:phoneAuth_ts",
+      "label": "phoneAuth.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/phoneAuth.ts",
+      "language": "typescript",
+      "tags": [
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:programs:client_ts",
+      "label": "client.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/programs/client.ts",
+      "language": "typescript",
+      "tags": [
+        "smart-contract",
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:programs:evmAddresses_ts",
+      "label": "evmAddresses.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/programs/evmAddresses.ts",
+      "language": "typescript",
+      "tags": [
+        "smart-contract",
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:programs:evmClient_ts",
+      "label": "evmClient.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/programs/evmClient.ts",
+      "language": "typescript",
+      "tags": [
+        "smart-contract",
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:programs:idl:community_registry_ts",
+      "label": "community_registry.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/programs/idl/community_registry.ts",
+      "language": "typescript",
+      "tags": [
+        "smart-contract",
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:programs:idl:governance_ts",
+      "label": "governance.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/programs/idl/governance.ts",
+      "language": "typescript",
+      "tags": [
+        "smart-contract",
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:programs:idl:membership_ts",
+      "label": "membership.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/programs/idl/membership.ts",
+      "language": "typescript",
+      "tags": [
+        "smart-contract",
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:programs:idl:payment_attestation_ts",
+      "label": "payment_attestation.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/programs/idl/payment_attestation.ts",
+      "language": "typescript",
+      "tags": [
+        "smart-contract",
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:programs:idl:treasury_vault_ts",
+      "label": "treasury_vault.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/programs/idl/treasury_vault.ts",
+      "language": "typescript",
+      "tags": [
+        "smart-contract",
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:programs:index_ts",
+      "label": "index.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/programs/index.ts",
+      "language": "typescript",
+      "tags": [
+        "smart-contract",
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:programs:pda_ts",
+      "label": "pda.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/programs/pda.ts",
+      "language": "typescript",
+      "tags": [
+        "smart-contract",
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:proposalStatus_ts",
+      "label": "proposalStatus.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/proposalStatus.ts",
+      "language": "typescript",
+      "tags": [
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:rpc_ts",
+      "label": "rpc.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/rpc.ts",
+      "language": "typescript",
+      "tags": [
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:securityReview_ts",
+      "label": "securityReview.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/securityReview.ts",
+      "language": "typescript",
+      "tags": [
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:seo_ts",
+      "label": "seo.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/seo.ts",
+      "language": "typescript",
+      "tags": [
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:stellar_ts",
+      "label": "stellar.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/stellar.ts",
+      "language": "typescript",
+      "tags": [
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:stellarAccounts_ts",
+      "label": "stellarAccounts.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/stellarAccounts.ts",
+      "language": "typescript",
+      "tags": [
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:stellarSettlements_ts",
+      "label": "stellarSettlements.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/stellarSettlements.ts",
+      "language": "typescript",
+      "tags": [
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:tokenGate_ts",
+      "label": "tokenGate.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/tokenGate.ts",
+      "language": "typescript",
+      "tags": [
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:lib:utils_ts",
+      "label": "utils.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/lib/utils.ts",
+      "language": "typescript",
+      "tags": [
+        "library"
+      ]
+    },
+    {
+      "id": "app:src:main_tsx",
+      "label": "main.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/main.tsx",
+      "language": "typescript",
+      "tags": []
+    },
+    {
+      "id": "app:src:pages:AdminReconciliation_tsx",
+      "label": "AdminReconciliation.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/pages/AdminReconciliation.tsx",
+      "language": "typescript",
+      "tags": [
+        "page"
+      ]
+    },
+    {
+      "id": "app:src:pages:Bounties_tsx",
+      "label": "Bounties.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/pages/Bounties.tsx",
+      "language": "typescript",
+      "tags": [
+        "page"
+      ]
+    },
+    {
+      "id": "app:src:pages:BountyDetail_tsx",
+      "label": "BountyDetail.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/pages/BountyDetail.tsx",
+      "language": "typescript",
+      "tags": [
+        "page"
+      ]
+    },
+    {
+      "id": "app:src:pages:Communities_tsx",
+      "label": "Communities.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/pages/Communities.tsx",
+      "language": "typescript",
+      "tags": [
+        "page"
+      ]
+    },
+    {
+      "id": "app:src:pages:CommunityDashboard_tsx",
+      "label": "CommunityDashboard.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/pages/CommunityDashboard.tsx",
+      "language": "typescript",
+      "tags": [
+        "page"
+      ]
+    },
+    {
+      "id": "app:src:pages:CreateCommunity_tsx",
+      "label": "CreateCommunity.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/pages/CreateCommunity.tsx",
+      "language": "typescript",
+      "tags": [
+        "page"
+      ]
+    },
+    {
+      "id": "app:src:pages:CreateDecision_tsx",
+      "label": "CreateDecision.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/pages/CreateDecision.tsx",
+      "language": "typescript",
+      "tags": [
+        "page"
+      ]
+    },
+    {
+      "id": "app:src:pages:Evaluate_tsx",
+      "label": "Evaluate.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/pages/Evaluate.tsx",
+      "language": "typescript",
+      "tags": [
+        "page"
+      ]
+    },
+    {
+      "id": "app:src:pages:Index_tsx",
+      "label": "Index.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/pages/Index.tsx",
+      "language": "typescript",
+      "tags": [
+        "page"
+      ]
+    },
+    {
+      "id": "app:src:pages:JoinDao_tsx",
+      "label": "JoinDao.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/pages/JoinDao.tsx",
+      "language": "typescript",
+      "tags": [
+        "page"
+      ]
+    },
+    {
+      "id": "app:src:pages:JoinStatus_tsx",
+      "label": "JoinStatus.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/pages/JoinStatus.tsx",
+      "language": "typescript",
+      "tags": [
+        "page"
+      ]
+    },
+    {
+      "id": "app:src:pages:NotFound_tsx",
+      "label": "NotFound.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/pages/NotFound.tsx",
+      "language": "typescript",
+      "tags": [
+        "page"
+      ]
+    },
+    {
+      "id": "app:src:pages:Profile_tsx",
+      "label": "Profile.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/pages/Profile.tsx",
+      "language": "typescript",
+      "tags": [
+        "page"
+      ]
+    },
+    {
+      "id": "app:src:pages:ProposalDetail_tsx",
+      "label": "ProposalDetail.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/pages/ProposalDetail.tsx",
+      "language": "typescript",
+      "tags": [
+        "page"
+      ]
+    },
+    {
+      "id": "app:src:pages:TreasuryDetail_tsx",
+      "label": "TreasuryDetail.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/pages/TreasuryDetail.tsx",
+      "language": "typescript",
+      "tags": [
+        "page"
+      ]
+    },
+    {
+      "id": "app:src:pages:__tests__:JoinStatus_test_tsx",
+      "label": "JoinStatus.test.tsx",
+      "source_file": "/home/user/baraza-protocol/app/src/pages/__tests__/JoinStatus.test.tsx",
+      "language": "typescript",
+      "tags": [
+        "page",
+        "test"
+      ]
+    },
+    {
+      "id": "app:src:polyfill_ts",
+      "label": "polyfill.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/polyfill.ts",
+      "language": "typescript",
+      "tags": []
+    },
+    {
+      "id": "app:src:test:setup_ts",
+      "label": "setup.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/test/setup.ts",
+      "language": "typescript",
+      "tags": []
+    },
+    {
+      "id": "app:src:vite-env_d_ts",
+      "label": "vite-env.d.ts",
+      "source_file": "/home/user/baraza-protocol/app/src/vite-env.d.ts",
+      "language": "typescript",
+      "tags": []
+    },
+    {
+      "id": "app:tsconfig_app_json",
+      "label": "tsconfig.app.json",
+      "source_file": "/home/user/baraza-protocol/app/tsconfig.app.json",
+      "language": "config",
+      "tags": []
+    },
+    {
+      "id": "app:tsconfig_json",
+      "label": "tsconfig.json",
+      "source_file": "/home/user/baraza-protocol/app/tsconfig.json",
+      "language": "config",
+      "tags": []
+    },
+    {
+      "id": "app:tsconfig_node_json",
+      "label": "tsconfig.node.json",
+      "source_file": "/home/user/baraza-protocol/app/tsconfig.node.json",
+      "language": "config",
+      "tags": []
+    },
+    {
+      "id": "app:vercel_json",
+      "label": "vercel.json",
+      "source_file": "/home/user/baraza-protocol/app/vercel.json",
+      "language": "config",
+      "tags": []
+    },
+    {
+      "id": "app:vite_config_ts",
+      "label": "vite.config.ts",
+      "source_file": "/home/user/baraza-protocol/app/vite.config.ts",
+      "language": "typescript",
+      "tags": []
+    },
+    {
+      "id": "app:vitest_config_ts",
+      "label": "vitest.config.ts",
+      "source_file": "/home/user/baraza-protocol/app/vitest.config.ts",
+      "language": "typescript",
+      "tags": []
+    },
+    {
+      "id": "contracts:evm:_solhint_json",
+      "label": ".solhint.json",
+      "source_file": "/home/user/baraza-protocol/contracts/evm/.solhint.json",
+      "language": "config",
+      "tags": [
+        "contract"
+      ]
+    },
+    {
+      "id": "contracts:evm:LICENSE_md",
+      "label": "LICENSE.md",
+      "source_file": "/home/user/baraza-protocol/contracts/evm/LICENSE.md",
+      "language": "config",
+      "tags": [
+        "contract"
+      ]
+    },
+    {
+      "id": "contracts:evm:README_md",
+      "label": "README.md",
+      "source_file": "/home/user/baraza-protocol/contracts/evm/README.md",
+      "language": "config",
+      "tags": [
+        "contract"
+      ]
+    },
+    {
+      "id": "contracts:evm:addresses:1_json",
+      "label": "1.json",
+      "source_file": "/home/user/baraza-protocol/contracts/evm/addresses/1.json",
+      "language": "config",
+      "tags": [
+        "contract"
+      ]
+    },
+    {
+      "id": "contracts:evm:addresses:10_json",
+      "label": "10.json",
+      "source_file": "/home/user/baraza-protocol/contracts/evm/addresses/10.json",
+      "language": "config",
+      "tags": [
+        "contract"
+      ]
+    },
+    {
+      "id": "contracts:evm:addresses:11155111_json",
+      "label": "11155111.json",
+      "source_file": "/home/user/baraza-protocol/contracts/evm/addresses/11155111.json",
+      "language": "config",
+      "tags": [
+        "contract"
+      ]
+    },
+    {
+      "id": "contracts:evm:addresses:11155420_json",
+      "label": "11155420.json",
+      "source_file": "/home/user/baraza-protocol/contracts/evm/addresses/11155420.json",
+      "language": "config",
+      "tags": [
+        "contract"
+      ]
+    },
+    {
+      "id": "contracts:evm:addresses:7777777_json",
+      "label": "7777777.json",
+      "source_file": "/home/user/baraza-protocol/contracts/evm/addresses/7777777.json",
+      "language": "config",
+      "tags": [
+        "contract"
+      ]
+    },
+    {
+      "id": "contracts:evm:addresses:8453_json",
+      "label": "8453.json",
+      "source_file": "/home/user/baraza-protocol/contracts/evm/addresses/8453.json",
+      "language": "config",
+      "tags": [
+        "contract"
+      ]
+    },
+    {
+      "id": "contracts:evm:addresses:84532_json",
+      "label": "84532.json",
+      "source_file": "/home/user/baraza-protocol/contracts/evm/addresses/84532.json",
+      "language": "config",
+      "tags": [
+        "contract"
+      ]
+    },
+    {
+      "id": "contracts:evm:addresses:999999999_json",
+      "label": "999999999.json",
+      "source_file": "/home/user/baraza-protocol/contracts/evm/addresses/999999999.json",
+      "language": "config",
+      "tags": [
+        "contract"
+      ]
+    },
+    {
+      "id": "contracts:evm:docs:README_md",
+      "label": "README.md",
+      "source_file": "/home/user/baraza-protocol/contracts/evm/docs/README.md",
+      "language": "config",
+      "tags": [
+        "contract"
+      ]
+    },
+    {
+      "id": "contracts:evm:docs:deployment-workflows_md",
+      "label": "deployment-workflows.md",
+      "source_file": "/home/user/baraza-protocol/contracts/evm/docs/deployment-workflows.md",
+      "language": "config",
+      "tags": [
+        "contract"
+      ]
+    },
+    {
+      "id": "contracts:evm:docs:mainnet-v2-upgrade-runbook_md",
+      "label": "mainnet-v2-upgrade-runbook.md",
+      "source_file": "/home/user/baraza-protocol/contracts/evm/docs/mainnet-v2-upgrade-runbook.md",
+      "language": "config",
+      "tags": [
+        "contract"
+      ]
+    },
+    {
+      "id": "contracts:evm:docs:manager-ownership-runbook_md",
+      "label": "manager-ownership-runbook.md",
+      "source_file": "/home/user/baraza-protocol/contracts/evm/docs/manager-ownership-runbook.md",
+      "language": "config",
+      "tags": [
+        "contract"
+      ]
+    },
+    {
+      "id": "contracts:evm:foundry_toml",
+      "label": "foundry.toml",
+      "source_file": "/home/user/baraza-protocol/contracts/evm/foundry.toml",
+      "language": "config",
+      "tags": [
+        "contract"
+      ]
+    },
+    {
+      "id": "contracts:evm:funding_json",
+      "label": "funding.json",
+      "source_file": "/home/user/baraza-protocol/contracts/evm/funding.json",
+      "language": "config",
+      "tags": [
+        "contract"
+      ]
+    },
+    {
+      "id": "contracts:evm:package_json",
+      "label": "package.json",
+      "source_file": "/home/user/baraza-protocol/contracts/evm/package.json",
+      "language": "config",
+      "tags": [
+        "contract"
+      ]
+    },
+    {
+      "id": "contracts:evm:slither_config_json",
+      "label": "slither.config.json",
+      "source_file": "/home/user/baraza-protocol/contracts/evm/slither.config.json",
+      "language": "config",
+      "tags": [
+        "contract"
+      ]
+    },
+    {
+      "id": "docs:TESTNET_CONTRACT_API_REVIEW_md",
+      "label": "TESTNET_CONTRACT_API_REVIEW.md",
+      "source_file": "/home/user/baraza-protocol/docs/TESTNET_CONTRACT_API_REVIEW.md",
+      "language": "config",
+      "tags": []
+    },
+    {
+      "id": "graphify-out:graph_json",
+      "label": "graph.json",
+      "source_file": "/home/user/baraza-protocol/graphify-out/graph.json",
+      "language": "config",
+      "tags": []
+    },
+    {
+      "id": "programs:community_registry:Cargo_toml",
+      "label": "Cargo.toml",
+      "source_file": "/home/user/baraza-protocol/programs/community_registry/Cargo.toml",
+      "language": "config",
+      "tags": [
+        "smart-contract"
+      ]
+    },
+    {
+      "id": "programs:community_registry:Xargo_toml",
+      "label": "Xargo.toml",
+      "source_file": "/home/user/baraza-protocol/programs/community_registry/Xargo.toml",
+      "language": "config",
+      "tags": [
+        "smart-contract"
+      ]
+    },
+    {
+      "id": "programs:community_registry:src:lib_rs",
+      "label": "lib.rs",
+      "source_file": "/home/user/baraza-protocol/programs/community_registry/src/lib.rs",
+      "language": "rust",
+      "tags": [
+        "smart-contract"
+      ]
+    },
+    {
+      "id": "programs:governance:Cargo_toml",
+      "label": "Cargo.toml",
+      "source_file": "/home/user/baraza-protocol/programs/governance/Cargo.toml",
+      "language": "config",
+      "tags": [
+        "smart-contract"
+      ]
+    },
+    {
+      "id": "programs:governance:Xargo_toml",
+      "label": "Xargo.toml",
+      "source_file": "/home/user/baraza-protocol/programs/governance/Xargo.toml",
+      "language": "config",
+      "tags": [
+        "smart-contract"
+      ]
+    },
+    {
+      "id": "programs:governance:src:lib_rs",
+      "label": "lib.rs",
+      "source_file": "/home/user/baraza-protocol/programs/governance/src/lib.rs",
+      "language": "rust",
+      "tags": [
+        "smart-contract"
+      ]
+    },
+    {
+      "id": "programs:membership:Cargo_toml",
+      "label": "Cargo.toml",
+      "source_file": "/home/user/baraza-protocol/programs/membership/Cargo.toml",
+      "language": "config",
+      "tags": [
+        "smart-contract"
+      ]
+    },
+    {
+      "id": "programs:membership:Xargo_toml",
+      "label": "Xargo.toml",
+      "source_file": "/home/user/baraza-protocol/programs/membership/Xargo.toml",
+      "language": "config",
+      "tags": [
+        "smart-contract"
+      ]
+    },
+    {
+      "id": "programs:membership:src:lib_rs",
+      "label": "lib.rs",
+      "source_file": "/home/user/baraza-protocol/programs/membership/src/lib.rs",
+      "language": "rust",
+      "tags": [
+        "smart-contract"
+      ]
+    },
+    {
+      "id": "programs:payment_attestation:Cargo_toml",
+      "label": "Cargo.toml",
+      "source_file": "/home/user/baraza-protocol/programs/payment_attestation/Cargo.toml",
+      "language": "config",
+      "tags": [
+        "smart-contract"
+      ]
+    },
+    {
+      "id": "programs:payment_attestation:Xargo_toml",
+      "label": "Xargo.toml",
+      "source_file": "/home/user/baraza-protocol/programs/payment_attestation/Xargo.toml",
+      "language": "config",
+      "tags": [
+        "smart-contract"
+      ]
+    },
+    {
+      "id": "programs:payment_attestation:src:lib_rs",
+      "label": "lib.rs",
+      "source_file": "/home/user/baraza-protocol/programs/payment_attestation/src/lib.rs",
+      "language": "rust",
+      "tags": [
+        "smart-contract"
+      ]
+    },
+    {
+      "id": "programs:treasury_vault:Cargo_toml",
+      "label": "Cargo.toml",
+      "source_file": "/home/user/baraza-protocol/programs/treasury_vault/Cargo.toml",
+      "language": "config",
+      "tags": [
+        "smart-contract"
+      ]
+    },
+    {
+      "id": "programs:treasury_vault:Xargo_toml",
+      "label": "Xargo.toml",
+      "source_file": "/home/user/baraza-protocol/programs/treasury_vault/Xargo.toml",
+      "language": "config",
+      "tags": [
+        "smart-contract"
+      ]
+    },
+    {
+      "id": "programs:treasury_vault:src:lib_rs",
+      "label": "lib.rs",
+      "source_file": "/home/user/baraza-protocol/programs/treasury_vault/src/lib.rs",
+      "language": "rust",
+      "tags": [
+        "smart-contract"
+      ]
+    },
+    {
+      "id": "vercel_json",
+      "label": "vercel.json",
+      "source_file": "/home/user/baraza-protocol/vercel.json",
+      "language": "config",
+      "tags": []
+    }
+  ],
+  "links": [
+    {
+      "source": "app:src:App_tsx",
+      "target": "app:src:components:ui:toaster_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:App_tsx",
+      "target": "app:src:components:WalletProviders_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:App_tsx",
+      "target": "app:src:components:ChainProvider_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:App_tsx",
+      "target": "app:src:components:PageLoader_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:App_tsx",
+      "target": "app:src:contexts:AshaChatContext_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:App_tsx",
+      "target": "app:src:contexts:ThemeContext_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:App_tsx",
+      "target": "app:src:components:chat:AshaChat_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:App_tsx",
+      "target": "app:src:pages:Index_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:App_tsx",
+      "target": "app:src:pages:Communities_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:App_tsx",
+      "target": "app:src:pages:Bounties_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:App_tsx",
+      "target": "app:src:pages:BountyDetail_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:App_tsx",
+      "target": "app:src:pages:Evaluate_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:App_tsx",
+      "target": "app:src:pages:CreateCommunity_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:App_tsx",
+      "target": "app:src:pages:CommunityDashboard_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:App_tsx",
+      "target": "app:src:pages:CreateDecision_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:App_tsx",
+      "target": "app:src:pages:JoinDao_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:App_tsx",
+      "target": "app:src:pages:JoinStatus_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:App_tsx",
+      "target": "app:src:pages:Profile_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:App_tsx",
+      "target": "app:src:pages:TreasuryDetail_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:App_tsx",
+      "target": "app:src:pages:ProposalDetail_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:App_tsx",
+      "target": "app:src:pages:AdminReconciliation_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:App_tsx",
+      "target": "app:src:pages:NotFound_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:AIPlatformSection_tsx",
+      "target": "app:src:hooks:useAshaChat_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:BackendStatus_tsx",
+      "target": "app:src:lib:communities_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:BarazaWalletModalProvider_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:BountyBoard_tsx",
+      "target": "app:src:lib:bounties_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:BountyBoard_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:BountyBoard_tsx",
+      "target": "app:src:hooks:useChain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:BountyBoard_tsx",
+      "target": "app:src:lib:chain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:BrandLogo_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:CTASection_tsx",
+      "target": "app:src:components:ui:shimmer-button_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:ChainProvider_tsx",
+      "target": "app:src:lib:chain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:ChainProvider_tsx",
+      "target": "app:src:contexts:chain-context_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:ChainSelector_tsx",
+      "target": "app:src:lib:chain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:ChainSelector_tsx",
+      "target": "app:src:hooks:useChain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:ChainSelector_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:CommunityBanner_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:CommunityBanner_tsx",
+      "target": "app:src:lib:communityVisuals_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:CommunityBanner_tsx",
+      "target": "app:src:lib:constants_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:CommunityBanner_tsx",
+      "target": "app:src:hooks:useChain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:CommunityCard_tsx",
+      "target": "app:src:components:ui:magic-card_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:CommunityCard_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:CommunityCard_tsx",
+      "target": "app:src:lib:communityVisuals_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:CommunityCard_tsx",
+      "target": "app:src:lib:chain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:CommunityCard_tsx",
+      "target": "app:src:lib:bounties_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:CommunityGallery_tsx",
+      "target": "app:src:lib:communityVisuals_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:CommunityGallery_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:CommunityMarquee_tsx",
+      "target": "app:src:components:ui:marquee_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:DecisionCard_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:DecisionCard_tsx",
+      "target": "app:src:hooks:useWalletGuard_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:DecisionCard_tsx",
+      "target": "app:src:hooks:useBarazaContract_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:DecisionCard_tsx",
+      "target": "app:src:lib:constants_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:DecisionCard_tsx",
+      "target": "app:src:lib:proposalStatus_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:DecisionCard_tsx",
+      "target": "app:src:lib:chain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:FeaturesSection_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:FlowWalkthrough_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:Footer_tsx",
+      "target": "app:src:components:BrandLogo_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:Footer_tsx",
+      "target": "app:src:hooks:useChain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:Header_tsx",
+      "target": "app:src:components:BrandLogo_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:Header_tsx",
+      "target": "app:src:components:ChainSelector_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:Header_tsx",
+      "target": "app:src:hooks:useAshaChat_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:Header_tsx",
+      "target": "app:src:hooks:useTheme_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:Header_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:HeroSection_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:Layout_tsx",
+      "target": "app:src:components:Header_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:Layout_tsx",
+      "target": "app:src:components:Footer_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:Layout_tsx",
+      "target": "app:src:components:WalletStatus_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:Layout_tsx",
+      "target": "app:src:components:MobileBottomNav_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:Layout_tsx",
+      "target": "app:src:components:BackendStatus_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:MobileBottomNav_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:MobileBottomNav_tsx",
+      "target": "app:src:hooks:useChain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:PageLoader_tsx",
+      "target": "app:src:components:BrandLogo_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:WalletProviders_tsx",
+      "target": "app:src:lib:network_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:WalletProviders_tsx",
+      "target": "app:src:components:BarazaWalletModalProvider_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:WalletStatus_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:WalletStatus_tsx",
+      "target": "app:src:hooks:use-toast_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:WalletStatus_tsx",
+      "target": "app:src:lib:network_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:WalletStatus_tsx",
+      "target": "app:src:hooks:useChain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:WalletStatus_tsx",
+      "target": "app:src:hooks:useEvmChain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:WalletStatus_tsx",
+      "target": "app:src:lib:chain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:WalletStatus_tsx",
+      "target": "app:src:lib:phoneAuth_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:__tests__:ChainSelector_test_tsx",
+      "target": "app:src:components:ChainProvider_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:__tests__:ChainSelector_test_tsx",
+      "target": "app:src:components:ChainSelector_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:__tests__:DecisionCard_test_tsx",
+      "target": "app:src:components:DecisionCard_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:__tests__:DecisionCard_test_tsx",
+      "target": "app:src:lib:constants_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:chat:AshaChat_tsx",
+      "target": "app:src:hooks:useAshaChat_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:chat:AshaChat_tsx",
+      "target": "app:src:hooks:useChain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:chat:AshaChat_tsx",
+      "target": "app:src:lib:chain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:community:ActivityFeed_tsx",
+      "target": "app:src:hooks:useBarazaData_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:community:ActivityFeed_tsx",
+      "target": "app:src:lib:dataStore_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:community:CombinedBoard_tsx",
+      "target": "app:src:lib:bounties_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:community:CombinedBoard_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:community:CombinedBoard_tsx",
+      "target": "app:src:lib:dataStore_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:community:CombinedBoard_tsx",
+      "target": "app:src:hooks:useChain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:community:CommunityLeaderboard_tsx",
+      "target": "app:src:lib:bounties_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:community:CommunityLeaderboard_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:community:CommunityRoadmap_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:community:CommunityRoadmap_tsx",
+      "target": "app:src:hooks:useChain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:community:CommunityRoles_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:community:CommunitySettings_tsx",
+      "target": "app:src:lib:constants_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:community:CommunitySettings_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:community:CommunitySettings_tsx",
+      "target": "app:src:hooks:useChain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:community:CommunitySuggestions_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:community:CommunitySuggestions_tsx",
+      "target": "app:src:hooks:useChain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:community:MemberDirectory_tsx",
+      "target": "app:src:hooks:useBarazaData_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:community:MemberDirectory_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:community:MemberDirectory_tsx",
+      "target": "app:src:lib:dataStore_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:community:MemberDirectory_tsx",
+      "target": "app:src:hooks:useChain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:security:AshaSecurityReview_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:security:AshaSecurityReview_tsx",
+      "target": "app:src:lib:securityReview_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:ui:dot-pattern_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:ui:magic-card_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:ui:marquee_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:ui:shimmer-button_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:ui:skeleton_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:ui:toast_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:ui:toaster_tsx",
+      "target": "app:src:hooks:use-toast_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:components:ui:toaster_tsx",
+      "target": "app:src:components:ui:toast_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:contexts:AshaChatContext_tsx",
+      "target": "app:src:contexts:asha-chat-context_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:contexts:ThemeContext_tsx",
+      "target": "app:src:contexts:theme-context_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:contexts:chain-context_ts",
+      "target": "app:src:lib:chain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:hooks:__tests__:useBarazaContract_test_ts",
+      "target": "app:src:hooks:useBarazaContract_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:hooks:__tests__:useBarazaContract_test_ts",
+      "target": "app:src:lib:chainMappings_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:hooks:__tests__:useCommunities_test_ts",
+      "target": "app:src:hooks:useCommunities_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:hooks:__tests__:useCommunities_test_ts",
+      "target": "app:src:lib:constants_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:hooks:__tests__:useCommunities_test_ts",
+      "target": "app:src:lib:communities_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:hooks:__tests__:useWalletGuard_test_ts",
+      "target": "app:src:hooks:useWalletGuard_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:hooks:use-toast_ts",
+      "target": "app:src:components:ui:toast_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:hooks:useAshaChat_ts",
+      "target": "app:src:contexts:asha-chat-context_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:hooks:useBarazaContract_ts",
+      "target": "app:src:hooks:use-toast_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:hooks:useBarazaContract_ts",
+      "target": "app:src:lib:dataStore_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:hooks:useBarazaContract_ts",
+      "target": "app:src:lib:programs:index_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:hooks:useBarazaContract_ts",
+      "target": "app:src:lib:chainMappings_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:hooks:useBarazaData_ts",
+      "target": "app:src:lib:dataStore_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:hooks:useBarazaData_ts",
+      "target": "app:src:lib:programs:index_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:hooks:useBarazaData_ts",
+      "target": "app:src:lib:chainMappings_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:hooks:useChain_ts",
+      "target": "app:src:contexts:chain-context_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:hooks:useCommunities_ts",
+      "target": "app:src:lib:constants_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:hooks:useCommunities_ts",
+      "target": "app:src:lib:communities_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:hooks:useEvmChain_ts",
+      "target": "app:src:lib:programs:evmClient_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:hooks:useEvmChain_ts",
+      "target": "app:src:lib:chain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:hooks:useTheme_ts",
+      "target": "app:src:contexts:theme-context_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:hooks:useWalletGuard_ts",
+      "target": "app:src:hooks:use-toast_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:__tests__:access_test_ts",
+      "target": "app:src:lib:access_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:__tests__:access_test_ts",
+      "target": "app:src:lib:memberships_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:__tests__:bounties_test_ts",
+      "target": "app:src:lib:bounties_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:__tests__:chain_test_ts",
+      "target": "app:src:lib:chain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:__tests__:chain_test_ts",
+      "target": "app:src:lib:programs:evmAddresses_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:__tests__:chainMappings_test_ts",
+      "target": "app:src:lib:chainMappings_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:__tests__:communities_test_ts",
+      "target": "app:src:lib:constants_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:__tests__:communities_test_ts",
+      "target": "app:src:lib:communities_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:__tests__:memberships_test_ts",
+      "target": "app:src:lib:memberships_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:__tests__:phone_test_ts",
+      "target": "app:src:lib:phone_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:__tests__:proposalStatus_test_ts",
+      "target": "app:src:lib:constants_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:__tests__:proposalStatus_test_ts",
+      "target": "app:src:lib:proposalStatus_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:__tests__:securityReview_test_ts",
+      "target": "app:src:lib:bounties_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:__tests__:securityReview_test_ts",
+      "target": "app:src:lib:constants_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:__tests__:securityReview_test_ts",
+      "target": "app:src:lib:securityReview_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:__tests__:stellar_test_ts",
+      "target": "app:src:lib:stellar_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:__tests__:stellarAccounts_test_ts",
+      "target": "app:src:lib:stellarAccounts_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:__tests__:stellarSettlements_test_ts",
+      "target": "app:src:lib:stellarSettlements_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:__tests__:tokenGate_test_ts",
+      "target": "app:src:lib:tokenGate_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:__tests__:tokenGate_test_ts",
+      "target": "app:src:lib:memberships_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:__tests__:utils_test_ts",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:access_ts",
+      "target": "app:src:lib:memberships_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:bounties_ts",
+      "target": "app:src:lib:communities_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:communities_ts",
+      "target": "app:src:lib:constants_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:communities_ts",
+      "target": "app:src:lib:chain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:evm:index_ts",
+      "target": "app:src:lib:evm:abis_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:payments_ts",
+      "target": "app:src:lib:communities_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:programs:client_ts",
+      "target": "app:src:lib:programs:idl:community_registry_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:programs:client_ts",
+      "target": "app:src:lib:programs:idl:governance_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:programs:client_ts",
+      "target": "app:src:lib:programs:idl:membership_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:programs:client_ts",
+      "target": "app:src:lib:programs:idl:payment_attestation_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:programs:client_ts",
+      "target": "app:src:lib:programs:idl:treasury_vault_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:programs:client_ts",
+      "target": "app:src:lib:programs:pda_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:programs:evmClient_ts",
+      "target": "app:src:lib:programs:evmAddresses_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:programs:index_ts",
+      "target": "app:src:lib:programs:client_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:programs:index_ts",
+      "target": "app:src:lib:programs:evmClient_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:programs:index_ts",
+      "target": "app:src:lib:programs:evmAddresses_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:programs:index_ts",
+      "target": "app:src:lib:programs:idl:community_registry_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:programs:index_ts",
+      "target": "app:src:lib:programs:idl:governance_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:programs:index_ts",
+      "target": "app:src:lib:programs:idl:membership_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:programs:index_ts",
+      "target": "app:src:lib:programs:idl:payment_attestation_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:programs:index_ts",
+      "target": "app:src:lib:programs:idl:treasury_vault_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:programs:index_ts",
+      "target": "app:src:lib:programs:pda_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:proposalStatus_ts",
+      "target": "app:src:lib:constants_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:rpc_ts",
+      "target": "app:src:lib:network_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:securityReview_ts",
+      "target": "app:src:lib:bounties_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:securityReview_ts",
+      "target": "app:src:lib:constants_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:stellarAccounts_ts",
+      "target": "app:src:lib:stellar_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:stellarSettlements_ts",
+      "target": "app:src:lib:stellar_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:tokenGate_ts",
+      "target": "app:src:lib:access_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:tokenGate_ts",
+      "target": "app:src:lib:memberships_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:lib:utils_ts",
+      "target": "app:src:lib:chain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:main_tsx",
+      "target": "app:src:App_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:main_tsx",
+      "target": "app:src:lib:env_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:AdminReconciliation_tsx",
+      "target": "app:src:components:Layout_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:AdminReconciliation_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:AdminReconciliation_tsx",
+      "target": "app:src:hooks:use-toast_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:AdminReconciliation_tsx",
+      "target": "app:src:lib:seo_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:AdminReconciliation_tsx",
+      "target": "app:src:lib:access_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:AdminReconciliation_tsx",
+      "target": "app:src:hooks:useChain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:AdminReconciliation_tsx",
+      "target": "app:src:hooks:useCommunities_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:AdminReconciliation_tsx",
+      "target": "app:src:lib:bounties_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:AdminReconciliation_tsx",
+      "target": "app:src:lib:securityReview_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Bounties_tsx",
+      "target": "app:src:components:Layout_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Bounties_tsx",
+      "target": "app:src:components:CommunityBanner_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Bounties_tsx",
+      "target": "app:src:lib:bounties_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Bounties_tsx",
+      "target": "app:src:hooks:useCommunities_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Bounties_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Bounties_tsx",
+      "target": "app:src:lib:seo_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Bounties_tsx",
+      "target": "app:src:lib:access_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Bounties_tsx",
+      "target": "app:src:hooks:useChain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Bounties_tsx",
+      "target": "app:src:lib:memberships_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:BountyDetail_tsx",
+      "target": "app:src:components:Layout_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:BountyDetail_tsx",
+      "target": "app:src:components:CommunityBanner_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:BountyDetail_tsx",
+      "target": "app:src:lib:bounties_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:BountyDetail_tsx",
+      "target": "app:src:hooks:useCommunities_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:BountyDetail_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:BountyDetail_tsx",
+      "target": "app:src:lib:seo_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:BountyDetail_tsx",
+      "target": "app:src:components:security:AshaSecurityReview_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:BountyDetail_tsx",
+      "target": "app:src:lib:securityReview_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:BountyDetail_tsx",
+      "target": "app:src:hooks:useChain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Communities_tsx",
+      "target": "app:src:components:Layout_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Communities_tsx",
+      "target": "app:src:components:CommunityCard_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Communities_tsx",
+      "target": "app:src:lib:constants_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Communities_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Communities_tsx",
+      "target": "app:src:hooks:useCommunities_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Communities_tsx",
+      "target": "app:src:components:CommunityBanner_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Communities_tsx",
+      "target": "app:src:lib:chain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Communities_tsx",
+      "target": "app:src:lib:seo_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Communities_tsx",
+      "target": "app:src:hooks:useChain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CommunityDashboard_tsx",
+      "target": "app:src:components:community:LiveStatCard_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CommunityDashboard_tsx",
+      "target": "app:src:components:community:ActivityFeed_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CommunityDashboard_tsx",
+      "target": "app:src:components:community:MemberDirectory_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CommunityDashboard_tsx",
+      "target": "app:src:components:community:CommunityRoles_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CommunityDashboard_tsx",
+      "target": "app:src:components:community:CommunitySuggestions_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CommunityDashboard_tsx",
+      "target": "app:src:components:community:CommunityLeaderboard_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CommunityDashboard_tsx",
+      "target": "app:src:components:community:CommunityRoadmap_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CommunityDashboard_tsx",
+      "target": "app:src:components:community:CombinedBoard_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CommunityDashboard_tsx",
+      "target": "app:src:components:community:CommunitySettings_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CommunityDashboard_tsx",
+      "target": "app:src:components:Layout_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CommunityDashboard_tsx",
+      "target": "app:src:components:DecisionCard_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CommunityDashboard_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CommunityDashboard_tsx",
+      "target": "app:src:hooks:useBarazaData_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CommunityDashboard_tsx",
+      "target": "app:src:hooks:useCommunities_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CommunityDashboard_tsx",
+      "target": "app:src:lib:memberships_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CommunityDashboard_tsx",
+      "target": "app:src:components:CommunityBanner_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CommunityDashboard_tsx",
+      "target": "app:src:components:CommunityGallery_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CommunityDashboard_tsx",
+      "target": "app:src:components:BountyBoard_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CommunityDashboard_tsx",
+      "target": "app:src:lib:seo_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CommunityDashboard_tsx",
+      "target": "app:src:lib:bounties_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CommunityDashboard_tsx",
+      "target": "app:src:components:security:AshaSecurityReview_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CommunityDashboard_tsx",
+      "target": "app:src:lib:securityReview_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CommunityDashboard_tsx",
+      "target": "app:src:hooks:useChain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CommunityDashboard_tsx",
+      "target": "app:src:lib:tokenGate_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CreateCommunity_tsx",
+      "target": "app:src:components:Layout_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CreateCommunity_tsx",
+      "target": "app:src:lib:constants_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CreateCommunity_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CreateCommunity_tsx",
+      "target": "app:src:lib:phone_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CreateCommunity_tsx",
+      "target": "app:src:hooks:useWalletGuard_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CreateCommunity_tsx",
+      "target": "app:src:hooks:use-toast_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CreateCommunity_tsx",
+      "target": "app:src:lib:communities_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CreateCommunity_tsx",
+      "target": "app:src:components:CommunityBanner_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CreateCommunity_tsx",
+      "target": "app:src:hooks:useChain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CreateCommunity_tsx",
+      "target": "app:src:lib:seo_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CreateCommunity_tsx",
+      "target": "app:src:lib:chain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CreateCommunity_tsx",
+      "target": "app:src:hooks:useBarazaData_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CreateCommunity_tsx",
+      "target": "app:src:lib:programs:index_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CreateCommunity_tsx",
+      "target": "app:src:lib:chainMappings_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CreateDecision_tsx",
+      "target": "app:src:components:Layout_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CreateDecision_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CreateDecision_tsx",
+      "target": "app:src:hooks:useWalletGuard_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CreateDecision_tsx",
+      "target": "app:src:hooks:use-toast_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CreateDecision_tsx",
+      "target": "app:src:hooks:useCommunities_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CreateDecision_tsx",
+      "target": "app:src:components:CommunityBanner_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CreateDecision_tsx",
+      "target": "app:src:lib:constants_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CreateDecision_tsx",
+      "target": "app:src:lib:seo_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CreateDecision_tsx",
+      "target": "app:src:hooks:useBarazaData_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CreateDecision_tsx",
+      "target": "app:src:hooks:useChain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:CreateDecision_tsx",
+      "target": "app:src:lib:tokenGate_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Evaluate_tsx",
+      "target": "app:src:components:Layout_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Evaluate_tsx",
+      "target": "app:src:lib:seo_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Index_tsx",
+      "target": "app:src:components:Layout_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Index_tsx",
+      "target": "app:src:components:HeroSection_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Index_tsx",
+      "target": "app:src:components:AIPlatformSection_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Index_tsx",
+      "target": "app:src:components:FlowWalkthrough_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Index_tsx",
+      "target": "app:src:components:FeaturesSection_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Index_tsx",
+      "target": "app:src:components:CommunityMarquee_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Index_tsx",
+      "target": "app:src:components:CTASection_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Index_tsx",
+      "target": "app:src:lib:seo_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:JoinDao_tsx",
+      "target": "app:src:components:Layout_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:JoinDao_tsx",
+      "target": "app:src:hooks:useCommunities_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:JoinDao_tsx",
+      "target": "app:src:hooks:use-toast_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:JoinDao_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:JoinDao_tsx",
+      "target": "app:src:lib:phone_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:JoinDao_tsx",
+      "target": "app:src:components:CommunityBanner_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:JoinDao_tsx",
+      "target": "app:src:lib:seo_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:JoinDao_tsx",
+      "target": "app:src:hooks:useChain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:JoinStatus_tsx",
+      "target": "app:src:components:Layout_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:JoinStatus_tsx",
+      "target": "app:src:hooks:useCommunities_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:JoinStatus_tsx",
+      "target": "app:src:lib:communities_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:JoinStatus_tsx",
+      "target": "app:src:lib:seo_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:JoinStatus_tsx",
+      "target": "app:src:lib:payments_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:JoinStatus_tsx",
+      "target": "app:src:lib:memberships_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:JoinStatus_tsx",
+      "target": "app:src:hooks:useChain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:NotFound_tsx",
+      "target": "app:src:components:Layout_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:NotFound_tsx",
+      "target": "app:src:lib:seo_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Profile_tsx",
+      "target": "app:src:components:Layout_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Profile_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Profile_tsx",
+      "target": "app:src:components:CommunityBanner_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Profile_tsx",
+      "target": "app:src:lib:memberships_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Profile_tsx",
+      "target": "app:src:hooks:useCommunities_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Profile_tsx",
+      "target": "app:src:lib:chain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Profile_tsx",
+      "target": "app:src:lib:seo_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Profile_tsx",
+      "target": "app:src:hooks:useChain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Profile_tsx",
+      "target": "app:src:lib:bounties_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Profile_tsx",
+      "target": "app:src:lib:stellar_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Profile_tsx",
+      "target": "app:src:lib:stellarAccounts_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:Profile_tsx",
+      "target": "app:src:lib:stellarSettlements_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:ProposalDetail_tsx",
+      "target": "app:src:components:Layout_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:ProposalDetail_tsx",
+      "target": "app:src:lib:constants_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:ProposalDetail_tsx",
+      "target": "app:src:hooks:useBarazaData_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:ProposalDetail_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:ProposalDetail_tsx",
+      "target": "app:src:hooks:useWalletGuard_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:ProposalDetail_tsx",
+      "target": "app:src:hooks:useBarazaContract_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:ProposalDetail_tsx",
+      "target": "app:src:hooks:useCommunities_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:ProposalDetail_tsx",
+      "target": "app:src:hooks:use-toast_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:ProposalDetail_tsx",
+      "target": "app:src:lib:proposalStatus_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:ProposalDetail_tsx",
+      "target": "app:src:components:CommunityBanner_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:ProposalDetail_tsx",
+      "target": "app:src:lib:seo_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:ProposalDetail_tsx",
+      "target": "app:src:components:security:AshaSecurityReview_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:ProposalDetail_tsx",
+      "target": "app:src:lib:securityReview_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:ProposalDetail_tsx",
+      "target": "app:src:hooks:useChain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:TreasuryDetail_tsx",
+      "target": "app:src:components:Layout_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:TreasuryDetail_tsx",
+      "target": "app:src:hooks:useCommunities_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:TreasuryDetail_tsx",
+      "target": "app:src:lib:utils_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:TreasuryDetail_tsx",
+      "target": "app:src:components:CommunityBanner_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:TreasuryDetail_tsx",
+      "target": "app:src:lib:seo_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:TreasuryDetail_tsx",
+      "target": "app:src:hooks:useChain_ts",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:__tests__:JoinStatus_test_tsx",
+      "target": "app:src:pages:JoinStatus_tsx",
+      "relation": "imports",
+      "weight": 1
+    },
+    {
+      "source": "app:src:pages:__tests__:JoinStatus_test_tsx",
+      "target": "app:src:components:ChainProvider_tsx",
+      "relation": "imports",
+      "weight": 1
+    }
+  ]
+}

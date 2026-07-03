@@ -1,0 +1,23 @@
+[features]
+resolution = true
+skip-lint = false
+
+[programs.localnet]
+community_registry = "Ggj4e8YjiDdpbcudKz6BLx5arT9nf7BQR498VnLXd7eD"
+governance = "DzMhDFtq2s2bUn4LNDVzDLLnbbRQ8jW1FKeWPQDDq25A"
+membership = "34MQRw2XSScvMYTiyYLix31qnrmh9vARwpmXM6ycNtuK"
+payment_attestation = "Az2CdHJFBLxRY6pigkYSsni6A8N1dQo3JUp3d62NGVpT"
+treasury_vault = "ApPdkfooQLdVN8gAXRnddbtttruYNihiwjanYtXUnxYy"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "localnet"
+wallet = "~/.config/solana/id.json"
+
+[workspace]
+members = ["programs/community_registry", "programs/governance", "programs/membership", "programs/payment_attestation", "programs/treasury_vault"]
+
+[scripts]
+test = "node tests/anchor-smoke.mjs"
