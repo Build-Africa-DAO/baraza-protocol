@@ -16,7 +16,7 @@ const navLinks = [
   { path: "/profile", label: "Profile" },
 ];
 
-const primaryNavLinks = navLinks.filter((link) => ["/", "/communities", "/create/purpose"].includes(link.path));
+const primaryNavLinks = navLinks.filter((link) => ["/", "/communities", "/bounties", "/create/purpose"].includes(link.path));
 const overflowNavLinks = navLinks.filter((link) => !primaryNavLinks.includes(link));
 
 const quickSearches = ["DAO", "SACCO", "co-operative", "governance", "savings"];
