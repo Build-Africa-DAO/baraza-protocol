@@ -98,7 +98,7 @@ values
     28,
     'Add payout receipt export for community admins',
     'Create a durable receipt export for approved community payouts.',
-    900,
+    null,
     'in_review',
     null,
     'Pending maintainer review',
