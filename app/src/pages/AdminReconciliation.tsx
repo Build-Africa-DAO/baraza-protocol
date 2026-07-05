@@ -22,6 +22,7 @@ import { cn, formatKSh, formatRailAmountFromKes, truncateAddress } from "@/lib/u
 import { useToast } from "@/hooks/use-toast";
 import { useSeo } from "@/lib/seo";
 import { getAdminWallets, isAdminWallet } from "@/lib/access";
+import { buildPayoutReceiptCsv, type PayoutReceiptSource } from "@/lib/payoutReceipts";
 import { useChain } from "@/hooks/useChain";
 import { useCommunities } from "@/hooks/useCommunities";
 import { listBounties, type BountyStatus } from "@/lib/bounties";
@@ -37,10 +38,37 @@ const ADMIN_WALLETS = getAdminWallets();
 const ADMIN_NFT_THRESHOLD = Number(import.meta.env.VITE_ADMIN_NFT_THRESHOLD ?? 0);
 const ADMIN_NFT_COUNT = Number(import.meta.env.VITE_ADMIN_NFT_COUNT ?? 0);
 
-const paymentOrders: Array<[string, string, number, string, string, string]> = [
-  ["ORD-8942A", "Kibera Youth Collective", 15_000, "PAYMENT_PENDING", "2026-05-13 08:02 UTC", "Reconcile proof"],
-  ["ORD-8941B", "Mama Mboga Association", 5_000, "PAYMENT_CONFIRMED", "2026-05-13 07:45 UTC", "-"],
-  ["ORD-8939X", "Mwanzo Housing Sacco", 100_000, "MANUAL_REVIEW", "2026-05-13 06:20 UTC", "Approve refund"],
+const paymentOrders: Array<PayoutReceiptSource & { action: string }> = [
+  {
+    payoutId: "ORD-8942A",
+    communityName: "Kibera Youth Collective",
+    amountKes: 15_000,
+    status: "PAYMENT_PENDING",
+    reviewedAt: "2026-05-13 08:02 UTC",
+    reviewer: "Nia Ops",
+    transactionReference: null,
+    action: "Reconcile proof",
+  },
+  {
+    payoutId: "ORD-8941B",
+    communityName: "Mama Mboga Association",
+    amountKes: 5_000,
+    status: "PAYMENT_CONFIRMED",
+    reviewedAt: "2026-05-13 07:45 UTC",
+    reviewer: "Kofi Treasury",
+    transactionReference: "stellar:8f1d2c9a7b4e",
+    action: "-",
+  },
+  {
+    payoutId: "ORD-8939X",
+    communityName: "Mwanzo Housing Sacco",
+    amountKes: 100_000,
+    status: "MANUAL_REVIEW",
+    reviewedAt: "2026-05-13 06:20 UTC",
+    reviewer: "Seku Risk",
+    transactionReference: null,
+    action: "Approve refund",
+  },
 ];
 
 const mintJobs = [
@@ -149,8 +177,8 @@ export default function AdminReconciliation() {
     return () => { cancelled = true; };
   }, []);
 
-  const filteredOrders = paymentOrders.filter(([id, group, amount, status]) =>
-    `${id} ${group} ${amount} ${status}`.toLowerCase().includes(searchTerm.toLowerCase()),
+  const filteredOrders = paymentOrders.filter((order) =>
+    `${order.payoutId} ${order.communityName} ${order.amountKes} ${order.status}`.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const filteredBounties = bounties
@@ -162,6 +190,21 @@ export default function AdminReconciliation() {
       title: `${action} is in preview mode`,
       description: "The operator UI is ready. This action will connect when admin endpoints ship.",
     });
+
+  const downloadPayoutReceipts = () => {
+    const csv = buildPayoutReceiptCsv(paymentOrders);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `baraza-payout-receipts-${new Date().toISOString().slice(0, 10)}.csv`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    toast({
+      title: "Payout receipts exported",
+      description: "The CSV includes amount, status, reviewer, and transaction reference only.",
+    });
+  };
 
   if (!isAdmin) {
     return (
@@ -218,7 +261,7 @@ export default function AdminReconciliation() {
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
-              <button type="button" onClick={() => notifyNotWired("Export CSV")} className="btn-ghost gap-2 text-sm">
+              <button type="button" onClick={downloadPayoutReceipts} className="btn-ghost gap-2 text-sm">
                 <Download className="h-4 w-4" /> Export CSV
               </button>
               <button type="button" onClick={() => notifyNotWired("Sync state")} className="btn-ghost gap-2 text-sm">
@@ -375,18 +418,18 @@ export default function AdminReconciliation() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredOrders.map(([id, group, amount, status, _time, action]) => (
-                    <tr key={id} className="border-b last:border-b-0">
-                      <td className="py-4 font-mono">{id}</td>
-                      <td className="py-4">{group}</td>
-                      <td className="py-4">{formatKSh(amount)}</td>
-                      <td className="py-4"><StatusChip value={status} /></td>
+                  {filteredOrders.map((order) => (
+                    <tr key={order.payoutId} className="border-b last:border-b-0">
+                      <td className="py-4 font-mono">{order.payoutId}</td>
+                      <td className="py-4">{order.communityName}</td>
+                      <td className="py-4">{formatKSh(order.amountKes)}</td>
+                      <td className="py-4"><StatusChip value={order.status} /></td>
                       <td className="py-4 text-right">
-                        {action === "-" ? (
+                        {order.action === "-" ? (
                           <span className="text-muted-foreground">Cleared</span>
                         ) : (
-                          <button type="button" onClick={() => notifyNotWired(action)} className="font-semibold text-primary hover:underline">
-                            {action}
+                          <button type="button" onClick={() => notifyNotWired(order.action)} className="font-semibold text-primary hover:underline">
+                            {order.action}
                           </button>
                         )}
                       </td>
