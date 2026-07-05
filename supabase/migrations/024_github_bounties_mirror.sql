@@ -99,9 +99,9 @@ values
     'Add payout receipt export for community admins',
     'Create a durable receipt export for approved community payouts.',
     900,
-    'paid',
+    'in_review',
     null,
-    'Treasury review',
+    'Pending maintainer review',
     'https://github.com/Build-Africa-DAO/baraza-protocol/issues/28',
     '2026-07-05T05:00:00Z'
   )
