@@ -30,7 +30,7 @@ const RetroRounds = lazy(() => import('./pages/RetroRounds'));
 const RetroVote = lazy(() => import('./pages/RetroVote'));
 const RetroResults = lazy(() => import('./pages/RetroResults'));
 const RetroCommunity = lazy(() => import('./pages/RetroCommunity'));
-const Onboarding = lazy(() => import('./pages/Onboarding'));
+const Onboarding = lazy(() => import('./pages/LeverageOnboarding'));
 const ClaimIdentity = lazy(() => import('./pages/ClaimIdentity'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
@@ -64,7 +64,8 @@ const App: React.FC = () => {
               <Route path="/profile" element={<Profile />} />
               <Route path="/dashboard/:id/treasury" element={<TreasuryDetail />} />
               <Route path="/dashboard/:id/decisions/:decisionId" element={<ProposalDetail />} />
-              <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/onboard" element={<Onboarding />} />
+              <Route path="/onboarding" element={<Navigate to="/onboard" replace />} />
               <Route path="/claim" element={<ClaimIdentity />} />
               <Route path="/admin" element={<AdminReconciliation />} />
               <Route path="/admin/akili" element={<AkiliCouncilFilings />} />
@@ -87,3 +88,4 @@ const App: React.FC = () => {
 };
 
 export default App;
+

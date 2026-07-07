@@ -1,0 +1,19 @@
+[submodule "vendor/baal"]
+	path = vendor/baal
+	url = https://github.com/HausDAO/Baal.git
+	branch = audit-fixes-brian
+[submodule "vendor/openzeppelin-contracts"]
+	path = vendor/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts.git
+[submodule "vendor/squads-v4"]
+	path = vendor/squads-v4
+	url = https://github.com/Squads-Protocol/v4.git
+[submodule "vendor/soroban-governor"]
+	path = vendor/soroban-governor
+	url = https://github.com/script3/soroban-governor.git
+[submodule "vendor/zodiac"]
+	path = vendor/zodiac
+	url = https://github.com/gnosisguild/zodiac.git
+[submodule "vendor/cairo-contracts"]
+	path = vendor/cairo-contracts
+	url = https://github.com/OpenZeppelin/cairo-contracts.git
