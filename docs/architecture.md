@@ -1,29 +1,154 @@
-# Architecture
+# Baraza Protocol Architecture
 
-Baraza is a governance compiler for communities. A group answers plain-language
-questions about treasury control, membership, contributions, and approvals, and
-Baraza produces a working governance deployment that matches those rules.
+This document defines the working target for the multi-chain sprint.
 
-The public protocol layer uses one module interface and many chain adapters.
-`interface/SPEC.md` defines the shared behavior. `contracts/stellar/` is the
-reference implementation. Other chains implement the same modules natively to
-their own contract and account models, but they must preserve identical
-observable behavior for communities.
+Current runnable client surface remains the existing `app/` Vite app in this checkout, but the intended layout is:
 
-The module model is standard core plus type packs:
+- `/apps/web` - Next.js app shell and onboarding / operational UI
+- `/packages/integrations` - shared integration adapters and sandbox stubs
+- `/packages/coop-templates` - community preset and constitution templates
+- `/programs` - Solana programs
+- `/contracts` - Stellar and EVM contracts
+- `/vendor` - pinned audited primitives
+- `/supabase` - schema, RLS, and edge workflow SQL
 
-- Standard core: community registry, membership, governance and proposals,
-  voting, treasury, contribution tracking, and basic reporting.
-- Type-unlocked or opt-in packs: reputation, token, season artifact, asset
-  ownership, and license-gated credit flow.
+## System map
 
-Baraza is non-custodial by design. The protocol never holds community funds or
-private keys, and it never touches payments. Payments may be observed,
-attested, or recorded, but the protocol layer does not become the custodian.
+```mermaid
+flowchart LR
+  user[Founder / Treasurer / Member]
+  web[apps/web or current app/ client]
+  supabase[(Supabase)]
+  privy[Privy stub]
+  daraja[Daraja / M-Pesa sandbox]
+  templates[coop templates]
+  solana[Solana devnet]
+  fuji[Fuji]
+  base[Base Sepolia]
+  stellar[Stellar Soroban]
+  parked[Starknet parked]
 
-The product layer is separate from this public repo. The onboarding compiler,
-AI layer, backend, and product applications are proprietary and sit above this
-protocol layer rather than inside it.
+  user --> web
+  web --> privy
+  web --> templates
+  web --> supabase
+  web --> daraja
+  web --> solana
+  web --> fuji
+  web --> base
+  web --> stellar
+  web -. study only .-> parked
+```
 
-`baraza-master-prompt.md` is the higher-level source of truth for product and
-governance intent; this document is the public protocol summary.
+## Onboarding flow
+
+```mermaid
+flowchart TD
+  A[Phone number entry] --> B[Privy invisible wallet stub]
+  B --> C[Community type preset]
+  C --> D[Constitution wizard]
+  D --> E[Tier selection]
+  E --> F[Chain selection]
+  F --> G[Review]
+  G --> H[Write community record to Supabase]
+  H --> I[Queue on-chain deployment]
+```
+
+## Activation payment flow
+
+```mermaid
+flowchart TD
+  A[Invite link or short code] --> B[Phone to wallet stub]
+  B --> C[KES 20 STK push]
+  C --> D[Webhook signature verification]
+  D --> E[Payment attestation]
+  E --> F[Member status pending -> active]
+  F --> G[Welcome proposal auto-created]
+```
+
+## Proposal lifecycle
+
+```mermaid
+stateDiagram-v2
+  [*] --> Draft
+  Draft --> Active
+  Active --> Passed
+  Active --> Failed
+  Active --> QuorumMissed
+  Passed --> Executed
+  Failed --> Archived
+  QuorumMissed --> Archived
+```
+
+## M-Pesa to treasury attestation
+
+```mermaid
+sequenceDiagram
+  participant Member
+  participant Web as Web client
+  participant Daraja as Daraja sandbox
+  participant SB as Supabase
+  participant Treasury as Treasury ledger
+
+  Member->>Web: submit phone + amount
+  Web->>Daraja: request STK push
+  Daraja-->>Web: request id + sandbox receipt
+  Daraja->>SB: webhook event / payment row
+  SB->>Treasury: persist attestation
+  Treasury-->>Web: payment confirmed, membership still pending
+  Web->>SB: activation update
+  SB-->>Web: member active
+```
+
+## Cross-chain deployment selection
+
+```mermaid
+flowchart LR
+  A[Chain selector] --> B{Selected chain}
+  B -->|Fuji| C[Avalanche test deployment queue]
+  B -->|Solana devnet| D[Solana queue]
+  B -->|Base Sepolia| E[EVM queue]
+  B -->|Stellar| F[Soroban queue]
+  B -->|Starknet| G[Parked / study only]
+```
+
+## Environment matrix
+
+| Environment | Frontend runtime | Chain keys | Payment keys | Supabase | Notes |
+| --- | --- | --- | --- | --- | --- |
+| Local | `app/` dev server | mocked / local RPC only | sandbox Daraja + simulator | optional anon key; local fallback if absent | No real secrets required |
+| Devnet-staging | Vercel preview or local preview | devnet / testnet / sandbox | sandbox only | anon key in Vercel; service role only in vault or server env | Used for QA and demo flows |
+| Production | Vercel production | live chain keys only in server-controlled stores | live Daraja / provider secrets outside repo | Supabase vault + server env only | Never commit secrets |
+
+Rules:
+
+- Secrets never live in git.
+- Vercel env stores frontend-visible non-secret values.
+- Supabase vault stores provider secrets and webhook signing keys.
+- Browser code only sees public endpoints and public IDs.
+
+## CI workflow
+
+PR checks should include:
+
+- existing status checks
+- `anchor test`
+- `soroban test`
+- `npm run typecheck`
+
+The workflow should fail fast on schema drift, contract test regressions, or frontend type errors.
+
+## Chain coverage
+
+Active chains:
+
+- Fuji
+- Solana devnet
+- Base Sepolia
+- Stellar Soroban
+
+Parked study chain:
+
+- Starknet
+
+The vendor registry and architecture doc must both reflect the same active-chain coverage.
