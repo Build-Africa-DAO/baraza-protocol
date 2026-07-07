@@ -62,6 +62,7 @@ CREATE INDEX IF NOT EXISTS communities_status_idx ON communities (status);
 
 CREATE TABLE IF NOT EXISTS members (
   member_id                text           PRIMARY KEY,
+  auth_user_id             text           NOT NULL,
   community_id             text           NOT NULL REFERENCES communities(id) ON DELETE CASCADE,
   phone_hash               text           NOT NULL,
   wallet_address           text           NOT NULL,
@@ -80,6 +81,8 @@ CREATE TABLE IF NOT EXISTS members (
 
 CREATE INDEX IF NOT EXISTS members_community_id_idx
   ON members (community_id);
+CREATE UNIQUE INDEX IF NOT EXISTS members_auth_user_id_unique
+  ON members (auth_user_id);
 CREATE INDEX IF NOT EXISTS members_wallet_address_idx
   ON members (wallet_address);
 CREATE INDEX IF NOT EXISTS members_phone_hash_idx
@@ -91,6 +94,8 @@ CREATE OR REPLACE FUNCTION public.is_community_admin(p_community_id text)
 RETURNS boolean
 LANGUAGE sql
 STABLE
+SECURITY DEFINER
+SET search_path = public
 AS $$
   SELECT
     public.is_admin()
@@ -98,7 +103,7 @@ AS $$
       SELECT 1
       FROM members m
       WHERE m.community_id = p_community_id
-        AND m.wallet_address = COALESCE(auth.jwt() ->> 'wallet_address', auth.uid()::text)
+        AND m.auth_user_id = auth.uid()::text
         AND m.role IN ('founder', 'admin', 'treasurer')
         AND m.activation_status = 'active'
     );
@@ -111,13 +116,7 @@ CREATE POLICY "Members can read their own community"
   ON members FOR SELECT
   USING (
     public.is_admin()
-    OR EXISTS (
-      SELECT 1
-      FROM members self
-      WHERE self.community_id = community_id
-        AND self.wallet_address = COALESCE(auth.jwt() ->> 'wallet_address', auth.uid()::text)
-        AND self.activation_status = 'active'
-    )
+    OR auth_user_id = auth.uid()::text
   );
 
 DROP POLICY IF EXISTS "Members can manage their own community" ON members;
@@ -125,6 +124,11 @@ CREATE POLICY "Members can manage their own community"
   ON members FOR ALL
   USING (public.is_community_admin(community_id))
   WITH CHECK (public.is_community_admin(community_id));
+DROP POLICY IF EXISTS "Members can update their own row" ON members;
+CREATE POLICY "Members can update their own row"
+  ON members FOR UPDATE
+  USING (auth_user_id = auth.uid()::text)
+  WITH CHECK (auth_user_id = auth.uid()::text);
 
 DROP TRIGGER IF EXISTS members_set_updated_at ON members;
 CREATE TRIGGER members_set_updated_at
@@ -178,7 +182,7 @@ CREATE POLICY "Activation payments are readable by the owning member"
       SELECT 1
       FROM members m
       WHERE m.member_id = activation_payments.member_id
-        AND m.wallet_address = COALESCE(auth.jwt() ->> 'wallet_address', auth.uid()::text)
+        AND m.auth_user_id = auth.uid()::text
     )
   );
 
@@ -247,3 +251,4 @@ CREATE TRIGGER tier_features_set_updated_at
   BEFORE UPDATE ON tier_features
   FOR EACH ROW
   EXECUTE FUNCTION set_updated_at();
+
