@@ -1,0 +1,36 @@
+{
+  "route": "/join/1",
+  "testedAt": "2026-07-07T08:54:58.929Z",
+  "tools": [
+    "Playwright Chromium 1.57.0",
+    "axe-core 4.11.0"
+  ],
+  "viewports": [
+    {
+      "width": 320,
+      "height": 700,
+      "axeViolations": 0,
+      "overflow": {
+        "scrollWidth": 320,
+        "clientWidth": 320,
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "axeViolations": 0,
+      "overflow": {
+        "scrollWidth": 390,
+        "clientWidth": 390,
+        "horizontalOverflow": false
+      }
+    }
+  ],
+  "screenshots": [
+    "iphone-se-invalid-phone.png",
+    "iphone-se-top.png",
+    "mobile-390-full.png",
+    "mobile-390-top.png"
+  ]
+}

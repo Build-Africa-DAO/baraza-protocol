@@ -96,6 +96,11 @@ export default function JoinDao() {
 
   const amount = community?.membershipFee ?? 0;
   const normalisedPhone = normaliseKenyanPhone(phone);
+  const hasPhoneInput = phone.trim().length > 0;
+  const isPhoneInvalid = hasPhoneInput && normalisedPhone === null;
+  const phoneHelpId = "join-phone-help";
+  const phoneErrorId = "join-phone-error";
+  const phoneDescriptionId = isPhoneInvalid ? `${phoneErrorId} ${phoneHelpId}` : phoneHelpId;
   const canSubmit = normalisedPhone !== null && amount > 0 && !isSubmitting;
   const canVerifyStellar = /^[a-f0-9]{64}$/i.test(stellarTxHash.trim()) &&
     Number(stellarAmountXlm) > 0 &&
@@ -294,13 +299,22 @@ export default function JoinDao() {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       className="min-w-0 flex-1 px-3 py-3 text-sm outline-none"
-                      placeholder="e.g. 0712 345 678"
+                      placeholder="712 345 678"
                       type="tel"
                       inputMode="numeric"
                       autoComplete="tel-national"
+                      aria-describedby={phoneDescriptionId}
+                      aria-invalid={isPhoneInvalid}
                     />
                   </div>
-                  <p className="mt-2 text-[11px]">We&apos;ll send a one-time code by SMS. Your number stays private.</p>
+                  {isPhoneInvalid && (
+                    <p id={phoneErrorId} className="mt-2 text-xs font-semibold text-red-200" role="alert">
+                      Use a Kenyan mobile number like 712 345 678.
+                    </p>
+                  )}
+                  <p id={phoneHelpId} className="mt-2 text-[11px]">
+                    Enter the 9 digits after +254. Full +254 or 0712 formats also work. Your number stays private.
+                  </p>
 
                   <button
                     type="button"

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import MobileBottomNav from '@/components/MobileBottomNav';
@@ -9,6 +10,9 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
+  const location = useLocation();
+  const isJoinFlow = location.pathname.startsWith('/join/');
+
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-clip flex flex-col bg-background">
       <a
@@ -20,13 +24,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <Header />
       <main
         id="main-content"
-        className="flex-1 pt-14 pb-24 md:pb-0"
+        className={isJoinFlow ? 'flex-1 pt-14 md:pb-0' : 'flex-1 pt-14 pb-24 md:pb-0'}
         tabIndex={-1}
       >
         {children}
       </main>
       <Footer />
-      <MobileBottomNav />
+      {!isJoinFlow && <MobileBottomNav />}
       <BackendStatus />
     </div>
   );
