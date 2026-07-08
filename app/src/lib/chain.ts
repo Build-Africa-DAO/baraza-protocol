@@ -64,7 +64,10 @@ export const CHAINS: Record<Chain, ChainMeta> = {
     railType: 'Primary rail',
     accountLabel: 'Solana account',
     suggestedWallet: 'Phantom',
-    walletExamples: 'Phantom, Solflare, or Backpack',
+    // Backpack removed 2026-07-08: no @solana/wallet-adapter-backpack package
+    // is registered in WalletProviders.tsx, so it wasn't actually connectable.
+    // Re-add here once a real adapter is wired up — see CLAUDE.md wallet rules.
+    walletExamples: 'Phantom, Solflare, or Coinbase Wallet',
     accountCta: 'Connect Solana account with Phantom',
     testnet: {
       label: 'Solana Devnet',
