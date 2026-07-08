@@ -49,7 +49,10 @@ Stellar launches first. Never treat EVM or Solana as launch blockers.
 
 - All business logic lives in `app/src/lib/` — components → hooks → lib. Never import lib directly in components.
 - Chain adapters (`app/src/lib/adapters/`) are the single entry point for all chain interactions.
-- Wallet support: **Phantom, Solflare, Coinbase Wallet only** — do not add others.
+- **Account/wallet architecture has two layers — both are intentional, not competing:**
+  - **Primary — Privy invisible wallets** (`app/src/contexts/AccountContext.tsx`, `app/src/components/auth/WalletGate.tsx`): phone/email login (`loginMethods: ['email', 'sms']`), embedded Solana wallet auto-created for users without one (`createOnLogin: 'users-without-wallets'`), wallet UI hidden (`showWalletUIs: false`). This is the default onboarding path for chama/SACCO members with no prior crypto exposure — see `app/src/pages/LeverageOnboarding.tsx`.
+  - **Secondary — direct wallet connect** (`app/src/components/WalletProviders.tsx`, `BarazaWalletModalProvider.tsx`): **Phantom, Solflare, Coinbase Wallet only** — the only three with an adapter package actually registered in `WalletProviders.tsx`. For crypto-native users who prefer to bring their own wallet.
+  - Do not add a wallet to the `BarazaWalletModalProvider` preferred-wallet list or its user-facing copy without also registering a real `@solana/wallet-adapter-*` package for it in `WalletProviders.tsx` — the modal must never name a wallet it can't actually connect (this happened once with Backpack/Ledger/Trezor; fixed 2026-07-08).
 - Supabase is optional everywhere — every route falls back gracefully without env vars.
 - `intentToken` is required for Stellar mainnet verification — legacy fields dev-only.
 - Activation secret is client-side only from order creation to membership activation.
@@ -135,7 +138,8 @@ Rules for keeping it that way:
 
 ## Do not
 
-- Add wallets beyond Phantom, Solflare, Coinbase Wallet
+- Add a wallet to the connect-wallet modal without registering a matching adapter package in `WalletProviders.tsx` (Phantom, Solflare, Coinbase Wallet are the only three currently wired)
+- Remove or bypass the Privy invisible-wallet path in favor of connect-only — it's the primary onboarding flow for non-crypto-native members, not a fallback
 - Commit secrets, private keys, or service role keys
 - Set `withdrawals_enabled = true` before multisig handoff
 - Relax `intentToken` requirement for Stellar mainnet
