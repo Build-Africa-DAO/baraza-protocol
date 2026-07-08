@@ -12,7 +12,6 @@
 
 ALTER TABLE retro_rounds
   ADD COLUMN IF NOT EXISTS opened_by text;
-
 -- Backfill historical rows (if any) with NULL — they were opened by admins
 -- before this migration, and the prior route did not capture the wallet.
 COMMENT ON COLUMN retro_rounds.opened_by

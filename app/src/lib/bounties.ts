@@ -420,7 +420,7 @@ export async function listBountiesAsync(): Promise<Bounty[]> {
 
   const [{ data: rows, error: bountyError }, { data: submissionRows, error: submissionError }] = await Promise.all([
     client
-      .from('bounties')
+      .from('community_bounties')
       .select('id,community_id,title,category,reward_kes,deadline,status,posted_by,summary,skills,access,reward_token,payout_tx_hash'),
     client
       .from('bounty_submissions')
@@ -488,7 +488,7 @@ export async function createBountyRecordAsync(input: CreateBountyInput): Promise
   }
 
   const { data, error } = await client
-    .from('bounties')
+    .from('community_bounties')
     .insert({
       id: bounty.id,
       community_id: bounty.communityId,
