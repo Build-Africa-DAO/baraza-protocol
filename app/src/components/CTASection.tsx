@@ -38,7 +38,7 @@ export default function CTASection() {
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link to="/create" tabIndex={-1}>
+              <Link to="/create">
                 <ShimmerButton
                   background="var(--gradient-warm)"
                   shimmerColor="rgba(255,255,255,0.5)"
