@@ -6,6 +6,12 @@ import { formatRailAmountFromKes } from "@/lib/utils";
 import CommunityBanner from "@/components/CommunityBanner";
 import { useSeo } from "@/lib/seo";
 import { useChain } from "@/hooks/useChain";
+import {
+  canExportTreasuryReceipt,
+  createTreasuryReceiptExport,
+  downloadTreasuryReceipt,
+  type TreasuryPayoutRecord,
+} from "@/lib/treasuryReceipts";
 
 const attestations = [
   ["MPESA-XJ9L2B", "PaymentAttestation", 50000, "Confirmed"],
@@ -13,16 +19,58 @@ const attestations = [
   ["ORD-8841B", "Mint job", "Membership credential", "Queued"],
 ];
 
-const releases = [
-  ["PROP-039", "Q4 welfare payout", 150000, "4xkL...p9Qr"],
-  ["PROP-038", "Audit bounty", 62500, "8mPz...x2Vy"],
-  ["PROP-035", "Training workshop", 30000, "2jRt...k8Mw"],
+const releases: TreasuryPayoutRecord[] = [
+  {
+    proposalId: "PROP-039",
+    purpose: "Q4 welfare payout",
+    amountKes: 150000,
+    status: "approved",
+    reviewer: "Amara N.",
+    txReference: "4xkL...p9Qr",
+    approvedAt: "2026-07-02T10:30:00.000Z",
+  },
+  {
+    proposalId: "PROP-038",
+    purpose: "Audit bounty",
+    amountKes: 62500,
+    status: "approved",
+    reviewer: "Kofi M.",
+    txReference: "8mPz...x2Vy",
+    approvedAt: "2026-06-28T15:45:00.000Z",
+  },
+  {
+    proposalId: "PROP-035",
+    purpose: "Training workshop",
+    amountKes: 30000,
+    status: "pending",
+    reviewer: "Nia O.",
+    approvedAt: "2026-06-24T08:15:00.000Z",
+  },
 ];
 
 export default function TreasuryDetail() {
   const { id } = useParams<{ id: string }>();
   const { community } = useCommunity(id);
   const { chainMeta } = useChain();
+  const completedReceiptCount = releases.filter((release) => canExportTreasuryReceipt(release)).length;
+  const exportableSummary = {
+    community: community?.name ?? "Community",
+    generatedAt: new Date().toISOString(),
+    receipts: releases
+      .map((release) => createTreasuryReceiptExport(release, chainMeta))
+      .filter((receipt): receipt is NonNullable<typeof receipt> => Boolean(receipt))
+      .map((receipt) => JSON.parse(receipt.content)),
+  };
+
+  function handleExportAllReceipts() {
+    const blob = new Blob([`${JSON.stringify(exportableSummary, null, 2)}\n`], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${(community?.name ?? "community").toLowerCase().replace(/[^a-z0-9]+/g, "-")}-payout-receipts.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
 
   useSeo({
     title: community ? `${community.name} treasury` : "Treasury",
@@ -44,13 +92,13 @@ export default function TreasuryDetail() {
             </div>
             <button
               type="button"
-              disabled
-              title="Not yet available"
-              aria-disabled="true"
-              className="btn-ghost gap-2 text-sm opacity-50 cursor-not-allowed"
+              onClick={handleExportAllReceipts}
+              disabled={completedReceiptCount === 0}
+              aria-disabled={completedReceiptCount === 0}
+              className="btn-ghost gap-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Download className="h-4 w-4" />
-              Export CSV
+              Export receipts
             </button>
           </header>
           </CommunityBanner>
@@ -105,10 +153,24 @@ export default function TreasuryDetail() {
             <div className="baraza-card p-5">
               <h2 className="mb-5 font-mono text-xs uppercase tracking-widest text-primary">Treasury Release Queue</h2>
               <div className="space-y-3">
-                {["PROP-042: Q4 Welfare Payout", "PROP-044: Contract Audit", "PROP-045: Member Emergency"].map((item) => (
-                  <div key={item} className="rounded-lg border border-primary/20 bg-primary/8 p-4">
-                    <p className="text-sm font-medium text-foreground">{item}</p>
-                    <p className="mt-2 text-xs text-muted-foreground">Ready after quorum and approval threshold.</p>
+                {releases.filter((release) => release.status !== "approved").map((release) => (
+                  <div key={release.proposalId} className="rounded-lg border border-primary/20 bg-primary/8 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{release.proposalId}: {release.purpose}</p>
+                        <p className="mt-2 text-xs text-muted-foreground">Ready after quorum and approval threshold.</p>
+                      </div>
+                      <button
+                        type="button"
+                        disabled
+                        aria-disabled="true"
+                        title="Receipt export becomes available after approval and transaction reference."
+                        className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold opacity-50"
+                      >
+                        <ReceiptText className="h-3.5 w-3.5" />
+                        Receipt pending
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -123,24 +185,43 @@ export default function TreasuryDetail() {
                   <th className="pb-3 font-normal">Proposal</th>
                   <th className="pb-3 font-normal">Purpose</th>
                   <th className="pb-3 font-normal">Amount</th>
-                  <th className="pb-3 text-right font-normal">Tx Signature</th>
+                  <th className="pb-3 font-normal">Reviewer</th>
+                  <th className="pb-3 font-normal">Status</th>
+                  <th className="pb-3 text-right font-normal">Receipt</th>
                 </tr>
               </thead>
               <tbody>
-                {releases.map(([ref, purpose, amount, tx]) => (
-                  <tr key={ref} className="border-b border-border/70 last:border-b-0">
-                    <td className="py-4 font-mono text-foreground">{ref}</td>
-                    <td className="py-4 text-muted-foreground">{purpose}</td>
-                    <td className="py-4 text-destructive">- {formatRailAmountFromKes(Number(amount), chainMeta)}</td>
-                    <td className="py-4 text-right">
-                      <span
-                        aria-disabled="true"
-                        title="Explorer link available after launch"
-                        className="inline-flex cursor-not-allowed items-center gap-1 font-mono text-network/60"
-                      >
-                        {tx}
-                        <ExternalLink className="h-3.5 w-3.5" />
+                {releases.map((release) => (
+                  <tr key={release.proposalId} className="border-b border-border/70 last:border-b-0">
+                    <td className="py-4 font-mono text-foreground">{release.proposalId}</td>
+                    <td className="py-4 text-muted-foreground">{release.purpose}</td>
+                    <td className="py-4 text-destructive">- {formatRailAmountFromKes(release.amountKes, chainMeta)}</td>
+                    <td className="py-4 text-muted-foreground">{release.reviewer}</td>
+                    <td className="py-4">
+                      <span className={release.status === "approved" ? "text-confirmed" : "text-muted-foreground"}>
+                        {release.status === "approved" ? "Approved" : "Pending"}
                       </span>
+                    </td>
+                    <td className="py-4 text-right">
+                      {canExportTreasuryReceipt(release) ? (
+                        <button
+                          type="button"
+                          onClick={() => downloadTreasuryReceipt(release, chainMeta)}
+                          className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          {release.txReference}
+                        </button>
+                      ) : (
+                        <span
+                          aria-disabled="true"
+                          title="Receipt export becomes available after approval and transaction reference."
+                          className="inline-flex cursor-not-allowed items-center gap-1 font-mono text-network/60"
+                        >
+                          Missing receipt data
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))}
