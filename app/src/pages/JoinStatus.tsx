@@ -218,7 +218,7 @@ export default function JoinStatus() {
           <div className="mx-auto max-w-4xl">
             <div className="mb-6">
               <p className="font-mono text-xs uppercase tracking-widest">Join Status</p>
-              <h1 className="mt-2 font-display text-3xl font-bold">
+              <h1 id="join-status-title" className="mt-2 font-display text-3xl font-bold">
                 {isFailed
                   ? "Membership activation failed"
                   : isComplete
@@ -240,12 +240,23 @@ export default function JoinStatus() {
             )}
 
             <div className="grid gap-6 lg:grid-cols-[0.62fr_0.38fr]">
-              <div className="baraza-card p-5 md:p-6">
-                <div className="space-y-5">
+              <section className="baraza-card p-5 md:p-6" aria-labelledby="join-status-title">
+                <div
+                  className="space-y-5"
+                  role="status"
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
                   {stepStates.map((step) => (
-                    <div key={step.code} className="flex gap-4 rounded-lg border p-4">
+                    <div
+                      key={step.code}
+                      className="flex gap-4 rounded-lg border p-4"
+                      aria-current={step.state === "current" ? "step" : undefined}
+                      aria-label={`${step.label} - ${step.state === "done" ? "done" : step.state === "current" ? "in progress" : "pending"}`}
+                    >
                       <div
                         className="grid h-9 w-9 shrink-0 place-items-center rounded-full"
+                        aria-hidden="true"
                       >
                         {step.state === "done"
                           ? <Check className="h-5 w-5" />
@@ -253,40 +264,45 @@ export default function JoinStatus() {
                             ? <Loader2 className="h-5 w-5 animate-spin" />
                             : <Clock3 className="h-5 w-5" />}
                       </div>
-                      <p className="self-center text-sm font-medium">{step.label}</p>
+                      <div className="self-center">
+                        <p className="text-sm font-medium">{step.label}</p>
+                        <p className="sr-only">
+                          {step.state === "done" ? "Done" : step.state === "current" ? "In progress" : "Pending"}
+                        </p>
+                      </div>
                     </div>
                   ))}
                 </div>
-              </div>
+              </section>
 
               <aside className="space-y-5">
-                <div className="baraza-card p-5">
-                  <h2 className="font-display text-lg font-semibold">Status</h2>
-                  <div className="mt-4 space-y-3 text-sm">
+                <section className="baraza-card p-5" aria-labelledby="join-status-summary">
+                  <h2 id="join-status-summary" className="font-display text-lg font-semibold">Status</h2>
+                  <dl className="mt-4 space-y-3 text-sm">
                     <div className="flex justify-between gap-3 border-b pb-3">
-                      <span>Payment</span>
-                      <span>
+                      <dt>Payment</dt>
+                      <dd aria-live="polite">
                         {statusIndex(status) >= statusIndex("PAYMENT_CONFIRMED") ? "Confirmed" : "Pending"}
-                      </span>
+                      </dd>
                     </div>
                     <div className="flex justify-between gap-3 border-b pb-3">
-                      <span>Credential</span>
-                      <span>
+                      <dt>Credential</dt>
+                      <dd aria-live="polite">
                         {statusIndex(status) >= statusIndex("MINT_CONFIRMED")
                           ? "Minted"
                           : statusIndex(status) >= statusIndex("MINT_QUEUED")
                             ? "Preparing"
                             : "Pending"}
-                      </span>
+                      </dd>
                     </div>
                     <div className="flex justify-between gap-3">
-                      <span>Membership</span>
-                      <span>
+                      <dt>Membership</dt>
+                      <dd aria-live="polite">
                         {isComplete ? "Active" : "Pending"}
-                      </span>
+                      </dd>
                     </div>
-                  </div>
-                </div>
+                  </dl>
+                </section>
 
                 <div className="rounded-lg border p-5">
                   <ShieldCheck className="mb-3 h-5 w-5" />

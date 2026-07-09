@@ -32,20 +32,30 @@ const joinSteps = [
 
 function ActivationTracker() {
   return (
-    <div className="baraza-card p-4 md:p-5">
+    <section className="baraza-card p-4 md:p-5" aria-labelledby="join-activation-title">
       <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="font-display text-base font-semibold">Membership activation</h2>
-          <p className="mt-1 text-xs">Payment proof and membership approval stay separate.</p>
+          <h2 id="join-activation-title" className="font-display text-base font-semibold">Membership activation</h2>
+          <p id="join-activation-help" className="mt-1 text-xs">Payment proof and membership approval stay separate.</p>
         </div>
-        <span className="rounded-full border px-3 py-1 text-[11px] font-semibold">
+        <span
+          className="rounded-full border px-3 py-1 text-[11px] font-semibold"
+          role="status"
+          aria-live="polite"
+        >
           Step 1 of {joinSteps.length}
         </span>
       </div>
-      <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
+      <ol
+        className="grid gap-2 sm:grid-cols-3 lg:grid-cols-6"
+        aria-label="Membership activation steps"
+        aria-describedby="join-activation-help"
+      >
         {joinSteps.map((step, index) => (
-          <div
+          <li
             key={step.label}
+            aria-current={step.state === "current" ? "step" : undefined}
+            aria-label={`${step.label} - ${step.state === "done" ? "done" : step.state === "current" ? "current" : "pending"}`}
             className={
               step.state === "current"
                 ? "rounded-lg border border-primary bg-primary/10 p-3"
@@ -58,16 +68,20 @@ function ActivationTracker() {
                   ? "mb-2 grid h-7 w-7 place-items-center rounded-full"
                   : "mb-2 grid h-7 w-7 place-items-center rounded-full border"
               }
+              aria-hidden="true"
             >
               {step.state === "done" ? <Check className="h-4 w-4" /> : <span className="text-[11px] font-bold">{index + 1}</span>}
             </div>
             <span className="block text-[11px] font-bold uppercase tracking-widest">
               {step.label}
             </span>
-          </div>
+            <span className="sr-only">
+              {step.state === "done" ? "Done" : step.state === "current" ? "Current step" : "Pending"}
+            </span>
+          </li>
         ))}
-      </div>
-    </div>
+      </ol>
+    </section>
   );
 }
 
@@ -100,6 +114,9 @@ export default function JoinDao() {
   const canVerifyStellar = /^[a-f0-9]{64}$/i.test(stellarTxHash.trim()) &&
     Number(stellarAmountXlm) > 0 &&
     !isVerifyingStellar;
+  const isPhoneInvalid = phone.trim().length > 0 && normalisedPhone === null;
+  const isTransferAmountInvalid = stellarAmountXlm.trim().length > 0 && !(Number(stellarAmountXlm) > 0);
+  const isTransferReferenceInvalid = stellarTxHash.trim().length > 0 && !/^[a-f0-9]{64}$/i.test(stellarTxHash.trim());
 
   function startAccountJoin(accountId: string) {
     if (!id || amount <= 0) return;
@@ -274,14 +291,14 @@ export default function JoinDao() {
               </div>
               </CommunityBanner>
 
-              <div className="grid gap-4 p-5 lg:grid-cols-3 md:p-6">
-                <div className="rounded-lg border p-5">
+              <div className="grid gap-4 p-5 md:p-6 lg:grid-cols-3" role="list" aria-label="Join methods">
+                <article className="rounded-lg border p-5" role="listitem" aria-labelledby="join-mpesa-title">
                   <div className="mb-4 flex items-center gap-3">
                     <div className="grid h-10 w-10 place-items-center rounded-lg">
                       <Phone className="h-5 w-5" />
                     </div>
                     <div>
-                      <h2 className="font-display text-base font-semibold">Phone-first M-Pesa</h2>
+                      <h2 id="join-mpesa-title" className="font-display text-base font-semibold">Phone-first M-Pesa</h2>
                       <p className="text-xs">Primary MVP path</p>
                     </div>
                   </div>
@@ -298,9 +315,11 @@ export default function JoinDao() {
                       type="tel"
                       inputMode="numeric"
                       autoComplete="tel-national"
+                      aria-describedby="join-phone-help"
+                      aria-invalid={isPhoneInvalid}
                     />
                   </div>
-                  <p className="mt-2 text-[11px]">We&apos;ll send a one-time code by SMS. Your number stays private.</p>
+                  <p id="join-phone-help" className="mt-2 text-[11px]">We&apos;ll send a one-time code by SMS. Your number stays private.</p>
 
                   <button
                     type="button"
@@ -320,15 +339,15 @@ export default function JoinDao() {
                       </>
                     )}
                   </button>
-                </div>
+                </article>
 
-                <div className="rounded-lg border p-5">
+                <article className="rounded-lg border p-5" role="listitem" aria-labelledby="join-transfer-title">
                   <div className="mb-4 flex items-center gap-3">
                     <div className="grid h-10 w-10 place-items-center rounded-lg">
                       <Stars className="h-5 w-5" />
                     </div>
                     <div>
-                      <h2 className="font-display text-base font-semibold">Bank or international transfer</h2>
+                      <h2 id="join-transfer-title" className="font-display text-base font-semibold">Bank or international transfer</h2>
                       <p className="text-xs">Verify transfer proof</p>
                     </div>
                   </div>
@@ -344,7 +363,12 @@ export default function JoinDao() {
                     className="w-full rounded-lg border px-3 py-3 text-sm outline-none"
                     inputMode="decimal"
                     placeholder="1"
+                    aria-describedby="stellar-amount-help"
+                    aria-invalid={isTransferAmountInvalid}
                   />
+                  <p id="stellar-amount-help" className="mt-2 text-[11px]">
+                    Enter the amount shown on the transfer receipt so Baraza can match the payment.
+                  </p>
 
                   <label htmlFor="stellar-tx" className="mb-2 mt-3 block text-xs font-semibold">Transaction reference</label>
                   <input
@@ -353,7 +377,12 @@ export default function JoinDao() {
                     onChange={(event) => setStellarTxHash(event.target.value)}
                     className="w-full rounded-lg border px-3 py-3 font-mono text-xs outline-none"
                     placeholder="64-character transaction reference"
+                    aria-describedby="stellar-tx-help"
+                    aria-invalid={isTransferReferenceInvalid}
                   />
+                  <p id="stellar-tx-help" className="mt-2 text-[11px]">
+                    Paste the full transfer reference exactly as your provider shows it.
+                  </p>
 
                   <button
                     type="button"
@@ -373,15 +402,15 @@ export default function JoinDao() {
                       </>
                     )}
                   </button>
-                </div>
+                </article>
 
-                <div className="rounded-lg border p-5">
+                <article className="rounded-lg border p-5" role="listitem" aria-labelledby="join-privy-title">
                   <div className="mb-4 flex items-center gap-3">
                     <div className="grid h-10 w-10 place-items-center rounded-lg">
                       <Wallet className="h-5 w-5" />
                     </div>
                     <div>
-                      <h2 className="font-display text-base font-semibold">Privy account</h2>
+                      <h2 id="join-privy-title" className="font-display text-base font-semibold">Privy account</h2>
                       <p className="text-xs">Private account access</p>
                     </div>
                   </div>
@@ -419,7 +448,7 @@ export default function JoinDao() {
                   <Link to="/profile" className="mt-3 inline-flex text-xs font-semibold">
                     Manage Baraza account
                   </Link>
-                </div>
+                </article>
               </div>
 
               <div className="mx-5 mb-5 rounded-lg border p-4 md:mx-6 md:mb-6">

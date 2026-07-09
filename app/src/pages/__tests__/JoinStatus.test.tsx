@@ -83,4 +83,14 @@ describe('JoinStatus payment rail copy', () => {
     expect(screen.getByText('Recording your membership')).toBeInTheDocument();
     expect(screen.queryByText(/Stellar|Solana|Base/i)).not.toBeInTheDocument();
   });
+
+  it('exposes the current activation step and live status summary', () => {
+    renderStatus('/join/1/status?orderId=ord_mpesa_demo');
+
+    expect(screen.getByRole('status')).toHaveAttribute('aria-live', 'polite');
+    expect(screen.getByText('Check your phone for the M-Pesa prompt').closest('[aria-current="step"]')).not.toBeNull();
+    expect(screen.getByText('Status')).toBeInTheDocument();
+    expect(screen.getByText('Payment')).toBeInTheDocument();
+    expect(screen.getByText('Membership')).toBeInTheDocument();
+  });
 });
