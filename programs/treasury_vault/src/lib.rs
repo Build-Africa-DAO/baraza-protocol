@@ -21,11 +21,11 @@
 use anchor_lang::prelude::*;
 use anchor_lang::system_program;
 
-declare_id!("ApPdkfooQLdVN8gAXRnddbtttruYNihiwjanYtXUnxYy");
+declare_id!("BjECSjJWMAn13eVJftch45f1LNYXa95UMTRp7S77M6wS");
 
 pub const GOVERNANCE_PROGRAM_ID: Pubkey = Pubkey::new_from_array([
-    192, 253, 191, 73, 222, 225, 12, 97, 239, 22, 209, 87, 210, 136, 24, 251, 188, 107, 10, 222,
-    115, 30, 212, 117, 232, 223, 66, 215, 177, 115, 99, 149,
+    68, 10, 50, 138, 245, 69, 78, 44, 139, 226, 129, 52, 245, 14, 104, 23, 61, 129, 97, 93, 184,
+    97, 168, 185, 1, 32, 125, 147, 210, 106, 23, 25,
 ]);
 pub const PROPOSAL_ACCOUNT_DISCRIMINATOR: [u8; 8] = [164, 190, 4, 248, 203, 124, 243, 64];
 

@@ -13,11 +13,11 @@
 
 use anchor_lang::prelude::*;
 
-declare_id!("34MQRw2XSScvMYTiyYLix31qnrmh9vARwpmXM6ycNtuK");
+declare_id!("ANra85R8oRawbSQu4z9yKjC8z7dcCyqeDJ5LzK4sonsa");
 
 pub const PAYMENT_ATTESTATION_PROGRAM_ID: Pubkey = Pubkey::new_from_array([
-    148, 84, 165, 82, 236, 107, 78, 109, 100, 65, 21, 86, 199, 209, 101, 143, 100, 33, 228,
-    227, 189, 128, 123, 16, 16, 241, 218, 166, 217, 30, 128, 56,
+    166, 80, 31, 41, 145, 125, 236, 135, 175, 106, 28, 21, 32, 180, 183, 25, 204, 253, 117, 17, 164,
+    62, 240, 66, 221, 199, 44, 52, 128, 244, 105, 148,
 ]);
 pub const PAYMENT_ATTESTATION_DISCRIMINATOR: [u8; 8] = [62, 247, 19, 32, 195, 26, 7, 197];
 

@@ -15,11 +15,11 @@
 
 use anchor_lang::prelude::*;
 
-declare_id!("DzMhDFtq2s2bUn4LNDVzDLLnbbRQ8jW1FKeWPQDDq25A");
+declare_id!("5abk3TPAhghaTvyxLYGRdY7YktHGKtJvxtyUYAtMwqqi");
 
 pub const MEMBERSHIP_PROGRAM_ID: Pubkey = Pubkey::new_from_array([
-    30, 147, 47, 230, 187, 54, 1, 75, 4, 119, 91, 36, 81, 222, 32, 243, 226, 244, 69, 60, 91,
-    134, 195, 150, 88, 30, 91, 60, 90, 21, 102, 190,
+    139, 82, 109, 244, 163, 233, 158, 174, 80, 159, 217, 121, 40, 6, 46, 252, 68, 147, 112, 6, 90,
+    167, 11, 10, 111, 56, 215, 160, 40, 206, 209, 249,
 ]);
 pub const MEMBER_ACCOUNT_DISCRIMINATOR: [u8; 8] = [173, 25, 100, 97, 192, 177, 84, 139];
 

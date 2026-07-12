@@ -27,3 +27,9 @@ Thumbs.db
 .idea/
 .vscode/
 .gstack/
+
+# anchor local build/validator artifacts (never commit — contains local keypairs & ledger)
+.anchor/
+test-ledger/
+**/*.log
+temp.json

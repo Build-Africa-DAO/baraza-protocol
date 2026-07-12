@@ -11,7 +11,7 @@
 
 use anchor_lang::prelude::*;
 
-declare_id!("Ggj4e8YjiDdpbcudKz6BLx5arT9nf7BQR498VnLXd7eD");
+declare_id!("5jgs47wXR92SMDzyG5LznPy95S6dohLuCKdQyCpEjTbp");
 
 #[program]
 pub mod community_registry {
