@@ -109,7 +109,7 @@ export const COMMUNITY_TYPES = [
   { value: 'savings',           label: 'Savings Group (Chama)' },
   { value: 'stokvel',           label: 'Stokvel' },
   { value: 'sacco',             label: 'SACCO' },
-  { value: 'dao',               label: 'DAO' },
+  { value: 'dao',               label: 'Digital-first Community' },
   { value: 'cooperative',       label: 'Cooperative' },
   { value: 'professional',      label: 'Professional Network' },
   { value: 'investment',        label: 'Investment Club' },
