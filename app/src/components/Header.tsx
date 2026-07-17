@@ -36,7 +36,7 @@ export default function Header({ walletSlot }: HeaderProps) {
   const navigate = useNavigate();
   const { open: openAkili } = useAkiliChat();
   const { theme, toggleTheme } = useTheme();
-  const showInfrastructureControls = location.pathname.startsWith("/join/");
+  const showInfrastructureControls = false;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);

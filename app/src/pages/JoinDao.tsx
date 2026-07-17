@@ -16,7 +16,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import Layout from "@/components/Layout";
 import { useCommunity } from "@/hooks/useCommunities";
 import { useToast } from "@/hooks/use-toast";
-import { formatRailAmountWithKes } from "@/lib/utils";
+import { formatKSh } from "@/lib/utils";
 import { normaliseKenyanPhone } from "@/lib/phone";
 import CommunityBanner from "@/components/CommunityBanner";
 import { useSeo } from "@/lib/seo";
@@ -24,12 +24,9 @@ import { useChain } from "@/hooks/useChain";
 import { PRODUCT_ENVIRONMENT } from "@/lib/network";
 
 const joinSteps = [
-  { label: "Invite opened", state: "current" },
-  { label: "Payment method selected", state: "pending" },
-  { label: "Payment proof submitted", state: "pending" },
-  { label: "Payment confirmed", state: "pending" },
-  { label: "Credential minted", state: "pending" },
-  { label: "Active member", state: "pending" },
+  { label: "Confirm phone", state: "current" },
+  { label: "Payment reviewed", state: "pending" },
+  { label: "Membership active", state: "pending" },
 ];
 
 function ActivationTracker() {
@@ -37,14 +34,14 @@ function ActivationTracker() {
     <div className="baraza-card p-4 md:p-5">
       <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="font-display text-base font-semibold">Membership activation</h2>
-          <p className="mt-1 text-xs">Payment proof and membership approval stay separate.</p>
+          <h2 className="font-display text-base font-semibold">What happens next</h2>
+          <p className="mt-1 text-xs">Three clear steps from phone confirmation to active membership.</p>
         </div>
         <span className="rounded-full border px-3 py-1 text-[11px] font-semibold">
           Step 1 of {joinSteps.length}
         </span>
       </div>
-      <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid gap-2 sm:grid-cols-3">
         {joinSteps.map((step, index) => (
           <div
             key={step.label}
@@ -82,8 +79,8 @@ export default function JoinDao() {
   const { community } = useCommunity(id);
   const { chainMeta } = useChain();
   useSeo({
-    title: community ? `Join ${community.name}` : "Join a DAO",
-    description: "Verify your phone, pay membership dues via M-Pesa, and activate your membership.",
+    title: community ? `Join ${community.name}` : "Join a community",
+    description: "Verify your phone, pay your monthly contribution through M-Pesa, and activate your membership.",
     path: id ? `/join/${id}` : undefined,
     noIndex: true,
   });
@@ -167,9 +164,9 @@ export default function JoinDao() {
     }
 
     toast({
-      title: usedFallback ? "Simulator unreachable - using local order" : "M-Pesa prompt sent",
+      title: usedFallback ? "Preview payment received" : "M-Pesa prompt sent",
       description: usedFallback
-        ? "Run \"vercel dev\" to exercise the real /api/mpesa/simulate endpoint."
+        ? "This local preview will continue through the membership review steps."
         : "Enter your M-Pesa PIN on your phone to confirm the payment.",
     });
 
@@ -257,7 +254,7 @@ export default function JoinDao() {
         <div className="container relative z-10 mx-auto px-4">
           <Link to={community ? `/dashboard/${community.id}` : "/communities"} className="mb-6 inline-flex items-center gap-2 text-sm">
             <ArrowLeft className="h-4 w-4" />
-            Back to DAO
+            Back to community
           </Link>
 
           <div className="mx-auto max-w-5xl space-y-5">
@@ -266,33 +263,33 @@ export default function JoinDao() {
               <div className="p-5 md:p-7">
                 <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
                   <div>
-                    <p className="font-mono text-xs uppercase tracking-widest">Join DAO</p>
+                    <p className="text-sm font-semibold text-primary">Join community</p>
                     <h1 className="mt-2 font-display text-3xl font-bold">
-                      {community?.name ?? "DAO"}
+                      {community?.name ?? "Community"}
                     </h1>
                     <p className="mt-2 max-w-xl text-sm leading-6">
-                      Pay dues through M-Pesa or Stellar, then connect your {chainMeta.label} account to receive your membership record.
+                      Pay your monthly contribution through M-Pesa. Your membership starts after payment review and group approval.
                     </p>
                   </div>
                   <div className="w-full rounded-lg border px-4 py-3 md:w-auto md:text-right">
-                    <p className="text-xs">Monthly Dues</p>
+                    <p className="text-xs">Monthly contribution</p>
                     <p className="font-display text-lg font-bold">
-                      {amount > 0 ? formatRailAmountWithKes(amount, chainMeta) : "—"}
+                      {amount > 0 ? formatKSh(amount) : "—"}
                     </p>
                   </div>
                 </div>
               </div>
               </CommunityBanner>
 
-              <div className="grid gap-4 p-5 lg:grid-cols-3 md:p-6">
-                <div className="rounded-lg border p-5">
+              <div className="p-5 md:p-6">
+                <div className="max-w-xl rounded-xl border border-border/70 p-5">
                   <div className="mb-4 flex items-center gap-3">
                     <div className="grid h-10 w-10 place-items-center rounded-lg">
                       <Phone className="h-5 w-5" />
                     </div>
                     <div>
-                      <h2 className="font-display text-base font-semibold">Phone-first M-Pesa</h2>
-                      <p className="text-xs">Primary MVP path</p>
+                      <h2 className="font-display text-base font-semibold">Pay with M-Pesa</h2>
+                      <p className="text-xs">Recommended</p>
                     </div>
                   </div>
 
@@ -326,13 +323,17 @@ export default function JoinDao() {
                     ) : (
                       <>
                         <CreditCard className="h-4 w-4" />
-                        Request M-Pesa Prompt
+                        Send payment prompt
                       </>
                     )}
                   </button>
                 </div>
 
-                <div className="rounded-lg border p-5">
+                <details className="mt-5 rounded-xl bg-muted/30 p-4">
+                  <summary className="cursor-pointer text-sm font-semibold">Other payment and account options</summary>
+                  <p className="mt-2 text-xs text-muted-foreground">Only use these options if an organiser or support person asked you to.</p>
+                  <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                <div className="rounded-lg border bg-background/50 p-5">
                   <div className="mb-4 flex items-center gap-3">
                     <div className="grid h-10 w-10 place-items-center rounded-lg">
                       <Stars className="h-5 w-5" />
@@ -385,7 +386,7 @@ export default function JoinDao() {
                   </button>
                 </div>
 
-                <div className="rounded-lg border p-5">
+                <div className="rounded-lg border bg-background/50 p-5">
                   <div className="mb-4 flex items-center gap-3">
                     <div className="grid h-10 w-10 place-items-center rounded-lg">
                       <Wallet className="h-5 w-5" />
@@ -396,7 +397,7 @@ export default function JoinDao() {
                     </div>
                   </div>
                   <p className="text-sm leading-6">
-                    Connect your {chainMeta.label} account for credentials and voting.
+                    Connect your {chainMeta.label} account for your membership record and voting.
                   </p>
                   <button
                     type="button"
@@ -418,13 +419,15 @@ export default function JoinDao() {
                     Manage linked Stellar account
                   </Link>
                 </div>
+                  </div>
+                </details>
               </div>
 
               <div className="mx-5 mb-5 rounded-lg border p-4 md:mx-6 md:mb-6">
                 <div className="flex gap-3">
                   <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
                   <p className="text-sm leading-6">
-                    <strong>Payment confirmed is not membership activation.</strong> Your membership activates after proof review and approval.
+                    <strong>Payment is only one step.</strong> Your membership starts after the group reviews and approves it.
                   </p>
                 </div>
               </div>

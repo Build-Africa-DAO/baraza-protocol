@@ -23,7 +23,6 @@ import {
 } from "@/lib/payments";
 import { recordActiveMembership } from "@/lib/memberships";
 import { getPhoneAuthSession } from "@/lib/phoneAuth";
-import { useChain } from "@/hooks/useChain";
 
 interface DisplayStep {
   code: string;
@@ -31,10 +30,10 @@ interface DisplayStep {
   minStatus: PaymentOrderStatus;
 }
 
-function getDisplaySteps(railLabel: string): DisplayStep[] {
+function getDisplaySteps(): DisplayStep[] {
   return [
-    { code: "mint-queued", label: "Preparing your membership credential", minStatus: "MINT_QUEUED" },
-    { code: "mint-submitted", label: `Submitting to ${railLabel}`, minStatus: "MINT_SUBMITTED" },
+    { code: "mint-queued", label: "Preparing your member record", minStatus: "MINT_QUEUED" },
+    { code: "mint-submitted", label: "Saving the group approval", minStatus: "MINT_SUBMITTED" },
     { code: "indexer-confirmed", label: "Membership verified", minStatus: "INDEXER_CONFIRMED" },
     { code: "reconciled", label: "Active member", minStatus: "RECONCILED" },
   ];
@@ -72,7 +71,6 @@ export default function JoinStatus() {
   const [params] = useSearchParams();
   const { community } = useCommunity(id);
   const { publicKey } = useWallet();
-  const { chainMeta } = useChain();
   const orderId = params.get("orderId") ?? "";
   const activationSecret = getPaymentOrderActivationSecret(orderId);
   const rail = params.get("rail") ?? (orderId.startsWith("ord_stellar_") || orderId.startsWith("ord_local_stellar_") ? "stellar" : "mpesa");
@@ -81,7 +79,7 @@ export default function JoinStatus() {
   useSeo({
     title: community ? `Join status - ${community.name}` : "Join status",
     description: isStellarRail
-      ? "Track Stellar payment verification and membership activation."
+      ? "Track an alternative payment and membership activation."
       : "Track M-Pesa payment and membership activation.",
     path: id ? `/join/${id}/status` : undefined,
     noIndex: true,
@@ -133,7 +131,7 @@ export default function JoinStatus() {
         const order = await fetchPaymentOrder(orderId, activationSecret);
         if (cancelled) return;
         if (!order) {
-          setErrorMessage(`Order ${orderId} not found in Supabase. Verify migrations + service role key.`);
+          setErrorMessage("We could not find this payment reference. Ask an organiser to check the payment setup.");
           return;
         }
         setErrorMessage(null);
@@ -202,12 +200,12 @@ export default function JoinStatus() {
             { code: "payment-confirmed", label: "Payment received - activating membership", minStatus: "PAYMENT_CONFIRMED" },
           ];
 
-      return [...paymentSteps, ...getDisplaySteps(chainMeta.label)].map((step) => ({
+      return [...paymentSteps, ...getDisplaySteps()].map((step) => ({
         ...step,
         state: deriveStepState(step.minStatus, status),
       }));
     },
-    [chainMeta.label, isStellarRail, status],
+    [isStellarRail, status],
   );
 
   const isFailed = isFailureStatus(status);
@@ -219,7 +217,7 @@ export default function JoinStatus() {
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-4xl">
             <div className="mb-6">
-              <p className="font-mono text-xs uppercase tracking-widest">Join Status</p>
+              <p className="text-sm font-semibold text-primary">Membership status</p>
               <h1 className="mt-2 font-display text-3xl font-bold">
                 {isFailed
                   ? "Membership activation failed"
@@ -228,9 +226,8 @@ export default function JoinStatus() {
                     : "Activating your membership"}
               </h1>
               <p className="mt-2 text-sm">
-                Order <span className="font-mono">{orderId || "(none)"}</span> for{" "}
-                {community?.name ?? "Chama"} is moving from{" "}
-                {isStellarRail ? "Stellar payment verification" : "M-Pesa confirmation"} to active membership.
+                {isStellarRail ? "Your alternative payment" : "Your M-Pesa payment"} for {" "}
+                {community?.name ?? "this community"} is being reviewed before membership starts.
               </p>
             </div>
 
@@ -272,10 +269,10 @@ export default function JoinStatus() {
                       </span>
                     </div>
                     <div className="flex justify-between gap-3 border-b pb-3">
-                      <span>Credential</span>
+                      <span>Member record</span>
                       <span>
                         {statusIndex(status) >= statusIndex("MINT_CONFIRMED")
-                          ? "Minted"
+                          ? "Ready"
                           : statusIndex(status) >= statusIndex("MINT_QUEUED")
                             ? "Preparing"
                             : "Pending"}
@@ -300,7 +297,7 @@ export default function JoinStatus() {
                 {!publicKey && isComplete && (
                   <div className="rounded-lg border p-5">
                     <p className="text-sm leading-6">
-                      {chainMeta.accountCta} to bind this membership to your account.
+                      You can add an optional digital account later from your profile.
                     </p>
                   </div>
                 )}

@@ -52,7 +52,7 @@ describe('JoinStatus payment rail copy', () => {
     renderStatus('/join/1/status?orderId=ord_local_stellar_demo&rail=stellar');
 
     expect(screen.getByText('Stellar payment verified')).toBeInTheDocument();
-    expect(screen.getByText(/Stellar payment verification/)).toBeInTheDocument();
+    expect(screen.getByText(/Your alternative payment/)).toBeInTheDocument();
     expect(screen.queryByText(/M-Pesa prompt/)).not.toBeInTheDocument();
   });
 
@@ -67,16 +67,17 @@ describe('JoinStatus payment rail copy', () => {
     renderStatus('/join/1/status?orderId=ord_mpesa_demo');
 
     expect(screen.getByText('Check your phone for the M-Pesa prompt')).toBeInTheDocument();
-    expect(screen.getByText(/M-Pesa confirmation/)).toBeInTheDocument();
+    expect(screen.getByText(/Your M-Pesa payment/)).toBeInTheDocument();
     expect(screen.queryByText('Stellar payment verified')).not.toBeInTheDocument();
   });
 
-  it('uses the community chain for membership submission copy even when another chain is selected globally', () => {
+  it('hides chain submission details even when another chain is selected globally', () => {
     window.localStorage.setItem('baraza:chain', 'base');
 
     renderStatus('/join/1/status?orderId=ord_mpesa_demo');
 
-    expect(screen.getByText('Submitting to Solana')).toBeInTheDocument();
+    expect(screen.getByText('Saving the group approval')).toBeInTheDocument();
+    expect(screen.queryByText('Submitting to Solana')).not.toBeInTheDocument();
     expect(screen.queryByText('Submitting to Base')).not.toBeInTheDocument();
   });
 });
