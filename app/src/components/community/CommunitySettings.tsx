@@ -3,8 +3,10 @@ import { Coins, ExternalLink, Info, Lock, Phone, Settings, ShieldCheck, Smartpho
 import { Link } from 'react-router-dom';
 import type { Community } from '@/lib/constants';
 import { PAYBILL_ADDON_FEE_KES, USSD_ADDON_FEE_KES } from '@/lib/constants';
-import { formatKSh, formatRailAmountFromKes, formatRailDate } from '@/lib/utils';
+import { formatKSh, formatRailDate } from '@/lib/utils';
 import { useChain } from '@/hooks/useChain';
+import { useTreasuryApprovals } from '@/hooks/useTreasuryApprovals';
+import { CHAINS } from '@/lib/chain';
 
 interface Props {
   community: Community;
@@ -13,7 +15,9 @@ interface Props {
 
 export default function CommunitySettings({ community, isMember }: Props) {
   const [copied, setCopied] = useState(false);
-  const { chainMeta } = useChain();
+  const { chain, chainMeta } = useChain();
+  const accountMeta = CHAINS[community.chain ?? chain] ?? chainMeta;
+  const approvals = useTreasuryApprovals(community);
 
   const copyId = () => {
     navigator.clipboard.writeText(community.id).then(() => {
@@ -34,7 +38,6 @@ export default function CommunitySettings({ community, isMember }: Props) {
           {[
             ['Name', community.name],
             ['Type', community.type],
-            ['Treasury rail', chainMeta.label],
             ['Founded', formatRailDate(community.createdAt, chainMeta, { month: 'long', year: 'numeric' })],
           ].map(([label, value]) => (
             <div key={label} className="rounded-lg border border-border/50 p-3">
@@ -58,11 +61,11 @@ export default function CommunitySettings({ community, isMember }: Props) {
         </div>
       </div>
 
-      {/* Governance parameters */}
+      {/* Decision rules */}
       <div className="baraza-card p-5">
         <div className="flex items-center gap-2 mb-4">
           <ShieldCheck className="h-4 w-4 text-primary" />
-          <h3 className="font-display text-base font-semibold">Governance parameters</h3>
+          <h3 className="font-display text-base font-semibold">How member decisions work</h3>
           <span className="ml-auto inline-flex items-center gap-1 rounded-full border border-border/50 px-2 py-0.5 text-[10px] text-muted-foreground">
             <Lock className="h-2.5 w-2.5" />
             Locked rules
@@ -70,10 +73,9 @@ export default function CommunitySettings({ community, isMember }: Props) {
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            ['Quorum', `${community.quorumPct ?? 51}%`, 'Min voters for proposal to pass'],
-            ['Approval', `${community.approvalThresholdPct ?? 66}%`, 'Yes-vote threshold'],
-            ['Voting period', `${community.votingPeriodDays ?? 7} days`, 'Time window for votes'],
-            ['Treasury policy', (community.treasuryPolicy ?? 'multisig-ready').replace('-', ' '), 'Release mechanism'],
+            ['Members needed', `${community.quorumPct ?? 51}%`, 'Minimum participation'],
+            ['Yes votes needed', `${community.approvalThresholdPct ?? 66}%`, 'Approval level'],
+            ['Time to vote', `${community.votingPeriodDays ?? 7} days`, 'Member review window'],
           ].map(([label, value, note]) => (
             <div key={label} className="rounded-lg border border-border/50 p-3">
               <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</p>
@@ -84,8 +86,38 @@ export default function CommunitySettings({ community, isMember }: Props) {
         </div>
         <p className="mt-3 flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <Info className="h-3 w-3 shrink-0" />
-          Governance parameters are locked after community creation. A member proposal is required to change them.
+          These rules are locked after community creation. Members must approve a proposal to change them.
         </p>
+      </div>
+
+      <div className="rounded-2xl border border-border/70 bg-card p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-sm text-muted-foreground">Withdrawal safety</p>
+            <h3 className="mt-1 font-display text-xl font-semibold">Who can approve group withdrawals</h3>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+              {approvals?.requiredApprovals ?? 2} named officers must agree before an eligible withdrawal can move forward.
+            </p>
+          </div>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
+            <Lock className="h-3 w-3" /> Withdrawals paused
+          </span>
+        </div>
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          {approvals?.approvers.map((approver) => (
+            <div key={approver.role} className="rounded-xl border border-border/60 p-4">
+              <p className="font-semibold">{approver.role}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{approver.status === 'ready' ? 'Ready to review' : 'Invitation pending'}</p>
+            </div>
+          ))}
+        </div>
+        <Link to={`/dashboard/${community.id}/treasury`} className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary">
+          View withdrawal approvals <ExternalLink className="h-3.5 w-3.5" />
+        </Link>
+        <details className="mt-5 rounded-lg bg-muted/35 p-4 text-sm">
+          <summary className="cursor-pointer font-semibold">Account setup and troubleshooting</summary>
+          <p className="mt-3 text-muted-foreground">Administrators can use the {accountMeta.label} account details when checking setup. Members do not need this information for normal group decisions.</p>
+        </details>
       </div>
 
       {/* Membership */}
@@ -95,7 +127,7 @@ export default function CommunitySettings({ community, isMember }: Props) {
         </div>
         <div className="grid gap-3 sm:grid-cols-3">
           {[
-            ['Monthly dues', formatRailAmountFromKes(community.membershipFee, chainMeta), 'Per active member'],
+            ['Monthly contribution', formatKSh(community.membershipFee), 'Per active member'],
             ['Total members', community.memberCount.toString(), 'Active membership records'],
             ['Your status', isMember ? 'Active member' : 'Not a member', isMember ? 'Account verified' : 'Join to activate'],
           ].map(([label, value, note]) => (
@@ -193,10 +225,10 @@ export default function CommunitySettings({ community, isMember }: Props) {
         <div className="grid gap-2">
           {[
             { label: 'Transfer admin rights', note: 'Nominate a new admin account with two-step approval', disabled: true },
-            { label: 'Update governance rules', note: 'Change quorum, approval threshold, or voting period through a member proposal', disabled: true },
-            { label: 'Create community token', note: 'Optional SPL token launch with umbrella treasury split. Coming soon after program deployment.', disabled: true, icon: Coins },
-            { label: 'Manage treasury', note: 'Release funds, set multisig signers, and view attestations', disabled: false, href: `/dashboard/${community.id}/treasury` },
-            { label: 'Export member list', note: 'Download CSV of all credential holders', disabled: true },
+            { label: 'Update decision rules', note: 'Change participation, approval, or voting time through a member proposal', disabled: true },
+            { label: 'Create community reward', note: 'Optional member recognition programme. Coming soon.', disabled: true, icon: Coins },
+            { label: 'Manage group account', note: 'Review withdrawal approvers, requests, and payment history', disabled: false, href: `/dashboard/${community.id}/treasury` },
+            { label: 'Export member list', note: 'Download a list of active members', disabled: true },
           ].map((action) => {
             const ActionIcon = action.icon;
             return (
@@ -213,7 +245,7 @@ export default function CommunitySettings({ community, isMember }: Props) {
               </div>
               {action.disabled ? (
                 <span className="shrink-0 rounded border border-border/50 px-2 py-1 text-[10px] text-muted-foreground">
-                  {action.label === 'Create community token' ? 'Coming soon' : 'Locked'}
+                  {action.label === 'Create community reward' ? 'Coming soon' : 'Locked'}
                 </span>
               ) : (
                 <Link
