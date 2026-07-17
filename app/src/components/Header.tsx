@@ -36,6 +36,7 @@ export default function Header({ walletSlot }: HeaderProps) {
   const navigate = useNavigate();
   const { open: openAkili } = useAkiliChat();
   const { theme, toggleTheme } = useTheme();
+  const showInfrastructureControls = location.pathname.startsWith("/join/");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -227,12 +228,16 @@ export default function Header({ walletSlot }: HeaderProps) {
             <Search className="h-4 w-4" />
           </button>
 
-          <div className="hidden sm:block">
-            <ChainSelector />
-          </div>
-          <div className="hidden 2xl:block">
-            <EnvironmentSelector />
-          </div>
+          {showInfrastructureControls && (
+            <>
+              <div className="hidden sm:block">
+                <ChainSelector />
+              </div>
+              <div className="hidden 2xl:block">
+                <EnvironmentSelector />
+              </div>
+            </>
+          )}
 
           {walletSlot && <div className="hidden 2xl:block">{walletSlot}</div>}
 
@@ -362,8 +367,12 @@ export default function Header({ walletSlot }: HeaderProps) {
                 {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                 {theme === "dark" ? "Light mode" : "Dark mode"}
               </button>
-              <ChainSelector variant="mobile" />
-              <EnvironmentSelector variant="mobile" />
+              {showInfrastructureControls && (
+                <>
+                  <ChainSelector variant="mobile" />
+                  <EnvironmentSelector variant="mobile" />
+                </>
+              )}
               {walletSlot}
             </div>
           </nav>

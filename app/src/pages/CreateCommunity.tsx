@@ -1,167 +1,60 @@
 import React, { useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Users, ArrowLeft, CheckCircle2, Loader2, Phone, ShieldCheck, Wallet, Hash, Smartphone } from 'lucide-react';
-import Layout from '@/components/Layout';
-import { COMMUNITY_TYPES, DAO_CREATION_FEE_KES, PAYBILL_ADDON_FEE_KES, USSD_ADDON_FEE_KES } from '@/lib/constants';
-import { formatKSh, formatRailAmountFromKes, formatRailAmountWithKes } from '@/lib/utils';
-import { normaliseKenyanPhone } from '@/lib/phone';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  CheckCircle2,
+  Loader2,
+  Phone,
+  Wallet,
+} from 'lucide-react';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useWalletGuard } from '@/hooks/useWalletGuard';
-import { useToast } from '@/hooks/use-toast';
-import { createCommunityRecord } from '@/lib/communities';
-import CommunityBanner from '@/components/CommunityBanner';
-import { useChain } from '@/hooks/useChain';
-import { useSeo } from '@/lib/seo';
-import { CHAINS, type Chain } from '@/lib/chain';
+import Layout from '@/components/Layout';
+import CommunityPurpose from '@/components/onboarding/CommunityPurpose';
 import { AskAkili } from '@/akili/AskAkili';
-import { useBarazaChain } from '@/hooks/useBarazaData';
+import {
+  COMMUNITY_TYPES,
+  DAO_CREATION_FEE_KES,
+  PAYBILL_ADDON_FEE_KES,
+  USSD_ADDON_FEE_KES,
+} from '@/lib/constants';
+import { formatKSh } from '@/lib/utils';
+import { normaliseKenyanPhone } from '@/lib/phone';
+import { createCommunityRecord } from '@/lib/communities';
 import { communityPda, toSlug } from '@/lib/programs';
 import { saveCommunityChainMapping } from '@/lib/chainMappings';
 import { buildWalletProofHeaders } from '@/lib/walletProof';
+import { useWalletGuard } from '@/hooks/useWalletGuard';
+import { useToast } from '@/hooks/use-toast';
+import { useSeo } from '@/lib/seo';
+import { useBarazaChain } from '@/hooks/useBarazaData';
+import { useCommunityDraft } from '@/hooks/useCommunityDraft';
+import type { Chain } from '@/lib/chain';
+import type { CommunitySetupStep } from '@/lib/communityDraft';
 
 type TreasuryPolicy = 'multisig-ready' | 'proposal-only' | 'manual-review';
-type ChecklistState = 'complete' | 'active' | 'pending';
+type AccountNetwork = Extract<Chain, 'solana' | 'stellar' | 'base'>;
 
-interface SetupChecklistItem {
-  label: string;
-  detail: string;
-  state: ChecklistState;
-}
-
-interface AnimatedSetupChecklistProps {
-  items: SetupChecklistItem[];
-  summary: string;
-}
-
-const checklistVariants = {
-  hidden: { opacity: 0, y: 14 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      staggerChildren: 0.12,
-      delayChildren: 0.08,
-    },
-  },
+const STEP_ORDER: CommunitySetupStep[] = ['basics', 'contributions', 'decisions', 'account'];
+const STEP_LABELS: Record<CommunitySetupStep, string> = {
+  basics: 'About your group',
+  contributions: 'Contributions',
+  decisions: 'Decision rules',
+  account: 'Account setup',
 };
 
-const checklistItemVariants = {
-  hidden: { opacity: 0, x: 18, filter: 'blur(4px)' },
-  show: { opacity: 1, x: 0, filter: 'blur(0px)' },
+const DEFAULT_FORM = {
+  name: '',
+  type: '',
+  fee: '',
+  description: '',
+  phone: '',
+  quorum: '51',
+  approvalThreshold: '66',
+  votingPeriod: '7',
+  treasuryPolicy: 'multisig-ready',
 };
-
-function AnimatedSetupChecklist({ items, summary }: AnimatedSetupChecklistProps) {
-  const completeCount = items.filter((item) => item.state === 'complete').length;
-  const progress = Math.max(8, Math.round((completeCount / items.length) * 100));
-
-  return (
-    <motion.div
-      className="baraza-card overflow-hidden p-5 lg:sticky lg:top-24"
-      initial={{ opacity: 0, y: 18, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-    >
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent"
-        initial={{ x: '-80%' }}
-        animate={{ x: '80%' }}
-        transition={{ duration: 2.8, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut' }}
-      />
-      <div className="mb-5 flex items-start justify-between gap-4">
-        <div>
-          <h2 className="font-mono text-xs font-semibold uppercase tracking-widest">
-            Setup checklist
-          </h2>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Launch readiness updates as the form is completed.
-          </p>
-        </div>
-        <motion.span
-          className="inline-flex items-center gap-2 rounded-full border border-primary/30 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-primary"
-          animate={{ boxShadow: ['0 0 0 hsl(22 100% 52% / 0)', '0 0 18px hsl(22 100% 52% / 0.28)', '0 0 0 hsl(22 100% 52% / 0)'] }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-          Live
-        </motion.span>
-      </div>
-
-      <div className="mb-5 h-1.5 overflow-hidden rounded-full bg-border/60">
-        <motion.div
-          className="h-full rounded-full bg-gradient-to-r from-primary via-accent to-primary"
-          initial={{ width: 0 }}
-          animate={{ width: `${progress}%` }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        />
-      </div>
-
-      <motion.div className="space-y-4" variants={checklistVariants} initial="hidden" animate="show">
-        {items.map((item, index) => {
-          const isComplete = item.state === 'complete';
-          const isActive = item.state === 'active';
-          return (
-            <motion.div
-              key={item.label}
-              className="relative flex gap-3"
-              variants={checklistItemVariants}
-              transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
-            >
-              {index < items.length - 1 && (
-                <span className="absolute left-2.5 top-7 h-[calc(100%-0.5rem)] w-px bg-border/60" aria-hidden />
-              )}
-              <motion.span
-                className={[
-                  'relative z-10 mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border',
-                  isComplete
-                    ? 'border-primary bg-primary text-primary-foreground'
-                    : isActive
-                      ? 'border-primary/70 bg-primary/10 text-primary'
-                      : 'border-border bg-background text-muted-foreground',
-                ].join(' ')}
-                animate={isActive ? { scale: [1, 1.12, 1] } : { scale: 1 }}
-                transition={{ duration: 1.2, repeat: isActive ? Infinity : 0, ease: 'easeInOut' }}
-              >
-                {isComplete ? (
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                ) : isActive ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <ShieldCheck className="h-3.5 w-3.5" />
-                )}
-              </motion.span>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold">{item.label}</p>
-                <AnimatePresence mode="wait">
-                  <motion.p
-                    key={item.detail}
-                    className="mt-1 text-xs text-muted-foreground"
-                    initial={{ opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -4 }}
-                    transition={{ duration: 0.18 }}
-                  >
-                    {item.detail}
-                  </motion.p>
-                </AnimatePresence>
-              </div>
-            </motion.div>
-          );
-        })}
-      </motion.div>
-
-      <motion.div
-        className="mt-6 rounded-lg border border-border/70 bg-background/45 p-4"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.45, duration: 0.3 }}
-      >
-        <p className="text-xs leading-5 text-muted-foreground">{summary}</p>
-      </motion.div>
-    </motion.div>
-  );
-}
 
 const GOVERNANCE_PRESETS: Record<string, {
   label: string;
@@ -173,327 +66,216 @@ const GOVERNANCE_PRESETS: Record<string, {
 }> = {
   savings: {
     label: 'Chama / savings group',
-    summary: 'Simple member-majority voting for dues, welfare support, and small shared purchases.',
-    quorum: '51',
-    approvalThreshold: '60',
-    votingPeriod: '7',
-    treasuryPolicy: 'proposal-only',
+    summary: 'A majority of members take part, and important spending needs clear support.',
+    quorum: '51', approvalThreshold: '60', votingPeriod: '7', treasuryPolicy: 'proposal-only',
   },
   cooperative: {
     label: 'Cooperative',
-    summary: 'Board-aware member governance for procurement, operations, and collective bargaining.',
-    quorum: '50',
-    approvalThreshold: '66',
-    votingPeriod: '14',
-    treasuryPolicy: 'multisig-ready',
+    summary: 'Member decisions remain visible while designated officers help approve withdrawals.',
+    quorum: '50', approvalThreshold: '66', votingPeriod: '14', treasuryPolicy: 'multisig-ready',
   },
   sacco: {
     label: 'SACCO',
-    summary: 'Stronger approvals and manual review for member savings, loans, and regulated treasury actions.',
-    quorum: '60',
-    approvalThreshold: '75',
-    votingPeriod: '14',
-    treasuryPolicy: 'manual-review',
+    summary: 'Higher participation and an officer review are recommended for member savings decisions.',
+    quorum: '60', approvalThreshold: '75', votingPeriod: '14', treasuryPolicy: 'manual-review',
   },
   housing: {
-    label: 'Housing SACCO',
-    summary: 'Higher participation for land, housing, and long-horizon asset decisions.',
-    quorum: '60',
-    approvalThreshold: '75',
-    votingPeriod: '30',
-    treasuryPolicy: 'manual-review',
-  },
-  dao: {
-    label: 'DAO',
-    summary: 'Token-aware governance for proposals, bounties, grants, and treasury releases.',
-    quorum: '40',
-    approvalThreshold: '51',
-    votingPeriod: '7',
-    treasuryPolicy: 'multisig-ready',
-  },
-  organization: {
-    label: 'Organization',
-    summary: 'Admin-led workflow with transparent proposal records and controlled treasury review.',
-    quorum: '40',
-    approvalThreshold: '66',
-    votingPeriod: '7',
-    treasuryPolicy: 'manual-review',
-  },
-  professional: {
-    label: 'Professional network',
-    summary: 'Lightweight votes for events, sponsorships, membership programs, and shared projects.',
-    quorum: '35',
-    approvalThreshold: '60',
-    votingPeriod: '7',
-    treasuryPolicy: 'proposal-only',
-  },
-  welfare: {
-    label: 'Welfare group',
-    summary: 'Member-majority rules for emergency support and recurring benefit decisions.',
-    quorum: '51',
-    approvalThreshold: '66',
-    votingPeriod: '7',
-    treasuryPolicy: 'proposal-only',
+    label: 'Housing group',
+    summary: 'Land and housing decisions use higher participation and a longer review period.',
+    quorum: '60', approvalThreshold: '75', votingPeriod: '30', treasuryPolicy: 'manual-review',
   },
   investment: {
     label: 'Investment club',
-    summary: 'Higher approvals for pooled investments, asset purchases, and risk-bearing decisions.',
-    quorum: '60',
-    approvalThreshold: '75',
-    votingPeriod: '14',
-    treasuryPolicy: 'multisig-ready',
+    summary: 'Shared investments use stronger approval and more than one withdrawal approver.',
+    quorum: '60', approvalThreshold: '75', votingPeriod: '14', treasuryPolicy: 'multisig-ready',
   },
 };
 
 function provisionPaybill(communityName: string): string {
-  // Generates a deterministic-looking 6-digit Safaricom business paybill.
-  const seed = Array.from(communityName).reduce((a, c) => a + c.charCodeAt(0), 0) + (Date.now() % 9000);
+  const seed = Array.from(communityName).reduce((total, character) => total + character.charCodeAt(0), 0) + (Date.now() % 9000);
   return String(400100 + (seed % 9900));
 }
 
 function provisionUssdShortcode(communityName: string): string {
-  const seed = Array.from(communityName).reduce((a, c) => a + c.charCodeAt(0), 0) + ((Date.now() >> 2) % 900);
+  const seed = Array.from(communityName).reduce((total, character) => total + character.charCodeAt(0), 0) + ((Date.now() >> 2) % 900);
   return `*384*${100 + (seed % 900)}#`;
 }
 
-const CreateCommunity: React.FC = () => {
+function isAccountNetwork(value: string | undefined): value is AccountNetwork {
+  return value === 'solana' || value === 'stellar' || value === 'base';
+}
+
+export default function CreateCommunity() {
   useSeo({
-    title: "Launch a group treasury",
-    description:
-      "Launch a group treasury on Baraza. Choose a governance model, set member dues, quorum rules, and payment paths in one guided flow.",
-    path: "/create",
+    title: 'Start a community',
+    description: 'Set up a chama, SACCO, cooperative, association, or community with guided questions and sensible starting rules.',
+    path: '/create',
   });
+
   const navigate = useNavigate();
-  const { requireWallet, isReady, address: founderAddress } = useWalletGuard({ action: 'launch a DAO' });
   const wallet = useWallet();
-  const { toast } = useToast();
-  const { chain } = useChain();
   const chainClient = useBarazaChain();
+  const { toast } = useToast();
+  const { savedDraft, saveDraft, clearDraft } = useCommunityDraft();
+  const { requireWallet, isReady, address: founderAddress } = useWalletGuard({ action: 'set up a community account' });
+
+  const [currentStep, setCurrentStep] = useState<CommunitySetupStep>(savedDraft?.step ?? 'basics');
+  const [form, setForm] = useState(savedDraft?.form ?? DEFAULT_FORM);
+  const [paymentMethod, setPaymentMethod] = useState<'mpesa' | 'wallet'>(savedDraft?.paymentMethod ?? 'mpesa');
+  const [addPaybill, setAddPaybill] = useState(savedDraft?.addPaybill ?? false);
+  const [addUssd, setAddUssd] = useState(savedDraft?.addUssd ?? false);
+  const [walletChain, setWalletChain] = useState<AccountNetwork>(
+    isAccountNetwork(savedDraft?.walletChain) ? savedDraft.walletChain : 'stellar',
+  );
   const [isPending, setIsPending] = useState(false);
   const [isCreated, setIsCreated] = useState(false);
   const [createdCommunityId, setCreatedCommunityId] = useState<string | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<'mpesa' | 'wallet'>('mpesa');
-  const [addPaybill, setAddPaybill] = useState(false);
-  const [addUssd, setAddUssd] = useState(false);
   const [assignedPaybill, setAssignedPaybill] = useState<string | null>(null);
   const [assignedUssd, setAssignedUssd] = useState<string | null>(null);
-  const [walletChain, setWalletChain] = useState<Extract<Chain, 'solana' | 'stellar' | 'base' | 'arbitrum' | 'optimism' | 'celo'>>(
-    chain === 'solana' || chain === 'stellar' || chain === 'base' || chain === 'arbitrum' || chain === 'optimism' || chain === 'celo'
-      ? chain
-      : 'solana',
-  );
-  const [form, setForm] = useState({
-    name: '',
-    type: '',
-    fee: '',
-    description: '',
-    phone: '',
-    quorum: '51',
-    approvalThreshold: '66',
-    votingPeriod: '7',
-    treasuryPolicy: 'multisig-ready',
-  });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    if (name === 'type') {
-      const preset = GOVERNANCE_PRESETS[value];
-      setForm((current) => ({
-        ...current,
-        type: value,
-        ...(preset
-          ? {
-              quorum: preset.quorum,
-              approvalThreshold: preset.approvalThreshold,
-              votingPeriod: preset.votingPeriod,
-              treasuryPolicy: preset.treasuryPolicy,
-            }
-          : {}),
-      }));
-      return;
-    }
-    setForm({ ...form, [name]: value });
-  };
-
+  const currentStepIndex = STEP_ORDER.indexOf(currentStep);
+  const selectedPreset = GOVERNANCE_PRESETS[form.type];
   const normalisedPhone = normaliseKenyanPhone(form.phone);
-  const totalFeeKes =
-    DAO_CREATION_FEE_KES +
-    (addPaybill ? PAYBILL_ADDON_FEE_KES : 0) +
-    (addUssd ? USSD_ADDON_FEE_KES : 0);
-  const selectedCommunityChain = walletChain;
-  const selectedCommunityChainMeta = CHAINS[selectedCommunityChain];
-  const selectedAccountMeta = CHAINS[walletChain];
-  const selectedPreset = form.type ? GOVERNANCE_PRESETS[form.type] : null;
-  const needsSolanaAccount = walletChain === 'solana';
-  const isValid = !!(
-    form.name.trim() &&
-    form.type &&
-    form.fee &&
-    form.description.trim() &&
-    (paymentMethod === 'wallet' || normalisedPhone !== null)
+  const totalFeeKes = DAO_CREATION_FEE_KES + (addPaybill ? PAYBILL_ADDON_FEE_KES : 0) + (addUssd ? USSD_ADDON_FEE_KES : 0);
+  const needsConnectedAccount = paymentMethod === 'wallet' && walletChain === 'solana';
+  const canContinue = currentStep === 'basics'
+    ? Boolean(form.name.trim() && form.type && form.description.trim())
+    : currentStep === 'contributions'
+      ? form.fee !== '' && Number(form.fee) >= 0
+      : true;
+  const canSubmit = Boolean(
+    form.name.trim() && form.type && form.description.trim() && form.fee !== '' &&
+    (paymentMethod === 'wallet' || normalisedPhone),
   );
-  const setupChecklistItems: SetupChecklistItem[] = [
-    {
-      label: 'Community account',
-      detail: form.name.trim() && form.type
-        ? `${form.name.trim()} is ready from form details`
-        : 'Add group name and setup model',
-      state: form.name.trim() && form.type ? 'complete' : form.name.trim() || form.type ? 'active' : 'pending',
-    },
-    {
-      label: 'Treasury account',
-      detail: needsSolanaAccount && !isReady
-        ? 'Import or connect a wallet to prepare the treasury'
-        : `${selectedAccountMeta.label} funding path selected`,
-      state: needsSolanaAccount ? (isReady ? 'complete' : 'active') : 'complete',
-    },
-    {
-      label: 'Membership tier',
-      detail: form.fee ? `${formatKSh(Number(form.fee) || 0)} monthly dues` : 'Set monthly member dues',
-      state: form.fee ? 'complete' : 'pending',
-    },
-    {
-      label: 'Governance model',
-      detail: selectedPreset ? selectedPreset.label : 'Choose chama, SACCO, cooperative, DAO, or organization',
-      state: selectedPreset ? 'complete' : 'pending',
-    },
-    {
-      label: 'Membership credential',
-      detail: paymentMethod === 'mpesa'
-        ? normalisedPhone
-          ? 'M-Pesa contact ready for payment attestation'
-          : 'Add member payment contact'
-        : isReady
-          ? 'Wallet ready for credential minting'
-          : 'Wallet import required before launch',
-      state: paymentMethod === 'mpesa' ? (normalisedPhone ? 'complete' : 'active') : (isReady ? 'complete' : 'active'),
-    },
-  ];
-  const setupChecklistSummary = isValid
-    ? 'Treasury setup, membership tiers, and credentials are ready to provision once your group is launched.'
-    : 'Complete the setup fields to preview the account, treasury, and credential provisioning flow.';
 
   React.useEffect(() => {
-    if (chain === 'solana' || chain === 'stellar' || chain === 'base' || chain === 'arbitrum' || chain === 'optimism' || chain === 'celo') {
-      setWalletChain(chain);
-    }
-  }, [chain]);
+    if (isCreated) return;
+    saveDraft({ step: currentStep, form, paymentMethod, addPaybill, addUssd, walletChain });
+  }, [addPaybill, addUssd, currentStep, form, isCreated, paymentMethod, saveDraft, walletChain]);
 
-  /**
-   * Charge the DAO setup fee via the M-Pesa simulator, then create the
-   * community record. Falls back to direct creation if the simulator endpoint
-   * is unreachable (local dev without `vercel dev`) so the form still works
-   * - the fee is then a paper-only acknowledgement, not enforced.
-   */
+  function updateField(name: keyof typeof form, value: string) {
+    setForm((current) => ({ ...current, [name]: value }));
+  }
+
+  function applyCommunityType(value: string) {
+    const preset = GOVERNANCE_PRESETS[value];
+    setForm((current) => ({
+      ...current,
+      type: value,
+      ...(preset ? {
+        quorum: preset.quorum,
+        approvalThreshold: preset.approvalThreshold,
+        votingPeriod: preset.votingPeriod,
+        treasuryPolicy: preset.treasuryPolicy,
+      } : {}),
+    }));
+  }
+
+  function goToStep(step: CommunitySetupStep) {
+    const index = STEP_ORDER.indexOf(step);
+    if (index <= currentStepIndex) setCurrentStep(step);
+  }
+
+  function continueForward() {
+    const next = STEP_ORDER[currentStepIndex + 1];
+    if (next && canContinue) setCurrentStep(next);
+  }
+
+  function goBack() {
+    const previous = STEP_ORDER[currentStepIndex - 1];
+    if (previous) setCurrentStep(previous);
+    else navigate(-1);
+  }
+
   async function chargeCreationFee(): Promise<{ orderId: string; persisted: boolean }> {
     try {
-      const res = await fetch('/api/mpesa/simulate', {
+      const response = await fetch('/api/mpesa/simulate', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           phone: `+254${normalisedPhone}`,
-          communityId: 'dao-creation-pending',
+          communityId: 'community-creation-pending',
           amount: totalFeeKes,
           currency: 'KES',
         }),
       });
-      if (res.ok) {
-        const data = (await res.json()) as { orderId?: string; activationSecret?: string; persisted?: boolean };
-        if (data.orderId) {
-          return { orderId: data.orderId, persisted: data.persisted ?? false };
-        }
+      if (response.ok) {
+        const data = await response.json() as { orderId?: string; persisted?: boolean };
+        if (data.orderId) return { orderId: data.orderId, persisted: data.persisted ?? false };
       }
     } catch {
-      // network/CORS/local-dev - fall through
+      // Local development can create the community without the payment simulator.
     }
-    return {
-      orderId: `ord_local_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-      persisted: false,
-    };
+    return { orderId: `ord_local_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`, persisted: false };
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isValid) return;
-    if (paymentMethod === 'mpesa' && !normalisedPhone) return;
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    if (!canSubmit || (paymentMethod === 'mpesa' && !normalisedPhone)) return;
 
-    const launchCommunity = async () => {
+    const createCommunity = async () => {
       setIsPending(true);
       try {
-        // Step 1: charge the setup fee
         const charge = paymentMethod === 'mpesa'
           ? await chargeCreationFee()
           : { orderId: `ord_${walletChain}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`, persisted: false };
 
-        // Step 2: create the community record
         let chainResult: { slug: string; communityAddress: string; signature: string } | null = null;
-        if (selectedCommunityChain === 'solana' && chainClient) {
+        if (walletChain === 'solana' && chainClient) {
           const slug = toSlug(form.name);
           try {
             const signature = await chainClient.createCommunity(slug, form.name, '');
             const [communityKey] = communityPda(slug);
-            chainResult = {
-              slug,
-              communityAddress: communityKey.toBase58(),
-              signature,
-            };
-          } catch (chainErr) {
-            console.warn('[baraza] createCommunity on-chain failed (record-only fallback):', chainErr);
+            chainResult = { slug, communityAddress: communityKey.toBase58(), signature };
+          } catch (chainError) {
+            console.warn('[baraza] account registration failed; saved locally instead:', chainError);
           }
         }
 
         const paybill = addPaybill ? provisionPaybill(form.name) : undefined;
         const ussd = addUssd ? provisionUssdShortcode(form.name) : undefined;
-        if (paybill) setAssignedPaybill(paybill);
-        if (ussd) setAssignedUssd(ussd);
-
-        const walletProofHeaders = founderAddress
-          ? await buildWalletProofHeaders(wallet, 'create-community')
-          : undefined;
-
+        const walletProofHeaders = founderAddress ? await buildWalletProofHeaders(wallet, 'create-community') : undefined;
         const community = await createCommunityRecord({
           name: form.name,
           type: form.type,
           description: form.description,
           membershipFee: Number(form.fee),
-          chain: selectedCommunityChain,
+          chain: walletChain,
           quorumPct: Number(form.quorum),
           approvalThresholdPct: Number(form.approvalThreshold),
           votingPeriodDays: Number(form.votingPeriod),
-          treasuryPolicy: form.treasuryPolicy as 'multisig-ready' | 'proposal-only' | 'manual-review',
+          treasuryPolicy: form.treasuryPolicy as TreasuryPolicy,
           paybillNumber: paybill,
           ussdShortcode: ussd,
           createdBy: founderAddress ?? undefined,
           walletProofHeaders,
         });
+
         if (chainResult) {
           saveCommunityChainMapping({
             localId: community.id,
-            // chainResult is only set in the `selectedCommunityChain === 'solana'`
-            // branch above, but TS cannot carry that narrowing here.
             chain: 'solana',
             slug: chainResult.slug,
             communityAddress: chainResult.communityAddress,
             createTxSignature: chainResult.signature,
           });
         }
+
+        setAssignedPaybill(paybill ?? null);
+        setAssignedUssd(ussd ?? null);
         setCreatedCommunityId(community.id);
         setIsCreated(true);
-        const launchFeeLabel = paymentMethod === 'mpesa'
-          ? formatKSh(totalFeeKes)
-          : formatRailAmountWithKes(totalFeeKes, selectedAccountMeta);
+        clearDraft();
         toast({
-          title: charge.persisted
-            ? `${launchFeeLabel} payment received`
-            : `DAO launched (simulator offline)`,
+          title: charge.persisted ? 'Setup payment received' : 'Community created',
           description: charge.persisted
-            ? `Order ${charge.orderId.slice(0, 12)}... ${form.name} is live.`
-            : 'Local dev mode - payment skipped, community launched.',
+            ? `${form.name} is ready. Payment reference ${charge.orderId.slice(0, 12)}…`
+            : 'Saved on this device. Payment was skipped in local development.',
         });
-      } catch (err) {
+      } catch (error) {
         toast({
-          title: 'DAO launch failed',
-          description: err instanceof Error ? err.message : 'Check the form and try again.',
+          title: 'Community setup could not be completed',
+          description: error instanceof Error ? error.message : 'Check the details and try again.',
           variant: 'destructive',
         });
       } finally {
@@ -501,75 +283,42 @@ const CreateCommunity: React.FC = () => {
       }
     };
 
-    if (needsSolanaAccount) {
-      await requireWallet(launchCommunity);
+    if (needsConnectedAccount && !isReady) {
+      await requireWallet(createCommunity);
       return;
     }
-
-    await launchCommunity();
-  };
+    await createCommunity();
+  }
 
   if (isCreated) {
-    const launchFeeLabel = paymentMethod === 'mpesa'
-      ? formatKSh(totalFeeKes)
-      : formatRailAmountWithKes(totalFeeKes, selectedAccountMeta);
     return (
       <Layout>
-        <section className="py-20">
-          <div className="container mx-auto px-4">
-            <div className="max-w-md mx-auto text-center">
-              <div className="w-16 h-16 rounded-full bg-confirmed/15 flex items-center justify-center mx-auto mb-6">
-                <CheckCircle2 className="w-8 h-8 text-confirmed" />
-              </div>
-              <h2 className="font-display text-2xl font-bold mb-3">
-                {form.name} is live
-              </h2>
-              <p className="text-sm mb-2">
-                Payment of {launchFeeLabel} received. Your DAO is ready.
-              </p>
-              {(assignedPaybill || assignedUssd) && (
-                <div className="mb-5 rounded-lg border p-4 text-left space-y-3">
-                  {assignedPaybill && (
-                    <div className="flex items-center gap-3 text-sm">
-                      <Phone className="h-4 w-4 shrink-0 text-primary" />
-                      <div>
-                        <p className="font-semibold">Paybill assigned</p>
-                        <p className="font-mono text-base">{assignedPaybill}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">Account number = your member ID</p>
-                      </div>
-                    </div>
-                  )}
-                  {assignedUssd && (
-                    <div className="flex items-center gap-3 text-sm">
-                      <Smartphone className="h-4 w-4 shrink-0 text-primary" />
-                      <div>
-                        <p className="font-semibold">USSD shortcode assigned</p>
-                        <p className="font-mono text-base">{assignedUssd}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">Members dial this to vote and pay dues</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-              <p className="text-sm mb-8">
-                Share the join link with members, then start your first proposal from the dashboard.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <button
-                  onClick={() => createdCommunityId && navigate(`/dashboard/${createdCommunityId}`)}
-                  disabled={!createdCommunityId}
-                  className="btn-primary text-sm"
-                >
-                  Go to Dashboard
-                </button>
-                <button
-                  onClick={() => navigate('/communities')}
-                  className="btn-ghost text-sm"
-                >
-                  View All Communities
-                </button>
-              </div>
+        <section className="mx-auto max-w-xl px-4 py-16 text-center sm:px-6">
+          <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-confirmed/15 text-confirmed">
+            <CheckCircle2 className="h-7 w-7" />
+          </div>
+          <h1 className="mt-6 text-balance font-display text-3xl font-bold text-foreground">{form.name} is ready</h1>
+          <p className="mt-3 text-pretty text-base leading-7 text-muted-foreground">
+            Invite your members, confirm who can approve withdrawals, and open your first decision.
+          </p>
+          {(assignedPaybill || assignedUssd) && (
+            <div className="mt-7 rounded-xl border border-border bg-card p-5 text-left">
+              {assignedPaybill && <p className="text-sm"><strong>Paybill:</strong> {assignedPaybill}</p>}
+              {assignedUssd && <p className="mt-2 text-sm"><strong>Member shortcode:</strong> {assignedUssd}</p>}
             </div>
+          )}
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={() => createdCommunityId && navigate(`/dashboard/${createdCommunityId}`)}
+              disabled={!createdCommunityId}
+              className="inline-flex min-h-12 items-center justify-center rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+            >
+              Open community home
+            </button>
+            <button type="button" onClick={() => navigate('/communities')} className="inline-flex min-h-12 items-center justify-center rounded-lg border border-border px-6 text-sm font-semibold">
+              View all communities
+            </button>
           </div>
         </section>
       </Layout>
@@ -578,507 +327,239 @@ const CreateCommunity: React.FC = () => {
 
   return (
     <Layout>
-      <section className="py-10 md:py-16">
-        <div className="container mx-auto px-4">
-          <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[0.64fr_0.36fr]">
-            <div>
-            {/* Back button */}
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-sm mb-6"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back
-            </button>
+      <section className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
+        <button type="button" onClick={goBack} className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="h-4 w-4" />
+          {currentStepIndex === 0 ? 'Back' : 'Previous step'}
+        </button>
 
-            <CommunityBanner type="cooperative" className="mb-8 min-h-[11.5rem] p-0">
-            <div className="max-w-2xl p-6 md:p-7">
-              <div className="mb-4 flex items-center gap-3">
-                <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-primary/25 bg-background/72 text-primary shadow-lg backdrop-blur">
-                  <Users className="w-5 h-5" />
-                </div>
-                <h1 className="font-display text-2xl font-black leading-tight text-foreground drop-shadow md:text-3xl">
-                  Launch a group treasury
-                </h1>
+        <div className="mt-7 grid gap-10 lg:grid-cols-[15rem_minmax(0,1fr)]">
+          <aside>
+            <p className="text-sm font-semibold text-primary">Start a community</p>
+            <h1 className="mt-2 text-balance font-display text-3xl font-bold text-foreground">A few clear decisions, one step at a time.</h1>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">Your progress is saved automatically on this device.</p>
+
+            <ol className="mt-7 space-y-2" aria-label="Community setup progress">
+              {STEP_ORDER.map((step, index) => {
+                const complete = index < currentStepIndex;
+                const active = step === currentStep;
+                return (
+                  <li key={step}>
+                    <button
+                      type="button"
+                      onClick={() => goToStep(step)}
+                      disabled={index > currentStepIndex}
+                      aria-current={active ? 'step' : undefined}
+                      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
+                        active ? 'bg-primary/10 font-semibold text-foreground' : complete ? 'text-foreground hover:bg-muted' : 'text-muted-foreground'
+                      }`}
+                    >
+                      <span className={`grid h-6 w-6 place-items-center rounded-full border text-xs ${active || complete ? 'border-primary text-primary' : 'border-border'}`}>
+                        {complete ? <Check className="h-3.5 w-3.5" /> : index + 1}
+                      </span>
+                      {STEP_LABELS[step]}
+                    </button>
+                  </li>
+                );
+              })}
+            </ol>
+          </aside>
+
+          <form onSubmit={handleSubmit} className="min-w-0 rounded-xl border border-border/70 bg-card p-5 shadow-[var(--shadow-card)] sm:p-7">
+            <div className="mb-7 flex items-start justify-between gap-4 border-b border-border/60 pb-5">
+              <div>
+                <p className="text-sm text-muted-foreground">Step {currentStepIndex + 1} of {STEP_ORDER.length}</p>
+                <h2 className="mt-1 text-2xl font-semibold text-foreground">{STEP_LABELS[currentStep]}</h2>
               </div>
-              <p className="max-w-xl text-sm font-semibold leading-6 text-foreground/92 drop-shadow md:text-base md:leading-7">
-                Choose the setup that matches your chama, SACCO, cooperative, DAO, or organization.
-              </p>
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                <AskAkili
-                  prompt="Suggest quorum, approval threshold, and dues for a 20-member chama meeting monthly"
-                  label="Suggest a setup"
-                  variant="chip"
-                />
-                <AskAkili
-                  prompt="Walk me through each field on this Create form, top to bottom"
-                  label="Walk me through it"
-                  variant="chip"
-                />
-              </div>
+              <span className="text-xs font-medium text-muted-foreground">Saved</span>
             </div>
-            </CommunityBanner>
 
-            {/* Form */}
-            <form
-              onSubmit={handleSubmit}
-              className="space-y-5"
-            >
-              {/* Name */}
-              <div>
-                <label className="block text-xs font-semibold mb-2">
-                  Group name
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={form.name}
-                  onChange={handleChange}
-                  placeholder="e.g. Milele Chama"
-                  className="w-full rounded-xl px-4 py-3 text-sm outline-none border"
-                />
-              </div>
-
-              {/* Type */}
-              <div>
-                <label className="block text-xs font-semibold mb-2">
-                  Setup model
-                </label>
-                <select
-                  name="type"
-                  value={form.type}
-                  onChange={handleChange}
-                  className="w-full rounded-xl px-4 py-3 text-sm outline-none border cursor-pointer appearance-none"
-                >
-                  <option value="" disabled>Select a setup model</option>
-                  {COMMUNITY_TYPES.map((t) => (
-                    <option key={t.value} value={t.value}>{t.label}</option>
-                  ))}
-                </select>
-                {selectedPreset && (
-                  <p className="mt-1.5 text-xs text-muted-foreground">
-                    Preset applied: {selectedPreset.label}
-                  </p>
-                )}
-              </div>
-
-              {/* Fee */}
-              <div>
-                <label className="block text-xs font-semibold mb-2">
-                  Monthly dues (KES)
-                </label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium">KES</span>
+            {currentStep === 'basics' && (
+              <div className="space-y-6">
+                <label className="block">
+                  <span className="mb-2 block text-sm font-semibold">Group name</span>
                   <input
-                    type="number"
-                    name="fee"
-                    value={form.fee}
-                    onChange={handleChange}
-                    placeholder="e.g. 500"
-                    min="0"
-                    className="w-full rounded-xl pl-14 pr-4 py-3 text-sm outline-none border"
+                    value={form.name}
+                    onChange={(event) => updateField('name', event.target.value)}
+                    placeholder="For example, Milele Chama"
+                    className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                   />
-                </div>
-                {Number(form.fee) > 0 && (
-                  <p className="mt-1.5 text-xs text-muted-foreground">
-                    Shows as {formatRailAmountFromKes(Number(form.fee), selectedCommunityChainMeta)} on {selectedCommunityChainMeta.label}.
-                  </p>
-                )}
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="block text-xs font-semibold mb-2">
-                  Description
                 </label>
-                <textarea
-                  name="description"
-                  value={form.description}
-                  onChange={handleChange}
-                  placeholder="e.g. Monthly welfare contributions for members"
-                  rows={4}
-                  className="w-full rounded-xl px-4 py-3 text-sm outline-none border resize-none"
-                />
+                <CommunityPurpose value={form.type} onChange={applyCommunityType} options={COMMUNITY_TYPES} />
+                <label className="block">
+                  <span className="mb-2 block text-sm font-semibold">What do members do together?</span>
+                  <textarea
+                    value={form.description}
+                    onChange={(event) => updateField('description', event.target.value)}
+                    placeholder="For example, we save monthly and provide emergency support to members"
+                    rows={4}
+                    className="w-full resize-none rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  />
+                </label>
               </div>
+            )}
 
-              <div className="grid gap-5 rounded-lg border p-5 md:grid-cols-3">
-                <div className="md:col-span-3">
-                  <h2 className="font-mono text-xs font-semibold uppercase tracking-widest">
-                    Governance model
-                  </h2>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {selectedPreset
-                      ? selectedPreset.summary
-                      : 'Select a group type to apply recommended quorum, approval, and treasury controls.'}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold mb-1">
-                    Quorum Threshold
-                  </label>
-                  <p className="mb-2 text-[11px] leading-relaxed text-muted-foreground">
-                    Minimum share of members who must vote for a decision to count. Most Kenyan chamas pick 51% — high enough to avoid surprise decisions, low enough that busy members don't block the group.
-                  </p>
-                  <div className="relative">
+            {currentStep === 'contributions' && (
+              <div className="space-y-6">
+                <label className="block">
+                  <span className="mb-2 block text-sm font-semibold">How much does each member contribute per month?</span>
+                  <span className="relative block">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">KES</span>
                     <input
                       type="number"
-                      name="quorum"
-                      value={form.quorum}
-                      onChange={handleChange}
-                      min="1"
-                      max="100"
-                      className="w-full rounded-lg px-4 py-3 pr-9 text-sm outline-none border"
+                      min="0"
+                      value={form.fee}
+                      onChange={(event) => updateField('fee', event.target.value)}
+                      placeholder="500"
+                      className="w-full rounded-lg border border-border bg-background py-3 pl-14 pr-4 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                     />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium">%</span>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold mb-1">
-                    Approval Threshold
-                  </label>
-                  <p className="mb-2 text-[11px] leading-relaxed text-muted-foreground">
-                    Of the votes that come in, share that must say Yes for the decision to pass. 51% is simple majority. 66%+ means the group really has to agree — set this higher for treasury spend.
-                  </p>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      name="approvalThreshold"
-                      value={form.approvalThreshold}
-                      onChange={handleChange}
-                      min="1"
-                      max="100"
-                      className="w-full rounded-lg px-4 py-3 pr-9 text-sm outline-none border"
-                    />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium">%</span>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold mb-1">
-                    Default Voting Period
-                  </label>
-                  <p className="mb-2 text-[11px] leading-relaxed text-muted-foreground">
-                    How long a proposal stays open before the result is final. Shorter for urgent operational calls; longer when members need to think or consult outside the app.
-                  </p>
-                  <select
-                    name="votingPeriod"
-                    value={form.votingPeriod}
-                    onChange={handleChange}
-                    className="w-full rounded-lg px-4 py-3 text-sm outline-none border cursor-pointer appearance-none"
-                  >
-                    <option value="3">3 days</option>
-                    <option value="7">7 days</option>
-                    <option value="14">14 days</option>
-                    <option value="30">30 days</option>
-                  </select>
-                </div>
-
-                <div className="md:col-span-3">
-                  <label className="block text-xs font-semibold mb-1">
-                    Treasury Policy
-                  </label>
-                  <p className="mb-2 text-[11px] leading-relaxed text-muted-foreground">
-                    How money actually leaves the shared fund once members agree. Multisig-ready requires 2+ trusted members to co-sign each release. Proposal-approved sends as soon as a vote passes. Manual review means an admin checks before money moves — safer for large amounts, slower for routine ones.
-                  </p>
-                  <select
-                    name="treasuryPolicy"
-                    value={form.treasuryPolicy}
-                    onChange={handleChange}
-                    className="w-full rounded-lg px-4 py-3 text-sm outline-none border cursor-pointer appearance-none"
-                  >
-                    <option value="multisig-ready">Multisig-ready treasury release</option>
-                    <option value="proposal-only">Proposal-approved releases only</option>
-                    <option value="manual-review">Manual admin review for releases</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Premium Add-ons */}
-              <div className="grid gap-4 rounded-lg border p-5">
-                <div>
-                  <h2 className="font-mono text-xs font-semibold uppercase tracking-widest">
-                    Premium Add-ons
-                  </h2>
-                  <p className="mt-1 text-[11px] text-muted-foreground">
-                    Optional payment channels added to your DAO setup fee.
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setAddPaybill((v) => !v)}
-                  className={`flex items-start gap-4 rounded-lg border p-4 text-left transition-colors ${
-                    addPaybill
-                      ? 'border-primary bg-primary/8'
-                      : 'border-border hover:border-primary/40'
-                  }`}
-                >
-                  <div className={`mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-lg ${addPaybill ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'}`}>
-                    <Phone className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-semibold">M-Pesa Paybill number</p>
-                      <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${addPaybill ? 'border-primary/40 bg-primary/10 text-primary' : 'border-border text-muted-foreground'}`}>
-                        + {formatKSh(PAYBILL_ADDON_FEE_KES)}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-[11px] text-muted-foreground leading-5">
-                      Register a dedicated Paybill so members can pay dues directly without sharing personal numbers.
-                    </p>
-                  </div>
-                </button>
-
-                {addPaybill && (
-                  <div className="flex items-start gap-3 rounded-lg border border-primary/25 bg-primary/5 px-4 py-3 text-sm">
-                    <Hash className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                    <div>
-                      <p className="font-semibold text-primary">Paybill will be assigned at launch</p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        Baraza registers a dedicated 6-digit Safaricom Paybill for your DAO. Your members pay dues using it — no personal number shared. The number appears in your dashboard after launch.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() => setAddUssd((v) => !v)}
-                  className={`flex items-start gap-4 rounded-lg border p-4 text-left transition-colors ${
-                    addUssd
-                      ? 'border-primary bg-primary/8'
-                      : 'border-border hover:border-primary/40'
-                  }`}
-                >
-                  <div className={`mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-lg ${addUssd ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'}`}>
-                    <Smartphone className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-semibold">USSD shortcode</p>
-                      <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${addUssd ? 'border-primary/40 bg-primary/10 text-primary' : 'border-border text-muted-foreground'}`}>
-                        + {formatKSh(USSD_ADDON_FEE_KES)}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-[11px] text-muted-foreground leading-5">
-                      Give feature-phone members a *XXX# shortcode to check balance, vote, and pay dues without a smartphone.
-                    </p>
-                  </div>
-                </button>
-
-                {addUssd && (
-                  <div className="flex items-start gap-3 rounded-lg border border-primary/25 bg-primary/5 px-4 py-3 text-sm">
-                    <Hash className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                    <div>
-                      <p className="font-semibold text-primary">USSD shortcode will be assigned at launch</p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        Baraza provisions a dedicated <span className="font-mono">*384*XXX#</span> shortcode for your DAO. Feature-phone members dial it to vote and pay dues without a smartphone. The shortcode appears in your dashboard after launch.
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Payment */}
-              <div className="grid gap-4 rounded-lg border p-5">
-                <h2 className="font-mono text-xs font-semibold uppercase tracking-widest">
-                  Payment
-                </h2>
-
-                {/* Method toggle */}
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('mpesa')}
-                    className={`flex items-center justify-center gap-2 rounded-lg border px-4 py-3 text-sm font-semibold transition-colors ${
-                      paymentMethod === 'mpesa'
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'
-                    }`}
-                  >
-                    <Phone className="h-4 w-4" />
-                    M-Pesa
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('wallet')}
-                    className={`flex items-center justify-center gap-2 rounded-lg border px-4 py-3 text-sm font-semibold transition-colors ${
-                      paymentMethod === 'wallet'
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'
-                    }`}
-                  >
-                    <Wallet className="h-4 w-4" />
-                    Account rail
-                  </button>
-                </div>
-
-                <AnimatePresence mode="wait" initial={false}>
-                  {paymentMethod === 'mpesa' ? (
-                    <motion.div
-                      key="mpesa"
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -6 }}
-                      transition={{ duration: 0.18, ease: 'easeOut' }}
-                    >
-                      <label htmlFor="create-phone" className="mb-2 flex items-center gap-1.5 text-xs font-semibold">
-                        <Phone className="h-3.5 w-3.5" />
-                        M-Pesa number for the {formatKSh(totalFeeKes)} launch charge
-                      </label>
-                      <div className="flex rounded-lg border focus-within:border-current">
-                        <span className="border-r px-3 py-2.5 text-sm">+254</span>
-                        <input
-                          id="create-phone"
-                          name="phone"
-                          value={form.phone}
-                          onChange={handleChange}
-                          placeholder="e.g. 0712 345 678"
-                          type="tel"
-                          inputMode="numeric"
-                          autoComplete="tel-national"
-                          aria-invalid={form.phone.length > 0 && normalisedPhone === null}
-                          className="min-w-0 flex-1 px-3 py-2.5 text-sm outline-none"
-                        />
-                      </div>
-                      {form.phone.length > 0 && normalisedPhone === null && (
-                        <p className="mt-1.5 text-[11px]">
-                          Enter a valid Kenyan mobile number (07XX, 7XX, or +254 7XX).
-                        </p>
-                      )}
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="wallet"
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -6 }}
-                      transition={{ duration: 0.18, ease: 'easeOut' }}
-                      className="grid gap-3"
-                    >
-                      <label htmlFor="wallet-chain" className="text-xs font-semibold">
-                        Choose account rail
-                      </label>
-                      <div className="relative">
-                        <span
-                          className="pointer-events-none absolute left-3 top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full"
-                          style={{ background: CHAINS[walletChain].badgeBg }}
-                        />
-                        <select
-                          id="wallet-chain"
-                          value={walletChain}
-                          onChange={(e) => setWalletChain(e.target.value as typeof walletChain)}
-                          className="w-full appearance-none rounded-lg border py-3 pl-8 pr-4 text-sm font-semibold outline-none cursor-pointer"
-                        >
-                          <option value="solana">Solana - Phantom / Solflare</option>
-                          <option value="stellar">Stellar - Freighter / Lobstr</option>
-                          <option value="base">Base - MetaMask / Coinbase Wallet</option>
-                          <option value="arbitrum">Arbitrum - MetaMask / Rabby</option>
-                          <option value="optimism">Optimism - MetaMask / Rabby</option>
-                          <option value="celo">Celo - Valora / MetaMask</option>
-                        </select>
-                      </div>
-                      <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm">
-                        {needsSolanaAccount && isReady ? (
-                          <p>
-                            <span className="font-semibold">{selectedAccountMeta.currency.code} estimate:</span>{' '}
-                            {formatRailAmountWithKes(DAO_CREATION_FEE_KES, selectedAccountMeta)} will be recorded against the launch order.
-                          </p>
-                        ) : needsSolanaAccount ? (
-                          <p className="text-muted-foreground">
-                            {selectedAccountMeta.accountCta} with {selectedAccountMeta.suggestedWallet} on {selectedAccountMeta.testnet.label}. Other options: {selectedAccountMeta.walletExamples}.
-                          </p>
-                        ) : (
-                          <p className="text-muted-foreground">
-                            Suggested for {selectedAccountMeta.label}: {selectedAccountMeta.suggestedWallet} on {selectedAccountMeta.testnet.label}. Other options: {selectedAccountMeta.walletExamples}. This launch records the selected rail for review; direct connection is next.
-                          </p>
-                        )}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Fee summary */}
-                <div className="grid gap-2 border-t pt-4 text-sm">
-                  <div className="flex items-center justify-between gap-4">
-                    <p className="text-xs text-muted-foreground">Setup fee</p>
-                    <span className="text-xs font-semibold tabular-nums">{formatKSh(DAO_CREATION_FEE_KES)}</span>
-                  </div>
-                  {addPaybill && (
-                    <div className="flex items-center justify-between gap-4">
-                      <p className="text-xs text-muted-foreground">Paybill add-on</p>
-                      <span className="text-xs font-semibold tabular-nums">+ {formatKSh(PAYBILL_ADDON_FEE_KES)}</span>
-                    </div>
-                  )}
-                  {addUssd && (
-                    <div className="flex items-center justify-between gap-4">
-                      <p className="text-xs text-muted-foreground">USSD add-on</p>
-                      <span className="text-xs font-semibold tabular-nums">+ {formatKSh(USSD_ADDON_FEE_KES)}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between gap-4 border-t pt-2">
-                    <p className="text-xs font-semibold">Total charge</p>
-                    <span className="font-display text-lg font-bold tabular-nums">
-                      {paymentMethod === 'mpesa' ? formatKSh(totalFeeKes) : formatRailAmountWithKes(totalFeeKes, selectedAccountMeta)}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="grid gap-2 text-xs sm:grid-cols-[1fr_auto] sm:items-center sm:gap-x-4">
-                  <span>Recorded on</span>
-                  <span className="inline-flex items-center gap-1.5 font-semibold">
-                    <span
-                      aria-hidden
-                      className="h-1.5 w-1.5 rounded-full"
-                      style={{ background: selectedCommunityChainMeta.badgeBg }}
-                    />
-                    {selectedCommunityChainMeta.label}
                   </span>
+                  <span className="mt-2 block text-sm text-muted-foreground">Enter 0 if contributions are optional.</span>
+                </label>
+
+                <details className="rounded-lg border border-border/70 p-4">
+                  <summary className="cursor-pointer text-sm font-semibold text-foreground">Optional ways for members to pay and participate</summary>
+                  <div className="mt-4 space-y-3">
+                    <label className="flex cursor-pointer items-start gap-3 rounded-lg bg-muted/45 p-3">
+                      <input type="checkbox" checked={addPaybill} onChange={(event) => setAddPaybill(event.target.checked)} className="mt-1" />
+                      <span className="text-sm"><strong>Dedicated M-Pesa Paybill</strong><br /><span className="text-muted-foreground">Members pay without using an organizer’s personal number. Adds {formatKSh(PAYBILL_ADDON_FEE_KES)}.</span></span>
+                    </label>
+                    <label className="flex cursor-pointer items-start gap-3 rounded-lg bg-muted/45 p-3">
+                      <input type="checkbox" checked={addUssd} onChange={(event) => setAddUssd(event.target.checked)} className="mt-1" />
+                      <span className="text-sm"><strong>Feature-phone shortcode</strong><br /><span className="text-muted-foreground">Members can check updates and participate without a smartphone. Adds {formatKSh(USSD_ADDON_FEE_KES)}.</span></span>
+                    </label>
+                  </div>
+                </details>
+              </div>
+            )}
+
+            {currentStep === 'decisions' && (
+              <div className="space-y-6">
+                <div className="rounded-lg bg-muted/45 p-4">
+                  <p className="font-semibold text-foreground">Recommended for {selectedPreset?.label ?? 'your group'}</p>
+                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                    {selectedPreset?.summary ?? 'These starting rules can be changed now or after setup.'}
+                  </p>
+                  <div className="mt-3">
+                    <AskAkili prompt={`Explain suitable decision rules for a ${form.type || 'community'} with monthly contributions of KES ${form.fee || '0'}`} label="Ask Akili to explain" variant="chip" />
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-semibold">Members needed</span>
+                    <select value={form.quorum} onChange={(event) => updateField('quorum', event.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-3 text-sm">
+                      <option value="35">35%</option><option value="40">40%</option><option value="50">50%</option><option value="51">51%</option><option value="60">60%</option><option value="75">75%</option>
+                    </select>
+                  </label>
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-semibold">Support to pass</span>
+                    <select value={form.approvalThreshold} onChange={(event) => updateField('approvalThreshold', event.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-3 text-sm">
+                      <option value="51">Simple majority</option><option value="60">60%</option><option value="66">Two-thirds</option><option value="75">Three-quarters</option>
+                    </select>
+                  </label>
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-semibold">Time to respond</span>
+                    <select value={form.votingPeriod} onChange={(event) => updateField('votingPeriod', event.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-3 text-sm">
+                      <option value="3">3 days</option><option value="7">7 days</option><option value="14">14 days</option><option value="30">30 days</option>
+                    </select>
+                  </label>
+                </div>
+
+                <fieldset>
+                  <legend className="text-sm font-semibold">Who confirms withdrawals?</legend>
+                  <div className="mt-3 space-y-2">
+                    {[
+                      ['multisig-ready', 'Two or more trusted approvers', 'Good for cooperatives and shared officer responsibility.'],
+                      ['proposal-only', 'Members approve each withdrawal', 'Good for smaller groups that decide directly.'],
+                      ['manual-review', 'Members approve, then a treasurer reviews', 'Good for registered groups with formal checks.'],
+                    ].map(([value, label, detail]) => (
+                      <label key={value} className={`flex cursor-pointer gap-3 rounded-lg border p-4 ${form.treasuryPolicy === value ? 'border-primary bg-primary/5' : 'border-border'}`}>
+                        <input type="radio" name="treasuryPolicy" value={value} checked={form.treasuryPolicy === value} onChange={(event) => updateField('treasuryPolicy', event.target.value)} className="mt-1" />
+                        <span className="text-sm"><strong>{label}</strong><br /><span className="text-muted-foreground">{detail}</span></span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+              </div>
+            )}
+
+            {currentStep === 'account' && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground">How would you like to pay the setup charge?</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">M-Pesa is recommended. Technical account choices are optional.</p>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <button type="button" onClick={() => setPaymentMethod('mpesa')} className={`flex min-h-14 items-center justify-center gap-2 rounded-lg border px-4 text-sm font-semibold ${paymentMethod === 'mpesa' ? 'border-primary bg-primary/8 text-foreground' : 'border-border text-muted-foreground'}`}>
+                    <Phone className="h-4 w-4" /> M-Pesa
+                  </button>
+                  <button type="button" onClick={() => setPaymentMethod('wallet')} className={`flex min-h-14 items-center justify-center gap-2 rounded-lg border px-4 text-sm font-semibold ${paymentMethod === 'wallet' ? 'border-primary bg-primary/8 text-foreground' : 'border-border text-muted-foreground'}`}>
+                    <Wallet className="h-4 w-4" /> Digital account
+                  </button>
+                </div>
+
+                {paymentMethod === 'mpesa' ? (
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-semibold">M-Pesa number</span>
+                    <span className="flex rounded-lg border border-border bg-background focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
+                      <span className="border-r border-border px-3 py-3 text-sm text-muted-foreground">+254</span>
+                      <input
+                        value={form.phone}
+                        onChange={(event) => updateField('phone', event.target.value)}
+                        type="tel"
+                        inputMode="numeric"
+                        placeholder="712 345 678"
+                        aria-invalid={form.phone.length > 0 && normalisedPhone === null}
+                        className="min-w-0 flex-1 bg-transparent px-3 py-3 text-sm outline-none"
+                      />
+                    </span>
+                    {form.phone.length > 0 && normalisedPhone === null && <span className="mt-2 block text-sm text-destructive">Enter a valid Kenyan mobile number.</span>}
+                  </label>
+                ) : (
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold" htmlFor="account-network">Community account network</label>
+                    <select id="account-network" value={walletChain} onChange={(event) => setWalletChain(event.target.value as AccountNetwork)} className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm">
+                      <option value="stellar">Stellar</option>
+                      <option value="solana">Solana</option>
+                      <option value="base">Base</option>
+                    </select>
+                    <details className="mt-3 rounded-lg border border-border/70 p-4">
+                      <summary className="cursor-pointer text-sm font-semibold">Technical setup details</summary>
+                      <p className="mt-2 text-sm leading-6 text-muted-foreground">The selected network is recorded for setup. Baraza supports Phantom, Solflare, and Coinbase Wallet only.</p>
+                    </details>
+                  </div>
+                )}
+
+                <div className="rounded-lg bg-muted/45 p-4 text-sm">
+                  <div className="flex items-center justify-between gap-4"><span>Community setup</span><strong>{formatKSh(DAO_CREATION_FEE_KES)}</strong></div>
+                  {addPaybill && <div className="mt-2 flex items-center justify-between gap-4"><span>Dedicated Paybill</span><strong>+ {formatKSh(PAYBILL_ADDON_FEE_KES)}</strong></div>}
+                  {addUssd && <div className="mt-2 flex items-center justify-between gap-4"><span>Feature-phone shortcode</span><strong>+ {formatKSh(USSD_ADDON_FEE_KES)}</strong></div>}
+                  <div className="mt-3 flex items-center justify-between gap-4 border-t border-border pt-3 text-base"><span>Total</span><strong>{formatKSh(totalFeeKes)}</strong></div>
                 </div>
               </div>
+            )}
 
-              {/* Submit */}
-              {needsSolanaAccount && !isReady ? (
-                <button
-                  type="button"
-                  onClick={() => requireWallet(async () => undefined)}
-                  className="w-full btn-warm text-sm py-3.5 flex items-center justify-center gap-2"
-                >
-                  {selectedAccountMeta.accountCta}
+            <div className="mt-8 flex flex-col-reverse gap-3 border-t border-border/60 pt-5 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs text-muted-foreground">Changes are saved automatically on this device.</p>
+              {currentStep !== 'account' ? (
+                <button type="button" onClick={continueForward} disabled={!canContinue} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-45">
+                  Continue <ArrowRight className="h-4 w-4" />
+                </button>
+              ) : needsConnectedAccount && !isReady ? (
+                <button type="button" onClick={() => requireWallet(async () => undefined)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground">
+                  Connect supported account
                 </button>
               ) : (
-                <button
-                  type="submit"
-                  disabled={!isValid || isPending}
-                  className="w-full btn-warm text-sm py-3.5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {isPending ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Processing payment...
-                    </>
-                  ) : paymentMethod === 'mpesa' ? (
-                    `Pay ${formatKSh(totalFeeKes)} via M-Pesa`
-                  ) : (
-                    needsSolanaAccount
-                      ? `Pay from ${selectedAccountMeta.short} & launch group`
-                      : `Record ${selectedAccountMeta.label} rail & launch group`
-                  )}
+                <button type="submit" disabled={!canSubmit || isPending} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-45">
+                  {isPending ? <><Loader2 className="h-4 w-4 animate-spin" /> Creating community…</> : <>Finish setup <ArrowRight className="h-4 w-4" /></>}
                 </button>
               )}
-            </form>
             </div>
-
-            <aside className="lg:pt-14">
-              <AnimatedSetupChecklist items={setupChecklistItems} summary={setupChecklistSummary} />
-            </aside>
-          </div>
+          </form>
         </div>
       </section>
     </Layout>
   );
-};
-
-export default CreateCommunity;
+}

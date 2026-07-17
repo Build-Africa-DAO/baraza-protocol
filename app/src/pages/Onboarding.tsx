@@ -15,6 +15,12 @@ const STEP_PROGRESS: Record<OnboardingStep, number> = {
   welcome: 100,
 };
 
+const STEP_LABEL: Record<OnboardingStep, string> = {
+  phone: 'Your mobile number',
+  otp: 'Confirm your number',
+  welcome: 'Ready to continue',
+};
+
 function generateOtp(): string {
   return String(Math.floor(100_000 + Math.random() * 900_000));
 }
@@ -72,14 +78,17 @@ export default function Onboarding() {
     navigate('/communities');
   }
 
-  function handleSkip() {
-    navigate('/communities');
-  }
-
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <header className="fixed left-0 top-0 z-50 w-full bg-background/80 backdrop-blur-md">
-        <div className="h-1.5 w-full bg-surface">
+        <div
+          className="h-1.5 w-full bg-surface"
+          role="progressbar"
+          aria-label="Account setup progress"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={STEP_PROGRESS[step]}
+        >
           <div
             className="h-full bg-primary transition-all duration-500 ease-out"
             style={{ width: `${STEP_PROGRESS[step]}%` }}
@@ -87,15 +96,7 @@ export default function Onboarding() {
         </div>
         <nav className="mx-auto flex w-full max-w-md items-center justify-between px-4 py-4">
           <span className="font-display text-xl font-bold tracking-tight text-primary">Baraza</span>
-          {step !== 'welcome' && (
-            <button
-              type="button"
-              onClick={handleSkip}
-              className="text-xs font-semibold uppercase tracking-widest text-muted-foreground transition-colors hover:text-primary"
-            >
-              Skip
-            </button>
-          )}
+          <span className="text-xs font-medium text-muted-foreground">{STEP_LABEL[step]}</span>
         </nav>
       </header>
 
