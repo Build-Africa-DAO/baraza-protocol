@@ -26,3 +26,6 @@ build/
 Thumbs.db
 .idea/
 .vscode/
+
+# Local product review notes
+.internal-review/
