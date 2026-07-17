@@ -5,30 +5,14 @@ import { useAkiliChat } from '@/akili/useAkiliChat';
 import { useChain } from '@/hooks/useChain';
 import { useLocation } from 'react-router-dom';
 import type { ChainMeta } from '@/lib/chain';
-import type { CouncilAgentName } from '@/akili/council';
+import type { AkiliChatMode } from '@/akili/akili-chat-context';
 
 interface Message {
   id: string;
   role: 'akili' | 'user';
   text: string;
   time: string;
-  /** When the message came from a named specialist instead of the relay. */
-  agent?: CouncilAgentName;
 }
-
-// Council specialists the member can consult one-shot. The relay (null) is
-// the default conversational voice; a specialist is a focused single-turn
-// read from that domain.
-type AgentSelection = CouncilAgentName | null;
-
-const COUNCIL_CHIPS: Array<{ key: AgentSelection; label: string; role: string }> = [
-  { key: null, label: 'Akili', role: 'relay' },
-  { key: 'nia', label: 'Nia', role: 'people' },
-  { key: 'kofi', label: 'Kofi', role: 'governance' },
-  { key: 'zara', label: 'Zara', role: 'economy' },
-  { key: 'amara', label: 'Amara', role: 'content' },
-  { key: 'seku', label: 'Seku', role: 'research' },
-];
 
 const timestamp = (chainMeta: ChainMeta) =>
   new Date().toLocaleTimeString(chainMeta.currency.locale, {
@@ -75,23 +59,23 @@ function classifyRoute(pathname: string): RouteContext {
 // short, names what Akili can do FROM THIS PAGE specifically, not in general.
 const GREETING_BY_ROUTE: Record<RouteContext, string> = {
   landing:
-    "Habari! I'm Akili, your Baraza guide. Ask me how chamas, DAOs, or SACCOs work on Baraza — or how to launch one.",
+    "Habari! I'm Akili, your Baraza guide. Ask me how chamas, SACCOs, cooperatives, or associations work on Baraza — or how to start one.",
   profile:
-    "Habari! I'm Akili. Want help joining your first community, increasing your voting weight, or understanding what your BRZA balance means? Just ask.",
+    "Habari! I'm Akili. Want help joining your first community, checking your contributions, or understanding your member record? Just ask.",
   create:
-    "Habari! I'm Akili. Setting up a community? I can suggest quorum and approval thresholds, dues amounts, and a voting period that fits your group size.",
+    "Habari! I'm Akili. Setting up a community? I can explain participation rules, approval levels, contributions, and a review period that fits your group size.",
   join:
     "Habari! I'm Akili. Want me to walk you through M-Pesa vs account payment, or explain what activation means? Just ask.",
   'join-status':
     "Habari! I'm Akili. Watching a payment confirm? Ask me what each step does, or what to do if confirmation takes longer than expected.",
   proposal:
-    "Habari! I'm Akili. Want me to summarise this proposal, explain the security review, or help you decide between Support, Object, and Abstain?",
+    "Habari! I'm Akili. I can summarise this proposal, explain the participation rules, or clarify the difference between yes, no, and abstain without choosing for you.",
   community:
-    "Habari! I'm Akili. Ask me anything about this community — treasury, members, active votes, or how to draft your own proposal.",
+    "Habari! I'm Akili. Ask me anything about this community — group funds, members, active decisions, or how to write a clear proposal.",
   communities:
-    "Habari! I'm Akili. I can help you compare DAOs, decide which one to join, or describe how each group is structured.",
+    "Habari! I'm Akili. I can help you compare communities, decide which one fits, or explain how each group is organised.",
   bounties:
-    "Habari! I'm Akili. Browsing bounties? I can explain rewards in KES vs BRZA, what verifiers check, and how to start a submission.",
+    "Habari! I'm Akili. Browsing community work? I can explain the payment, what reviewers check, and how to submit your work.",
   evaluate:
     "Habari! I'm Akili. Use the checklist on this page; ask me whenever a question deserves a longer answer than a checkbox.",
   admin:
@@ -107,6 +91,8 @@ const initialMessage = (chainMeta: ChainMeta, route: RouteContext): Message => (
   time: timestamp(chainMeta),
 });
 
+const FACILITATOR_GREETING = 'I can summarise this community discussion, preserve different views, list unanswered questions, or translate between English and Kiswahili. I will not recommend or cast a vote.';
+
 // Suggested next-asks per route. 4 chips max so the row never wraps awkwardly
 // on a 320-wide mobile drawer. The first chip is the highest-intent action
 // for that route.
@@ -118,13 +104,13 @@ const QUICK_REPLIES_BY_ROUTE: Record<RouteContext, string[]> = {
     'How are funds managed?',
   ],
   profile: [
-    'How do I increase my BRZA balance?',
+    'How do I check my contribution record?',
     'How do I join a community?',
     'What does voting weight mean?',
     'How do referrals work?',
   ],
   create: [
-    'Suggest quorum and approval for a 20-member chama',
+    'Suggest participation and approval rules for a 20-member chama',
     'What is a fair monthly dues amount?',
     'How long should the voting period be?',
     'Run a security review on my setup',
@@ -144,23 +130,23 @@ const QUICK_REPLIES_BY_ROUTE: Record<RouteContext, string[]> = {
   proposal: [
     'Summarise this proposal',
     'What does the security review flag?',
-    'How is quorum calculated here?',
-    'Should I Support, Object, or Abstain?',
+    'How many members need to take part?',
+    'Explain yes, no, and abstain',
   ],
   community: [
-    'How do I propose a treasury spend?',
-    'How is the BRZA balance distributed here?',
+    'How do I propose using group funds?',
+    'How are contributions shown here?',
     'What recent decisions did this group make?',
     'Run a security review on this community',
   ],
   communities: [
     'Which community fits a youth savings group?',
-    'How do I compare quorum rules?',
+    'How do I compare participation rules?',
     'What does "active" vs "draft" mean?',
     'How do I join one?',
   ],
   bounties: [
-    'Which bounties pay in KES vs BRZA?',
+    'Which community tasks are paid?',
     'How do I submit work for review?',
     'What do verifiers check?',
     'How are disputes resolved?',
@@ -181,7 +167,7 @@ const QUICK_REPLIES_BY_ROUTE: Record<RouteContext, string[]> = {
     'How do I create a community?',
     'How do dues work?',
     'How does voting work?',
-    'What is BRZA?',
+    'How are member contributions tracked?',
   ],
 };
 
@@ -189,7 +175,7 @@ const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
   {
     keywords: ['ai', 'asha', 'akili', 'guide', 'copilot', 'assistant', 'platform', 'use baraza'],
     reply:
-      'Baraza combines the website, the operating platform, and Akili AI in one flow. Use the website to understand the model, Explore to find DAOs, Launch to create one, dashboards to manage KES treasury and votes, and ask me when you need help choosing settings or explaining the next action.',
+      'Baraza combines community discovery, setup, group funds, decisions, and Akili guidance in one flow. Use Explore to find a group, Launch to start one, and each community home to follow contributions and decisions.',
   },
   {
     keywords: ['plan', 'setup', 'best setup', 'rules', 'quorum', 'threshold'],
@@ -199,22 +185,22 @@ const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
   {
     keywords: ['create', 'start', 'new group', 'community', 'chama', 'sacco'],
     reply:
-      'To create a DAO, tap "Launch" in the menu. Fill in your group name, choose a community type (Savings Group, SACCO, Cooperative, etc.), set monthly dues in KES, and write a short description. Once created, share the link so members can join instantly.',
+      'To start a community, tap "Launch" in the menu. Add the group name, choose the group type, set the monthly contribution in KES, and write a short purpose. Once created, share the link so members can ask to join.',
   },
   {
     keywords: ['vote', 'voting', 'decision', 'propose', 'proposal'],
     reply:
-      "Any member can create a proposal to spend DAO funds. Give it a title, description, and funding amount in KES, then set a voting window. All members vote Support or Object. When time's up, the majority wins. Simple, transparent, and fair.",
+      "An eligible member can propose using group funds. Give it a clear title, reason, amount in KES, and review period. Members can discuss it and then vote yes, no, or abstain under the group's agreed rules.",
   },
   {
     keywords: ['fund', 'money', 'KES', 'shilling', 'fee', 'pay', 'balance', 'treasury'],
     reply:
-      'Every DAO has a shared KES fund built from monthly membership dues. The balance is always visible to all members on the dashboard. When a Decision is approved, funds are released and every transaction is logged.',
+      'Each community has shared group funds built from member contributions. Members can see the balance and money updates. An approved decision still needs the group’s required withdrawal approvals before money can move.',
   },
   {
     keywords: ['join', 'member', 'membership', 'card', 'how to join'],
     reply:
-      'To join a DAO, find it on Explore and click "Become a member". After paying the monthly dues, your membership is issued after payment proof and approval.',
+      'To join a community, find it on Explore and choose "Ask to join". Review the contribution and group rules, then follow the payment and approval steps.',
   },
   {
     keywords: ['dashboard', 'stats', 'overview', 'manage'],
@@ -224,7 +210,7 @@ const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
   {
     keywords: ['wallet', 'phantom', 'solflare', 'connect', 'sign in', 'login'],
     reply:
-      'Different rails use different accounts. Solana actions use Phantom, Solflare, or Backpack. Stellar uses Freighter, Lobstr, or Albedo. Base, Arbitrum, and Optimism use MetaMask, Coinbase Wallet, Rabby, or WalletConnect. Celo can use Valora or MetaMask.',
+      'Account setup supports Phantom, Solflare, and Coinbase Wallet. If your account will not connect, check that you selected one of those supported options and then try again.',
   },
   {
     keywords: ['solana', 'blockchain', 'on-chain', 'web3', 'crypto'],
@@ -249,12 +235,12 @@ const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
   {
     keywords: ['hello', 'hi', 'habari', 'hey', 'hola', 'sasa'],
     reply:
-      'Habari! Great to have you here. Ask me about launching a DAO, how voting works, managing KES funds, joining a group, or anything else. What would you like to know?',
+      'Habari! Ask me about starting a community, how voting works, managing group funds, joining a group, or what to do next.',
   },
   {
     keywords: ['thank', 'thanks', 'asante', 'awesome', 'great', 'perfect'],
     reply:
-      'Karibu sana! Happy to help anytime. If you get stuck anywhere in Baraza, just ask. Good luck with your DAO!',
+      'Karibu sana! If you get stuck anywhere in Baraza, ask me for the next step.',
   },
 ];
 
@@ -263,7 +249,27 @@ const getStaticResponse = (input: string): string => {
   for (const { keywords, reply } of RESPONSES) {
     if (keywords.some((kw) => lower.includes(kw))) return reply;
   }
-  return 'Great question! Baraza helps DAOs and communities manage KES funds and make decisions together. Try asking me about launching a DAO, how voting works, the shared fund, or how to join an existing group.';
+  return 'Baraza helps communities manage KES contributions and make decisions together. Try asking about starting a group, how voting works, group funds, or how to join an existing community.';
+};
+
+const getFacilitatorFallback = (input: string): string => {
+  const sources = Array.from(
+    input.matchAll(/\[([^\]]+)]\s*([^:\n]+):\s*([^\n]+)/g),
+    (match) => ({ id: match[1], author: match[2].trim(), body: match[3].trim() }),
+  );
+  if (sources.length === 0) {
+    return 'There are not enough source messages to summarise yet. I will not recommend or cast a vote.';
+  }
+
+  const summary = sources
+    .map((source) => `- ${source.author}: ${source.body} [#${source.id}]`)
+    .join('\n');
+  const unanswered = sources
+    .filter((source) => /\?|confirm|clarify|share|before/i.test(source.body))
+    .map((source) => `- Follow up on ${source.author}'s point [#${source.id}]`)
+    .join('\n');
+
+  return `Discussion summary\n${summary}\n\nUnanswered questions\n${unanswered || '- None identified from the available messages.'}\n\nMinority views\n- Not enough distinct positions are present to identify a minority view.\n\nNo voting recommendation has been made.`;
 };
 
 /**
@@ -293,7 +299,7 @@ async function streamAkiliResponse(
   communityId: string | null,
   history: Array<{ role: 'user' | 'assistant'; content: string }>,
   onChunk: (text: string) => void,
-  agent: CouncilAgentName | null,
+  mode: AkiliChatMode,
 ): Promise<void> {
   // VITE_AKILI_API_URL points at the standalone Akili service (https://<akili>.vercel.app).
   // Unset = use the in-repo /api/agent/chat fallback. Set = direct cross-origin call.
@@ -307,7 +313,7 @@ async function streamAkiliResponse(
       message,
       communityId: communityId ?? undefined,
       history,
-      ...(agent ? { agent } : {}),
+      mode,
     }),
   });
 
@@ -361,7 +367,7 @@ const TypingDots: React.FC = () => (
 );
 
 const AkiliChat: React.FC = () => {
-  const { isOpen, open, close, pendingMessage, clearPending } = useAkiliChat();
+  const { isOpen, open, close, pendingMessage, pendingMode, mode, setMode, clearPending } = useAkiliChat();
   const { chainMeta } = useChain();
   const location = useLocation();
   const routeContext = classifyRoute(location.pathname);
@@ -371,11 +377,6 @@ const AkiliChat: React.FC = () => {
   const QUICK_REPLIES = QUICK_REPLIES_BY_ROUTE[routeContext];
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  // Selected council agent. null = relay (Akili). When a specialist is
-  // selected, the next send is a one-shot to that agent. Selection persists
-  // across sends so a member can converse within one domain.
-  const [selectedAgent, setSelectedAgent] = useState<AgentSelection>(null);
-  const activeChip = COUNCIL_CHIPS.find((c) => c.key === selectedAgent) ?? COUNCIL_CHIPS[0];
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const focusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -415,7 +416,7 @@ const AkiliChat: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, routeContext]);
 
-  const sendMessage = useCallback(async (text: string) => {
+  const sendMessage = useCallback(async (text: string, requestedMode: AkiliChatMode = mode) => {
     if (!text.trim() || isTyping) return;
 
     const userMsg: Message = {
@@ -447,7 +448,6 @@ const AkiliChat: React.FC = () => {
           role: 'akili',
           text: '',
           time: timestamp(chainMeta),
-          ...(selectedAgent ? { agent: selectedAgent } : {}),
         },
       ]);
 
@@ -460,7 +460,7 @@ const AkiliChat: React.FC = () => {
             prev.map((m) => (m.id === akiliId ? { ...m, text: m.text + chunk } : m))
           );
         },
-        selectedAgent,
+        requestedMode,
       );
     } catch (err) {
       setIsTyping(false);
@@ -473,21 +473,23 @@ const AkiliChat: React.FC = () => {
         err instanceof ChatStreamError && err.category !== 'unknown';
       const replacement = isClassified
         ? (err as ChatStreamError).message
-        : getStaticResponse(text);
+        : requestedMode === 'facilitator'
+          ? getFacilitatorFallback(text)
+          : getStaticResponse(text);
       setMessages((prev) =>
         prev.map((m) => (m.id === akiliId ? { ...m, text: replacement } : m))
       );
     }
-  }, [chainMeta, communityId, isTyping, messages, selectedAgent]);
+  }, [chainMeta, communityId, isTyping, messages, mode]);
 
   // Send pending message from hero search bar
   useEffect(() => {
     if (isOpen && pendingMessage) {
       clearPending();
-      void sendMessage(pendingMessage);
+      void sendMessage(pendingMessage, pendingMode);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, pendingMessage]);
+  }, [isOpen, pendingMessage, pendingMode]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -545,10 +547,10 @@ const AkiliChat: React.FC = () => {
                 </div>
                 <div>
                   <h4 className="text-sm font-semibold text-primary-foreground leading-none">
-                    {activeChip.label}
+                    Akili
                   </h4>
                   <p className="text-[10px] text-primary-foreground/70 mt-0.5 capitalize">
-                    {activeChip.key ? `Council · ${activeChip.role}` : 'Your Baraza guide'}
+                    {mode === 'facilitator' ? 'Community facilitator' : 'Private guide'}
                   </p>
                 </div>
               </div>
@@ -579,12 +581,12 @@ const AkiliChat: React.FC = () => {
                     }`}
                     style={msg.role === 'user' ? { background: 'var(--gradient-primary)' } : undefined}
                   >
-                    {msg.text}
+                    {msg.id === '1' && msg.role === 'akili' && mode === 'facilitator'
+                      ? FACILITATOR_GREETING
+                      : msg.text}
                   </div>
                   <span className="text-[9px] text-muted-foreground mt-1 px-1">
-                    {msg.role === 'akili' && msg.agent
-                      ? `${msg.agent.charAt(0).toUpperCase()}${msg.agent.slice(1)} · ${msg.time}`
-                      : msg.time}
+                    {msg.time}
                   </span>
                 </motion.div>
               ))}
@@ -606,7 +608,7 @@ const AkiliChat: React.FC = () => {
 
             {/* Quick replies */}
             <AnimatePresence>
-              {showQuickReplies && (
+              {showQuickReplies && mode === 'private' && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
@@ -626,27 +628,13 @@ const AkiliChat: React.FC = () => {
               )}
             </AnimatePresence>
 
-            {/* Council selector */}
-            <div className="px-3 pt-2 pb-1 flex gap-1 overflow-x-auto flex-shrink-0 scrollbar-none">
-              {COUNCIL_CHIPS.map((chip) => {
-                const isActive = chip.key === selectedAgent;
-                return (
-                  <button
-                    key={chip.label}
-                    type="button"
-                    onClick={() => setSelectedAgent(chip.key)}
-                    aria-pressed={isActive}
-                    title={chip.key ? `Consult ${chip.label} (${chip.role})` : 'Akili relay (default)'}
-                    className={`px-2.5 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-colors ${
-                      isActive
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-surface text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    {chip.label}
-                  </button>
-                );
-              })}
+            <div className="mx-3 mb-1 grid grid-cols-2 rounded-lg bg-surface p-1 text-[10px] font-semibold">
+              <button type="button" onClick={() => setMode('private')} aria-pressed={mode === 'private'} className={mode === 'private' ? 'rounded-md bg-background px-2 py-1.5 text-foreground shadow-sm' : 'px-2 py-1.5 text-muted-foreground'}>
+                Private guide
+              </button>
+              <button type="button" onClick={() => setMode('facilitator')} aria-pressed={mode === 'facilitator'} className={mode === 'facilitator' ? 'rounded-md bg-background px-2 py-1.5 text-foreground shadow-sm' : 'px-2 py-1.5 text-muted-foreground'}>
+                Community facilitator
+              </button>
             </div>
 
             {/* Input */}
@@ -659,7 +647,7 @@ const AkiliChat: React.FC = () => {
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask Akili anything…"
+                placeholder={mode === 'facilitator' ? 'Ask for a neutral summary…' : 'Ask Akili privately…'}
                 className="flex-1 bg-surface rounded-xl px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary/50 transition-all"
               />
               <button

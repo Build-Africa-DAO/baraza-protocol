@@ -63,7 +63,7 @@ export function useWalletGuard(options: WalletGuardOptions = {}): WalletGuardRes
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Transaction failed.';
 
-        // Match the rejection vocab across Phantom, Solflare, Backpack, Coinbase, etc.
+        // Match rejection messages from the supported account providers.
         if (/user (rejected|denied|cancell?ed)|rejected by user|approval denied/i.test(message)) {
           toast({
             title: 'Approval cancelled',

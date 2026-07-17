@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, CircleMinus, Loader2, MessageCircle, ThumbsDown, ThumbsUp } from "lucide-react";
+import { ArrowLeft, CircleMinus, Languages, Loader2, MessageCircle, Reply, Sparkles, ThumbsDown, ThumbsUp } from "lucide-react";
 import Layout from "@/components/Layout";
 import { DEFAULT_GOVERNANCE } from "@/lib/constants";
 import { useCastVote, useDecision, useVoteStatus } from "@/hooks/useBarazaData";
@@ -11,16 +11,15 @@ import { useToast } from "@/hooks/use-toast";
 import { STAGE_META, inferStage } from "@/lib/proposalStatus";
 import CommunityBanner from "@/components/CommunityBanner";
 import { useSeo } from "@/lib/seo";
-import AkiliSecurityReview from "@/akili/AkiliSecurityReview";
-import { reviewProposal } from "@/lib/securityReview";
 import { useChain } from "@/hooks/useChain";
 import {
-  addProposalComment,
+  addProposalAuditEntry,
   listProposalAuditTrail,
-  listProposalComments,
   voteOptionLabel,
 } from "@/lib/governance";
 import type { VoteOption } from "@/types";
+import { useProposalThread } from "@/hooks/useProposalThread";
+import { useAkiliChat } from "@/akili/useAkiliChat";
 
 export default function ProposalDetail() {
   const { id, decisionId } = useParams<{ id: string; decisionId: string }>();
@@ -31,11 +30,12 @@ export default function ProposalDetail() {
   const existingVote = useVoteStatus(decisionId ?? '', address);
   const { toast } = useToast();
   const { chainMeta } = useChain();
+  const { open: openAkili } = useAkiliChat();
   const [commentBody, setCommentBody] = useState("");
   const [commentVersion, setCommentVersion] = useState(0);
+  const [replyingTo, setReplyingTo] = useState<string | undefined>();
+  const { messages: comments, addMessage, facilitatorExcerpt } = useProposalThread(decisionId ?? '');
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const comments = useMemo(() => proposal ? listProposalComments(proposal.id) : [], [proposal?.id, commentVersion]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const auditTrail = useMemo(() => proposal ? listProposalAuditTrail(proposal.id) : [], [proposal?.id, commentVersion]);
 
@@ -43,7 +43,7 @@ export default function ProposalDetail() {
     title: proposal && community
       ? `${proposal.title} — ${community.name}`
       : proposal?.title ?? "Proposal",
-    description: proposal?.description ?? "View proposal details, vote, and track quorum on Baraza.",
+    description: proposal?.description ?? "Review a community proposal, discuss it with members, and vote on Baraza.",
     path: id && decisionId ? `/dashboard/${id}/decisions/${decisionId}` : undefined,
     noIndex: true,
   });
@@ -53,9 +53,9 @@ export default function ProposalDetail() {
       <Layout>
         <section className="py-20">
           <div className="mx-auto max-w-md px-4 text-center">
-            <h1 className="font-display text-2xl font-bold">Proposal not found</h1>
+            <h1 className="font-display text-2xl font-bold">Decision not found</h1>
             <p className="mt-3 text-sm">
-              This governance proposal doesn&apos;t exist or has been removed.
+              This decision doesn&apos;t exist or has been removed.
             </p>
             <Link to={id ? `/dashboard/${id}` : "/communities"} className="btn-warm mt-6 inline-flex items-center gap-2 text-sm">
               <ArrowLeft className="h-4 w-4" />
@@ -95,7 +95,6 @@ export default function ProposalDetail() {
     ? Math.round((proposal.fundingAmount / community.fundBalance) * 1000) / 10
     : null;
   const quorumRequiredPct = community?.quorumPct ?? DEFAULT_GOVERNANCE.quorumPct;
-  const securityReview = reviewProposal(proposal, community ?? undefined);
 
   const handleVote = (vote: VoteOption) => async () => {
     await requireWallet(async () => {
@@ -123,20 +122,30 @@ export default function ProposalDetail() {
 
   const handleAddComment = () => {
     try {
-      addProposalComment({
-        proposalId: proposal.id,
-        memberId: "local-member",
+      addMessage({
+        authorId: address ?? "local-member",
+        authorName: address ? `Member ${address.slice(0, 4)}` : "Local member",
         body: commentBody,
+        parentId: replyingTo,
       });
+      addProposalAuditEntry({ proposalId: proposal.id, actor: address ?? 'local-member', action: 'discussion.message-added' });
       setCommentBody("");
+      setReplyingTo(undefined);
       setCommentVersion((value) => value + 1);
     } catch (err) {
       toast({
-        title: "Comment failed",
-        description: err instanceof Error ? err.message : "Could not add proposal comment.",
+        title: "Message not posted",
+        description: err instanceof Error ? err.message : "Could not add your message.",
         variant: "destructive",
       });
     }
+  };
+
+  const askFacilitator = (translation = false) => {
+    const task = translation
+      ? 'Translate the discussion between English and Kiswahili. Preserve each speaker, question, and source message ID.'
+      : 'Summarise the opinions in this discussion. Link every point to its source message ID, list unanswered questions, and preserve minority views. Do not recommend or cast a vote.';
+    openAkili(`${task}\n\nProposal: ${proposal.title}\n\nSource messages:\n${facilitatorExcerpt}`, 'facilitator');
   };
 
   return (
@@ -145,7 +154,7 @@ export default function ProposalDetail() {
         <div className="container mx-auto px-4">
           <Link to={`/dashboard/${id ?? proposal.communityId}`} className="mb-6 inline-flex items-center gap-2 text-sm">
             <ArrowLeft className="h-4 w-4" />
-            Back to proposals
+            Back to decisions
           </Link>
 
           <div className="grid gap-6 xl:grid-cols-[0.68fr_0.32fr]">
@@ -167,9 +176,9 @@ export default function ProposalDetail() {
 
               <div className="grid gap-4 md:grid-cols-4">
                 {[
-                  ["Requested funding", formatRailAmountFromKes(proposal.fundingAmount, chainMeta)],
-                  ["Treasury impact", treasuryImpactPct !== null ? `-${treasuryImpactPct}%` : "—"],
-                  ["Quorum required", `${quorumRequiredPct}%`],
+                  ["Amount requested", formatRailAmountFromKes(proposal.fundingAmount, 'mpesa')],
+                  ["Share of group funds", treasuryImpactPct !== null ? `${treasuryImpactPct}%` : "—"],
+                  ["Members needed to take part", `${quorumRequiredPct}%`],
                   ["Current approval", totalVotes > 0 ? `${support}%` : "—"],
                 ].map(([label, value]) => (
                   <div key={label} className="baraza-card p-4">
@@ -197,7 +206,7 @@ export default function ProposalDetail() {
                   </div>
                   <div className="flex justify-between font-mono text-xs">
                     <span>{support}% approval of decided votes</span>
-                    <span>{quorum}% quorum progress</span>
+                    <span>{quorum}% member participation</span>
                   </div>
                 </div>
 
@@ -233,50 +242,74 @@ export default function ProposalDetail() {
                 <p className="mt-3 text-xs">
                   {existingVote
                     ? `You voted ${existingVote === 'for' ? 'yes' : existingVote === 'against' ? 'no' : 'abstain'} on this proposal.`
-                    : "One vote per member. Your vote is recorded in the shared ledger."}
+                    : "One vote per member. Your choice is recorded with the group tally."}
                 </p>
               </div>
 
-              <div className="baraza-card p-5 md:p-6">
-                <div className="mb-4 flex items-center gap-2">
-                  <MessageCircle className="h-4 w-4 text-primary" />
-                  <h2 className="font-display text-xl font-semibold">Proposal comments</h2>
+              <div className="rounded-2xl border border-border/70 bg-card p-5 md:p-6">
+                <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <MessageCircle className="h-4 w-4 text-primary" />
+                      <h2 className="font-display text-xl font-semibold">Community discussion</h2>
+                    </div>
+                    <p className="mt-1 text-sm text-muted-foreground">Ask a question, reply to a member, or mention someone with @name.</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button type="button" onClick={() => askFacilitator(false)} className="btn-ghost gap-2 text-xs">
+                      <Sparkles className="h-3.5 w-3.5" /> Summarise discussion
+                    </button>
+                    <button type="button" onClick={() => askFacilitator(true)} className="btn-ghost gap-2 text-xs">
+                      <Languages className="h-3.5 w-3.5" /> English / Kiswahili
+                    </button>
+                  </div>
                 </div>
+                {replyingTo && (
+                  <div className="mb-2 flex items-center justify-between rounded-lg bg-muted/60 px-3 py-2 text-xs">
+                    <span>Replying to message #{replyingTo.slice(-6)}</span>
+                    <button type="button" onClick={() => setReplyingTo(undefined)} className="font-semibold text-primary">Cancel</button>
+                  </div>
+                )}
                 <textarea
                   value={commentBody}
                   onChange={(event) => setCommentBody(event.target.value)}
-                  placeholder="Add a member comment or question for the proposal record."
+                  placeholder="Share your view or type @name to invite a member..."
                   className="min-h-24 w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
                 />
                 <button type="button" onClick={handleAddComment} className="btn-warm mt-3 text-sm">
-                  Add comment
+                  Post message
                 </button>
                 <div className="mt-5 space-y-3">
                   {comments.length === 0 ? (
                     <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-                      No comments yet. Members can ask questions before voting.
+                      No messages yet. Start with a question other members can answer before voting.
                     </p>
-                  ) : comments.map((comment) => (
-                    <article key={comment.id} className="rounded-lg border p-4">
+                  ) : comments.map((comment) => {
+                    const parent = comment.parentId ? comments.find((message) => message.id === comment.parentId) : undefined;
+                    return (
+                    <article id={comment.id} key={comment.id} className={comment.parentId ? "ml-6 rounded-lg border-l-2 border-primary/30 bg-muted/25 p-4" : "rounded-lg border p-4"}>
+                      {parent && <p className="mb-2 text-xs text-muted-foreground">Reply to {parent.authorName}: “{parent.body.slice(0, 80)}{parent.body.length > 80 ? '…' : ''}”</p>}
                       <p className="text-sm leading-6">{comment.body}</p>
-                      <p className="mt-2 text-xs text-muted-foreground">
-                        {comment.memberId} · {formatRailDate(comment.createdAt, chainMeta, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
-                      </p>
+                      <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                        <span>{comment.authorName} · {formatRailDate(comment.createdAt, chainMeta, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+                        <a href={`#${comment.id}`} className="font-mono text-[10px]">#{comment.id.slice(-6)}</a>
+                        <button type="button" onClick={() => setReplyingTo(comment.id)} className="inline-flex items-center gap-1 font-semibold text-primary">
+                          <Reply className="h-3 w-3" /> Reply
+                        </button>
+                      </div>
                     </article>
-                  ))}
+                  )})}
                 </div>
               </div>
             </main>
 
             <aside className="space-y-6">
-              <AkiliSecurityReview review={securityReview} />
-
               <div className="baraza-card p-5">
-                <h3 className="font-mono text-xs uppercase tracking-widest">Proposal activity</h3>
+                <h3 className="font-display text-base font-semibold">Decision timeline</h3>
                 <div className="mt-5 space-y-4 border-l pl-5">
                   <div className="relative">
                     <span className="absolute -left-[1.6rem] top-1 h-3 w-3 rounded-full bg-primary" />
-                    <p className="text-sm">Proposal opened for voting</p>
+                    <p className="text-sm">Opened for member review</p>
                     <p className="text-xs">
                       {formatRailDate(proposal.createdAt, chainMeta, { day: "2-digit", month: "short", year: "numeric" })}
                     </p>
@@ -293,7 +326,7 @@ export default function ProposalDetail() {
                   {auditTrail.map((entry) => (
                     <div key={entry.id} className="relative">
                       <span className="absolute -left-[1.6rem] top-1 h-3 w-3 rounded-full bg-accent" />
-                      <p className="text-sm">{entry.action}</p>
+                      <p className="text-sm">{entry.action === 'discussion.message-added' ? 'Member added to the discussion' : entry.action.replace(/\./g, ' ')}</p>
                       <p className="text-xs">
                         {formatRailDate(entry.createdAt, chainMeta, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
                       </p>

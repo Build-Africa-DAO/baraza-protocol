@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useParams, Link, useSearchParams } from 'react-router-dom';
 import {
-  Users, TrendingUp, Vote, History, PlusCircle, CreditCard,
+  Users, Vote, PlusCircle, CreditCard,
   ArrowLeft, Calendar, ShieldCheck, ReceiptText,
   LayoutDashboard, Wallet as WalletIcon, ExternalLink, Activity,
   Images, BriefcaseBusiness, Crown, Lightbulb, Trophy, MapIcon,
   Layers, Settings, ChevronRight, Menu, X,
 } from 'lucide-react';
-import LiveStatCard from '@/components/community/LiveStatCard';
 import ActivityFeed from '@/components/community/ActivityFeed';
 import MemberDirectory from '@/components/community/MemberDirectory';
 import CommunityRoles from '@/components/community/CommunityRoles';
@@ -29,11 +28,7 @@ import CommunityGallery from '@/components/CommunityGallery';
 import BountyBoard from '@/components/BountyBoard';
 import { CHAINS } from '@/lib/chain';
 import { useSeo } from '@/lib/seo';
-import { getBountyStatsForCommunity } from '@/lib/bounties';
-import AkiliSecurityReview from '@/akili/AkiliSecurityReview';
-import { reviewCommunity } from '@/lib/securityReview';
 import { useChain } from '@/hooks/useChain';
-import { getTokenGateStatus } from '@/lib/tokenGate';
 
 // ─── Tab definition ───────────────────────────────────────────────────────────
 
@@ -46,23 +41,22 @@ interface TabDef {
   key: DashboardTab;
   label: string;
   icon: React.ElementType;
-  group?: string;
 }
 
 const TABS: TabDef[] = [
-  { key: 'overview',     label: 'Overview',             icon: LayoutDashboard },
-  { key: 'roles',        label: 'Roles',                icon: Crown,         group: 'Community' },
-  { key: 'suggestions',  label: 'Community Suggestions',icon: Lightbulb,     group: 'Community' },
-  { key: 'leaderboard',  label: 'Leaderboards',         icon: Trophy,        group: 'Community' },
-  { key: 'roadmap',      label: 'Roadmap',              icon: MapIcon,       group: 'Community' },
-  { key: 'combined',     label: 'Combined Board',       icon: Layers,        group: 'Community' },
-  { key: 'governance',   label: 'Governance',           icon: Vote,          group: 'Work' },
-  { key: 'bounties',     label: 'Bounties',             icon: BriefcaseBusiness, group: 'Work' },
-  { key: 'members',      label: 'Members',              icon: Users,         group: 'Work' },
-  { key: 'gallery',      label: 'Gallery',              icon: Images,        group: 'Work' },
-  { key: 'activity',     label: 'Activity',             icon: Activity,      group: 'Work' },
-  { key: 'wallet',       label: 'Account',              icon: WalletIcon,    group: 'Work' },
-  { key: 'settings',     label: 'Settings',             icon: Settings },
+  { key: 'overview',     label: 'Home',                  icon: LayoutDashboard },
+  { key: 'governance',   label: 'Decisions',             icon: Vote },
+  { key: 'members',      label: 'Members',               icon: Users },
+  { key: 'wallet',       label: 'Group account',         icon: WalletIcon },
+  { key: 'suggestions',  label: 'Suggestions',           icon: Lightbulb },
+  { key: 'roles',        label: 'Roles',                 icon: Crown },
+  { key: 'roadmap',      label: 'Plans',                 icon: MapIcon },
+  { key: 'combined',     label: 'Shared board',          icon: Layers },
+  { key: 'bounties',     label: 'Community work',        icon: BriefcaseBusiness },
+  { key: 'leaderboard',  label: 'Recognition',           icon: Trophy },
+  { key: 'gallery',      label: 'Photos',                icon: Images },
+  { key: 'activity',     label: 'Updates',               icon: Activity },
+  { key: 'settings',     label: 'Settings',              icon: Settings },
 ];
 
 const DASHBOARD_TAB_KEYS = new Set<DashboardTab>(TABS.map((tab) => tab.key));
@@ -86,54 +80,48 @@ function SidebarNav({
   isMember: boolean;
   communityId: string;
 }) {
-  const groups = ['__top__', 'Community', 'Work', '__bottom__'];
-  const byGroup = new Map<string, TabDef[]>();
-  for (const tab of TABS) {
-    const g = tab.group ?? (tab.key === 'settings' ? '__bottom__' : '__top__');
-    if (!byGroup.has(g)) byGroup.set(g, []);
-    byGroup.get(g)!.push(tab);
-  }
+  const home = TABS[0];
+  const more = TABS.slice(1);
+
+  const tabLink = (tab: TabDef) => {
+    const Icon = tab.icon;
+    const isActive = active === tab.key;
+    const to = tab.key === 'overview'
+      ? `/dashboard/${communityId}`
+      : `/dashboard/${communityId}?tab=${tab.key}`;
+
+    return (
+      <Link
+        key={tab.key}
+        to={to}
+        onClick={() => onChange(tab.key)}
+        className={cn(
+          'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+          isActive
+            ? 'bg-foreground text-background'
+            : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
+        )}
+      >
+        <Icon className="h-4 w-4 flex-shrink-0" />
+        <span className="truncate">{tab.label}</span>
+        {isActive && <ChevronRight className="ml-auto h-3.5 w-3.5 opacity-50" />}
+      </Link>
+    );
+  };
 
   return (
     <nav className="flex flex-col gap-1">
-      {groups.map((g) => {
-        const items = byGroup.get(g) ?? [];
-        if (!items.length) return null;
-        return (
-          <div key={g}>
-            {g !== '__top__' && g !== '__bottom__' && (
-              <p className="mb-1 mt-3 px-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                {g}
-              </p>
-            )}
-            {g === '__bottom__' && <div className="my-3 border-t border-border/40" />}
-            {items.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = active === tab.key;
-              const to = tab.key === 'overview'
-                ? `/dashboard/${communityId}`
-                : `/dashboard/${communityId}?tab=${tab.key}`;
-              return (
-                <Link
-                  key={tab.key}
-                  to={to}
-                  onClick={() => onChange(tab.key)}
-                  className={cn(
-                    'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-all',
-                    isActive
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-muted-foreground hover:bg-surface/80 hover:text-foreground',
-                  )}
-                >
-                  <Icon className="h-4 w-4 flex-shrink-0" />
-                  <span className="truncate">{tab.label}</span>
-                  {isActive && <ChevronRight className="ml-auto h-3.5 w-3.5 opacity-50" />}
-                </Link>
-              );
-            })}
-          </div>
-        );
-      })}
+      {tabLink(home)}
+      <details className="group mt-1" open={active !== 'overview'}>
+        <summary className="flex cursor-pointer list-none items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted/60 hover:text-foreground">
+          <Menu className="h-4 w-4" />
+          More
+          <ChevronRight className="ml-auto h-3.5 w-3.5 transition-transform group-open:rotate-90" />
+        </summary>
+        <div className="mt-1 space-y-1 border-l border-border/60 pl-2">
+          {more.map(tabLink)}
+        </div>
+      </details>
 
       {/* Quick action */}
       <div className="mt-3 border-t border-border/40 pt-3">
@@ -143,7 +131,7 @@ function SidebarNav({
             className="flex w-full items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs font-bold text-primary transition-all hover:bg-primary/10"
           >
             <PlusCircle className="h-3.5 w-3.5" />
-            New Proposal
+            New decision
           </Link>
         ) : (
           <Link
@@ -178,7 +166,7 @@ const CommunityDashboard: React.FC = () => {
 
   useSeo({
     title: community ? `${community.name} dashboard` : undefined,
-    description: 'Treasury balance, member roster, proposals, and account activity for a Baraza group.',
+    description: 'Group funds, members, decisions, and recent updates for a Baraza community.',
     path: id ? `/dashboard/${id}` : '/dashboard',
     noIndex: true,
   });
@@ -266,14 +254,11 @@ const CommunityDashboard: React.FC = () => {
     );
   }
 
-  const bountyStats = getBountyStatsForCommunity(community.id);
   const currentTab = TABS.find((t) => t.key === activeTab);
   const canPostBounties = isMember;
-  const securityReview = reviewCommunity(community);
   const communityChain = community.chain ?? chain;
   const communityChainMeta = CHAINS[communityChain];
   const activeRailLabel = communityChainMeta.testnet.label;
-  const tokenGateStatus = getTokenGateStatus(community.id, publicKey?.toBase58(), 'proposal');
 
   return (
     <Layout>
@@ -304,17 +289,6 @@ const CommunityDashboard: React.FC = () => {
                     <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-medium capitalize">
                       {community.type}
                     </span>
-                    <span
-                      aria-label={`Treasury rail: ${communityChainMeta.label}`}
-                      className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-medium"
-                    >
-                      <span
-                        aria-hidden
-                        className="h-1.5 w-1.5 rounded-full"
-                        style={{ background: communityChainMeta.badgeBg }}
-                      />
-                      {communityChainMeta.label}
-                    </span>
                     <span className="inline-flex items-center gap-1">
                       <Calendar className="h-3.5 w-3.5" />
                       Since {formatRailDate(community.createdAt, communityChainMeta, { month: 'short', year: 'numeric' })}
@@ -337,15 +311,6 @@ const CommunityDashboard: React.FC = () => {
                 </div>
               </div>
             </CommunityBanner>
-          </div>
-
-          {/* Live stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
-            <LiveStatCard icon={TrendingUp} label="Treasury" value={community.fundBalance} format={(v) => formatRailAmountFromKes(v, communityChainMeta)} color="text-primary" bg="bg-primary/10" />
-            <LiveStatCard icon={Users} label="Members" value={community.memberCount} color="text-secondary" bg="bg-secondary/10" />
-            <LiveStatCard icon={Vote} label="Active Proposals" value={activeDecisions.length} color="text-accent" bg="bg-accent/10" showDelta={false} />
-            <LiveStatCard icon={History} label="Past Proposals" value={pastDecisions.length} color="text-muted-foreground" bg="bg-muted" showDelta={false} />
-            <LiveStatCard icon={BriefcaseBusiness} label="Open Bounties" value={bountyStats.open} color="text-confirmed" bg="bg-confirmed/10" showDelta={false} />
           </div>
 
           {/* ── Sidebar + content layout ──────────────────────── */}
@@ -389,120 +354,74 @@ const CommunityDashboard: React.FC = () => {
             {/* Main content */}
             <main className="min-w-0 flex-1">
 
-              {/* ── Overview ── */}
+              {/* ── Home ── */}
               {activeTab === 'overview' && (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_21rem]">
-                    <div className="premium-glass rounded-xl p-5">
-                      <div className="mb-4 flex items-center justify-between gap-4">
-                        <div>
-                          <h3 className="font-display text-lg font-semibold">Group activity overview</h3>
-                          <p className="text-xs">Contributions, proposals, and votes at a glance.</p>
-                        </div>
-                        <span className="hidden rounded-full border px-3 py-1 text-xs font-semibold sm:inline-flex">
-                          <Activity className="mr-1 h-3 w-3" />
-                          {activeRailLabel}
-                        </span>
+                <div className="space-y-10">
+                  <section aria-labelledby="attention-heading">
+                    <div className="mb-4 flex items-end justify-between gap-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Start here</p>
+                        <h2 id="attention-heading" className="mt-1 font-display text-2xl font-semibold">Needs your attention</h2>
                       </div>
-                      <div className="grid gap-3 sm:grid-cols-3">
-                        {[
-                          ['Payments verified', '24', 'This month'],
-                          ['Votes cast', '96', 'Across active proposals'],
-                          ['Pending releases', activeDecisions.length.toString(), 'Awaiting quorum'],
-                        ].map(([label, value, detail]) => (
-                          <div key={label} className="rounded-lg border p-4">
-                            <p className="text-[10px] uppercase tracking-widest">{label}</p>
-                            <p className="mt-2 font-display text-2xl font-bold">{value}</p>
-                            <p className="mt-1 text-xs">{detail}</p>
-                          </div>
-                        ))}
-                      </div>
+                      <Link to={`/dashboard/${community.id}?tab=governance`} className="text-sm font-semibold text-primary">See all decisions</Link>
                     </div>
-
-                    <div className="premium-glass rounded-xl p-5">
-                      <div className="mb-4 flex items-center justify-between">
-                        <h3 className="font-display text-base font-semibold">Your role</h3>
-                        {isMember ? (
-                          <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider">
-                            <ShieldCheck className="h-3 w-3" />
-                            Active
-                          </span>
-                        ) : (
-                          <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                            Not a member
-                          </span>
-                        )}
-                      </div>
-                      {isMember ? (
-                        <div className="space-y-3 text-sm">
-                          <div className="flex justify-between border-b pb-2"><span>Role</span><span className="font-semibold">Member</span></div>
-                          <div className="flex justify-between border-b pb-2"><span>Voting power</span><span className="font-semibold">1 vote</span></div>
-                          <div className="flex justify-between"><span>Monthly dues</span><span className="font-semibold">{formatRailAmountFromKes(community.membershipFee, communityChainMeta)}</span></div>
+                    <div className="rounded-2xl border border-border/70 bg-card p-5">
+                      {activeDecisions.length > 0 ? (
+                        <div className="space-y-4">
+                          {activeDecisions.slice(0, 2).map((decision) => (
+                            <Link key={decision.id} to={`/dashboard/${community.id}/decisions/${decision.id}`} className="flex items-center justify-between gap-4 border-b border-border/60 pb-4 last:border-0 last:pb-0">
+                              <div>
+                                <p className="font-semibold text-foreground">{decision.title}</p>
+                                <p className="mt-1 text-sm text-muted-foreground">Review the details and record your view.</p>
+                              </div>
+                              <ChevronRight className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
+                            </Link>
+                          ))}
                         </div>
                       ) : (
-                        <>
-                          <p className="text-xs">Join to receive a {communityChainMeta.label} membership record and vote on proposals.</p>
-                          <Link to={`/join/${community.id}`} className="btn-warm mt-4 w-full justify-center text-sm">Join group</Link>
-                        </>
+                        <p className="text-sm text-muted-foreground">Nothing needs a decision from you right now.</p>
                       )}
                     </div>
-                  </div>
+                  </section>
 
-                  <AkiliSecurityReview review={securityReview} compact />
+                  <section aria-labelledby="conversation-heading">
+                    <div className="mb-4">
+                      <p className="text-sm text-muted-foreground">Listen before deciding</p>
+                      <h2 id="conversation-heading" className="mt-1 font-display text-2xl font-semibold">Community conversation</h2>
+                    </div>
+                    <div className="rounded-2xl bg-muted/35 p-5 md:p-6">
+                      <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+                        Open a decision to ask questions, reply to another member, mention someone who can help, or ask Akili to summarise the discussion without taking a side.
+                      </p>
+                      <Link to={`/dashboard/${community.id}?tab=governance`} className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-foreground">
+                        Join a conversation <ChevronRight className="h-4 w-4" />
+                      </Link>
+                    </div>
+                  </section>
 
-                  <div className="premium-glass rounded-xl p-5">
-                    <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+                  <section aria-labelledby="money-heading">
+                    <div className="mb-4 flex items-end justify-between gap-4">
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-primary">Membership credential gate</p>
-                        <h3 className="mt-1 font-display text-base font-semibold">Member-only actions are protected</h3>
+                        <p className="text-sm text-muted-foreground">A simple account view</p>
+                        <h2 id="money-heading" className="mt-1 font-display text-2xl font-semibold">Money updates</h2>
                       </div>
-                      <span className={cn(
-                        'rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wider',
-                        tokenGateStatus.allowed ? 'border-confirmed/40 bg-confirmed/10 text-confirmed' : 'border-secondary/40 bg-secondary/10 text-secondary',
-                      )}>
-                        {tokenGateStatus.label}
-                      </span>
+                      <Link to={`/dashboard/${community.id}/treasury`} className="text-sm font-semibold text-primary">View group account</Link>
                     </div>
-                    <div className="grid gap-3 sm:grid-cols-3">
-                      {[
-                        ['Proposals', 'Active member credential required'],
-                        ['Bounties', 'Admin or active member credential required'],
-                        ['Treasury releases', 'Admin credential and approved proposal required'],
-                      ].map(([label, detail]) => (
-                        <div key={label} className="rounded-lg border p-3">
-                          <p className="text-[10px] font-bold uppercase tracking-widest">{label}</p>
-                          <p className="mt-2 text-xs leading-5 text-muted-foreground">{detail}</p>
-                        </div>
-                      ))}
+                    <div className="grid gap-4 rounded-2xl border border-border/70 bg-card p-5 sm:grid-cols-3">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Group funds</p>
+                        <p className="mt-2 font-display text-2xl font-semibold">{formatRailAmountFromKes(community.fundBalance, communityChainMeta)}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Monthly contribution</p>
+                        <p className="mt-2 font-display text-xl font-semibold">{formatRailAmountFromKes(community.membershipFee, communityChainMeta)}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Withdrawal requests</p>
+                        <p className="mt-2 font-display text-xl font-semibold">None waiting</p>
+                      </div>
                     </div>
-                    <p className="mt-4 text-xs leading-5 text-muted-foreground">
-                      The gate checks the member record linked to this group before sensitive actions open.
-                    </p>
-                  </div>
-
-                  <BountyBoard communityId={community.id} communityName={community.name} compact />
-
-                  <div className="premium-glass rounded-xl p-5">
-                    <div className="mb-4 flex items-center justify-between">
-                      <h3 className="font-display text-base font-semibold">Governance rules</h3>
-                      <ShieldCheck className="h-4 w-4" />
-                    </div>
-                    <div className="grid gap-3 sm:grid-cols-4">
-                      {[
-                        ['Quorum', `${community.quorumPct ?? 51}%`],
-                        ['Approval', `${community.approvalThresholdPct ?? 66}%`],
-                        ['Voting period', `${community.votingPeriodDays ?? 7} days`],
-                        ['Treasury', (community.treasuryPolicy ?? 'multisig-ready').replace('-', ' ')],
-                      ].map(([label, value]) => (
-                        <div key={label} className="rounded-lg border p-3">
-                          <p className="text-[10px] uppercase tracking-widest">{label}</p>
-                          <p className="mt-1 font-semibold capitalize">{value}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <CommunityGallery communityName={community.name} type={community.type} compact />
+                  </section>
                 </div>
               )}
 

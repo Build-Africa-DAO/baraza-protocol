@@ -20,7 +20,7 @@ const navLinks = [
 const primaryNavLinks = navLinks.filter((link) => ["/", "/communities", "/create"].includes(link.path));
 const overflowNavLinks = navLinks.filter((link) => !primaryNavLinks.includes(link));
 
-const quickSearches = ["DAO", "SACCO", "co-operative", "governance", "savings"];
+const quickSearches = ["chama", "SACCO", "co-operative", "community decisions", "savings"];
 
 interface HeaderProps {
   walletSlot?: ReactNode;
@@ -70,7 +70,7 @@ export default function Header({ walletSlot }: HeaderProps) {
   };
 
   const openAiGuide = () => {
-    openAkili("Help me use Baraza for my DAO");
+    openAkili("Help me use Baraza for my community group");
     setMobileOpen(false);
   };
 

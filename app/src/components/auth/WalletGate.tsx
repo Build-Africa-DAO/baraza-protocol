@@ -71,7 +71,7 @@ const WalletGate: React.FC<WalletGateProps> = ({
             </div>
 
             <p className="text-[10px] text-muted-foreground text-center mt-4">
-              Supports Phantom, Solflare, and Backpack
+              Supports Phantom, Solflare, and Coinbase Wallet
             </p>
           </div>
         </div>

@@ -17,6 +17,8 @@ interface ChatRequest {
   agent?: CouncilAgentName;
   /** When set, inject relationship-tension context into the relay-mode system prompt. */
   activePrincipals?: ReadonlyArray<AkiliPrincipalName>;
+  /** Member-facing mode. Facilitator mode is neutral and source-bound. */
+  mode?: 'private' | 'facilitator';
 }
 
 /**
@@ -150,7 +152,7 @@ async function handleChat(req: Request): Promise<Response> {
     return new Response('Bad Request', { status: 400 });
   }
 
-  const { message, communityId, history = [], agent, activePrincipals } = body;
+  const { message, communityId, history = [], agent, activePrincipals, mode = 'private' } = body;
   if (!message?.trim()) return new Response('Bad Request', { status: 400 });
 
   const communityContext = communityId ? await loadCommunityContext(communityId) : '';
@@ -185,7 +187,7 @@ async function handleChat(req: Request): Promise<Response> {
     });
   }
 
-  const systemPrompt = buildSystemPrompt(communityContext);
+  const systemPrompt = buildSystemPrompt(communityContext, mode);
   // Relay mode: when 2+ principals are flagged, inject the session-context
   // block (tension lines + Decision Stack Guard prepend if applicable) in
   // front of the user message. Empty string when fewer than 2 principals.
@@ -293,7 +295,10 @@ ${proposalLines}`;
   }
 }
 
-function buildSystemPrompt(communityContext: string): string {
+function buildSystemPrompt(
+  communityContext: string,
+  mode: 'private' | 'facilitator' = 'private',
+): string {
   // Layer 1: Akili relay character + Decision Stack Guard, pulled verbatim
   //          from the character bible at docs/akili-council/AKILI.md and
   //          encoded in app/src/lib/akili/prompts.ts. This is the persona
@@ -313,11 +318,27 @@ function buildSystemPrompt(communityContext: string): string {
   // specialist one-shot, or `activePrincipals` to inject the relationship
   // tension block + Decision Stack Guard prepend into relay-mode output.
   // See handleChat() above for the dispatch.
+  const modePrompt = mode === 'facilitator'
+    ? `# Community facilitator mode
+
+You are facilitating a member discussion, not advising an individual.
+- Summarise positions neutrally and link every claim to the supplied source message ID in square brackets.
+- Preserve minority and dissenting views explicitly; do not flatten them into consensus.
+- List unanswered questions separately.
+- Translate faithfully between English and Kiswahili when asked, preserving speaker and source IDs.
+- Never recommend, imply, or cast a vote. Never tell a member which option to choose.
+- If no source messages are supplied, say that there is not enough discussion to summarise.`
+    : `# Private guide mode
+
+Help the member understand the page and their options in plain language. Keep their conversation private. Explain choices without deciding for them.`;
+
   return `${AKILI_RELAY.systemPrompt}
 
 # Direct-chat task surface
 
 You are answering a member of a Baraza community in a live, single-turn chat session. There is no other council agent feeding into this exchange. Use your own voice. The Decision Stack Guard above does not fire here (no council synthesis is in flight), but the discipline does: never greet, never soften a flag into a feeling, never speak for an agent who has not filed.
+
+${modePrompt}
 
 ## Capabilities
 1. **DRAFT** - Turn a member's idea into a structured governance proposal ready for human review.
