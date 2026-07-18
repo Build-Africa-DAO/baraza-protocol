@@ -272,12 +272,12 @@ const WalletStatus: React.FC = () => {
             onClick={handleConnect}
             className="rounded-md bg-secondary px-6 py-2.5 text-sm font-bold text-secondary-foreground transition-colors hover:bg-secondary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
           >
-            {chainMeta.accountCta}
+            Connect account
           </button>
           <p className="hidden text-[10px] font-semibold text-muted-foreground lg:block">
             {chain === 'mpesa'
-              ? 'Wallet required for M-Pesa onramp'
-              : chainMeta.suggestedWallet}
+              ? 'Account required for M-Pesa payments'
+              : 'Phantom, Solflare, or Coinbase Wallet'}
           </p>
           <button
             type="button"

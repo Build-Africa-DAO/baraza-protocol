@@ -20,7 +20,6 @@ import { formatKSh } from "@/lib/utils";
 import { normaliseKenyanPhone } from "@/lib/phone";
 import CommunityBanner from "@/components/CommunityBanner";
 import { useSeo } from "@/lib/seo";
-import { useChain } from "@/hooks/useChain";
 import { PRODUCT_ENVIRONMENT } from "@/lib/network";
 
 const joinSteps = [
@@ -77,7 +76,6 @@ function generateLocalOrderId(): string {
 export default function JoinDao() {
   const { id } = useParams<{ id: string }>();
   const { community } = useCommunity(id);
-  const { chainMeta } = useChain();
   useSeo({
     title: community ? `Join ${community.name}` : "Join a community",
     description: "Verify your phone, pay your monthly contribution through M-Pesa, and activate your membership.",
@@ -392,12 +390,12 @@ export default function JoinDao() {
                       <Wallet className="h-5 w-5" />
                     </div>
                     <div>
-                      <h2 className="font-display text-base font-semibold">{chainMeta.label} account</h2>
+                      <h2 className="font-display text-base font-semibold">Community account</h2>
                       <p className="text-xs">Optional account path</p>
                     </div>
                   </div>
                   <p className="text-sm leading-6">
-                    Connect your {chainMeta.label} account for your membership record and voting.
+                    Connect a supported account for your membership record and voting.
                   </p>
                   <button
                     type="button"
@@ -413,7 +411,7 @@ export default function JoinDao() {
                     className="btn-ghost mt-5 w-full justify-center gap-2 py-3 text-sm font-bold"
                   >
                     <Wallet className="h-4 w-4" />
-                    {connecting ? "Connecting..." : connected ? `Pay from connected ${chainMeta.label} account` : chainMeta.accountCta}
+                    {connecting ? "Connecting..." : connected ? "Pay from connected account" : "Connect account"}
                   </button>
                   <Link to="/profile" className="mt-3 inline-flex text-xs font-semibold">
                     Manage linked Stellar account
