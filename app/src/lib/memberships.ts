@@ -34,6 +34,7 @@ function readMemberships(): MembershipRecord[] {
 function writeMemberships(records: MembershipRecord[]): void {
   if (typeof window === 'undefined') return;
   window.localStorage.setItem(LOCAL_MEMBERSHIP_KEY, JSON.stringify(records));
+  window.dispatchEvent(new Event('baraza:memberships'));
 }
 
 export function getActiveMembership(

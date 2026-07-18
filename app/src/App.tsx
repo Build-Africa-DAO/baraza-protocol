@@ -9,7 +9,8 @@ import { OfflineProvider } from '@/contexts/OfflineContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import AkiliChat from '@/akili/AkiliChat';
 
-const Index = lazy(() => import('./pages/Index'));
+const EntryExperience = lazy(() => import('./pages/EntryExperience'));
+const AkiliWorkspace = lazy(() => import('./pages/AkiliWorkspace'));
 const Communities = lazy(() => import('./pages/Communities'));
 const Bounties = lazy(() => import('./pages/Bounties'));
 const BountyDetail = lazy(() => import('./pages/BountyDetail'));
@@ -41,7 +42,7 @@ const App: React.FC = () => {
           <AkiliChatProvider>
             <Suspense fallback={<PageLoader />}>
             <Routes>
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<EntryExperience />} />
               <Route path="/home" element={<Navigate to="/" replace />} />
               <Route path="/communities" element={<Communities />} />
               <Route path="/bounties" element={<Bounties />} />
@@ -61,6 +62,7 @@ const App: React.FC = () => {
               <Route path="/dashboard/:id/treasury" element={<TreasuryDetail />} />
               <Route path="/dashboard/:id/decisions/:decisionId" element={<ProposalDetail />} />
               <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/akili" element={<AkiliWorkspace />} />
               <Route path="/claim" element={<ClaimIdentity />} />
               <Route path="/admin" element={<AdminReconciliation />} />
               <Route path="/admin/akili" element={<AkiliCouncilFilings />} />

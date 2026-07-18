@@ -74,6 +74,14 @@ export function useDecision(id: string) {
   return useStoreSnapshot(() => dataStore.getDecision(id));
 }
 
+export function useAllDecisions() {
+  return useStoreSnapshot(() => dataStore.getAllDecisions());
+}
+
+export function useMemberCommunityIds(walletKey: string | null) {
+  return useStoreSnapshot(() => walletKey ? dataStore.getCommunityIdsForMember(walletKey) : []);
+}
+
 // ---------- Activities ----------
 
 export function useActivities(communityId: string) {

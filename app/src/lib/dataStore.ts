@@ -425,6 +425,10 @@ class BarazaDataStore {
     return Array.from(this.decisions.values()).filter((d) => d.communityId === communityId);
   }
 
+  getAllDecisions(): Decision[] {
+    return Array.from(this.decisions.values());
+  }
+
   getDecision(id: string): Decision | undefined {
     return this.decisions.get(id);
   }
@@ -445,6 +449,12 @@ class BarazaDataStore {
   isMember(communityId: string, walletKey: string): boolean {
     const community = this.communities.get(communityId);
     return community ? community.members.includes(walletKey) : false;
+  }
+
+  getCommunityIdsForMember(walletKey: string): string[] {
+    return Array.from(this.communities.values())
+      .filter((community) => community.members.includes(walletKey))
+      .map((community) => community.id);
   }
 
   hasVoted(decisionId: string, walletKey: string): 'for' | 'against' | 'abstain' | null {

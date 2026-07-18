@@ -80,6 +80,16 @@ describe('recordActiveMembership', () => {
     expect(getActiveMembership('c1', 'wallet1')).not.toBeNull();
     expect(getActiveMembership('c1', 'wallet2')).not.toBeNull();
   });
+
+  it('notifies reactive views after membership activation', () => {
+    const listener = vi.fn();
+    window.addEventListener('baraza:memberships', listener);
+
+    recordActiveMembership('c1', 'wallet1');
+
+    expect(listener).toHaveBeenCalledTimes(1);
+    window.removeEventListener('baraza:memberships', listener);
+  });
 });
 
 describe('listMembershipsForWallet', () => {

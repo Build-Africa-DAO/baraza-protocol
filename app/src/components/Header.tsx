@@ -4,9 +4,11 @@ import { Menu, Moon, MoreHorizontal, PlayCircle, Search, Sparkles, Sun, X } from
 import { BrandLogo } from "@/components/BrandLogo";
 import ChainSelector from "@/components/ChainSelector";
 import EnvironmentSelector from "@/components/EnvironmentSelector";
-import { useAkiliChat } from "@/akili/useAkiliChat";
 import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
+import InterfaceSwitcher from "@/components/InterfaceSwitcher";
+import { useMembershipAccess } from "@/hooks/useMembershipAccess";
+import { getHomeDestination, shouldShowHomeNavigation } from "@/lib/homeDestination";
 
 const navLinks = [
   { path: "/", label: "Home" },
@@ -16,9 +18,6 @@ const navLinks = [
   { path: "/create", label: "Launch" },
   { path: "/profile", label: "Profile" },
 ];
-
-const primaryNavLinks = navLinks.filter((link) => ["/", "/communities", "/create"].includes(link.path));
-const overflowNavLinks = navLinks.filter((link) => !primaryNavLinks.includes(link));
 
 const quickSearches = ["chama", "SACCO", "co-operative", "community decisions", "savings"];
 
@@ -34,9 +33,23 @@ export default function Header({ walletSlot }: HeaderProps) {
   const [query, setQuery] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
-  const { open: openAkili } = useAkiliChat();
   const { theme, toggleTheme } = useTheme();
+  const { communityIds, identified } = useMembershipAccess();
   const showInfrastructureControls = false;
+  const homePath = getHomeDestination({
+    communityIds,
+    identified,
+    lastInterface: typeof window === 'undefined' ? null : window.localStorage.getItem('baraza.interface.last'),
+  });
+  const resolvedNavLinks = navLinks
+    .map((link) => link.path === '/' ? {
+      ...link,
+      path: homePath,
+      label: communityIds.length > 0 ? 'My group' : link.label,
+    } : link)
+    .filter((link) => link.path !== homePath || shouldShowHomeNavigation(location.pathname, homePath));
+  const primaryNavLinks = resolvedNavLinks.filter((link) => ['Home', 'My group', 'Explore', 'Launch'].includes(link.label));
+  const overflowNavLinks = resolvedNavLinks.filter((link) => !primaryNavLinks.includes(link));
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -70,7 +83,9 @@ export default function Header({ walletSlot }: HeaderProps) {
   };
 
   const openAiGuide = () => {
-    openAkili("Help me use Baraza for my community group");
+    const from = `${location.pathname}${location.search}${location.hash}`;
+    window.localStorage.setItem('baraza.interface.last', 'chat');
+    navigate(`/akili?from=${encodeURIComponent(from)}`);
     setMobileOpen(false);
   };
 
@@ -85,7 +100,7 @@ export default function Header({ walletSlot }: HeaderProps) {
     >
       <div className="flex h-14 w-full items-center justify-between gap-3 px-4 sm:px-6">
         <div className="flex min-w-0 items-center gap-5">
-          <Link to="/" className="flex shrink-0 items-center" aria-label="Baraza home">
+          <Link to={homePath} className="flex shrink-0 items-center" aria-label="Baraza home">
             <BrandLogo size="sm" />
           </Link>
 
@@ -158,6 +173,9 @@ export default function Header({ walletSlot }: HeaderProps) {
         </div>
 
         <div className="relative flex shrink-0 items-center gap-2">
+          <div className="hidden md:block">
+            <InterfaceSwitcher compact />
+          </div>
           <div className="relative hidden md:block 2xl:hidden">
             <button
               type="button"
@@ -304,7 +322,7 @@ export default function Header({ walletSlot }: HeaderProps) {
       {mobileOpen && (
         <div className="animate-fade-in border-t border-border/50 bg-background/95 backdrop-blur-xl md:hidden">
           <nav className="container mx-auto flex flex-col gap-1 px-4 py-4" aria-label="Mobile navigation">
-            {navLinks.map((link) => {
+            {resolvedNavLinks.map((link) => {
               const isActive =
                 location.pathname === link.path ||
                 (link.path !== "/" && location.pathname.startsWith(link.path));

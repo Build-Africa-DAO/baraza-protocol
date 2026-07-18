@@ -705,6 +705,7 @@ export function updateBountyStatus(
     local.push(updated);
   }
   writeLocalBounties(local);
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event('baraza:bounties'));
   return updated;
 }
 

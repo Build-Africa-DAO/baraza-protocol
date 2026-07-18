@@ -246,7 +246,7 @@ export default function ProposalDetail() {
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-border/70 bg-card p-5 md:p-6">
+              <div id="community-discussion" className="scroll-mt-24 rounded-2xl border border-border/70 bg-card p-5 md:p-6">
                 <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-2">

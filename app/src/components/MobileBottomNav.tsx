@@ -1,9 +1,10 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
-import { Compass, Home, PlusCircle, UserRound, Wallet, type LucideIcon } from 'lucide-react';
+import { Compass, Home, MessageCircle, UserRound, Wallet, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useChain } from '@/hooks/useChain';
+import { useMembershipAccess } from '@/hooks/useMembershipAccess';
+import { getHomeDestination, shouldShowHomeNavigation } from '@/lib/homeDestination';
 
 interface NavItem {
   path: string;
@@ -13,10 +14,7 @@ interface NavItem {
   colClass: string;
 }
 
-const leftItems: NavItem[] = [
-  { path: '/', label: 'Home', icon: Home, colClass: 'col-start-1' },
-  { path: '/communities', label: 'Explore', icon: Compass, colClass: 'col-start-2' },
-];
+const exploreItem: NavItem = { path: '/communities', label: 'Explore', icon: Compass, colClass: 'col-start-2' };
 
 const rightItems: NavItem[] = [
   { path: '/profile', label: 'Profile', icon: UserRound, colClass: 'col-start-4' },
@@ -50,7 +48,6 @@ function NavLink({ item, location }: { item: NavItem; location: ReturnType<typeo
 function WalletAction() {
   const { connected, publicKey } = useWallet();
   const { setVisible } = useWalletModal();
-  const { chainMeta } = useChain();
   const label = connected && publicKey ? 'Account' : 'Join';
 
   return (
@@ -61,7 +58,7 @@ function WalletAction() {
         'col-start-5 flex flex-col items-center gap-1 rounded-md px-2 py-2 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70',
         connected ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
       )}
-      aria-label={connected ? `${chainMeta.label} account connected. Change account` : chainMeta.accountCta}
+      aria-label={connected ? 'Account connected. Change account' : 'Connect an account to join'}
     >
       <Wallet className="h-5 w-5" />
       {label}
@@ -71,7 +68,23 @@ function WalletAction() {
 
 export default function MobileBottomNav() {
   const location = useLocation();
-  const createActive = isPathActive(location.pathname, '/create');
+  const { communityIds, identified } = useMembershipAccess();
+  const homePath = getHomeDestination({
+    communityIds,
+    identified,
+    lastInterface: typeof window === 'undefined' ? null : window.localStorage.getItem('baraza.interface.last'),
+  });
+  const leftItems: NavItem[] = [
+    ...(shouldShowHomeNavigation(location.pathname, homePath) ? [{
+      path: homePath,
+      label: communityIds.length > 0 ? 'My group' : 'Home',
+      icon: Home,
+      colClass: 'col-start-1',
+    }] : []),
+    exploreItem,
+  ];
+  const chatActive = isPathActive(location.pathname, '/akili');
+  const currentPath = `${location.pathname}${location.search}${location.hash}`;
 
   return (
     <nav
@@ -85,16 +98,17 @@ export default function MobileBottomNav() {
 
         <div className="col-start-3 flex justify-center">
           <Link
-            to="/create"
-            aria-current={createActive ? 'page' : undefined}
+            to={`/akili?from=${encodeURIComponent(currentPath === '/akili' ? '/communities' : currentPath)}`}
+            onClick={() => window.localStorage.setItem('baraza.interface.last', 'chat')}
+            aria-current={chatActive ? 'page' : undefined}
             className={cn(
               'flex h-14 w-14 -translate-y-3 items-center justify-center rounded-full shadow-[var(--shadow-warm)] transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70',
               'bg-primary text-primary-foreground',
-              createActive && 'scale-105',
+              chatActive && 'scale-105',
             )}
           >
-            <PlusCircle className="h-7 w-7" />
-            <span className="sr-only">Launch a DAO</span>
+            <MessageCircle className="h-7 w-7" />
+            <span className="sr-only">Ask Akili</span>
           </Link>
         </div>
 
