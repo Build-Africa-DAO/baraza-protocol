@@ -5,6 +5,7 @@ import { reviewBounty, reviewCommunity, reviewProposal, type SecurityReview } fr
 import { getSupabaseClient, listCommunities } from '@/lib/communities';
 import { listMembershipsForCommunity, type MembershipRecord } from '@/lib/memberships';
 import type { PaymentOrder, PaymentOrderStatus } from '@/lib/payments';
+import { PLATFORM_CAPABILITIES, type PlatformCapability } from '@/lib/capabilityManifest';
 
 export type KnowledgeNodeType =
   | 'community'
@@ -252,6 +253,22 @@ function capabilityNode(capability: string): KnowledgeNode {
   };
 }
 
+function platformCapabilityNode(capability: PlatformCapability): KnowledgeNode {
+  return {
+    id: nodeId('capability', capability.id),
+    type: 'capability',
+    label: capability.plainName,
+    status: capability.status,
+    summary: capability.plainDescription,
+    metadata: {
+      enabled: capability.enabled,
+      technicalName: capability.technicalName,
+      technicalDescription: capability.technicalDescription,
+      blockers: capability.blockers.join(' | '),
+    },
+  };
+}
+
 export function buildKnowledgeGraph(input?: {
   communities?: Community[];
   proposals?: Decision[];
@@ -282,6 +299,10 @@ export function buildKnowledgeGraph(input?: {
       addNode(capabilityNode(capability));
       addEdge(chainId, capabilityId, 'supports-capability', 'supports');
     });
+  });
+
+  Object.values(PLATFORM_CAPABILITIES).forEach((capability) => {
+    addNode(platformCapabilityNode(capability));
   });
 
   READINESS_TASKS.forEach(addNode);
