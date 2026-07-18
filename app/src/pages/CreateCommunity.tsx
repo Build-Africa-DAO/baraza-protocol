@@ -184,7 +184,7 @@ export default function CreateCommunity() {
   function goBack() {
     const previous = STEP_ORDER[currentStepIndex - 1];
     if (previous) setCurrentStep(previous);
-    else navigate(-1);
+    else navigate('/communities');
   }
 
   async function chargeCreationFee(): Promise<{ orderId: string; persisted: boolean }> {
@@ -330,7 +330,7 @@ export default function CreateCommunity() {
       <section className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
         <button type="button" onClick={goBack} className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" />
-          {currentStepIndex === 0 ? 'Back' : 'Previous step'}
+          {currentStepIndex === 0 ? 'Back to Explore' : 'Previous step'}
         </button>
 
         <div className="mt-7 grid gap-10 lg:grid-cols-[15rem_minmax(0,1fr)]">

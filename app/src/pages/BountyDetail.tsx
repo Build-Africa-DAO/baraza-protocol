@@ -24,7 +24,7 @@ import {
   type BountySubmission,
 } from '@/lib/bounties';
 import { useCommunities } from '@/hooks/useCommunities';
-import { cn, formatRailAmountFromKes, formatRailDate } from '@/lib/utils';
+import { cn, formatKSh, formatRailDate } from '@/lib/utils';
 import { useSeo } from '@/lib/seo';
 import AkiliSecurityReview from '@/akili/AkiliSecurityReview';
 import { reviewBounty } from '@/lib/securityReview';
@@ -204,7 +204,7 @@ export default function BountyDetail() {
                 <section className="baraza-card p-5">
                   <div className="mb-4 flex items-center justify-between gap-3">
                     <h2 className="font-display text-lg font-semibold">Bounty brief</h2>
-                    <span className="font-display text-xl font-bold text-accent">{formatRailAmountFromKes(bounty.rewardKes, chainMeta)}</span>
+                    <span className="font-display text-xl font-bold text-accent">{formatKSh(bounty.rewardKes)}</span>
                   </div>
                   <p className="text-sm leading-6 text-muted-foreground">{bounty.summary}</p>
                   <div className="mt-5 flex flex-wrap gap-2">

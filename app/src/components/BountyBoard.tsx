@@ -12,7 +12,7 @@ import {
   updateBountyStatus, updateSubmissionStatus,
   type Bounty, type BountyStatus, type BountySubmission,
 } from '@/lib/bounties';
-import { formatRailAmountFromKes, cn } from '@/lib/utils';
+import { formatKSh, cn } from '@/lib/utils';
 import { useChain } from '@/hooks/useChain';
 import type { ChainMeta } from '@/lib/chain';
 
@@ -75,7 +75,7 @@ function CompactCard({
   onDragStart,
   onDragEnd,
   isDragging,
-  chainMeta,
+  chainMeta: _chainMeta,
 }: {
   bounty: Bounty;
   interested: boolean;
@@ -126,7 +126,7 @@ function CompactCard({
           <CalendarDays className="h-3 w-3" />
           {daysLeft(bounty.deadline)}
         </span>
-        <span className="font-bold text-sm text-accent">{formatRailAmountFromKes(bounty.rewardKes, chainMeta)}</span>
+        <span className="font-bold text-sm text-accent">{formatKSh(bounty.rewardKes)}</span>
       </div>
 
       <div className="mt-2.5 flex gap-2">
@@ -296,7 +296,7 @@ function FullCard({
   interested,
   onToggleInterest,
   onAdvanceStatus,
-  chainMeta,
+  chainMeta: _chainMeta,
 }: {
   bounty: Bounty;
   interested: boolean;
@@ -351,7 +351,7 @@ function FullCard({
           <p className="mt-1.5 text-xs leading-5 text-muted-foreground">{bounty.summary}</p>
         </div>
         <div className="shrink-0 text-right">
-          <p className="font-display text-base font-bold text-accent">{formatRailAmountFromKes(bounty.rewardKes, chainMeta)}</p>
+          <p className="font-display text-base font-bold text-accent">{formatKSh(bounty.rewardKes)}</p>
           <p className="mt-0.5 text-[10px] text-muted-foreground">
             {bounty.submissions} {bounty.submissions === 1 ? 'applicant' : 'applicants'}
           </p>
@@ -619,7 +619,7 @@ export default function BountyBoard({ communityId, communityName = 'this communi
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Open</p>
             </div>
             <div className="rounded-lg border p-3">
-              <p className="font-display text-xl font-bold text-accent">{formatRailAmountFromKes(rewardPool, chainMeta)}</p>
+              <p className="font-display text-xl font-bold text-accent">{formatKSh(rewardPool)}</p>
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Rewards</p>
             </div>
           </div>

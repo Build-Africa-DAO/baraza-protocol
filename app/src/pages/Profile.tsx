@@ -17,7 +17,7 @@ import {
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import Layout from "@/components/Layout";
-import { formatRailAmountFromKes, formatRailDate, truncateAddress } from "@/lib/utils";
+import { formatKSh, formatRailDate, truncateAddress } from "@/lib/utils";
 import CommunityBanner from "@/components/CommunityBanner";
 import { fetchMembershipsForWallet, listMembershipsForWallet } from "@/lib/memberships";
 import { AskAkili } from "@/akili/AskAkili";
@@ -285,12 +285,12 @@ export default function Profile() {
             <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl">
               <Wallet className="h-7 w-7" />
             </div>
-            <h1 className="font-display text-2xl font-bold">{chainMeta.accountCta}</h1>
+            <h1 className="font-display text-2xl font-bold">Connect your account</h1>
             <p className="mt-3 text-sm">
-              Your profile shows your memberships, voting history, and credentials across every DAO you join.
+              Your profile shows your memberships, voting history, and records across every group you join.
             </p>
             <button onClick={() => setVisible(true)} className="btn-warm mt-6 inline-flex items-center gap-2 text-sm">
-              Connect {chainMeta.label}
+              Connect account
             </button>
           </div>
         </section>
@@ -584,10 +584,10 @@ export default function Profile() {
                                   className="h-1.5 w-1.5 rounded-full"
                                   style={{ background: chainMeta.badgeBg }}
                                 />
-                                {chainMeta.label}
+                                Group account
                               </span>
                               <span>Joined {formatRailDate(record.joinedAt, chainMeta, { month: 'short', year: 'numeric' })}</span>
-                              <span>{formatRailAmountFromKes(community.membershipFee, chainMeta)}/mo</span>
+                              <span>{formatKSh(community.membershipFee)}/mo</span>
                               <span className="font-semibold text-primary">
                                 {record.brzaBalance} BRZA
                               </span>
@@ -657,7 +657,7 @@ export default function Profile() {
                               </span>
                             </div>
                             <p className="mt-1 text-xs text-muted-foreground">
-                              {community.name} - {formatRailAmountFromKes(bounty.rewardKes, chainMeta)} - {bounty.submissions} submissions
+                              {community.name} - {formatKSh(bounty.rewardKes)} - {bounty.submissions} submissions
                             </p>
                             <p className="mt-2 text-xs text-muted-foreground">
                               {stats.open} open bounties in this community.

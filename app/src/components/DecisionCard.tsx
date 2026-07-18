@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { CircleMinus, Loader2, ThumbsDown, ThumbsUp, User } from 'lucide-react';
-import { formatRailAmountFromKes, daysRemaining } from '@/lib/utils';
+import { formatKSh, daysRemaining } from '@/lib/utils';
 import { useWalletGuard } from '@/hooks/useWalletGuard';
 import { useCastVote, useVoteStatus } from '@/hooks/useBarazaData';
 import type { ProposalLifecycleStage } from '@/lib/constants';
@@ -37,7 +37,7 @@ const DecisionCard: React.FC<DecisionCardProps> = ({
   status,
   lifecycleStage,
   endsAt,
-  chainMeta = CHAINS.solana,
+  chainMeta: _chainMeta = CHAINS.solana,
 }) => {
   const { requireWallet, isReady, address } = useWalletGuard({ action: 'vote on decisions' });
   const { vote: submitVote } = useCastVote();
@@ -113,7 +113,7 @@ const DecisionCard: React.FC<DecisionCardProps> = ({
             </span>
           )}
         </div>
-        <span className="text-xs font-semibold text-accent">{formatRailAmountFromKes(fundingAmount, chainMeta)}</span>
+        <span className="text-xs font-semibold text-accent">{formatKSh(fundingAmount)}</span>
       </div>
 
       {/* Title & Description */}

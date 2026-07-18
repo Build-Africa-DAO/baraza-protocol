@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Vote, ArrowLeft, Info, Loader2, ShieldCheck } from 'lucide-react';
 import Layout from '@/components/Layout';
-import { formatRailAmountFromKes } from '@/lib/utils';
+import { formatKSh } from '@/lib/utils';
 import { useWalletGuard } from '@/hooks/useWalletGuard';
 import { useToast } from '@/hooks/use-toast';
 import { useCommunity } from '@/hooks/useCommunities';
@@ -171,7 +171,7 @@ const CreateDecision: React.FC = () => {
               <Info className="w-5 h-5 flex-shrink-0" />
               <div>
                 <p className="text-xs">Available treasury</p>
-                <p className="text-sm font-bold">{formatRailAmountFromKes(community.fundBalance, chainMeta)}</p>
+                <p className="text-sm font-bold">{formatKSh(community.fundBalance)}</p>
               </div>
             </div>
 
@@ -246,12 +246,12 @@ const CreateDecision: React.FC = () => {
                 </div>
                 {overBudget && (
                   <p className="text-xs mt-1.5">
-                    This exceeds the available treasury of {formatRailAmountFromKes(community.fundBalance, chainMeta)}
+                    This exceeds the available group funds of {formatKSh(community.fundBalance)}
                   </p>
                 )}
                 {Number(form.fundingAmount) > 0 && !overBudget && (
                   <p className="text-xs mt-1.5 text-muted-foreground">
-                    Shows as {formatRailAmountFromKes(Number(form.fundingAmount), chainMeta)} on {chainMeta.label}.
+                    Members will see {formatKSh(Number(form.fundingAmount))}.
                   </p>
                 )}
               </div>

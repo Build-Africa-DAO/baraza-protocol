@@ -6,7 +6,7 @@ import {
   ArrowUpDown, X
 } from 'lucide-react';
 import { useMembers } from '@/hooks/useBarazaData';
-import { formatRailAmountFromKes, formatRailDate } from '@/lib/utils';
+import { formatKSh, formatRailDate } from '@/lib/utils';
 import type { Member, Contribution } from '@/lib/dataStore';
 import { useChain } from '@/hooks/useChain';
 import { DuesStreakChip } from '@/components/DuesStreakChip';
@@ -58,7 +58,7 @@ const ContributionRow: React.FC<{ contribution: Contribution }> = ({ contributio
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-foreground">{formatRailAmountFromKes(contribution.amount, chainMeta)}</span>
+          <span className="text-xs font-medium text-foreground">{formatKSh(contribution.amount)}</span>
           <span className={`text-[10px] font-medium ${config.color} px-1.5 py-0.5 rounded-full bg-surface`}>
             {config.label}
           </span>
@@ -80,7 +80,6 @@ const MemberCard: React.FC<{ member: Member; isExpanded: boolean; onToggle: () =
   onToggle,
   streakMonths,
 }) => {
-  const { chainMeta } = useChain();
   const role = roleConfig[member.role] || roleConfig.member;
   const RoleIcon = role.icon;
   const [showAllContribs, setShowAllContribs] = useState(false);
@@ -121,7 +120,7 @@ const MemberCard: React.FC<{ member: Member; isExpanded: boolean; onToggle: () =
             </span>
             <span className="inline-flex items-center gap-1 font-medium text-accent">
               <PiggyBank className="w-2.5 h-2.5" />
-              {formatRailAmountFromKes(member.totalContributed, chainMeta)}
+              {formatKSh(member.totalContributed)}
             </span>
           </div>
         </div>
@@ -162,7 +161,7 @@ const MemberCard: React.FC<{ member: Member; isExpanded: boolean; onToggle: () =
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 mb-5">
                 <div className="bg-surface rounded-lg p-3 text-center">
                   <PiggyBank className="w-4 h-4 text-accent mx-auto mb-1" />
-                  <p className="text-sm font-bold text-foreground tabular-nums">{formatRailAmountFromKes(member.totalContributed, chainMeta)}</p>
+                  <p className="text-sm font-bold text-foreground tabular-nums">{formatKSh(member.totalContributed)}</p>
                   <p className="text-[9px] text-muted-foreground">Total Contributed</p>
                 </div>
                 <div className="bg-surface rounded-lg p-3 text-center">
@@ -221,7 +220,6 @@ const MemberCard: React.FC<{ member: Member; isExpanded: boolean; onToggle: () =
 // ---------- Main directory ----------
 
 const MemberDirectory: React.FC<MemberDirectoryProps> = ({ communityId, totalCount }) => {
-  const { chainMeta } = useChain();
   const members = useMembers(communityId);
   const [search, setSearch] = useState('');
   const [sortField, setSortField] = useState<SortField>('contributed');
@@ -297,12 +295,12 @@ const MemberDirectory: React.FC<MemberDirectoryProps> = ({ communityId, totalCou
         </div>
         <div className="baraza-card p-3 text-center">
           <PiggyBank className="w-4 h-4 text-accent mx-auto mb-1" />
-          <p className="font-display text-lg font-bold text-foreground tabular-nums">{formatRailAmountFromKes(totalContributed, chainMeta)}</p>
+          <p className="font-display text-lg font-bold text-foreground tabular-nums">{formatKSh(totalContributed)}</p>
           <p className="text-[9px] text-muted-foreground">Total Contributed</p>
         </div>
         <div className="baraza-card p-3 text-center">
           <TrendingUp className="w-4 h-4 text-secondary mx-auto mb-1" />
-          <p className="font-display text-lg font-bold text-foreground tabular-nums">{formatRailAmountFromKes(avgContribution, chainMeta)}</p>
+          <p className="font-display text-lg font-bold text-foreground tabular-nums">{formatKSh(avgContribution)}</p>
           <p className="text-[9px] text-muted-foreground">Avg per Member</p>
         </div>
         <div className="baraza-card p-3 text-center">

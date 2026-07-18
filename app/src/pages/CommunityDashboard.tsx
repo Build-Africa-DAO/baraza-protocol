@@ -17,7 +17,7 @@ import CombinedBoard from '@/components/community/CombinedBoard';
 import CommunitySettings from '@/components/community/CommunitySettings';
 import Layout from '@/components/Layout';
 import DecisionCard from '@/components/DecisionCard';
-import { formatRailAmountFromKes, formatRailDate, cn } from '@/lib/utils';
+import { formatKSh, formatRailDate, cn } from '@/lib/utils';
 import { useDecisions } from '@/hooks/useBarazaData';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
@@ -293,7 +293,7 @@ const CommunityDashboard: React.FC = () => {
                       <Calendar className="h-3.5 w-3.5" />
                       Since {formatRailDate(community.createdAt, communityChainMeta, { month: 'short', year: 'numeric' })}
                     </span>
-                    <span className="font-medium">{formatRailAmountFromKes(community.membershipFee, communityChainMeta)}/month</span>
+                    <span className="font-medium">{formatKSh(community.membershipFee)}/month</span>
                   </div>
                 </div>
                 <div className="flex w-full flex-col gap-3 sm:w-auto sm:items-end">
@@ -410,11 +410,11 @@ const CommunityDashboard: React.FC = () => {
                     <div className="grid gap-4 rounded-2xl border border-border/70 bg-card p-5 sm:grid-cols-3">
                       <div>
                         <p className="text-sm text-muted-foreground">Group funds</p>
-                        <p className="mt-2 font-display text-2xl font-semibold">{formatRailAmountFromKes(community.fundBalance, communityChainMeta)}</p>
+                        <p className="mt-2 font-display text-2xl font-semibold">{formatKSh(community.fundBalance)}</p>
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">Monthly contribution</p>
-                        <p className="mt-2 font-display text-xl font-semibold">{formatRailAmountFromKes(community.membershipFee, communityChainMeta)}</p>
+                        <p className="mt-2 font-display text-xl font-semibold">{formatKSh(community.membershipFee)}</p>
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">Withdrawal requests</p>
@@ -570,7 +570,7 @@ const CommunityDashboard: React.FC = () => {
                       </div>
                       <div className="flex items-center justify-between border-b pb-3">
                         <span>Recorded balance</span>
-                        <span className="font-display text-lg font-bold">{formatRailAmountFromKes(community.fundBalance, communityChainMeta)}</span>
+                        <span className="font-display text-lg font-bold">{formatKSh(community.fundBalance)}</span>
                       </div>
                       <div className="flex items-center justify-between border-b pb-3">
                         <span>Treasury record</span>
