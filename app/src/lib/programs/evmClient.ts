@@ -12,6 +12,7 @@
  */
 
 import { getEvmAddresses } from './evmAddresses';
+import { isEvmMainnetChainId } from '@/lib/platformGates';
 
 // Minimal ABI fragments.
 
@@ -80,7 +81,12 @@ const PUBLIC_RPC: Record<number, string> = {
 };
 
 export function getPublicRpc(chainId: number): string {
-  return PUBLIC_RPC[chainId] ?? 'https://ethereum.publicnode.com';
+  if (isEvmMainnetChainId(chainId)) {
+    throw new Error('EVM mainnet access is disabled by the platform mainnet allowlist.');
+  }
+  const rpcUrl = PUBLIC_RPC[chainId];
+  if (!rpcUrl) throw new Error(`Unsupported EVM chain ID: ${chainId}.`);
+  return rpcUrl;
 }
 
 // Client.

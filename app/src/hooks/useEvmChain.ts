@@ -103,7 +103,14 @@ export function useEvmChain(): UseEvmChainResult {
   useEffect(() => {
     if (!evmChainId) return;
     setIsLoadingEvmInfo(true);
-    const client = createBarazaEvmReadClient(evmChainId);
+    let client;
+    try {
+      client = createBarazaEvmReadClient(evmChainId);
+    } catch {
+      setEvmCommunityInfo(null);
+      setIsLoadingEvmInfo(false);
+      return;
+    }
     client
       .fetchCommunityInfo()
       .then(setEvmCommunityInfo)

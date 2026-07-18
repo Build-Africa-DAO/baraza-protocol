@@ -1,6 +1,7 @@
 import type { Bounty } from '@/lib/bounties';
 import type { Community, Decision } from '@/lib/dataStore';
 import { buildFacilitatorExcerpt, listProposalThread } from '@/lib/proposalThreads';
+import { PURCHASABLE_VOTES } from '@/lib/platformGates';
 
 export type AkiliResourceKind = 'community' | 'decision' | 'task' | 'destination' | 'discussion';
 
@@ -45,6 +46,16 @@ export const buildTaskRoute = (id: string) => `/bounties/${id}`;
 export function resolveAkiliCapability(input: string, context: AkiliCapabilityContext): AkiliCapabilityReply {
   const lower = input.trim().toLowerCase();
   const query = queryTerms(input);
+
+  if (includesAny(lower, ['buy votes', 'buy a vote', 'purchase votes', 'pay for votes'])) {
+    return {
+      text: PURCHASABLE_VOTES.enabled
+        ? 'Paid voting is available for this community.'
+        : 'Paying for votes is not available. Community decisions use the voting rules agreed when the group was created.',
+      resources: [{ kind: 'destination', id: 'communities', href: '/communities', actionLabel: 'Browse communities' }],
+      suggestions: ['How does voting work?', 'Show open decisions', 'Compare communities'],
+    };
+  }
 
   if (includesAny(lower, ['summar', 'discussion', 'members saying', 'conversation'])) {
     const decision = context.decisions.find((item) => matches([item.title, item.description], query));

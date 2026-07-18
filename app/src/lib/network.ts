@@ -1,5 +1,6 @@
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { getPublicEnv } from '@/lib/env';
+import { isMainnetChainAllowed } from '@/lib/platformGates';
 
 type NetworkName = 'mainnet' | 'devnet' | 'testnet';
 export type ProductEnvironment = 'test' | 'live';
@@ -28,7 +29,7 @@ export function writeStoredEnvironment(environment: ProductEnvironment): void {
 export const PRODUCT_ENVIRONMENT = readStoredEnvironment();
 const CONFIGURED_NETWORK = normaliseNetwork(publicEnv.VITE_SOLANA_NETWORK.toLowerCase());
 const NETWORK: NetworkName =
-  PRODUCT_ENVIRONMENT === 'live'
+  PRODUCT_ENVIRONMENT === 'live' && isMainnetChainAllowed('solana')
     ? 'mainnet'
     : CONFIGURED_NETWORK === 'mainnet'
       ? 'devnet'
@@ -57,7 +58,7 @@ export const EXPECTED_GENESIS = GENESIS_BY_NETWORK[NETWORK];
 export const NETWORK_LABEL = LABEL_BY_NETWORK[NETWORK];
 export const WALLET_ADAPTER_NETWORK = ADAPTER_BY_NETWORK[NETWORK];
 export const RPC_ENDPOINT =
-  PRODUCT_ENVIRONMENT === 'live'
+  PRODUCT_ENVIRONMENT === 'live' && isMainnetChainAllowed('solana')
     ? 'https://api.mainnet-beta.solana.com'
     : CONFIGURED_NETWORK === 'mainnet'
       ? 'https://api.devnet.solana.com'
