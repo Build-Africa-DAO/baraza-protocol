@@ -29,3 +29,28 @@ Thumbs.db
 
 # Local product review notes
 .internal-review/
+
+# Local agent tooling and browser-review evidence
+.claude/
+.codex/
+.gstack/
+.impeccable/
+.planning/
+.playwright-mcp/
+.vercel/
+claude-mem/
+skills-lock.json
+app/.vitest-output.txt
+app/akili-*.png
+app/showreel-*.png
+showreel-*.png
+
+# Superseded local design prototypes and private draft locations
+DESIGN-IS-*/
+stitch-*.html
+PRODUCT.md
+superteam-microgrant.md
+docs/missing.md
+docs/decisions/D1-group-type-registry.md
+docs/decisions/D17-professional-verification-layer.md
+docs/whitepaper/COUNSEL_BRIEF.md
