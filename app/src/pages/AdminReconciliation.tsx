@@ -32,6 +32,12 @@ import {
   summarizeKnowledgeGraph,
   type KnowledgeGraph,
 } from "@/lib/knowledgeGraph";
+import {
+  defaultReceiptFilename,
+  downloadReceiptExport,
+  listPayoutReceipts,
+  receiptsToCsv,
+} from "@/lib/payouts/receiptExport";
 
 const ADMIN_WALLETS = getAdminWallets();
 const ADMIN_NFT_THRESHOLD = Number(import.meta.env.VITE_ADMIN_NFT_THRESHOLD ?? 0);
@@ -163,6 +169,24 @@ export default function AdminReconciliation() {
       description: "The operator UI is ready. This action will connect when admin endpoints ship.",
     });
 
+  /** Downloadable receipt export for approved/paid bounties (no private member PII). */
+  const exportPayoutReceipts = () => {
+    const receipts = listPayoutReceipts(bounties);
+    if (receipts.length === 0) {
+      toast({
+        title: "No approved payouts to export",
+        description: "Receipts are generated for awarded/paid bounties only.",
+      });
+      return;
+    }
+    const csv = receiptsToCsv(receipts);
+    downloadReceiptExport(csv, defaultReceiptFilename("csv"));
+    toast({
+      title: "Payout receipts exported",
+      description: `${receipts.length} receipt(s) downloaded (amount, status, reviewer, tx reference).`,
+    });
+  };
+
   if (!isAdmin) {
     return (
       <Layout>
@@ -218,8 +242,8 @@ export default function AdminReconciliation() {
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
-              <button type="button" onClick={() => notifyNotWired("Export CSV")} className="btn-ghost gap-2 text-sm">
-                <Download className="h-4 w-4" /> Export CSV
+              <button type="button" onClick={exportPayoutReceipts} className="btn-ghost gap-2 text-sm">
+                <Download className="h-4 w-4" /> Export payout receipts
               </button>
               <button type="button" onClick={() => notifyNotWired("Sync state")} className="btn-ghost gap-2 text-sm">
                 <RefreshCw className="h-4 w-4" /> Sync state
