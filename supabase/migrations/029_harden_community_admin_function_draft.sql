@@ -1,6 +1,10 @@
 -- 029_harden_community_admin_function_draft.sql
 -- Classification: INTERNAL
 -- DRAFT ONLY. DO NOT APPLY without explicit maintainer approval.
+-- PASS 2 LIVE PREFLIGHT: DO NOT APPLY. The target
+-- public.is_community_admin(text) does not exist in the live project. Live
+-- SECURITY DEFINER functions require a separate definition-by-definition
+-- authorization review before a replacement migration can be drafted.
 --
 -- This function is SECURITY DEFINER because members-table policies call it
 -- while querying the same table. Limit exposure and qualify all objects.
@@ -44,4 +48,3 @@ GRANT EXECUTE ON FUNCTION public.is_community_admin(text) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.is_community_admin(text) TO service_role;
 
 COMMIT;
-
