@@ -2,10 +2,14 @@
 
 **Classification:** INTERNAL
 
-**Pass:** 1, audit only  
-**Repository:** `Build-Africa-DAO/baraza-protocol`  
-**Audited base:** `org/main` at `5181a7735afef9e49cf07c6cacaa1dff69bf29c1`  
-**Audit date:** 2026-07-23  
+**Pass:** 1, audit only
+
+**Repository:** `Build-Africa-DAO/baraza-protocol`
+
+**Audited base:** `org/main` at `5181a7735afef9e49cf07c6cacaa1dff69bf29c1`
+
+**Audit date:** 2026-07-23
+
 **Builder OSS comparison:** `BuilderOSS/nouns-protocol` at `ee88e32a284e275020cdad974def07d3444c2427`
 
 This document records repository and upstream evidence only. It does not green-light a
