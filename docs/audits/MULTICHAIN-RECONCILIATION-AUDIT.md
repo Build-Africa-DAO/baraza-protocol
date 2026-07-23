@@ -40,7 +40,7 @@ from evidence independently present in this repository.
 | Classification | Stop condition | Evidence | Required decision |
 |---|---|---|---|
 | INTERNAL | License obligations affect Baraza | Upstream `nouns-protocol` and `nouns-builder` are MIT; copied/substantial portions must retain the MIT notice. Local `contracts/evm/LICENSE.md` names Baraza OSS instead of Builder OSS. | Counsel must determine required attribution, provenance, and compatibility with the proposed root BSL license. |
-| INTERNAL | Builder Governor cannot express all requested Base behavior | Governor is ERC-721 vote-weighted and timelock-executed. It does not natively express independent verified membership, one-member-one-vote, officer workflows, welfare verification, disputes, or delayed exits. | Maintainer must narrow Base presets or approve custom-contract scope. |
+| INTERNAL | Builder Governor cannot express all decided Base behavior | Governor is ERC-721 vote-weighted and timelock-executed. It does not natively express independent verified membership, the decided Base one-member-one-vote preset, officer workflows, welfare verification, disputes, or delayed exits. | Base one-member-one-vote requires a custom Governor-related implementation; maintainer must select the scoped approach. |
 | INTERNAL | Proposal readability needs an architecture decision | Solana stores only `metadata_uri`; EVM proposal descriptions are event data rather than returned by `getProposal`; no shared index/body store exists. | Maintainer must approve an off-chain body/index with an on-chain hash/description anchor, or select another evidenced design. |
 | INTERNAL | Established decisions conflict with repository source-of-truth files | `AGENTS.md`, `docs/architecture.md`, and `CDR-0001` encode superseded product and chain decisions. | Maintainer must approve the terminology/decision-document reconciliation after this audit. |
 
@@ -307,9 +307,9 @@ exist. Prior decisions must be marked superseded rather than deleted.
 | INTERNAL | `anchor build` and smoke checks | Five programs compiled; drift-only checks passed; full smoke failed at `createCommunity` with a missing-program simulation error |
 
 **INTERNAL — baseline conclusion:** starting and ending app counts are 501/501 for this
-audit-only pass. This is eight below the directive's stated Sprint 001 ending baseline
-of 509, although no tests were removed by this pass. The discrepancy is a launch
-readiness issue, not a refactor allowance.
+audit-only pass. The exact CI run at the base commit also reports 501/501, and
+no reachable commit with 509 tests was found. `TEST-COUNT-DELTA.md` records why
+this is a baseline mismatch rather than a regression.
 
 ## 11. Ordered Implementation Plan
 
@@ -340,13 +340,14 @@ This is a draft plan only. No Pass 2 work is authorized.
 | Classification | Decision | Why it cannot be inferred |
 |---|---|---|
 | INTERNAL | Approve or reject Supabase body/index plus on-chain hash/description anchor for proposals | Solana and EVM do not currently expose a complete adapter-readable body; choosing storage is architectural. |
-| INTERNAL | Define which Base presets are allowed without custom contracts | Builder Governor does not satisfy all approved Soroban governance behavior or independent membership models. |
+| INTERNAL | Select the custom Base one-member-one-vote approach | The decided Base preset cannot be expressed by the unmodified Builder Governor; the verified-membership Governor, soulbound-token, and cap approaches have different identity/auction consequences. |
+| INTERNAL | Decide SACCO-style compliance posture | Current code has no governance-model lock; maintainer review is still required between fully open, warning, or one-member-one-vote lock. |
 | INTERNAL | Decide whether Builder Treasury alone satisfies each Base multisig preset | Safe integration is absent; timelock equivalence is a product/security decision. |
 | INTERNAL | Obtain counsel direction on MIT attribution and BSL compatibility | Legal obligations and covered derivative works are outside engineering authority. |
 | INTERNAL | Confirm whether migration `026` is applied and remediate live `payment_attestations` RLS | Repository source cannot prove live database state. |
 | INTERNAL | Confirm whether the credential-shaped value in `app/.env.local.example` is synthetic | Repository evidence is insufficient; the value must not be repeated publicly. |
 | INTERNAL | Confirm founder-controlled deployment custody per chain | No repository artifact proves custody. |
-| INTERNAL | Reconcile the 501 current app tests with the stated 509 Sprint 001 baseline | No test deletions occurred in this audit, but the expected eight tests are not identifiable from current `main` evidence alone. |
+| INTERNAL | Preserve any external artifact that produced the stated 509 Sprint 001 count | Current `main` and exact CI both produce 501; no originating 509 commit can be identified without that artifact. |
 
 ## 13. Exact Maintainer Handoff
 
