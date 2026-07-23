@@ -24,14 +24,14 @@ from evidence independently present in this repository.
 | INTERNAL | Overall launch state | `blocked` | No chain satisfies all seven `launch_candidate` criteria in repository evidence. No green-light is recommended. |
 | INTERNAL | Reusable code | `partial` | Five Soroban V2 contracts, five Anchor programs, the Builder-derived EVM contract set, frontend proposal screens, payment adapters, and Privy scaffolding are reusable. Their existence is not deployment evidence. |
 | INTERNAL | Stellar | `in_preparation` | The current V2 contracts pass 21 unit tests, but the only committed testnet registry is legacy V1. No V2 deployment record, smoke record, founder-controlled custody record, sample deployment, cost model, or end-to-end adapter proposal path exists. |
-| INTERNAL | Base | `in_preparation` | The Builder contract set and tests are present, but every local EVM address registry entry is zero, Forge was unavailable, no Base Sepolia record exists, and the app adapter only supports voting and token-balance membership. |
-| INTERNAL | Solana | `in_preparation` | All five programs remain present and five Rust identity tests pass. `Anchor.toml` targets localnet, current program IDs are documented as local keys, and no accepted devnet deployment/smoke record exists on `main`. |
+| INTERNAL | Base | `in_preparation` | The Builder contract set compiles and 205/205 non-address Forge tests pass, but every local EVM address registry entry is zero, no Base Sepolia record exists, and the app adapter only supports voting and token-balance membership. |
+| INTERNAL | Solana | `in_preparation` | All five programs compile and drift-only checks pass, but the full local smoke run fails at its first instruction and generated deployment keypairs differ from committed IDs. No accepted devnet deployment/smoke record exists on `main`. |
 | INTERNAL | Proposals | `blocked` | Chain-neutral adapters omit create/get/list. Frontend creation falls back to an in-memory store; cards vote inline and do not link to the detail route. Stellar has contract create/get but no adapter/list, Solana stores only a metadata URI, and EVM text retrieval requires event indexing or another body store. |
 | INTERNAL | Membership axes | `conflicting` | `verifyBaseMembership()` treats a positive NFT balance as membership. Builder Governor voting is NFT-token weighted. The directive requires membership, voting weight, and fundraising assets to be independent. |
 | INTERNAL | Product architecture | `conflicting` | `AGENTS.md` and existing architecture documents describe Africa focus, universal Stellar settlement, Solana governance, EVM read-only, and user chain selection. The directive establishes global scope, fit-to-strength routing, Base launch candidacy, and no user chain choice. |
 | INTERNAL | Mobile money | `conflicting` | Core code is Kenya-only, M-Pesa appears as a selectable “chain,” and the requested provider/account fields do not exist as a normalized model. |
 | INTERNAL | Security | `blocked` | Migration `003` creates `payment_attestations` without RLS. The directive reports live RLS disabled. The fixed `is_community_admin()` body exists only in draft migration `026`, so repository evidence does not prove the live fix is applied. |
-| INTERNAL | Tests | `partial` | App: 501/501 passing, typecheck/build clean, lint 0 errors and 31 warnings. Stellar: 21/21 unit tests. Root Rust: 5/5 tests. Forge and Anchor smoke tests were not run because their CLIs are unavailable. |
+| INTERNAL | Tests | `partial` | App: 501/501 passing, typecheck/build clean, lint 0 errors and 31 warnings. Stellar: 21/21 unit tests. Root Rust: 5/5 tests. Forge: 205/205 non-address tests. Anchor compiles and drift checks pass, but full smoke execution does not. |
 | INTERNAL | Documentation | `missing` | All 18 canonical documents named by the directive are absent at the requested paths. Existing documents contain decisions now superseded by the directive. |
 | INTERNAL | License | `blocked` | Both current upstream repositories inspected are MIT, not GPL-family. MIT still requires preservation of copyright and license notices. The local vendored contract license replaces Builder OSS attribution, while the repository root proposes BSL 1.1. Counsel must decide remediation and derivative-work scope. |
 
@@ -54,8 +54,8 @@ documented, and proposals working end to end.
 | Classification | Chain | Registry state supported by evidence | Satisfied criteria | Missing evidence | Distance to `launch_candidate` | Recommendation |
 |---|---|---|---:|---|---:|---|
 | INTERNAL | Stellar | `in_preparation` | 0/7 | Current adapter; V2 testnet addresses; V2 smoke record; sample; custody; cost model; proposal create/list/get through UI and adapter | 7 unresolved | Closest reusable launch candidate because current contracts and unit tests exist, but do not green-light. |
-| INTERNAL | Base | `in_preparation` | 0/7 | Complete Builder wrapper adapter; Base Sepolia deployment; Forge/smoke evidence; sample; custody; cost model; independent membership and readable proposals | 7 unresolved | Keep as target launch candidate; resolve license, governance scope, and proposal storage before deployment work. |
-| INTERNAL | Solana | `in_preparation` | 0/7 | Complete adapter; accepted devnet record; reproducible smoke evidence; event sample; founder custody; cost model; proposal body retrieval | 7 unresolved | Preserve as Phase 2. Directive-reported deployment/smoke results are not corroborated on `main` and are not counted. |
+| INTERNAL | Base | `in_preparation` | 1/7 | Complete Builder wrapper adapter; Base Sepolia deployment; sample; custody; cost model; independent membership and readable proposals | 6 unresolved | Keep as target launch candidate; local Forge evidence now passes, but resolve license, governance scope, and proposal storage before deployment work. |
+| INTERNAL | Solana | `in_preparation` | 0/7 | Complete adapter; accepted devnet record; passing reproducible smoke evidence; event sample; founder custody; cost model; proposal body retrieval; reconcile generated and committed program IDs | 7 unresolved | Preserve as Phase 2. Compilation is verified, but the full local smoke run fails before the first instruction completes. |
 | INTERNAL | Ethereum | `in_preparation` | 0/7 | Local addresses are zero; no Baraza deployment, adapter readiness, sample, custody, cost, or proposal E2E evidence | 7 unresolved | Prepare only after Base proves the integration. |
 | INTERNAL | Optimism | `in_preparation` | 0/7 | Same gaps as Ethereum; upstream address records are not Baraza deployment evidence | 7 unresolved | Prepare only after Base. |
 | INTERNAL | Zora | `in_preparation` | 0/7 | Inherited contracts and upstream records exist, but local addresses are zero and the app has no Zora adapter mapping | 7 unresolved | Prepare only after Base. |
@@ -105,7 +105,7 @@ those launch-candidate tracks proceed.
 | INTERNAL | `contracts/stellar/addresses/testnet-v1.json` | Testnet registry | Stellar | `obsolete` | Records legacy V1 deployments from 2026-06-23. Current V2 README warns V1 is not V2 deployment evidence. | Preserve; add a separate V2 registry only after deployment. |
 | INTERNAL | `contracts/stellar/README.md` | Soroban deployment status | Stellar | `partial` | Documents V2 contract set and warns against reusing V1 state. No V2 testnet registry exists. | Complete V2 testnet deployment evidence in a later concern. |
 | INTERNAL | `Anchor.toml` | Anchor environment | Solana | `missing_configuration` | Provider cluster is `localnet`; committed program IDs are local identities. | Do not infer devnet readiness. |
-| INTERNAL | `tests/anchor-smoke.mjs` | Solana smoke test | Solana | `partial` | Script exists, but no accepted output is committed and Anchor CLI is unavailable in this audit environment. | Re-run after custody and devnet configuration are resolved. |
+| INTERNAL | `tests/anchor-smoke.mjs` | Solana smoke test | Solana | `partial` | Drift-only checks pass, but the restored full local run fails at `createCommunity`; generated deployment keypairs differ from the configured IDs. | Reconcile program identities and establish a reproducible validator environment before relying on smoke evidence. |
 | INTERNAL | `supabase/migrations/003_payment_attestations.sql` | Payment attestations | Backend | `blocked` | Table is created without enabling RLS or policies. | Security-remediation PR after live posture is confirmed. |
 | INTERNAL | `supabase/migrations/026_leverage_foundation.sql` | Admin authorization fix | Backend | `partial` | Corrected community-scoped `auth.uid()` membership check is present; migration is explicitly Draft only. | Confirm applied live state without exposing credentials. |
 | INTERNAL | `supabase/migrations/021_identity_links.sql` and `021_retro_rounds_opened_by.sql` | Migration ordering | Backend | `conflicting` | Both use migration number `021`; filenames are zero-padded but numbering is not unique. | Renumber through a dedicated schema reconciliation after checking applied history. |
@@ -251,8 +251,8 @@ exist. Prior decisions must be marked superseded rather than deleted.
 | Classification | Area | Status | Evidence | Blocker |
 |---|---|---|---|---|
 | INTERNAL | Stellar | `in_preparation` | Current V2 code and 21 unit tests | No V2 testnet/smoke/sample/custody/cost/proposal E2E evidence |
-| INTERNAL | Base | `in_preparation` | Builder-derived contract set and app vote adapter | License, zero addresses, no Forge result, membership conflict, proposal body gap |
-| INTERNAL | Solana | `in_preparation` | Five programs preserved; five Rust tests | Localnet config, deployment evidence absent on main, custody unresolved, body gap |
+| INTERNAL | Base | `in_preparation` | Builder-derived contract set, app vote adapter, 205/205 non-address Forge tests | License, zero addresses, membership conflict, proposal body gap |
+| INTERNAL | Solana | `in_preparation` | Five programs compile; drift-only checks and five Rust tests pass | Full smoke fails, generated/configured IDs diverge, deployment evidence absent on main, custody unresolved, body gap |
 | INTERNAL | Ethereum/Optimism/Zora | `in_preparation` | Inherited upstream code/address records | No local operational addresses or Baraza readiness artifacts |
 | INTERNAL | Proposals | `blocked` | UI, local store, and chain-specific fragments exist | No mandatory shared create/get/list or durable full-body read |
 | INTERNAL | Mobile money | `blocked` | Kotani/M-Pesa flow exists | Kenya-only identity, no provider abstraction/model |
@@ -260,7 +260,7 @@ exist. Prior decisions must be marked superseded rather than deleted.
 | INTERNAL | Sample communities | `missing` | Demo seed data only | No required testnet deployment artifacts |
 | INTERNAL | Backend | `partial` | Supabase migrations and payment APIs exist | Applied state unknown, duplicate `021`, normalized models absent |
 | INTERNAL | Frontend | `partial` | List/create/detail screens exist | In-memory proposals, missing detail links, user chain selection remains |
-| INTERNAL | Tests | `partial` | App 501, Stellar 21, root Rust 5 all pass | Declared 509 baseline not met; Forge/Anchor smoke unavailable |
+| INTERNAL | Tests | `partial` | App 501, Stellar 21, root Rust 5, and Forge 205 all pass | Anchor full smoke fails; 509 is not a reachable baseline in current history |
 | INTERNAL | Security | `blocked` | Webhook HMAC checks and treasury safety defaults exist | Payment RLS, draft-only admin fix, possible example credential, single-signer path |
 | INTERNAL | Documentation | `missing` | Historical docs exist | All 18 canonical outputs absent |
 | INTERNAL | Deployment | `blocked` | Scripts and legacy records exist | No chain meets all current testnet/custody/sample/cost/proposal criteria |
@@ -303,8 +303,8 @@ exist. Prior decisions must be marked superseded rather than deleted.
 | INTERNAL | `npm run build` in `app` | Passed |
 | INTERNAL | `cargo test --workspace` in `contracts/stellar` | 21 tests passed; 10 deprecation warnings |
 | INTERNAL | `cargo test --workspace` at repository root | 5 tests passed |
-| INTERNAL | `forge test` | Not run; Forge CLI unavailable |
-| INTERNAL | Anchor smoke/deploy tests | Not run; Anchor CLI unavailable and no deployment was attempted |
+| INTERNAL | `forge test --no-match-test 'WithAddress' -vv` | 11 suites, 205 passed, 0 failed, 0 skipped |
+| INTERNAL | `anchor build` and smoke checks | Five programs compiled; drift-only checks passed; full smoke failed at `createCommunity` with a missing-program simulation error |
 
 **INTERNAL — baseline conclusion:** starting and ending app counts are 501/501 for this
 audit-only pass. This is eight below the directive's stated Sprint 001 ending baseline
