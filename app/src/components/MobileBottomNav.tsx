@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Compass, Home, PlusCircle, UserRound, Wallet, type LucideIcon } from 'lucide-react';
+import { BriefcaseBusiness, Compass, Home, PlusCircle, Wallet, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAccount } from '@/contexts/AccountContext';
 
@@ -17,7 +17,7 @@ const leftItems: NavItem[] = [
 ];
 
 const rightItems: NavItem[] = [
-  { path: '/profile', label: 'Profile', icon: UserRound, colClass: 'col-start-4' },
+  { path: '/bounties', label: 'Bounties', icon: BriefcaseBusiness, colClass: 'col-start-4' },
 ];
 
 function isPathActive(currentPath: string, target: string): boolean {
