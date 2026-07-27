@@ -3,6 +3,7 @@ import { CheckCircle, Vote, CreditCard, Award } from 'lucide-react';
 interface WelcomeScreenProps {
   phone: string;
   onContinue: () => void;
+  ctaLabel?: string;
 }
 
 function maskPhone(phone: string): string {
@@ -16,7 +17,11 @@ const VALUE_PROPS = [
   { icon: Award,      text: 'Earn BRZA for participation' },
 ] as const;
 
-export default function WelcomeScreen({ phone, onContinue }: WelcomeScreenProps) {
+export default function WelcomeScreen({
+  phone,
+  onContinue,
+  ctaLabel = 'Explore Communities',
+}: WelcomeScreenProps) {
   return (
     <div className="w-full max-w-sm mx-auto text-center">
       <div className="mb-6 flex flex-col items-center gap-3">
@@ -46,7 +51,7 @@ export default function WelcomeScreen({ phone, onContinue }: WelcomeScreenProps)
         onClick={onContinue}
         className="btn-warm w-full justify-center py-3 text-sm font-bold"
       >
-        Explore Communities
+        {ctaLabel}
       </button>
     </div>
   );

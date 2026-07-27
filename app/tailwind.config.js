@@ -76,12 +76,42 @@ export default {
 				surface: {
 					DEFAULT: 'hsl(var(--surface))',
 					hover: 'hsl(var(--surface-hover))'
+				},
+				onboarding: {
+					bg: 'var(--onboarding-bg)',
+					surface: 'var(--onboarding-surface)',
+					panel: 'var(--onboarding-panel)',
+					card: 'var(--onboarding-card)',
+					cardActive: 'var(--onboarding-card-active)',
+					border: 'var(--onboarding-border)',
+					borderStrong: 'var(--onboarding-border-strong)',
+					text: 'var(--onboarding-text)',
+					muted: 'var(--onboarding-muted)',
+					accent: 'var(--onboarding-accent)',
+					accentStrong: 'var(--onboarding-accent-strong)',
+					accentSoft: 'var(--onboarding-accent-soft)',
 				}
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
+			},
+			spacing: {
+				'onboarding-gutter': '1rem',
+				'onboarding-stack-sm': '0.5rem',
+				'onboarding-stack-lg': '3rem',
+				'onboarding-margin-mobile': '1rem',
+				'onboarding-margin-desktop': '4rem',
+			},
+			fontSize: {
+				'onboarding-headline-mobile': ['1.5rem', { lineHeight: '1.2', fontWeight: '700' }],
+				'onboarding-headline-desktop': ['2rem', { lineHeight: '1.2', fontWeight: '700' }],
+				'onboarding-title': ['1.25rem', { lineHeight: '1.4', fontWeight: '600' }],
+				'onboarding-body': ['1rem', { lineHeight: '1.5', fontWeight: '400' }],
+			},
+			boxShadow: {
+				onboarding: 'var(--onboarding-shadow)',
 			},
 			keyframes: {
 				'accordion-down': {

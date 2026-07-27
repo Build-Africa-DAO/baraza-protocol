@@ -1,0 +1,419 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport">
+<title>Baraza | Nairobi Community Collective Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&amp;family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "inverse-primary": "#9d4300",
+                    "on-secondary": "#3c2f00",
+                    "on-background": "#efe2c2",
+                    "secondary": "#ffe083",
+                    "on-primary-fixed-variant": "#783200",
+                    "tertiary-fixed": "#ffdcc5",
+                    "on-secondary-fixed-variant": "#574500",
+                    "surface-tint": "#ffb690",
+                    "tertiary-fixed-dim": "#ffb783",
+                    "on-tertiary": "#4f2500",
+                    "surface-bright": "#403923",
+                    "tertiary-container": "#e5812c",
+                    "primary-fixed-dim": "#ffb690",
+                    "primary-container": "#f97316",
+                    "tertiary": "#ffb783",
+                    "secondary-container": "#eec200",
+                    "surface-container-low": "#211b08",
+                    "primary": "#ffb690",
+                    "background": "#181303",
+                    "error": "#ffb4ab",
+                    "surface-container": "#251f0b",
+                    "secondary-fixed-dim": "#eec200",
+                    "on-primary": "#552100",
+                    "error-container": "#93000a",
+                    "on-error-container": "#ffdad6",
+                    "outline": "#a78b7d",
+                    "surface-container-lowest": "#130e01",
+                    "on-secondary-fixed": "#231b00",
+                    "surface": "#181303",
+                    "on-secondary-container": "#645000",
+                    "on-error": "#690005",
+                    "surface-variant": "#3b341f",
+                    "inverse-surface": "#efe2c2",
+                    "on-tertiary-container": "#522700",
+                    "on-primary-fixed": "#341100",
+                    "surface-container-high": "#302915",
+                    "on-primary-container": "#582200",
+                    "primary-fixed": "#ffdbca",
+                    "outline-variant": "#584237",
+                    "secondary-fixed": "#ffe083",
+                    "on-tertiary-fixed": "#301400",
+                    "on-tertiary-fixed-variant": "#713700",
+                    "surface-container-highest": "#3b341f",
+                    "inverse-on-surface": "#37301b",
+                    "on-surface-variant": "#e0c0b1",
+                    "surface-dim": "#181303",
+                    "on-surface": "#efe2c2"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "unit": "4px",
+                    "margin-desktop": "64px",
+                    "stack-sm": "8px",
+                    "gutter": "16px",
+                    "stack-md": "24px",
+                    "stack-lg": "48px",
+                    "margin-mobile": "16px"
+            },
+            "fontFamily": {
+                    "headline-lg-mobile": ["Syne"],
+                    "title-md": ["Syne"],
+                    "body-md": ["DM Sans"],
+                    "display-lg": ["Syne"],
+                    "body-lg": ["DM Sans"],
+                    "label-sm": ["DM Sans"],
+                    "headline-lg": ["Syne"]
+            },
+            "fontSize": {
+                    "headline-lg-mobile": ["24px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                    "title-md": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "label-sm": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #0F0A00;
+            color: #efe2c2;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .stagger-item {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #1A1200;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #f97316;
+            border-radius: 10px;
+        }
+
+        .premium-border {
+            border: 1px solid #2D2418;
+            transition: border-color 0.3s ease;
+        }
+        .premium-border:hover {
+            border-color: #f97316;
+        }
+
+        .glass-effect {
+            background: rgba(26, 18, 0, 0.8);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="font-body-md text-body-md overflow-x-hidden">
+<!-- Top Navigation Shell -->
+<header class="flex justify-between items-center py-4 w-full sticky top-0 z-50 bg-background border-b border-outline-variant dark:border-outline-variant px-6"><div class="flex items-center gap-3"><img alt="Baraza logo" class="h-9 w-9 shrink-0 rounded-lg" src="app/public/baraza-logo-v2.svg"/><h1 class="font-headline-lg-mobile text-headline-lg-mobile font-bold tracking-tight"><span class="text-on-background">bara</span><span class="text-primary">za</span></h1></div><div class="flex items-center gap-4"><span class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors cursor-pointer" data-icon="notifications">notifications</span><div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant"><img class="w-full h-full object-cover" data-alt="A professional studio headshot of a dignified East African community leader with a warm expression, high-contrast warm lighting, ember tones, and a minimalist dark background. Premium editorial photography style, sharp focus, 8k resolution." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0fUR02cC0JhiqjZrs8mFgjG0bKwcPWcKiFHxw6yRo4dgk7iUc26V55adnFzeCbk5uVJm1U5_JS7Hne5MkVaGGxT6ReRCv5oYXfWrbucQaord-ACITX0LG37ZZbU1EBI1L-3jzC8Z1vY4Jl-RuD-qNYKOLkzzz6Pu-SS7hJmx61GFQKKDYibgFT1PS7WQVUhcoFqpGQc_SqRCi-2l6WBdgTPdeV-BkX2JEy9-vlrW-SefG3E7v_y_cnCevTciA9-jpDCo4wgJ39xHT"></div></div></header>
+<main class="min-h-screen pb-32 pt-6">
+<!-- Community Header Section -->
+<section class="mb-stack-lg stagger-item px-6" style="animation-delay: 50ms;">
+<div class="flex flex-col gap-1">
+<h2 class="font-headline-lg text-headline-lg text-on-background">Nairobi Community Collective</h2>
+<div class="flex items-center gap-2">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full border border-background bg-surface-variant"></div>
+<div class="w-6 h-6 rounded-full border border-background bg-primary-container"></div>
+<div class="w-6 h-6 rounded-full border border-background bg-secondary"></div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">42 Members Active</span>
+</div>
+</div>
+</section>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter lg:gap-stack-md px-6">
+<!-- Left Column: Finances & Governance -->
+<div class="md:col-span-7 flex flex-col gap-stack-md">
+<!-- Community Fund Balance -->
+<div class="stagger-item premium-border bg-surface-container-low p-6 rounded-xl relative overflow-hidden" style="animation-delay: 150ms;">
+<div class="absolute top-4 right-4 bg-surface-variant/30 px-3 py-1 rounded-full border border-outline-variant/30">
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="visibility">visibility</span>
+                            READ-ONLY
+                        </span>
+</div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase mb-2">Total Community Treasury</p>
+<div class="flex items-baseline gap-2">
+<h3 class="font-display-lg text-display-lg text-primary">KES 450,000</h3>
+<span class="text-tertiary font-bold">+12.4%</span>
+</div>
+<!-- Growth Chart Placeholder via Shader -->
+<div class="mt-6 h-32 w-full rounded-lg overflow-hidden opacity-40">
+
+</div>
+<div class="mt-4 flex gap-4">
+<button class="flex-1 py-3 bg-primary text-on-primary font-bold rounded-lg active:scale-95 transition-transform text-label-sm uppercase">Contribution History</button>
+<button class="flex-1 py-3 border-2 border-primary text-primary font-bold rounded-lg active:scale-95 transition-transform text-label-sm uppercase">Treasury Report</button>
+</div>
+</div>
+<!-- Active Governance -->
+<div class="stagger-item flex flex-col gap-4" style="animation-delay: 250ms;">
+<div class="flex justify-between items-end">
+<h4 class="font-title-md text-title-md text-on-background">Active Governance</h4>
+<a class="font-label-sm text-label-sm text-primary uppercase" href="#">View Ballot</a>
+</div>
+<div class="flex flex-col gap-3">
+<!-- Vote Card 1 -->
+<div class="premium-border bg-surface-container rounded-xl flex flex-col gap-4 p-6">
+<div class="flex justify-between items-start">
+<h5 class="font-body-lg font-bold text-on-background">Q3 Investment: Solar Microgrid Project</h5>
+<span class="bg-secondary/10 text-secondary text-[10px] px-2 py-1 rounded font-bold uppercase">2 Days Left</span>
+</div>
+<div class="w-full h-2 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 78%"></div>
+</div>
+<div class="flex justify-between font-label-sm text-label-sm">
+<span class="text-on-surface-variant">78% For (32 Votes)</span>
+<span class="text-on-surface-variant">Quorum Reached</span>
+</div>
+</div>
+<!-- Vote Card 2 -->
+<div class="premium-border bg-surface-container rounded-xl flex flex-col gap-4 opacity-80 p-6">
+<div class="flex justify-between items-start">
+<h5 class="font-body-lg font-bold text-on-background">New Membership Threshold Proposal</h5>
+<span class="bg-error/10 text-error text-[10px] px-2 py-1 rounded font-bold uppercase">Critical</span>
+</div>
+<div class="w-full h-2 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-secondary" style="width: 45%"></div>
+</div>
+<div class="flex justify-between font-label-sm text-label-sm">
+<span class="text-on-surface-variant">45% For (19 Votes)</span>
+<span class="text-on-surface-variant">Needs 5 more</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Leaderboard & Bounties -->
+<div class="md:col-span-5 flex flex-col gap-stack-md">
+<!-- Leaderboard Section -->
+<div class="stagger-item premium-border bg-surface-container-high p-6 rounded-xl" style="animation-delay: 350ms;">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-secondary" data-icon="military_tech">military_tech</span>
+<h4 class="font-title-md text-title-md text-on-background">Top Contributors</h4>
+</div>
+<div class="flex flex-col gap-6">
+<!-- Rank 1 -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="relative">
+<div class="w-12 h-12 rounded-full border-2 border-secondary overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A portrait of a young African woman with short natural hair, wearing colorful traditional-patterned modern professional attire. Warm amber lighting, dark background, premium cinematic focus, editorial style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBHYWDDRjheRtE4IZWV_vIH9sr7Xezztg-AUisqTUaoUlt-yFzpoAN3o3v8t4Az9mU1PxuBbDPQJP0eV9ao3hlxSpdyjlHZbmLMLVEs8k2fEtVS8JBTiDjQRykVkI69fEZpsvICygHkRkJrDTpk_mfbwP_Vtpg6SU-FnnZ0J50KGM1uQ7EHpAqXbTPX18-thTTfpGOho7qbbFVp4BMrG-ini4NxiejFFV1gl93K5A9doMvMOsofU1yEBQLSZsk7S5TZ6e_Sj7vc5VR1">
+</div>
+<div class="absolute -bottom-1 -right-1 bg-secondary text-on-secondary rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold">1</div>
+</div>
+<div>
+<p class="font-bold text-on-background">Zara Mwangi</p>
+<p class="text-label-sm text-on-surface-variant">Member since 2021</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-primary font-bold">2.4k</p>
+<p class="text-[10px] text-on-surface-variant uppercase">Points</p>
+</div>
+</div>
+<!-- Rank 2 -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="relative">
+<div class="w-12 h-12 rounded-full border border-outline-variant overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A portrait of an older African man with salt-and-pepper hair and glasses, wearing a dark blazer over a mustard yellow shirt. Warm studio lighting, deep amber shadows, highly detailed skin texture, 8k professional headshot." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBo-aItjug0cOs65pECu_anxNqZ2nm6URwIeKrKiq-HEK-elKaqKEQxPFdbv8OG9My0Yo_QUNCjTSgDQ5DuLUWcfUhtV-YXP-iqgistjT8AZozyjxi9tKdXdo-wxkMfzi4DsAHia72DeUWcRJ5JdE_OcxRvEkMaVbefhqCSRUS0Cf9piZuyzBCDPdDkXcXX7s9ekWEYDNuik-CmoBH3vQXNJRPAM4aPhWK0mBI_V4KMyDVIDd-XWoMiX-QuExyF2Z0ZFAnb3F6kAz7W">
+</div>
+<div class="absolute -bottom-1 -right-1 bg-surface-variant text-on-surface rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold">2</div>
+</div>
+<div>
+<p class="font-bold text-on-background">Dr. Samuel Okafor</p>
+<p class="text-label-sm text-on-surface-variant">Audit Lead</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-primary font-bold">1.9k</p>
+<p class="text-[10px] text-on-surface-variant uppercase">Points</p>
+</div>
+</div>
+<!-- Rank 3 -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="relative">
+<div class="w-12 h-12 rounded-full border border-outline-variant overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Close-up portrait of a trendy young man in Nairobi, wearing a stylish hat and amber-tinted glasses. The lighting is warm and golden-hour style against a dark brick texture. High-end lifestyle photography, vibrant but dark-toned." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB581yrs-saBo3lCWGiMGffbwYm9NG3IYFuXE1BYBOIzMKMF0BhwOMAlNHu2phRWU5HZnG3134y_-gm6WMuDDDeBW-kakvO_y9dtgtdMDpIj851b16Fq0H-w3QV9D0Owxx3srtrEADbpnN9qcY-y4YnDYw1VXHod6HpaZkyPQAk8DmzHpgFLBoFsECw_zukVUzOJYNBrbDBus_OR2eswh3dyzVugcFwteP5Cd4mvaQ0jCLZ-sMSCsej7-rrU3dde1RZmmcrYt1VbfT-">
+</div>
+<div class="absolute -bottom-1 -right-1 bg-surface-variant text-on-surface rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold">3</div>
+</div>
+<div>
+<p class="font-bold text-on-background">Kofi Mensah</p>
+<p class="text-label-sm text-on-surface-variant">Strategy Committee</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-primary font-bold">1.7k</p>
+<p class="text-[10px] text-on-surface-variant uppercase">Points</p>
+</div>
+</div>
+</div>
+<button class="w-full mt-8 py-2 text-label-sm text-primary hover:underline transition-all">VIEW ALL CONTRIBUTORS</button>
+</div>
+<!-- Open Bounties Horizontal Scroll -->
+<div class="stagger-item flex flex-col gap-4" style="animation-delay: 450ms;">
+<div class="flex justify-between items-end">
+<h4 class="font-title-md text-title-md text-on-background">Open Bounties</h4>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="flex gap-4 overflow-x-auto pb-4 custom-scrollbar snap-x">
+<!-- Bounty 1 -->
+<div class="min-w-[260px] snap-start premium-border bg-surface-container rounded-xl flex flex-col gap-4 p-6">
+<div class="w-10 h-10 rounded bg-primary-container/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="edit_note">edit_note</span>
+</div>
+<div>
+<h6 class="font-bold text-on-background">Draft Monthly SACCO Newsletter</h6>
+<p class="text-label-sm text-on-surface-variant mt-1 line-clamp-2">Create a summary of last month's investments and group growth.</p>
+</div>
+<div class="flex justify-between items-center mt-2">
+<span class="font-bold text-secondary">500 PTS</span>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase">2 Slots Left</span>
+</div>
+</div>
+<!-- Bounty 2 -->
+<div class="min-w-[260px] snap-start premium-border bg-surface-container rounded-xl flex flex-col gap-4 p-6">
+<div class="w-10 h-10 rounded bg-tertiary-container/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary" data-icon="bug_report">bug_report</span>
+</div>
+<div>
+<h6 class="font-bold text-on-background">Audit Transaction Logs</h6>
+<p class="text-label-sm text-on-surface-variant mt-1 line-clamp-2">Verify internal ledger against public transaction history.</p>
+</div>
+<div class="flex justify-between items-center mt-2">
+<span class="font-bold text-secondary">1200 PTS</span>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase">High Priority</span>
+</div>
+</div>
+<!-- Bounty 3 -->
+<div class="min-w-[260px] snap-start premium-border bg-surface-container rounded-xl flex flex-col gap-4 p-6">
+<div class="w-10 h-10 rounded bg-secondary-container/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary" data-icon="campaign">campaign</span>
+</div>
+<div>
+<h6 class="font-bold text-on-background">Organize Community Meetup</h6>
+<p class="text-label-sm text-on-surface-variant mt-1 line-clamp-2">Coordinate the logistics for the quarterly gathering in Westlands.</p>
+</div>
+<div class="flex justify-between items-center mt-2">
+<span class="font-bold text-secondary">800 PTS</span>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase">Event</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Community Milestone Banner -->
+<section class="mt-stack-lg stagger-item px-6" style="animation-delay: 550ms;">
+<div class="w-full bg-gradient-to-r from-primary-container to-secondary-container rounded-xl p-8 flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative">
+<div class="absolute -right-10 -top-10 opacity-10">
+<span class="material-symbols-outlined text-[200px]" data-icon="celebration">celebration</span>
+</div>
+<div class="relative z-10 text-center md:text-left">
+<h3 class="font-headline-lg text-headline-lg text-on-primary-container">Goal Reached!</h3>
+<p class="font-body-lg text-on-primary-container/90 max-w-md">The collective has officially hit the "Emergency Fund" target of KES 400,000. Celebration rewards have been distributed.</p>
+</div>
+<button class="relative z-10 px-8 py-4 bg-background text-primary font-extrabold rounded-lg shadow-xl hover:scale-105 transition-transform">CLAIM REWARD</button>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Shell -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 pb-safe bg-surface-container-lowest border-t border-outline-variant dark:border-outline-variant">
+<a class="flex flex-col items-center justify-center text-primary bg-primary-container/10 rounded-xl px-3 py-1" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-sm text-label-sm">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant/50 transition-all rounded-xl px-3 py-1" href="#">
+<span class="material-symbols-outlined" data-icon="extension">extension</span>
+<span class="font-label-sm text-label-sm">Features</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant/50 transition-all rounded-xl px-3 py-1" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="font-label-sm text-label-sm">Bounties</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant/50 transition-all rounded-xl px-3 py-1" href="#">
+<span class="material-symbols-outlined" data-icon="how_to_vote">how_to_vote</span>
+<span class="font-label-sm text-label-sm">Voting</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant/50 transition-all rounded-xl px-3 py-1" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-sm text-label-sm">Profile</span>
+</a>
+</nav>
+<script>
+        // Micro-interactions for hover states
+        document.querySelectorAll('.premium-border').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-4px)';
+                card.style.transition = 'transform 0.3s cubic-bezier(0.2, 0, 0, 1), border-color 0.3s ease';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0px)';
+            });
+        });
+
+        // Initialize animations on scroll
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-in');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.stagger-item').forEach(el => observer.observe(el));
+    </script>
+
+
+</body></html>
