@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Wallet, Shield, Users, Vote } from 'lucide-react';
+import { Shield, Users, Vote } from 'lucide-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useWallet } from '@solana/wallet-adapter-react';
 
@@ -42,7 +42,7 @@ const WalletGate: React.FC<WalletGateProps> = ({
             {/* Icon */}
             <div className="w-14 h-14 rounded-2xl mx-auto mb-6 flex items-center justify-center"
               style={{ background: 'var(--gradient-primary)' }}>
-              <Wallet className="w-7 h-7 text-white" />
+              <Shield className="w-7 h-7 text-white" />
             </div>
 
             {/* Heading */}
@@ -71,7 +71,7 @@ const WalletGate: React.FC<WalletGateProps> = ({
             </div>
 
             <p className="text-[10px] text-muted-foreground text-center mt-4">
-              Supports Phantom, Solflare, and Coinbase Wallet
+              Secure account setup uses Phantom, Solflare, or Coinbase when a signature is needed.
             </p>
           </div>
         </div>

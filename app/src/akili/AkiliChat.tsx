@@ -206,7 +206,7 @@ const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
   {
     keywords: ['dashboard', 'stats', 'overview', 'manage'],
     reply:
-      "The Community Dashboard is your group's control centre. It shows fund balance, total members, active decisions, and past decisions - all updating in real time.",
+      "The community home shows fund balance, total members, active decisions, and past decisions in one place.",
   },
   {
     keywords: ['wallet', 'phantom', 'solflare', 'connect', 'sign in', 'login'],
@@ -226,12 +226,12 @@ const RESPONSES: Array<{ keywords: string[]; reply: string }> = [
   {
     keywords: ['what is chama', 'chama meaning', 'what is a chama'],
     reply:
-      'A Chama is a traditional Kenyan group savings model where members pool money regularly and share it in rotation or use it for group investments. Baraza digitises the Chama - making it transparent, governed by votes, and accessible from any phone.',
+      'A chama is a Kenyan group savings model where members pool money regularly and share it in rotation or use it for group investments. Baraza helps the group keep records, discuss decisions, vote, and stay accessible from any phone.',
   },
   {
     keywords: ['security', 'safe', 'trust', 'secure', 'hack', 'vet', 'review', 'risk'],
     reply:
-      'Akili runs an AI-assisted security review on group rules, bounties, proposals, and treasury releases. It checks for unclear dues, weak voting rules, expired tasks, large fund requests, and missing member records. Akili can flag risk, but members and admins still make the final decision.',
+      'Akili can review group rules, community tasks, proposals, and money requests. It checks for unclear dues, weak voting rules, expired tasks, large fund requests, and missing member records. Akili can flag risk, but members and admins still make the final decision.',
   },
   {
     keywords: ['hello', 'hi', 'habari', 'hey', 'hola', 'sasa'],

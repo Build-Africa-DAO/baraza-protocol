@@ -5,14 +5,14 @@ import { ShimmerButton } from "@/components/ui/shimmer-button";
 
 const steps = [
   { icon: Link2, title: "Choose how you sign in", desc: "Use your phone number for M-Pesa flows, or connect a supported account. No seed phrases needed to join." },
-  { icon: ShieldCheck, title: "Set basics & rules", desc: "Name your DAO, pick a community type, set monthly dues in KES, and define quorum, approval, and voting period." },
+  { icon: ShieldCheck, title: "Set basics & rules", desc: "Name your community, pick a group type, set monthly dues in KES, and define quorum, approval, and voting period." },
   { icon: Users, title: "Invite members", desc: "Share the join link. Members can join with M-Pesa or a connected account." },
-  { icon: Coins, title: "Govern transparently", desc: "Members propose, vote, and release funds. Every action stays visible in one shared record." },
+  { icon: Coins, title: "Decide transparently", desc: "Members propose, vote, and release funds. Every action stays visible in one shared record." },
 ];
 
 const summary = [
   { label: "Setup time", value: "4 min" },
-  { label: "Treasury mode", value: "Shared" },
+  { label: "Funds mode", value: "Shared" },
   { label: "Decision rule", value: "Quorum" },
 ];
 
@@ -28,13 +28,13 @@ export default function CTASection() {
           className="dark grid overflow-hidden rounded-2xl border border-border/70 bg-[image:var(--gradient-hero)] text-foreground shadow-[var(--shadow-deep)] lg:grid-cols-[0.9fr_1.1fr]"
         >
           <div className="border-b border-border/70 p-5 sm:p-8 md:p-10 lg:border-b-0 lg:border-r">
-            <p className="text-xs font-semibold uppercase tracking-widest text-accent">Launch a treasury</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-accent">Start a community</p>
             <h2 className="mt-3 max-w-xl font-display text-3xl font-bold leading-tight text-foreground md:text-4xl">
-              Launch your DAO with rules everyone can inspect
+              Start your community with rules everyone can inspect
             </h2>
             <p className="mt-4 max-w-lg text-base leading-relaxed text-muted-foreground">
-              Start with a working treasury, not a blank workspace. Baraza gives members a shared
-              dashboard from the first contribution to the final governance vote.
+              Start with a working group account, not a blank workspace. Baraza gives members a shared
+              home from the first contribution to the final decision.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -44,12 +44,12 @@ export default function CTASection() {
                   shimmerColor="rgba(255,255,255,0.5)"
                   className="w-full justify-center rounded-lg px-7 py-3.5 text-sm font-bold sm:w-auto"
                 >
-                  Launch a DAO
+                  Start a community
                   <ArrowRight className="h-4 w-4" />
                 </ShimmerButton>
               </Link>
               <Link to="/communities" className="btn-ghost justify-center rounded-lg px-7 py-3.5 text-sm">
-                Browse DAOs
+                Browse communities
               </Link>
             </div>
 

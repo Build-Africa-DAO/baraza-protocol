@@ -30,7 +30,7 @@ const reelVideos: ReelVideo[] = [
     tag: "Overview",
     title: "What Baraza does, in two minutes",
     description:
-      "DAOs, chamas, and SACCOs on one shared protocol — dues, votes, and treasury without the spreadsheet.",
+      "Chamas, SACCOs, and cooperatives in one shared workspace: contributions, decisions, and group funds without the spreadsheet.",
     community: "Baraza Protocol",
     host: "Aziz · Founder",
     date: "Mar 2026",
@@ -40,15 +40,15 @@ const reelVideos: ReelVideo[] = [
     tag: "Setup",
     title: "Launching a chama in four minutes",
     description:
-      "Group rules, member invites, and the first M-Pesa round of dues. From phone to live treasury.",
+      "Group rules, member invites, and the first M-Pesa round of dues. From phone to live group account.",
     community: "Mama Mboga Sacco",
     host: "Wanjiku · Treasurer",
     date: "Apr 2026",
   },
   {
     youtubeId: "w-AkLBB43aM",
-    tag: "Governance",
-    title: "Treasury vote, live",
+    tag: "Decisions",
+    title: "Fund decision, live",
     description:
       "Members propose a clinic equipment purchase. Quorum bar moves. Funds release on threshold.",
     community: "Kibera Youth Chama",
@@ -58,10 +58,10 @@ const reelVideos: ReelVideo[] = [
   {
     youtubeId: "QdBZY2fkU-0",
     tag: "Payments",
-    title: "M-Pesa to on-chain in one tap",
+    title: "M-Pesa to member record in one tap",
     description:
       "Mobile-money confirmation attaches to the shared ledger before the SMS clears. No reconciliation gap.",
-    community: "Stellar Settlement",
+    community: "Payment confirmation",
     host: "Protocol demo",
     date: "May 2026",
   },
@@ -450,8 +450,8 @@ export default function ShowReelSection() {
               <span className="block text-primary">run itself.</span>
             </h2>
             <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-              Real treasuries, real votes, real members. Pulled straight from communities running
-              on Baraza — no stock footage.
+              Real group funds, real votes, real members. Pulled straight from communities running
+              on Baraza - no stock footage.
             </p>
           </div>
         </motion.div>
