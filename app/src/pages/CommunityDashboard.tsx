@@ -462,7 +462,7 @@ const CommunityDashboard: React.FC = () => {
                     </p>
                   </div>
 
-                  <BountyBoard communityId={community.id} communityName={community.name} compact />
+                  <BountyBoard communityId={community.id} communityName={community.name} communityAdminId={community.createdBy} compact />
 
                   <div className="premium-glass rounded-xl p-5">
                     <div className="mb-4 flex items-center justify-between">
@@ -572,7 +572,7 @@ const CommunityDashboard: React.FC = () => {
                       </span>
                     )}
                   </div>
-                  <BountyBoard communityId={community.id} communityName={community.name} />
+                  <BountyBoard communityId={community.id} communityName={community.name} communityAdminId={community.createdBy} />
                   <div className="premium-glass rounded-xl p-5">
                     <div className="mb-4 flex items-center gap-2">
                       <Activity className="h-4 w-4" />

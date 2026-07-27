@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BriefcaseBusiness, CalendarDays, CheckCircle2, Clock, Columns3, LayoutGrid, List, PlusCircle, Search, Send, SlidersHorizontal, Trophy } from 'lucide-react';
+import { ArrowRight, BriefcaseBusiness, Building2, CalendarDays, CheckCircle2, Clock, Columns3, LayoutGrid, List, PlusCircle, Search, Send, SlidersHorizontal, Trophy } from 'lucide-react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import Layout from '@/components/Layout';
@@ -21,21 +21,24 @@ import { useSeo } from '@/lib/seo';
 import { bountyCreateAccessMessage, getBountyCreateAccess } from '@/lib/access';
 import { useChain } from '@/hooks/useChain';
 import { getActiveMembership } from '@/lib/memberships';
+import { dataStore } from '@/lib/dataStore';
+import { inferStage } from '@/lib/proposalStatus';
 
 const STATUS_OPTIONS: { value: BountyStatus | 'all'; label: string }[] = [
   { value: 'all', label: 'All bounties' },
   { value: 'open', label: 'Open' },
   { value: 'in_progress', label: 'In progress' },
   { value: 'in_review', label: 'Under review' },
-  { value: 'paid', label: 'Approved' },
+  { value: 'awarded', label: 'Awaiting payout' },
+  { value: 'paid', label: 'Paid' },
 ];
 
 const statusLabel: Record<BountyStatus, string> = {
   open: 'Open',
   in_progress: 'In progress',
   in_review: 'Under review',
-  awarded: 'Approved',
-  paid: 'Approved',
+  awarded: 'Awaiting payout',
+  paid: 'Paid',
 };
 
 const statusClass: Record<BountyStatus, string> = {
@@ -46,7 +49,7 @@ const statusClass: Record<BountyStatus, string> = {
   paid: 'border-confirmed/50 bg-confirmed/15 text-confirmed',
 };
 
-const BOARD_COLUMNS: BountyStatus[] = ['open', 'in_progress', 'in_review', 'paid'];
+const BOARD_COLUMNS: BountyStatus[] = ['open', 'in_progress', 'in_review', 'awarded', 'paid'];
 type ViewMode = 'board' | 'grid' | 'list';
 
 const SECTION_COPY: Record<BountyStatus, { heading: string; detail: string }> = {
@@ -60,15 +63,15 @@ const SECTION_COPY: Record<BountyStatus, { heading: string; detail: string }> = 
   },
   in_review: {
     heading: 'Under review',
-    detail: 'Submitted work waiting for the bounty owner to approve or reopen.',
+    detail: 'Submitted work waiting for both the bounty creator and a community admin.',
   },
   awarded: {
-    heading: 'Approved',
-    detail: 'Completed work approved by the bounty owner.',
+    heading: 'Awaiting payout',
+    detail: 'Creator and admin approved. The community multisig can now release payment.',
   },
   paid: {
-    heading: 'Approved',
-    detail: 'Completed work approved by the bounty owner.',
+    heading: 'Paid',
+    detail: 'Stablecoin payouts confirmed on the public ledger.',
   },
 };
 
@@ -94,6 +97,7 @@ export default function Bounties() {
   const { setVisible } = useWalletModal();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<BountyStatus | 'all'>('all');
+  const [communityFilter, setCommunityFilter] = useState('all');
   const [viewMode, setViewMode] = useState<ViewMode>('board');
   const [bounties, setBounties] = useState(() => listBounties());
   const [draggedBountyId, setDraggedBountyId] = useState<string | null>(null);
@@ -110,6 +114,7 @@ export default function Bounties() {
     deadline: '',
     summary: '',
     skills: '',
+    approvalProposalId: '',
   });
   const [submission, setSubmission] = useState({
     contributor: '',
@@ -139,14 +144,30 @@ export default function Bounties() {
     [communities],
   );
   const walletAddress = publicKey?.toBase58() ?? null;
+  const selectedCommunity = communityById.get(newBounty.communityId);
+  const passedProposals = useMemo(() => {
+    if (!newBounty.communityId) return [];
+    return dataStore.getDecisionsForCommunity(newBounty.communityId).filter((proposal) => {
+      const stage = inferStage(proposal.status);
+      return stage === 'succeeded' || stage === 'queued' || stage === 'executed';
+    });
+  }, [newBounty.communityId]);
+  const approvedProposalId = passedProposals.some((proposal) => proposal.id === newBounty.approvalProposalId)
+    ? newBounty.approvalProposalId
+    : null;
   const selectedBountyAccess = useMemo(
-    () => getBountyCreateAccess(newBounty.communityId || null, walletAddress),
-    [newBounty.communityId, walletAddress],
+    () => getBountyCreateAccess(newBounty.communityId || null, walletAddress, {
+      communityAdminId: selectedCommunity?.createdBy,
+      approvedProposalId,
+    }),
+    [approvedProposalId, newBounty.communityId, selectedCommunity?.createdBy, walletAddress],
   );
   const memberCommunities = useMemo(() => {
     if (!walletAddress) return [];
     return communities.filter((community) => {
-      return (community.chain ?? 'solana') === chain && !!getActiveMembership(community.id, walletAddress);
+      const isCommunityAdmin = community.createdBy === walletAddress;
+      return (community.chain ?? 'solana') === chain
+        && (isCommunityAdmin || !!getActiveMembership(community.id, walletAddress));
     });
   }, [chain, communities, walletAddress]);
 
@@ -155,7 +176,8 @@ export default function Bounties() {
     const haystack = `${bounty.title} ${bounty.category} ${bounty.summary} ${bounty.skills.join(' ')} ${community?.name ?? ''}`.toLowerCase();
     const matchesSearch = haystack.includes(search.toLowerCase());
     const matchesStatus = status === 'all' || bounty.status === status;
-    return matchesSearch && matchesStatus;
+    const matchesCommunity = communityFilter === 'all' || bounty.communityId === communityFilter;
+    return matchesSearch && matchesStatus && matchesCommunity;
   });
 
   const activeChainBounties = bounties;
@@ -177,6 +199,18 @@ export default function Bounties() {
   const openRewardPool = activeChainBounties
     .filter((bounty) => bounty.status === 'open')
     .reduce((sum, bounty) => sum + bounty.rewardKes, 0);
+  const workflowTickerItems = useMemo(() => communities
+    .map((community) => {
+      const communityBounties = bounties.filter((bounty) => bounty.communityId === community.id);
+      return {
+        id: community.id,
+        name: community.name,
+        open: communityBounties.filter((bounty) => bounty.status === 'open').length,
+        review: communityBounties.filter((bounty) => bounty.status === 'in_review').length,
+        payout: communityBounties.filter((bounty) => bounty.status === 'awarded').length,
+      };
+    })
+    .filter((item) => item.open + item.review + item.payout > 0), [bounties, communities]);
 
   const handlePostBountyClick = () => {
     if (!connected || !publicKey) {
@@ -194,7 +228,7 @@ export default function Bounties() {
 
   const handleCreateBounty = async () => {
     const community = communityById.get(newBounty.communityId);
-    const access = getBountyCreateAccess(newBounty.communityId, walletAddress);
+    const access = selectedBountyAccess;
     if (!access.allowed) {
       setFormMessage(bountyCreateAccessMessage(access.reason));
       return;
@@ -203,6 +237,8 @@ export default function Bounties() {
       await createBountyRecordAsync({
         communityId: newBounty.communityId,
         postedBy: community?.name ?? 'Baraza community',
+        createdBy: walletAddress ?? account.accountId ?? undefined,
+        approvalProposalId: access.isAdmin ? undefined : approvedProposalId ?? undefined,
         title: newBounty.title,
         category: newBounty.category,
         rewardKes: Number(newBounty.rewardKes),
@@ -218,6 +254,7 @@ export default function Bounties() {
         deadline: '',
         summary: '',
         skills: '',
+        approvalProposalId: '',
       });
       setShowPostForm(false);
       setFormMessage('Bounty posted to Baraza.');
@@ -232,6 +269,7 @@ export default function Bounties() {
       await submitBountyWorkAsync({
         bountyId,
         contributor: submission.contributor,
+        contributorWallet: walletAddress ?? account.walletAddress ?? undefined,
         workUrl: submission.workUrl,
         note: submission.note,
       });
@@ -254,6 +292,11 @@ export default function Bounties() {
 
     if (!current || current.status === nextStatus) return;
 
+    if (nextStatus === 'awarded' || nextStatus === 'paid') {
+      setFormMessage('Approve a submitted delivery to create a multisig payout. Paid is set only after settlement confirmation.');
+      return;
+    }
+
     const updated = updateBountyStatus(current.id, nextStatus, current.assignee);
     if (!updated) {
       setFormMessage('Could not move that bounty.');
@@ -269,52 +312,47 @@ export default function Bounties() {
     <Layout>
       <section className="relative pt-24 pb-10 sm:pt-28">
         <div className="container mx-auto max-w-6xl px-4">
-          <div className="relative mb-8 overflow-hidden rounded-lg border border-border/70 bg-card shadow-[var(--shadow-card)]">
-            <img
-              src="https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=1400&q=80"
-              alt=""
-              className="absolute inset-0 h-full w-full object-cover opacity-35"
-              loading="lazy"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-background via-background/88 to-background/35" />
-            <div className="absolute inset-0 bg-gradient-to-t from-background/88 via-transparent to-transparent" />
-
-            <div className="relative grid gap-6 p-5 md:grid-cols-[minmax(0,1fr)_minmax(18rem,30rem)] md:items-center md:p-7">
-              <div className="max-w-[38rem]">
-                <p className="mb-2 text-xs font-bold uppercase tracking-widest text-primary">
-                  Contributor workflow
+          <div className="mb-8 overflow-hidden rounded-lg border border-border/70 bg-card shadow-[var(--shadow-card)]">
+            <div className="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
+              <div>
+                <h1 className="font-display text-3xl font-black leading-tight">Bounty board</h1>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+                  Paid community work, dual review, and payout status in one shared workflow.
                 </p>
-                <h1 className="font-display text-3xl font-black leading-tight md:text-4xl">Bounty board</h1>
-                <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground md:text-base md:leading-7">
-                  Post paid tasks, move work through review lanes, and keep approvals visible for every group.
+                <p className="mt-2 text-xs font-semibold text-foreground">
+                  {activeChainBounties.filter((bounty) => bounty.status === 'open').length} open · {formatKSh(openRewardPool)} available · {account.country.currency}
                 </p>
               </div>
-
-              <div className="flex flex-col gap-3">
-                <button
-                  type="button"
-                  onClick={handlePostBountyClick}
-                  className="btn-warm inline-flex w-full items-center justify-center gap-2 text-sm sm:w-auto md:self-end"
-                >
-                  <PlusCircle className="h-4 w-4" />
-                  Post bounty
-                </button>
-                <div className="grid w-full gap-2 sm:grid-cols-3">
-                  <div className="rounded-lg border border-border/70 bg-background/58 p-3 backdrop-blur">
-                    <p className="font-display text-xl font-bold">{activeChainBounties.filter((b) => b.status === 'open').length}</p>
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Open tasks</p>
-                  </div>
-                  <div className="rounded-lg border border-border/70 bg-background/58 p-3 backdrop-blur">
-                    <p className="font-display text-xl font-bold text-primary">{formatKSh(openRewardPool)}</p>
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Open rewards</p>
-                  </div>
-                  <div className="rounded-lg border border-border/70 bg-background/58 p-3 backdrop-blur">
-                    <p className="font-display text-xl font-bold">{account.country.currency}</p>
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Account currency</p>
-                  </div>
+              <button
+                type="button"
+                onClick={handlePostBountyClick}
+                className="btn-warm inline-flex w-full items-center justify-center gap-2 text-sm sm:w-auto"
+              >
+                <PlusCircle className="h-4 w-4" />
+                Post bounty
+              </button>
+            </div>
+            {workflowTickerItems.length > 0 && (
+              <div className="bounty-ticker border-t border-border/70 bg-surface/45" aria-label="Community bounty activity">
+                <div className="bounty-ticker-track">
+                  {[...workflowTickerItems, ...workflowTickerItems].map((item, index) => (
+                    <Link
+                      key={`${item.id}-${index}`}
+                      to={`/dashboard/${item.id}`}
+                      className="inline-flex shrink-0 items-center gap-3 border-r border-border/70 px-5 py-3 text-xs transition-colors hover:bg-primary/10"
+                      aria-hidden={index >= workflowTickerItems.length}
+                      tabIndex={index >= workflowTickerItems.length ? -1 : 0}
+                    >
+                      <Building2 className="h-3.5 w-3.5 text-primary" />
+                      <span className="font-bold text-foreground">{item.name}</span>
+                      <span className="text-muted-foreground">{item.open} open</span>
+                      <span className="text-muted-foreground">{item.review} review</span>
+                      <span className="text-muted-foreground">{item.payout} payout</span>
+                    </Link>
+                  ))}
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
           {showPostForm && (
@@ -325,7 +363,11 @@ export default function Bounties() {
                   <select
                     value={newBounty.communityId}
                     onChange={(event) => {
-                      setNewBounty((current) => ({ ...current, communityId: event.target.value }));
+                      setNewBounty((current) => ({
+                        ...current,
+                        communityId: event.target.value,
+                        approvalProposalId: '',
+                      }));
                       setFormMessage(null);
                     }}
                     className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none"
@@ -338,6 +380,37 @@ export default function Bounties() {
                   {memberCommunities.length === 0 && (
                     <p className="mt-1 text-[11px] text-muted-foreground">
                       Join a community before posting a bounty.
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="mb-2 block text-xs font-semibold">Authorization</label>
+                  {selectedBountyAccess.isAdmin ? (
+                    <div className="flex min-h-11 items-center rounded-lg border border-confirmed/35 bg-confirmed/10 px-3 text-sm text-confirmed">
+                      Community admin verified
+                    </div>
+                  ) : (
+                    <select
+                      value={newBounty.approvalProposalId}
+                      onChange={(event) => {
+                        setNewBounty((current) => ({ ...current, approvalProposalId: event.target.value }));
+                        setFormMessage(null);
+                      }}
+                      disabled={!newBounty.communityId || passedProposals.length === 0}
+                      className="min-h-11 w-full rounded-lg border px-3 py-2.5 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <option value="">Select a passed proposal</option>
+                      {passedProposals.map((proposal) => (
+                        <option key={proposal.id} value={proposal.id}>{proposal.title}</option>
+                      ))}
+                    </select>
+                  )}
+                  {!selectedBountyAccess.isAdmin && newBounty.communityId && passedProposals.length === 0 && (
+                    <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
+                      No passed proposal is available.{' '}
+                      <Link to={`/dashboard/${newBounty.communityId}/decisions/create`} className="font-semibold text-primary hover:underline">
+                        Submit a proposal
+                      </Link>
                     </p>
                   )}
                 </div>
@@ -401,7 +474,9 @@ export default function Bounties() {
               <div className="mt-4 rounded-lg border px-4 py-3 text-sm">
                 {selectedBountyAccess.allowed ? (
                   <span>
-                    Active member verified. You can post bounties for this community.
+                    {selectedBountyAccess.isAdmin
+                      ? 'Community admin verified. This bounty can be published directly.'
+                      : 'Passed proposal verified. Its ID will be attached to the bounty record.'}
                   </span>
                 ) : (
                   <span>{bountyCreateAccessMessage(selectedBountyAccess.reason)}</span>
@@ -425,7 +500,7 @@ export default function Bounties() {
             </div>
           )}
 
-          <div className="mb-6 grid gap-3 lg:grid-cols-[1fr_auto_auto]">
+          <div className="mb-6 grid gap-3 lg:grid-cols-[1fr_auto_auto_auto]">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2" />
               <input
@@ -435,6 +510,21 @@ export default function Bounties() {
                 className="w-full rounded-xl border bg-card px-4 py-3 pl-10 text-sm outline-none"
                 aria-label="Search bounties"
               />
+            </div>
+
+            <div className="relative">
+              <Building2 className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2" />
+              <select
+                value={communityFilter}
+                onChange={(event) => setCommunityFilter(event.target.value)}
+                className="min-w-44 appearance-none rounded-xl border bg-card py-3 pl-10 pr-8 text-sm outline-none"
+                aria-label="Filter bounties by community"
+              >
+                <option value="all">All communities</option>
+                {communities.map((community) => (
+                  <option key={community.id} value={community.id}>{community.name}</option>
+                ))}
+              </select>
             </div>
 
             <div className="relative">
@@ -485,7 +575,7 @@ export default function Bounties() {
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {status === 'all'
-                    ? 'Drag bounty cards between lanes as work moves from open task to approved payout.'
+                    ? 'Track work from open task through creator and admin review to confirmed payout.'
                     : SECTION_COPY[status].detail}
                 </p>
               </div>
@@ -544,7 +634,9 @@ export default function Bounties() {
                         {column.bounties.length === 0 ? (
                           <div className="rounded-lg border border-dashed border-border/40 p-6 text-center">
                             <p className="text-[11px] text-muted-foreground/60">
-                              No {statusLabel[column.status].toLowerCase()} bounties
+                              {column.status === 'awarded'
+                                ? 'Work appears here after creator and admin approval.'
+                                : `No ${statusLabel[column.status].toLowerCase()} bounties`}
                             </p>
                           </div>
                         ) : column.bounties.map((bounty) => {
@@ -605,7 +697,9 @@ export default function Bounties() {
 
                               {/* Meta footer */}
                               <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-border/40 pt-2.5 text-[11px] text-muted-foreground">
-                                <span className="truncate">{community?.name ?? bounty.postedBy}</span>
+                                <Link to={`/dashboard/${bounty.communityId}`} className="truncate hover:text-primary">
+                                  {community?.name ?? bounty.postedBy}
+                                </Link>
                                 <span className="shrink-0">{daysLeft(bounty.deadline)}</span>
                               </div>
 
@@ -629,13 +723,13 @@ export default function Bounties() {
                                   </button>
                                 )}
                                 {bounty.status === 'in_review' && (
-                                  <span className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-accent/30 bg-accent/5 px-2 py-1.5 text-xs font-semibold text-accent">
-                                    <Clock className="h-3 w-3" /> In review · {submissionCounts[bounty.id] ?? bounty.submissions} subs
-                                  </span>
+                                  <Link to={`/dashboard/${bounty.communityId}`} className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-accent/30 bg-accent/5 px-2 py-1.5 text-xs font-semibold text-accent hover:bg-accent/10">
+                                    <Clock className="h-3 w-3" /> Review in dashboard · {submissionCounts[bounty.id] ?? bounty.submissions}
+                                  </Link>
                                 )}
                                 {(bounty.status === 'paid' || bounty.status === 'awarded') && (
                                   <span className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-confirmed/30 bg-confirmed/5 px-2 py-1.5 text-xs font-semibold text-confirmed">
-                                    <CheckCircle2 className="h-3 w-3" /> Approved
+                                    <CheckCircle2 className="h-3 w-3" /> {statusLabel[bounty.status]}
                                   </span>
                                 )}
                               </div>
@@ -811,7 +905,7 @@ export default function Bounties() {
                         </button>
                       ) : (
                         <span className="inline-flex items-center justify-center rounded-lg border border-confirmed/30 bg-confirmed/5 px-3 py-2 text-xs font-bold text-confirmed">
-                          {bounty.status === 'paid' ? 'Approved' : statusLabel[bounty.status]}
+                          {statusLabel[bounty.status]}
                         </span>
                       )}
                     </div>

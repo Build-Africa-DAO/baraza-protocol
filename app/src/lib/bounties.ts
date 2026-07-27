@@ -15,6 +15,10 @@ export interface Bounty {
   submissions: number;
   status: BountyStatus;
   postedBy: string;
+  /** Account that created the bounty and must sign off on delivered work. */
+  createdBy?: string;
+  /** Passed governance proposal that authorized creation, when not posted directly by an admin. */
+  approvalProposalId?: string;
   summary: string;
   skills: string[];
   /** Account address or display name of the assigned contributor, if any. */
@@ -34,17 +38,27 @@ export interface BountySubmission {
   id: string;
   bountyId: string;
   contributor: string;
+  /** Settlement destination captured from the contributor's connected account. */
+  contributorWallet?: string;
   workUrl: string;
   note: string;
   submittedAt: string;
-  /** Approval state set by the admin after review. */
+  /** Approved only after both the bounty creator and a community admin sign off. */
   status?: 'pending' | 'approved' | 'rejected';
   reviewedAt?: string;
+  creatorApprovedBy?: string;
+  creatorApprovedAt?: string;
+  adminApprovedBy?: string;
+  adminApprovedAt?: string;
 }
+
+export type BountyApprovalRole = 'creator' | 'admin';
 
 export interface CreateBountyInput {
   communityId: string;
   postedBy: string;
+  createdBy?: string;
+  approvalProposalId?: string;
   title: string;
   category: string;
   rewardKes: number;
@@ -69,6 +83,8 @@ interface BountyRow {
   deadline: string;
   status: BountyStatus;
   posted_by: string;
+  created_by?: string | null;
+  approval_proposal_id?: string | null;
   summary: string;
   skills: string[] | null;
   access?: string | null;
@@ -80,11 +96,16 @@ interface BountySubmissionRow {
   id: string;
   bounty_id: string;
   contributor: string;
+  contributor_wallet?: string | null;
   work_url: string;
   note: string | null;
   submitted_at: string;
   status?: string;
   reviewed_at?: string;
+  creator_approved_by?: string | null;
+  creator_approved_at?: string | null;
+  admin_approved_by?: string | null;
+  admin_approved_at?: string | null;
 }
 
 const SEED_BOUNTIES: Bounty[] = [
@@ -307,6 +328,8 @@ const SEED_BOUNTIES: Bounty[] = [
 ];
 
 function normalizePublicBountyWording(bounty: Bounty): Bounty {
+  // Never present a payout as complete without a reconciled public transaction.
+  if (bounty.status === 'paid' && !bounty.payoutTxHash) bounty = { ...bounty, status: 'awarded' };
   if (bounty.id === 'b-tb-audit') {
     return {
       ...bounty,
@@ -394,6 +417,8 @@ function bountyFromRow(row: BountyRow, submissions = 0): Bounty {
     submissions,
     status: row.status,
     postedBy: row.posted_by,
+    createdBy: row.created_by ?? undefined,
+    approvalProposalId: row.approval_proposal_id ?? undefined,
     summary: row.summary,
     skills: row.skills ?? [],
     access: row.access === 'public' ? 'public' : 'community-restricted',
@@ -407,11 +432,16 @@ function submissionFromRow(row: BountySubmissionRow): BountySubmission {
     id: row.id,
     bountyId: row.bounty_id,
     contributor: row.contributor,
+    contributorWallet: row.contributor_wallet ?? undefined,
     workUrl: row.work_url,
     note: row.note ?? '',
     submittedAt: row.submitted_at,
     status: (row.status as BountySubmission['status']) ?? 'pending',
     reviewedAt: row.reviewed_at,
+    creatorApprovedBy: row.creator_approved_by ?? undefined,
+    creatorApprovedAt: row.creator_approved_at ?? undefined,
+    adminApprovedBy: row.admin_approved_by ?? undefined,
+    adminApprovedAt: row.admin_approved_at ?? undefined,
   };
 }
 
@@ -446,7 +476,7 @@ export async function listBountiesAsync(): Promise<Bounty[]> {
   const [{ data: rows, error: bountyError }, { data: submissionRows, error: submissionError }] = await Promise.all([
     client
       .from('bounties')
-      .select('id,community_id,title,category,reward_kes,deadline,status,posted_by,summary,skills,access,reward_token,payout_tx_hash'),
+      .select('id,community_id,title,category,reward_kes,deadline,status,posted_by,created_by,approval_proposal_id,summary,skills,access,reward_token,payout_tx_hash'),
     client
       .from('bounty_submissions')
       .select('bounty_id'),
@@ -496,8 +526,12 @@ export function createBountyRecord(input: CreateBountyInput): Bounty {
     submissions: 0,
     status: 'open',
     postedBy: input.postedBy,
+    createdBy: input.createdBy?.trim() || undefined,
+    approvalProposalId: input.approvalProposalId?.trim() || undefined,
     summary: input.summary.trim(),
     skills: splitSkills(input.skills),
+    access: input.access ?? (input.roleGated ? 'community-restricted' : 'public'),
+    rewardToken: input.rewardToken ?? 'USDC',
   };
 
   writeLocalBounties([bounty, ...readLocalBounties()]);
@@ -523,12 +557,14 @@ export async function createBountyRecordAsync(input: CreateBountyInput): Promise
       deadline: bounty.deadline,
       status: bounty.status,
       posted_by: bounty.postedBy,
+      created_by: bounty.createdBy,
+      approval_proposal_id: bounty.approvalProposalId,
       summary: bounty.summary,
       skills: bounty.skills,
       access: bounty.access,
       reward_token: bounty.rewardToken,
     })
-    .select('id,community_id,title,category,reward_kes,deadline,status,posted_by,summary,skills,access,reward_token,payout_tx_hash')
+    .select('id,community_id,title,category,reward_kes,deadline,status,posted_by,created_by,approval_proposal_id,summary,skills,access,reward_token,payout_tx_hash')
     .single();
 
   if (error) throw error;
@@ -552,17 +588,19 @@ function validateAndBuildBounty(input: CreateBountyInput): Bounty {
     submissions: 0,
     status: 'open',
     postedBy: input.postedBy,
+    createdBy: input.createdBy?.trim() || undefined,
+    approvalProposalId: input.approvalProposalId?.trim() || undefined,
     summary: input.summary.trim(),
     skills: splitSkills(input.skills),
     access: input.access ?? (input.roleGated ? 'community-restricted' : 'public'),
-    rewardToken: input.rewardToken ?? 'BRZA',
+    rewardToken: input.rewardToken ?? 'USDC',
   };
 }
 
 function parseRewardToken(raw: string | null | undefined): RewardToken {
-  return raw === 'BRZA' || raw === 'G$' || raw === 'XLM' || raw === 'COMMUNITY_TOKEN' || raw === 'SOL'
+  return raw === 'USDC' || raw === 'USDT' || raw === 'BRZA' || raw === 'G$' || raw === 'XLM' || raw === 'COMMUNITY_TOKEN' || raw === 'SOL'
     ? raw
-    : 'BRZA';
+    : 'USDC';
 }
 
 export function listWorkerProfileBounties(accountOrName: string): Bounty[] {
@@ -595,7 +633,7 @@ export async function triggerBountyPayout(input: {
       brief: bounty.summary,
       access: bounty.access ?? 'community-restricted',
       status: bounty.status === 'paid' || bounty.status === 'awarded' ? 'completed' : 'open',
-      rewardToken: bounty.rewardToken ?? 'BRZA',
+      rewardToken: bounty.rewardToken ?? 'USDC',
       rewardAmount: String(bounty.rewardKes),
       rewardKesEstimate: bounty.rewardKes,
       postedByMemberId: bounty.postedBy,
@@ -603,7 +641,7 @@ export async function triggerBountyPayout(input: {
       createdAt: new Date().toISOString(),
     },
     recipient: input.recipient,
-    token: bounty.rewardToken ?? 'BRZA',
+    token: bounty.rewardToken ?? 'USDC',
   });
 
   if (!result?.ok) return { ok: false, message: result?.error ?? 'Bounty payout is not available yet.' };
@@ -613,6 +651,7 @@ export async function triggerBountyPayout(input: {
 export function submitBountyWork(input: {
   bountyId: string;
   contributor: string;
+  contributorWallet?: string;
   workUrl: string;
   note: string;
 }): BountySubmission {
@@ -624,6 +663,7 @@ export function submitBountyWork(input: {
     id: `sub-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
     bountyId: input.bountyId,
     contributor: input.contributor.trim(),
+    contributorWallet: input.contributorWallet?.trim() || undefined,
     workUrl: input.workUrl.trim(),
     note: input.note.trim(),
     submittedAt: new Date().toISOString(),
@@ -636,6 +676,7 @@ export function submitBountyWork(input: {
 export async function submitBountyWorkAsync(input: {
   bountyId: string;
   contributor: string;
+  contributorWallet?: string;
   workUrl: string;
   note: string;
 }): Promise<BountySubmission> {
@@ -652,11 +693,12 @@ export async function submitBountyWorkAsync(input: {
       id: submission.id,
       bounty_id: submission.bountyId,
       contributor: submission.contributor,
+      contributor_wallet: submission.contributorWallet ?? null,
       work_url: submission.workUrl,
       note: submission.note,
       submitted_at: submission.submittedAt,
     })
-    .select('id,bounty_id,contributor,work_url,note,submitted_at')
+    .select('id,bounty_id,contributor,contributor_wallet,work_url,note,submitted_at,status,reviewed_at,creator_approved_by,creator_approved_at,admin_approved_by,admin_approved_at')
     .single();
 
   if (error) throw error;
@@ -666,6 +708,7 @@ export async function submitBountyWorkAsync(input: {
 function validateAndBuildSubmission(input: {
   bountyId: string;
   contributor: string;
+  contributorWallet?: string;
   workUrl: string;
   note: string;
 }): BountySubmission {
@@ -677,6 +720,7 @@ function validateAndBuildSubmission(input: {
     id: `sub-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
     bountyId: input.bountyId,
     contributor: input.contributor.trim(),
+    contributorWallet: input.contributorWallet?.trim() || undefined,
     workUrl: input.workUrl.trim(),
     note: input.note.trim(),
     submittedAt: new Date().toISOString(),
@@ -695,7 +739,7 @@ export async function listBountySubmissionsAsync(bountyId: string): Promise<Boun
 
   const { data, error } = await client
     .from('bounty_submissions')
-    .select('id,bounty_id,contributor,work_url,note,submitted_at,status,reviewed_at')
+    .select('id,bounty_id,contributor,contributor_wallet,work_url,note,submitted_at,status,reviewed_at')
     .eq('bounty_id', bountyId)
     .order('submitted_at', { ascending: false });
 
@@ -745,8 +789,45 @@ export function updateSubmissionStatus(
     ...submissions[idx],
     status,
     reviewedAt: new Date().toISOString(),
+    ...(status === 'rejected' ? {
+      creatorApprovedBy: undefined,
+      creatorApprovedAt: undefined,
+      adminApprovedBy: undefined,
+      adminApprovedAt: undefined,
+    } : {}),
   };
   writeSubmissions(submissions);
+}
+
+/** Record one side of the required creator + admin review. */
+export function approveSubmissionByRole(
+  submissionId: string,
+  role: BountyApprovalRole,
+  approver: string,
+): BountySubmission | null {
+  const actor = approver.trim();
+  if (!actor) throw new Error('An authenticated approver is required.');
+
+  const submissions = readSubmissions();
+  const idx = submissions.findIndex((submission) => submission.id === submissionId);
+  if (idx < 0) return null;
+
+  const current = submissions[idx];
+  if (current.status === 'rejected') throw new Error('Reopen the submission before approving it.');
+  const now = new Date().toISOString();
+  const next: BountySubmission = {
+    ...current,
+    ...(role === 'creator'
+      ? { creatorApprovedBy: actor, creatorApprovedAt: now }
+      : { adminApprovedBy: actor, adminApprovedAt: now }),
+  };
+  const fullyApproved = !!next.creatorApprovedAt && !!next.adminApprovedAt;
+  next.status = fullyApproved ? 'approved' : 'pending';
+  next.reviewedAt = fullyApproved ? now : current.reviewedAt;
+
+  submissions[idx] = next;
+  writeSubmissions(submissions);
+  return next;
 }
 
 export function getBountyStatsForCommunity(communityId: string) {

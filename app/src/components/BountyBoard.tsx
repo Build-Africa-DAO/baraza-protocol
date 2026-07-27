@@ -1,4 +1,4 @@
-import { useEffect, useState, type DragEvent } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, type DragEvent } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight, BriefcaseBusiness, CalendarDays, CheckCircle2,
@@ -9,18 +9,29 @@ import {
 import {
   getBountiesForCommunity, getBountiesForCommunityAsync,
   listBountySubmissions, submitBountyWork,
-  updateBountyStatus, updateSubmissionStatus,
+  approveSubmissionByRole, updateBountyStatus, updateSubmissionStatus,
   type Bounty, type BountyStatus, type BountySubmission,
 } from '@/lib/bounties';
+import { createBountyPayoutRequest } from '@/lib/bountyPayouts';
 import { formatRailAmountFromKes, cn } from '@/lib/utils';
 import { useChain } from '@/hooks/useChain';
 import type { ChainMeta } from '@/lib/chain';
+import { useAccount } from '@/contexts/AccountContext';
+import { isAdminWallet } from '@/lib/access';
 
 interface BountyBoardProps {
   communityId: string;
   communityName?: string;
+  communityAdminId?: string;
   compact?: boolean;
 }
+
+interface ReviewAccess {
+  actorId: string | null;
+  communityAdminId?: string;
+}
+
+const ReviewAccessContext = createContext<ReviewAccess>({ actorId: null });
 
 const STATUS_CONFIG: Record<BountyStatus, {
   label: string;
@@ -32,11 +43,11 @@ const STATUS_CONFIG: Record<BountyStatus, {
   open:        { label: 'Open',        columnLabel: 'To Do',       emptyText: 'No open tasks yet',                icon: CircleDot,    badgeClass: 'border-confirmed/40 bg-confirmed/10 text-confirmed' },
   in_progress: { label: 'In progress', columnLabel: 'In Progress', emptyText: 'Work in progress appears here',    icon: Zap,          badgeClass: 'border-primary/40 bg-primary/10 text-primary' },
   in_review:   { label: 'Under review', columnLabel: 'Under Review', emptyText: 'Submissions awaiting review',      icon: Clock,        badgeClass: 'border-accent/40 bg-accent/10 text-accent' },
-  awarded:     { label: 'Approved',    columnLabel: 'Approved',    emptyText: 'Approved bounties land here',      icon: CheckCircle2, badgeClass: 'border-confirmed/50 bg-confirmed/15 text-confirmed' },
-  paid:        { label: 'Approved',    columnLabel: 'Approved',    emptyText: 'Approved bounties land here',      icon: CheckCircle2, badgeClass: 'border-confirmed/50 bg-confirmed/15 text-confirmed' },
+  awarded:     { label: 'Awaiting payout', columnLabel: 'Awaiting Payout', emptyText: 'Approved work awaiting multisig', icon: Clock, badgeClass: 'border-accent/50 bg-accent/15 text-accent' },
+  paid:        { label: 'Paid',        columnLabel: 'Paid',        emptyText: 'Confirmed payouts land here',      icon: CheckCircle2, badgeClass: 'border-confirmed/50 bg-confirmed/15 text-confirmed' },
 };
 
-const KANBAN_COLUMNS: BountyStatus[] = ['open', 'in_progress', 'in_review', 'paid'];
+const KANBAN_COLUMNS: BountyStatus[] = ['open', 'in_progress', 'in_review', 'awarded', 'paid'];
 
 function daysLeft(deadline: string) {
   const days = Math.ceil((new Date(`${deadline}T23:59:59`).getTime() - Date.now()) / 86400000);
@@ -185,7 +196,46 @@ function ReviewActions({
   compact?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
   const submissions = open ? listBountySubmissions(bounty.id) : [];
+  const { actorId, communityAdminId } = useContext(ReviewAccessContext);
+  const canApproveAsCreator = !!actorId && !!bounty.createdBy && actorId === bounty.createdBy;
+  const canApproveAsAdmin = !!actorId && (actorId === communityAdminId || isAdminWallet(actorId));
+
+  const recordApproval = (sub: BountySubmission, role: 'creator' | 'admin') => {
+    const allowed = role === 'creator' ? canApproveAsCreator : canApproveAsAdmin;
+    if (!actorId || !allowed) {
+      setMessage(role === 'creator'
+        ? 'Only the account that posted this bounty can give creator approval.'
+        : 'Only a community admin can give admin approval.');
+      return;
+    }
+
+    try {
+      const reviewed = approveSubmissionByRole(sub.id, role, actorId);
+      if (!reviewed) throw new Error('Submission not found.');
+      if (reviewed.status !== 'approved') {
+        setMessage(`${role === 'creator' ? 'Creator' : 'Admin'} approval recorded. The other approval is still required.`);
+        return;
+      }
+
+      createBountyPayoutRequest({
+        bountyId: bounty.id,
+        communityId: bounty.communityId,
+        submissionId: sub.id,
+        recipientWallet: sub.contributorWallet ?? '',
+        recipientName: sub.contributor,
+        amountKes: bounty.rewardKes,
+        asset: 'USDC',
+        requiredApprovals: 2,
+      });
+      onAdvanceStatus(bounty.id, 'awarded', sub.contributor);
+      setMessage(null);
+      setOpen(false);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Could not record approval.');
+    }
+  };
 
   return (
     <div className={cn('flex flex-col gap-2', compact ? 'flex-1' : 'w-full')}>
@@ -213,12 +263,16 @@ function ReviewActions({
               <SubmissionRow
                 key={sub.id}
                 sub={sub}
-                onApprove={() => {
-                  updateSubmissionStatus(sub.id, 'approved');
-                  onAdvanceStatus(bounty.id, 'paid', sub.contributor);
-                  setOpen(false);
-                }}
+                creatorRecorded={!!bounty.createdBy}
+                canApproveAsCreator={canApproveAsCreator}
+                canApproveAsAdmin={canApproveAsAdmin}
+                onApproveCreator={() => recordApproval(sub, 'creator')}
+                onApproveAdmin={() => recordApproval(sub, 'admin')}
                 onRevise={() => {
+                  if (!canApproveAsCreator && !canApproveAsAdmin) {
+                    setMessage('Only the bounty creator or a community admin can request revisions.');
+                    return;
+                  }
                   updateSubmissionStatus(sub.id, 'rejected');
                   onAdvanceStatus(bounty.id, 'in_progress');
                   setOpen(false);
@@ -226,6 +280,7 @@ function ReviewActions({
               />
             ))
           )}
+          {message && <p className="text-[11px] font-medium text-destructive">{message}</p>}
         </div>
       )}
     </div>
@@ -234,11 +289,19 @@ function ReviewActions({
 
 function SubmissionRow({
   sub,
-  onApprove,
+  creatorRecorded,
+  canApproveAsCreator,
+  canApproveAsAdmin,
+  onApproveCreator,
+  onApproveAdmin,
   onRevise,
 }: {
   sub: BountySubmission;
-  onApprove: () => void;
+  creatorRecorded: boolean;
+  canApproveAsCreator: boolean;
+  canApproveAsAdmin: boolean;
+  onApproveCreator: () => void;
+  onApproveAdmin: () => void;
   onRevise: () => void;
 }) {
   return (
@@ -257,34 +320,71 @@ function SubmissionRow({
           {sub.note && <p className="mt-1 text-[11px] text-muted-foreground">{sub.note}</p>}
         </div>
 
-        {(!sub.status || sub.status === 'pending') ? (
-          <div className="flex shrink-0 gap-1.5">
-            <button
-              type="button"
-              onClick={onApprove}
-              className="flex items-center gap-1 rounded-lg border border-confirmed/40 bg-confirmed/10 px-2 py-1 text-[11px] font-bold text-confirmed"
-            >
-              <ThumbsUp className="h-3 w-3" /> Approve
-            </button>
-            <button
-              type="button"
-              onClick={onRevise}
-              className="flex items-center gap-1 rounded-lg border border-border/60 bg-surface/60 px-2 py-1 text-[11px] font-bold text-muted-foreground hover:border-primary/50"
-            >
-              <ThumbsDown className="h-3 w-3" /> Revise
-            </button>
-          </div>
-        ) : (
-          <span className={cn(
-            'shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider',
-            sub.status === 'approved'
-              ? 'border-confirmed/40 bg-confirmed/10 text-confirmed'
-              : 'border-border/60 bg-surface/60 text-muted-foreground',
-          )}>
-            {sub.status === 'approved' ? 'Approved' : 'Revision'}
+        {sub.status === 'rejected' && (
+          <span className="shrink-0 rounded-full border border-border/60 bg-surface/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            Revision requested
           </span>
         )}
       </div>
+
+      {sub.status !== 'rejected' && (
+        <div className="mt-3 grid gap-2 border-t border-border/50 pt-3 sm:grid-cols-2">
+          <ApprovalCheck
+            label="Bounty creator"
+            approved={!!sub.creatorApprovedAt}
+            canApprove={canApproveAsCreator}
+            unavailable={!creatorRecorded}
+            onApprove={onApproveCreator}
+          />
+          <ApprovalCheck
+            label="Community admin"
+            approved={!!sub.adminApprovedAt}
+            canApprove={canApproveAsAdmin}
+            onApprove={onApproveAdmin}
+          />
+        </div>
+      )}
+
+      {sub.status !== 'approved' && sub.status !== 'rejected' && (
+        <button
+          type="button"
+          onClick={onRevise}
+          className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-muted-foreground hover:text-primary"
+        >
+          <ThumbsDown className="h-3 w-3" /> Request revision
+        </button>
+      )}
+    </div>
+  );
+}
+
+function ApprovalCheck({
+  label,
+  approved,
+  canApprove,
+  unavailable = false,
+  onApprove,
+}: {
+  label: string;
+  approved: boolean;
+  canApprove: boolean;
+  unavailable?: boolean;
+  onApprove: () => void;
+}) {
+  return (
+    <div className="flex min-h-10 items-center justify-between gap-2 rounded-md border border-border/60 px-2.5 py-2">
+      <span className="text-[11px] font-semibold text-foreground">{label}</span>
+      {approved ? (
+        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-confirmed">
+          <CheckCircle2 className="h-3 w-3" /> Approved
+        </span>
+      ) : canApprove ? (
+        <button type="button" onClick={onApprove} className="inline-flex items-center gap-1 text-[10px] font-bold text-primary hover:underline">
+          <ThumbsUp className="h-3 w-3" /> Approve
+        </button>
+      ) : (
+        <span className="text-[10px] text-muted-foreground">{unavailable ? 'Creator not recorded' : 'Waiting'}</span>
+      )}
     </div>
   );
 }
@@ -420,7 +520,7 @@ function FullCard({
         {(bounty.status === 'paid' || bounty.status === 'awarded') && (
           <>
             <span className="flex items-center gap-1.5 rounded-lg border border-confirmed/30 bg-confirmed/5 px-3 py-2 text-[11px] font-semibold text-confirmed">
-              <CheckCircle2 className="h-3 w-3" /> Approved
+              <CheckCircle2 className="h-3 w-3" /> {STATUS_CONFIG[bounty.status].label}
             </span>
             <button
               type="button"
@@ -534,8 +634,13 @@ function KanbanColumn({
 
 type ViewMode = 'list' | 'board';
 
-export default function BountyBoard({ communityId, communityName = 'this community', compact = false }: BountyBoardProps) {
+export default function BountyBoard({ communityId, communityName = 'this community', communityAdminId, compact = false }: BountyBoardProps) {
   const { chainMeta } = useChain();
+  const account = useAccount();
+  const reviewAccess = useMemo<ReviewAccess>(() => ({
+    actorId: account.walletAddress ?? account.accountId,
+    communityAdminId,
+  }), [account.accountId, account.walletAddress, communityAdminId]);
   const [bounties, setBounties] = useState(() => getBountiesForCommunity(communityId));
   const [view, setView] = useState<ViewMode>('board');
   const [interested, setInterested] = useState<Set<string>>(readInterest);
@@ -575,7 +680,7 @@ export default function BountyBoard({ communityId, communityName = 'this communi
   const handleDrop = (event: DragEvent<HTMLDivElement>, status: BountyStatus) => {
     event.preventDefault();
     const bountyId = event.dataTransfer.getData('text/plain') || draggedBountyId;
-    if (bountyId) handleAdvanceStatus(bountyId, status);
+    if (bountyId && status !== 'awarded' && status !== 'paid') handleAdvanceStatus(bountyId, status);
     handleDragEnd();
   };
 
@@ -583,7 +688,7 @@ export default function BountyBoard({ communityId, communityName = 'this communi
   const rewardPool = bounties.filter((b) => b.status === 'open').reduce((sum, b) => sum + b.rewardKes, 0);
   const shown = compact ? bounties.slice(0, 2) : bounties;
   const byStatus = KANBAN_COLUMNS.reduce<Record<BountyStatus, Bounty[]>>((acc, s) => {
-    acc[s] = bounties.filter((b) => b.status === s || (s === 'paid' && b.status === 'awarded'));
+    acc[s] = bounties.filter((b) => b.status === s);
     return acc;
   }, {} as Record<BountyStatus, Bounty[]>);
 
@@ -600,6 +705,7 @@ export default function BountyBoard({ communityId, communityName = 'this communi
   }
 
   return (
+    <ReviewAccessContext.Provider value={reviewAccess}>
     <section className="baraza-card p-5">
       {/* Header */}
       <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -696,5 +802,6 @@ export default function BountyBoard({ communityId, communityName = 'this communi
         </div>
       )}
     </section>
+    </ReviewAccessContext.Provider>
   );
 }

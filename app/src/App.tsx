@@ -14,6 +14,7 @@ const Index = lazy(() => import('./pages/Index'));
 const Communities = lazy(() => import('./pages/Communities'));
 const Bounties = lazy(() => import('./pages/Bounties'));
 const BountyDetail = lazy(() => import('./pages/BountyDetail'));
+const PayoutReceipt = lazy(() => import('./pages/PayoutReceipt'));
 const Evaluate = lazy(() => import('./pages/Evaluate'));
 const CreateCommunity = lazy(() => import('./pages/CreateCommunity'));
 const CommunityPurpose = lazy(() => import('./pages/CommunityPurpose'));
@@ -52,6 +53,7 @@ const App: React.FC = () => {
               <Route path="/communities" element={<Communities />} />
               <Route path="/bounties" element={<Bounties />} />
               <Route path="/bounties/:bountyId" element={<BountyDetail />} />
+              <Route path="/payouts/:payoutId" element={<PayoutReceipt />} />
               <Route path="/evaluate" element={<Evaluate />} />
               <Route path="/create" element={<CreateCommunity />} />
               <Route path="/create/purpose" element={<CommunityPurpose />} />

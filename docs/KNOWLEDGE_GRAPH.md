@@ -141,6 +141,8 @@ These are hard blockers before real funds move.
 | --- | --- | --- | --- |
 | 1 | Test governance-dispatched treasury releases on devnet | `programs/governance/src/lib.rs` → `execute_proposal` | **Critical** — native SOL CPI dispatch is wired locally but still needs a real devnet execution |
 | 2 | Hand treasury release authority to the production Squads vault PDA | Treasury deployment and operations | **Critical** — on-chain authority enforcement is wired; keep `withdrawals_enabled = false` until the deployed handoff is tested |
+| 3 | Bounty stable payouts | Community multisig and payout coordinator | USDC is the default settlement asset; USDT is permitted only on an explicitly supported rail; G$ is a non-stable optional community asset. A bounty becomes paid only after transaction reconciliation. |
+| 4 | Deploy and verify Soroban bounty payout vault | `docs/BOUNTY_PAYOUT_CONTRACT_SPEC.md` and `contracts/stellar/treasury_vault` | Structured payout references, expiry, cancellation, pause, signer rotation, and reconciliation events are implemented locally. Build and deploy a new Circle USDC vault, run the full testnet payout flow, and complete security review before automation. |
 | 3 | Wire Supabase payment orders to on-chain attestation | `programs/payment_attestation` + `/api/membership/activate` | **Critical** — off-chain membership is acceptable for testnet, not for live |
 | 4 | Restrict `bump_member_count` to membership CPI only | `programs/community_registry/src/lib.rs` | **High** — currently admin-only |
 | 5 | Replace admin-provided governance snapshot inputs with CPI reads | `programs/governance/src/lib.rs` → `activate_proposal` | **High** |

@@ -427,6 +427,26 @@
   }
 }
 
+@keyframes bounty-ticker-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.bounty-ticker {
+  overflow: hidden;
+}
+
+.bounty-ticker-track {
+  display: flex;
+  width: max-content;
+  animation: bounty-ticker-scroll 34s linear infinite;
+}
+
+.bounty-ticker:hover .bounty-ticker-track,
+.bounty-ticker:focus-within .bounty-ticker-track {
+  animation-play-state: paused;
+}
+
 .community-banner-slide {
   animation: community-banner-slide 0.72s ease-out both;
 }
@@ -454,7 +474,12 @@
 
 @media (prefers-reduced-motion: reduce) {
   .community-banner-slide,
-  .rise {
+  .rise,
+  .bounty-ticker-track {
     animation: none;
+  }
+
+  .bounty-ticker {
+    overflow-x: auto;
   }
 }

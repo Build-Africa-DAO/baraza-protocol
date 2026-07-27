@@ -325,6 +325,8 @@ export function buildKnowledgeGraph(input?: {
     addEdge(bountyId, reviewId, 'has-review', 'Akili review');
 
     if (bounty.rewardToken === 'G$') addEdge(bountyId, nodeId('chain', 'celo'), 'settles-on', 'G$ reward');
+    if (bounty.rewardToken === 'USDC') addEdge(bountyId, nodeId('chain', 'stellar'), 'settles-on', 'USDC stable payout');
+    if (bounty.rewardToken === 'USDT') addEdge(bountyId, nodeId('chain', 'solana'), 'settles-on', 'USDT supported-rail payout');
     if (bounty.rewardToken === 'XLM') addEdge(bountyId, nodeId('chain', 'stellar'), 'settles-on', 'XLM reward');
     if (bounty.rewardToken === 'SOL') addEdge(bountyId, nodeId('chain', 'solana'), 'settles-on', 'SOL reward');
     if (bounty.rewardToken === 'BRZA') addEdge(bountyId, nodeId('chain', 'stellar'), 'settles-on', 'BRZA reward');

@@ -328,7 +328,8 @@ export default function AdminReconciliation() {
                   <option value="open">Open</option>
                   <option value="in_progress">In progress</option>
                   <option value="in_review">Under review</option>
-                  <option value="paid">Approved</option>
+                  <option value="awarded">Awaiting payout</option>
+                  <option value="paid">Paid</option>
                 </select>
               </div>
               <div className="space-y-3">
@@ -342,7 +343,7 @@ export default function AdminReconciliation() {
                         <p className="mt-1 text-xs text-muted-foreground">{bounty.postedBy} · {formatRailAmountFromKes(bounty.rewardKes, chainMeta)}</p>
                       </div>
                       <span className={cn("w-fit rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider", statusClass[bounty.status])}>
-                        {bounty.status === "paid" || bounty.status === "awarded" ? "Approved" : bounty.status.replace("_", " ")}
+                        {bounty.status === "paid" ? "Paid" : bounty.status === "awarded" ? "Awaiting payout" : bounty.status.replace("_", " ")}
                       </span>
                     </div>
                   </article>

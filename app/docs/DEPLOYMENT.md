@@ -108,6 +108,14 @@ After redeploy completes:
 3. Create a community and confirm it persists to the Supabase communities table.
 4. Join with M-Pesa simulator and confirm a payment_orders row is created.
 5. Wait for cron or call /api/cron/promote-orders with CRON_SECRET. The demo promoter advances sandbox orders only.
+
+## Bounty payouts
+
+Apply `supabase/migrations/022_bounty_payout_ledger.sql` before enabling payout coordination. Set
+`BOUNTY_PAYOUT_COORDINATOR_SECRET` only on trusted server callers. The payout endpoint records approval
+and reconciliation state; it does not replace the community multisig. A bounty becomes `paid` only after
+the coordinator confirms a submitted transaction hash. Public receipts are read-only and omit contact,
+submission, approver, and internal failure details.
 6. Confirm payment status advances to RECONCILED and memberships receives a row.
 7. Join with Stellar by sending 1 XLM on testnet, pasting the tx hash, and confirming the Stellar status path.
 8. Open /dashboard/<id> and /profile to confirm member-facing state.

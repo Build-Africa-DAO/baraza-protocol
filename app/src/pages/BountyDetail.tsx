@@ -29,13 +29,15 @@ import { useSeo } from '@/lib/seo';
 import AkiliSecurityReview from '@/akili/AkiliSecurityReview';
 import { reviewBounty } from '@/lib/securityReview';
 import { useChain } from '@/hooks/useChain';
+import { useAccount } from '@/contexts/AccountContext';
+import { getBountyPayout, PAYOUT_ASSET_DETAILS } from '@/lib/bountyPayouts';
 
 const statusLabel: Record<BountyStatus, string> = {
   open: 'Open',
   in_progress: 'In progress',
   in_review: 'Under review',
-  awarded: 'Approved',
-  paid: 'Approved',
+  awarded: 'Awaiting payout',
+  paid: 'Paid',
 };
 
 const statusClass: Record<BountyStatus, string> = {
@@ -79,6 +81,7 @@ function BountyNotFound() {
 export default function BountyDetail() {
   const { bountyId = '' } = useParams();
   const { chainMeta } = useChain();
+  const account = useAccount();
   const { communities } = useCommunities();
   const [bounty, setBounty] = useState<Bounty | null>(() => getBounty(bountyId));
   const [submissions, setSubmissions] = useState<BountySubmission[]>([]);
@@ -95,6 +98,7 @@ export default function BountyDetail() {
     () => communities.find((item) => item.id === bounty?.communityId),
     [bounty?.communityId, communities],
   );
+  const payout = useMemo(() => bounty ? getBountyPayout(bounty.id) : null, [bounty]);
 
   useSeo({
     title: bounty ? `${bounty.title} bounty` : 'Bounty detail',
@@ -133,6 +137,7 @@ export default function BountyDetail() {
       await submitBountyWorkAsync({
         bountyId: bounty.id,
         contributor: submission.contributor,
+        contributorWallet: account.walletAddress ?? undefined,
         workUrl: submission.workUrl,
         note: submission.note,
       });
@@ -185,7 +190,7 @@ export default function BountyDetail() {
                     </a>
                   ) : (
                     <span className="inline-flex items-center rounded-lg border border-confirmed/30 bg-confirmed/5 px-4 py-2 text-sm font-semibold text-confirmed">
-                      {bounty.status === 'paid' ? 'Approved by owner' : statusLabel[bounty.status]}
+                      {statusLabel[bounty.status]}
                     </span>
                   )}
                 </div>
@@ -258,7 +263,9 @@ export default function BountyDetail() {
                     <h2 className="font-display text-lg font-semibold">{statusLabel[bounty.status]}</h2>
                     <p className="mt-1 text-sm text-muted-foreground">
                       {bounty.status === 'paid'
-                        ? 'This bounty has been approved. New work updates stay closed unless the owner reopens it for review.'
+                        ? 'This payout has been confirmed. New work updates stay closed unless the owner reopens it for review.'
+                        : bounty.status === 'awarded'
+                          ? 'The delivery is approved and waiting for the community multisig payout.'
                         : 'This bounty is not accepting new work updates right now.'}
                     </p>
                   </section>
@@ -310,6 +317,53 @@ export default function BountyDetail() {
 
               <aside className="space-y-6">
                 {securityReview && <AkiliSecurityReview review={securityReview} />}
+
+                {(payout || bounty.status === 'awarded' || bounty.status === 'paid') && (
+                  <section className="baraza-card p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-primary">Payout</p>
+                        <h2 className="mt-1 font-display text-lg font-semibold">
+                          {payout?.status === 'paid' || bounty.status === 'paid' ? 'Payment confirmed' : 'Community approval'}
+                        </h2>
+                      </div>
+                      <ShieldCheck className="h-5 w-5 text-primary" />
+                    </div>
+                    {payout ? (
+                      <div className="mt-4 space-y-3 text-sm">
+                        <div className="rounded-lg border p-3">
+                          <p className="text-xs text-muted-foreground">Settlement asset</p>
+                          <p className="mt-1 font-semibold">{PAYOUT_ASSET_DETAILS[payout.asset].label}</p>
+                          {!PAYOUT_ASSET_DETAILS[payout.asset].stable && (
+                            <p className="mt-1 text-xs text-accent">Community asset; value may change.</p>
+                          )}
+                        </div>
+                        <div className="rounded-lg border p-3">
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="text-muted-foreground">Multisig approvals</span>
+                            <span className="font-semibold">{payout.approvals.length} / {payout.requiredApprovals}</span>
+                          </div>
+                          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+                            <div
+                              className="h-full bg-primary transition-all"
+                              style={{ width: `${Math.min(100, (payout.approvals.length / payout.requiredApprovals) * 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                        <p className="break-all text-xs text-muted-foreground">Recipient: {payout.recipientWallet}</p>
+                        {payout.txHash && (
+                          <Link to={`/payouts/${payout.id}`} className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
+                            View public receipt <ExternalLink className="h-3 w-3" />
+                          </Link>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                        The approved delivery needs a recipient wallet before the multisig request can be created.
+                      </p>
+                    )}
+                  </section>
+                )}
 
                 <section className="baraza-card p-5">
                   <h2 className="font-display text-lg font-semibold">Bounty details</h2>

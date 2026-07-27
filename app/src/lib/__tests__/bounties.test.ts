@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   createBountyRecord,
+  approveSubmissionByRole,
   getBountiesForCommunity,
   listBounties,
   listBountySubmissions,
@@ -41,6 +42,7 @@ describe('bounties', () => {
     const bounty = createBountyRecord({
       communityId: '1',
       postedBy: 'Kibera Youth Collective',
+      approvalProposalId: 'proposal-1',
       title: 'Build member directory',
       category: 'Dev',
       rewardKes: 35000,
@@ -51,6 +53,7 @@ describe('bounties', () => {
 
     expect(bounty.status).toBe('open');
     expect(bounty.submissions).toBe(0);
+    expect(bounty.approvalProposalId).toBe('proposal-1');
     expect(getBountiesForCommunity('1').some((item) => item.id === bounty.id)).toBe(true);
   });
 
@@ -76,6 +79,36 @@ describe('bounties', () => {
     expect(submission.bountyId).toBe(bounty.id);
     expect(listBountySubmissions(bounty.id)).toHaveLength(1);
     expect(listBounties().find((item) => item.id === bounty.id)?.submissions).toBe(1);
+  });
+
+  it('requires creator and admin approval before marking work approved', () => {
+    const bounty = createBountyRecord({
+      communityId: '2',
+      postedBy: 'Mama Mboga Association',
+      createdBy: 'creator-1',
+      title: 'Review market prices',
+      category: 'Research',
+      rewardKes: 12000,
+      deadline: '2026-07-12',
+      summary: 'Verify weekly produce prices.',
+      skills: ['Research'],
+    });
+    const submission = submitBountyWork({
+      bountyId: bounty.id,
+      contributor: 'Amina',
+      workUrl: 'https://example.com/prices',
+      note: 'Ready for review.',
+    });
+
+    const adminOnly = approveSubmissionByRole(submission.id, 'admin', 'admin-1');
+    expect(adminOnly?.status).toBe('pending');
+    expect(adminOnly?.adminApprovedAt).toBeTruthy();
+    expect(adminOnly?.creatorApprovedAt).toBeUndefined();
+
+    const fullyApproved = approveSubmissionByRole(submission.id, 'creator', 'creator-1');
+    expect(fullyApproved?.status).toBe('approved');
+    expect(fullyApproved?.creatorApprovedAt).toBeTruthy();
+    expect(fullyApproved?.adminApprovedAt).toBeTruthy();
   });
 
   it('rejects invalid bounty and submission data', () => {

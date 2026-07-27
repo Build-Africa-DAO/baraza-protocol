@@ -100,6 +100,8 @@ GET  /api/payment-orders/status            Client polls order status by orderId
 POST /api/membership/activate              Gate-check + write membership to Supabase
 POST /api/payments/kotani                  Low-level Kotani proxy
 POST /api/payments/minisend                Low-level Minisend proxy
+GET  /api/bounties/payouts                 Read a confirmed public bounty payout receipt
+POST /api/bounties/payouts                 Trusted bounty payout coordinator actions
 POST /api/cron/promote-orders              Advance orders one step (cron, requires CRON_SECRET)
 ```
 
@@ -205,6 +207,7 @@ KOTANI_PAY_API_KEY            server-only
 KOTANI_API_BASE               default: https://api.kotanipay.com
 PAYMENT_ADAPTER_PROXY_SECRET  server-only, Bearer token for trusted server calls to /api/payments/*
 PAYMENT_PHONE_HASH_PEPPER     server-only, HMAC pepper for phone number hashing
+BOUNTY_PAYOUT_COORDINATOR_SECRET server-only, Bearer token for trusted bounty payout state changes
 
 # Supabase
 VITE_SUPABASE_URL
