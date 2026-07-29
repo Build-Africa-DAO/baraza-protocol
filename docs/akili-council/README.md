@@ -1,6 +1,6 @@
 # Akili Council — Character Bibles
 
-Five specialised AI agents reporting to a central relay (Akili). Built with the CCC Framework (18 lenses) + AI Persona Layer. These are characters, not feature lists — they are the writing layer that sits above the inline implementation at `app/src/lib/akili/`.
+Five specialised AI agents reporting to a central relay (Akili). Built with the CCC Framework (18 lenses) + AI Persona Layer. These are characters, not feature lists — they are the writing layer that sits above the inline implementation at `app/src/akili/`.
 
 | File | Agent | Domain | Cast position |
 |---|---|---|---|
@@ -14,7 +14,7 @@ Five specialised AI agents reporting to a central relay (Akili). Built with the 
 
 ## How these relate to the code
 
-- Implementation system prompts live in `app/src/lib/akili/prompts.ts` and are the production-facing distilled versions of these bibles.
+- Implementation system prompts live in `app/src/akili/prompts.ts` and are the production-facing distilled versions of these bibles.
 - The relay is implemented as the chat brain at `app/api/agent/chat.ts`. The brain identifies as Akili and *leads* the council; it does not impersonate council members.
 - Use the bibles for writing, branding, episode design, voice consistency. Use the prompts for runtime behaviour.
 

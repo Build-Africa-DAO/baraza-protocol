@@ -296,7 +296,7 @@ ${proposalLines}`;
 function buildSystemPrompt(communityContext: string): string {
   // Layer 1: Akili relay character + Decision Stack Guard, pulled verbatim
   //          from the character bible at docs/akili-council/AKILI.md and
-  //          encoded in app/src/lib/akili/prompts.ts. This is the persona
+  //          encoded in app/src/akili/prompts.ts. This is the persona
   //          and the taboo list (never greet, never strip dissent, etc.).
   //
   // Layer 2: Direct-chat operational surface (DRAFT / EXPLAIN / FLAG / GUIDE)
