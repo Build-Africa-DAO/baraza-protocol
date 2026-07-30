@@ -5,7 +5,12 @@ import { WalletModalContext } from "@solana/wallet-adapter-react-ui";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const PREFERRED_WALLETS = ["Phantom", "Solflare", "Coinbase Wallet", "Backpack", "Ledger", "Trezor"];
+// Only these three ship with a registered adapter in WalletProviders.tsx.
+// Backpack/Ledger/Trezor were previously listed here and in the modal copy
+// below with no adapter wired up, so the UI promised connections that could
+// never succeed. Removed rather than deleted from intent: add the adapter
+// package + registration in WalletProviders.tsx first, then re-add here.
+const PREFERRED_WALLETS = ["Phantom", "Solflare", "Coinbase Wallet"];
 
 interface BarazaWalletModalProviderProps {
   children: React.ReactNode;
@@ -130,7 +135,7 @@ export default function BarazaWalletModalProvider({ children }: BarazaWalletModa
               Connect your Baraza account to continue
             </h2>
             <p className="mx-auto mt-3 max-w-xs text-center text-sm leading-6">
-              Use Phantom, Solflare, Backpack, Coinbase Wallet, Ledger, or Trezor for Baraza actions.
+              Use Phantom, Solflare, or Coinbase Wallet for Baraza actions.
             </p>
 
             <div className="mt-7 max-h-[60vh] space-y-2 overflow-y-auto pr-1">

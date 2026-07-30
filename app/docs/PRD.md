@@ -470,7 +470,7 @@ Private identifiers must remain off-chain.
 
 Option A: External blockchain wallet
 
-- User connects Phantom, Solflare, Backpack, or another supported wallet.
+- User connects Phantom, Solflare, or Coinbase Wallet — the three with a registered adapter in `WalletProviders.tsx`. (Backpack was listed here previously; removed 2026-07-08 as unwired, not ruled out — add a real adapter package first.)
 - Best for crypto-native users.
 - User signs directly.
 - Baraza does not custody assets.
