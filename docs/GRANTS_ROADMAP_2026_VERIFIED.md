@@ -44,6 +44,8 @@
 
 | Program | Max Award | Chain Focus | Eligibility | Status | URL | Timeline | Notes |
 |---|---|---|---|---|---|---|---|
+| **Colosseum Eternal** | up to $250K | Solana | Crypto builders; 4-week sprint | ⭐ Pursue | https://colosseum.com/eternal | Rolling (ongoing throughout year) | Pre-seed funding + accelerator cohort acceptance. Perpetual challenge: submit product anytime to compete for $250K pre-seed. Also offers $25K USDC semi-annual Eternal Award. Direct fit for Baraza Protocol Solana devnet work. **ACTION:** Prepare submission with Baraza Protocol Solana governance demo. |
+| **Superteam Microgrants** | $10K | Solana | Early-stage builders in emerging markets (Africa included) | ⭐ Pursue | https://superteam.fun/earn/grants | Rolling | Solana ecosystem talent network. $10K microgrants specifically target emerging markets: Africa, India, Southeast Asia, Eastern Europe. Fast approval for seed-stage teams. **ACTION:** Apply immediately; high fit + quick decision. |
 | **Celo Foundation — Prezenti Season 3** | TBD | Celo | Africa-founded teams | ⭐ Pursue strongly | https://celo.org/community | Season 2 closed; Season 3 TBD | **ACTION:** Confirm Season 3 launch date and structure ASAP. Celo is in Baraza's roadmap; mobile-first Africa focus makes this critical. |
 | **Circle Developer Grant (Cohort 2)** | TBD | USDC/EVM | Africa-founded fintech | ⭐ Pursue | https://www.circle.com/developer | Cohort 2 TBD; Cohort 1 had 8 Africa teams | Relaunched May 2026; proven Africa track record. |
 | **Gitcoin** | Retroactive PGF grants | Multi-chain | Public goods / DAO tooling | ⭐ Pursue | https://www.gitcoin.co/ | GG25 proposed 2026; Retroactive PGF ongoing | Restructured to 3.0 architecture. Strong fit for DAO governance as public good. |
@@ -217,11 +219,13 @@ JAN 2027
 **Grants (Non-dilutive):**
 - SCF Instaward: $5K ✅ (received)
 - SCF Build Award: $75K–$150K (median: $100K) [awaiting 16 Aug submission]
+- Colosseum Eternal: up to $250K [Solana pre-seed; rolling submissions]
+- Superteam Microgrants: $10K [rolling; high priority due to Africa focus]
 - ANF Operational Support: $25K–$50K [awaiting pursuit]
 - MDIF Amplify Kenya: $10K [awaiting submission]
 - Mercy Corps AgriFin: $25K–$50K [awaiting submission]
 - Gitcoin + retro: $10K–$20K (varies by round) [post-mainnet]
-- **Subtotal: $250K–$330K**
+- **Subtotal (conservative): $280K–$360K** | **Subtotal (with Colosseum): up to $510K–$610K**
 
 **Event + Competition Revenue:**
 - TOKEN2049 NEXUS prize: $25K–$100K [if placed; Oct 2026]
@@ -275,6 +279,10 @@ JAN 2027
 - [ ] **Submit SCF Build Award interest form** (due 16 Aug 2026, 23:59 UTC)
   - Evidence needed: Live governance cycle on testnet
   - Link: https://communityfund.stellar.org/programs/build-award
+
+- [ ] **Apply for Superteam Microgrant** ($10K, rolling, high priority for Africa focus)
+  - Link: https://superteam.fun/earn/grants
+  - Fastest approval window (rolling submissions)
   
 - [ ] **Confirm Celo Prezenti Season 3 launch date** (email partnerships@celo.org)
   - Critical for Oct–Nov submission window
@@ -284,6 +292,10 @@ JAN 2027
 
 ### August–September
 
+- [ ] **Submit Colosseum Eternal application** (rolling; $250K pre-seed for Solana)
+  - URL: https://colosseum.com/eternal
+  - Include: 4-week sprint plan, Baraza Protocol Solana governance demo, team credentials
+  
 - [ ] **Submit ANF Operational Support Grant** (repositioning: "counter-stereotype narrative" angle)
   - URL: https://africanofilter.org/
   
