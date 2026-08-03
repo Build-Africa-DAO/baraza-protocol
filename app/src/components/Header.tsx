@@ -12,6 +12,7 @@ const navLinks = [
   { path: "/", label: "Home" },
   { path: "/communities", label: "Explore" },
   { path: "/bounties", label: "Bounties" },
+  { path: "/grants", label: "Grants" },
   { path: "/evaluate", label: "Evaluate" },
   { path: "/create/purpose", label: "Launch" },
   { path: "/profile", label: "Profile" },
