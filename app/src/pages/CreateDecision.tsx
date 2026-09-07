@@ -146,7 +146,7 @@ const CreateDecision: React.FC = () => {
             {/* Back */}
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-sm mb-6"
+              className="btn-wipe-outline mb-6 h-9 gap-2 px-4 text-sm"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to {community.name}

@@ -59,7 +59,7 @@ function WalletAction() {
         'col-start-5 flex flex-col items-center gap-1 rounded-md px-2 py-2 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70',
         account.authenticated ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
       )}
-      aria-label={account.authenticated ? 'Privy account connected' : 'Log in with Privy'}
+      aria-label={account.authenticated ? 'Account connected' : 'Log in'}
     >
       <Wallet className="h-5 w-5" />
       {label}

@@ -140,26 +140,26 @@ function LeverageOnboardingScreen() {
                 </div>
 
                 <div className="mt-5 grid gap-3 md:grid-cols-3">
-                  <button type="button" onClick={handleCommunityCreate} className="flex items-center justify-between rounded-xl border border-primary/30 bg-primary px-4 py-4 text-left text-primary-foreground transition hover:opacity-95">
+                  <button type="button" onClick={handleCommunityCreate} className="btn-wipe w-full justify-between px-4 py-4 text-left">
                     <span className="min-w-0">
                       <span className="block text-xs uppercase tracking-[0.18em] opacity-80">{currentCopy.community}</span>
                       <span className="mt-1 block text-sm font-semibold">{currentCopy.submitCommunity}</span>
                     </span>
                     {communityStatus === 'working' ? <Loader2 className="h-5 w-5 animate-spin" /> : <ArrowRight className="h-5 w-5" />}
                   </button>
-                  <button type="button" onClick={handleActivation} className="flex items-center justify-between rounded-xl border border-border/70 bg-background px-4 py-4 text-left transition hover:border-primary/40">
+                  <button type="button" onClick={handleActivation} className="btn-wipe-outline w-full justify-between px-4 py-4 text-left">
                     <span className="min-w-0">
-                      <span className="block text-xs uppercase tracking-[0.18em] text-muted-foreground">{currentCopy.member}</span>
+                      <span className="block text-xs uppercase tracking-[0.18em] opacity-80">{currentCopy.member}</span>
                       <span className="mt-1 block text-sm font-semibold">{currentCopy.startActivation}</span>
                     </span>
-                    <Phone className="h-5 w-5 text-primary" />
+                    <Phone className="h-5 w-5" />
                   </button>
-                  <button type="button" onClick={handleWelcomeProposal} className="flex items-center justify-between rounded-xl border border-border/70 bg-background px-4 py-4 text-left transition hover:border-primary/40">
+                  <button type="button" onClick={handleWelcomeProposal} className="btn-wipe-outline w-full justify-between px-4 py-4 text-left">
                     <span className="min-w-0">
-                      <span className="block text-xs uppercase tracking-[0.18em] text-muted-foreground">{currentCopy.proposal}</span>
+                      <span className="block text-xs uppercase tracking-[0.18em] opacity-80">{currentCopy.proposal}</span>
                       <span className="mt-1 block text-sm font-semibold">{currentCopy.createWelcome}</span>
                     </span>
-                    <Vote className="h-5 w-5 text-primary" />
+                    <Vote className="h-5 w-5" />
                   </button>
                 </div>
               </div>
@@ -289,7 +289,7 @@ function LeverageOnboardingScreen() {
                       </div>
                     </div>
 
-                    <button type="button" onClick={handleActivation} className="inline-flex items-center justify-between rounded-xl border border-primary/30 bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground">
+                    <button type="button" onClick={handleActivation} className="btn-wipe w-full justify-between px-4 py-3 text-sm">
                       <span>{currentCopy.startActivation}</span>
                       <Send className="h-4 w-4" />
                     </button>
@@ -297,7 +297,7 @@ function LeverageOnboardingScreen() {
                     <div className="rounded-2xl border border-border/70 bg-background p-4">
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">USSD skeleton</p>
                       <p className="mt-2 text-sm text-muted-foreground">Menu state: {ussdSession.state}</p>
-                      <button type="button" onClick={handleUssdAdvance} className="mt-3 inline-flex items-center gap-2 rounded-full border border-border/70 px-3 py-2 text-xs font-semibold">
+                      <button type="button" onClick={handleUssdAdvance} className="btn-wipe-outline mt-3 gap-2 px-3 py-2 text-xs">
                         Advance session
                         <ChevronRight className="h-3.5 w-3.5" />
                       </button>
@@ -308,9 +308,9 @@ function LeverageOnboardingScreen() {
                       <input type="number" min={1} max={50} value={batchSize} onChange={(event) => setBatchSize(Number(event.target.value))} className="rounded-xl border border-border/70 bg-background px-4 py-3 text-sm outline-none focus:border-primary" />
                     </label>
 
-                    <button type="button" onClick={handleBatchActivation} className="inline-flex items-center justify-between rounded-xl border border-border/70 bg-background px-4 py-3 text-sm font-semibold">
+                    <button type="button" onClick={handleBatchActivation} className="btn-wipe-outline w-full justify-between px-4 py-3 text-sm">
                       <span>{currentCopy.activateBatch}</span>
-                      <Wallet className="h-4 w-4 text-primary" />
+                      <Wallet className="h-4 w-4" />
                     </button>
 
                     <div className="rounded-2xl border border-border/70 bg-background p-4">
@@ -379,7 +379,7 @@ function LeverageOnboardingScreen() {
                       <div className="flex items-start justify-between gap-3"><dt className="text-muted-foreground">Membership fee</dt><dd className="font-semibold">{formatKSh(membershipFee)}</dd></div>
                     </dl>
 
-                    <button type="button" onClick={handleWelcomeProposal} className="mt-5 inline-flex items-center gap-2 rounded-xl border border-primary/30 bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground">
+                    <button type="button" onClick={handleWelcomeProposal} className="btn-wipe mt-5 w-full gap-2 px-4 py-3 text-sm">
                       <MessageSquare className="h-4 w-4" />
                       {currentCopy.createWelcome}
                     </button>

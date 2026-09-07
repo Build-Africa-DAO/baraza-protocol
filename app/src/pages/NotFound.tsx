@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Compass, Home } from 'lucide-react';
 import Layout from '@/components/Layout';
+import { Button } from '@/components/ui/button';
 import { useSeo } from '@/lib/seo';
 
 const NotFound: React.FC = () => {
@@ -26,17 +27,18 @@ const NotFound: React.FC = () => {
           </p>
 
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link to="/" className="btn-warm inline-flex items-center gap-2 text-sm">
-              <Home className="h-4 w-4" />
-              Go Home
-            </Link>
-            <Link
-              to="/communities"
-              className="btn-ghost inline-flex items-center gap-2 text-sm"
-            >
-              <Compass className="h-4 w-4" />
-              Browse communities
-            </Link>
+            <Button asChild>
+              <Link to="/">
+                <Home className="h-4 w-4" />
+                Go Home
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link to="/communities">
+                <Compass className="h-4 w-4" />
+                Browse communities
+              </Link>
+            </Button>
           </div>
         </div>
       </section>

@@ -191,7 +191,7 @@ export default function RetroRounds() {
           <button
             type="button"
             onClick={() => setVisible(true)}
-            className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground"
+            className="btn-wipe px-5 py-2 text-sm"
           >
             Connect wallet
           </button>
@@ -256,7 +256,7 @@ export default function RetroRounds() {
             onClick={() => selectedCommunityId && void loadActive(selectedCommunityId)}
             disabled={loading}
             aria-label="Refresh"
-            className="rounded-full border border-border bg-surface px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground disabled:opacity-50"
+            className="btn-wipe-outline px-3 py-2 text-xs"
           >
             <RefreshCw className={`inline h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
           </button>
@@ -321,7 +321,7 @@ export default function RetroRounds() {
                     type="button"
                     onClick={() => void settleRound()}
                     disabled={settling}
-                    className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+                    className="btn-wipe px-4 py-2 text-sm disabled:opacity-50"
                   >
                     {settling ? 'Settling…' : 'Settle round'}
                   </button>
@@ -347,7 +347,7 @@ export default function RetroRounds() {
                 type="button"
                 onClick={() => void openRound()}
                 disabled={opening || !selectedCommunityId}
-                className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+                className="btn-wipe px-4 py-2 text-sm disabled:opacity-50"
               >
                 {opening ? 'Opening…' : 'Open a weekly round'}
               </button>

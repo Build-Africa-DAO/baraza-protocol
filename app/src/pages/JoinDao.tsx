@@ -297,7 +297,7 @@ export default function JoinDao() {
                       {community?.name ?? "Community"}
                     </h1>
                     <p className="mt-2 max-w-xl text-sm leading-6">
-                      Pay with mobile money, bank transfer, or your Privy account. Your membership record stays attached to one Baraza account.
+                      Pay with mobile money, bank transfer, or your Baraza account. Your membership record stays attached to one Baraza account.
                     </p>
                   </div>
                   <div className="w-full rounded-lg border px-4 py-3 md:w-auto md:text-right">
@@ -454,7 +454,7 @@ export default function JoinDao() {
                       <Wallet className="h-5 w-5" />
                     </div>
                     <div>
-                      <h2 className="font-display text-base font-semibold">Privy account</h2>
+                      <h2 className="font-display text-base font-semibold">Baraza account</h2>
                       <p className="text-xs">Private account access</p>
                     </div>
                   </div>
@@ -475,7 +475,7 @@ export default function JoinDao() {
                     className="btn-ghost mt-5 w-full justify-center gap-2 py-3 text-sm font-bold"
                   >
                     <Wallet className="h-4 w-4" />
-                    {!account.ready ? "Loading..." : account.authenticated ? "Pay from Privy account" : "Log in with Privy"}
+                    {!account.ready ? "Loading..." : account.authenticated ? "Pay from your account" : "Log in"}
                   </button>
                   {!account.authenticated && account.configured && (
                     <button
@@ -484,9 +484,9 @@ export default function JoinDao() {
                         setPendingWalletJoin(true);
                         account.createAccount();
                       }}
-                      className="mt-3 w-full text-center text-xs font-semibold"
+                      className="btn-wipe-outline mt-3 w-full justify-center py-2 text-xs"
                     >
-                      Create a Privy account
+                      Create an account
                     </button>
                   )}
                   <Link to="/profile" className="mt-3 inline-flex text-xs font-semibold">

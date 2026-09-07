@@ -140,7 +140,7 @@ function SidebarNav({
         {isMember ? (
           <Link
             to={`/dashboard/${communityId}/decisions/create`}
-            className="flex w-full items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs font-bold text-primary transition-all hover:bg-primary/10"
+            className="btn-wipe w-full gap-2 px-3 py-2 text-xs"
           >
             <PlusCircle className="h-3.5 w-3.5" />
             New Proposal
@@ -148,7 +148,7 @@ function SidebarNav({
         ) : (
           <Link
             to={`/join/${communityId}`}
-            className="flex w-full items-center gap-2 rounded-lg border border-secondary/30 bg-secondary/5 px-3 py-2 text-xs font-bold text-secondary transition-all hover:bg-secondary/10"
+            className="btn-wipe-outline w-full gap-2 px-3 py-2 text-xs"
           >
             <CreditCard className="h-3.5 w-3.5" />
             Join group
@@ -657,7 +657,7 @@ const CommunityDashboard: React.FC = () => {
                     {account.authenticated ? (
                       <div className="space-y-3 text-sm">
                         <div className="rounded-lg border p-3">
-                          <p className="text-[10px] uppercase tracking-widest">Privy account</p>
+                          <p className="text-[10px] uppercase tracking-widest">Signed in as</p>
                           <p className="mt-1 text-sm font-semibold break-all">{account.displayName}</p>
                         </div>
                         <div className="flex items-center justify-between border-b pb-3">
@@ -678,7 +678,7 @@ const CommunityDashboard: React.FC = () => {
                         <WalletIcon className="mx-auto mb-3 h-8 w-8" />
                         <p className="text-sm font-semibold">Account not connected</p>
                         <p className="mt-1 text-xs">
-                          Log in with Privy from the header to see your account status.
+                          Log in from the header to see your account status.
                         </p>
                       </div>
                     )}

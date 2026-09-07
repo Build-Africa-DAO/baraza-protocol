@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { CircleMinus, Loader2, ThumbsDown, ThumbsUp, User } from 'lucide-react';
-import { formatRailAmountFromKes, daysRemaining } from '@/lib/utils';
+import { formatRailAmountFromKes, daysRemaining, cn } from '@/lib/utils';
 import { useWalletGuard } from '@/hooks/useWalletGuard';
 import { useCastVote, useVoteStatus } from '@/hooks/useBarazaData';
 import type { ProposalLifecycleStage } from '@/lib/constants';
@@ -167,27 +167,18 @@ const DecisionCard: React.FC<DecisionCardProps> = ({
             const isOtherSide = userVote !== null && userVote !== side;
             const label = side === 'for' ? 'Support' : side === 'against' ? 'Object' : 'Abstain';
             const Icon = side === 'for' ? ThumbsUp : side === 'against' ? ThumbsDown : CircleMinus;
-            const activeClass =
-              side === 'for'
-                ? 'bg-primary/20 text-primary border border-primary/30'
-                : side === 'against'
-                  ? 'bg-destructive/20 text-destructive border border-destructive/30'
-                  : 'bg-accent/20 text-accent border border-accent/30';
-            const idleClass =
-              side === 'for'
-                ? 'bg-primary/10 text-primary hover:bg-primary/20 border border-transparent hover:border-primary/30'
-                : side === 'against'
-                  ? 'bg-destructive/10 text-destructive hover:bg-destructive/20 border border-transparent hover:border-destructive/30'
-                  : 'bg-accent/10 text-accent hover:bg-accent/20 border border-transparent hover:border-accent/30';
+            const solid = isThisSide || (userVote === null && side === 'for');
 
             return (
               <button
                 key={side}
                 onClick={() => handleVote(side)}
                 disabled={!canVote || isVoting}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
-                  isThisSide ? activeClass : isOtherSide ? 'opacity-40 ' + idleClass : idleClass
-                }`}
+                className={cn(
+                  'flex-1 gap-2 py-2.5 text-xs',
+                  solid ? 'btn-wipe' : 'btn-wipe-outline',
+                  isOtherSide && 'opacity-40',
+                )}
               >
                 {isVoting && isThisSide ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />

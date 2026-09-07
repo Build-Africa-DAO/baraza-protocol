@@ -75,7 +75,7 @@ const WalletGate: React.FC<WalletGateProps> = ({
             </div>
 
             <p className="text-[10px] text-muted-foreground text-center mt-4">
-              Secure account access powered by Privy
+              No seed phrases. Phone or email is enough.
             </p>
           </div>
         </div>

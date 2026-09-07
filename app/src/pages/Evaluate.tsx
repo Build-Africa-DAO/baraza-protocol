@@ -11,6 +11,7 @@ import {
   Vote,
 } from "lucide-react";
 import Layout from "@/components/Layout";
+import { Button } from "@/components/ui/button";
 import { useSeo } from "@/lib/seo";
 
 const evaluationChecks = [
@@ -156,10 +157,12 @@ export default function Evaluate() {
                   Wait for reconciliation, membership minting, and confirmed membership state.
                 </p>
               </div>
-              <Link to="/create" className="btn-warm shrink-0 justify-center text-sm">
-                Launch with these rules
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+              <Button asChild className="shrink-0">
+                <Link to="/create">
+                  Launch with these rules
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
             </div>
           </div>
         </div>

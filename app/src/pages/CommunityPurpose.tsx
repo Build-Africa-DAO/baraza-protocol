@@ -11,6 +11,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { BrandLogo } from '@/components/BrandLogo';
+import { Button } from '@/components/ui/button';
 import { useSeo } from '@/lib/seo';
 import { cn } from '@/lib/utils';
 
@@ -90,14 +91,10 @@ export default function CommunityPurpose() {
           <div className="h-full w-1/2 bg-primary" />
         </div>
         <nav className="mx-auto flex w-full max-w-4xl items-center justify-between px-4 py-4 sm:px-6" aria-label="Creation progress">
-          <button
-            type="button"
-            onClick={() => navigate('/')}
-            className="inline-flex min-h-11 items-center gap-2 rounded-md text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
-          >
+          <Button type="button" variant="ghost" onClick={() => navigate('/')}>
             <ArrowLeft className="h-4 w-4" />
             <span className="hidden sm:inline">Back</span>
-          </button>
+          </Button>
           <BrandLogo size="sm" />
           <span className="text-sm font-semibold text-muted-foreground">Step 1 of 2</span>
         </nav>
@@ -159,15 +156,16 @@ export default function CommunityPurpose() {
               ? 'Choose at least one focus to continue.'
               : `${selected.length} ${selected.length === 1 ? 'focus' : 'focuses'} selected.`}
           </p>
-          <button
+          <Button
             type="button"
+            size="lg"
             disabled={selected.length === 0}
             onClick={continueToSetup}
-            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md bg-primary px-6 py-3 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 disabled:cursor-not-allowed disabled:opacity-45 sm:w-auto"
+            className="min-h-12 w-full sm:w-auto"
           >
             Continue to setup
             <ArrowRight className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
       </footer>
     </div>

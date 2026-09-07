@@ -614,7 +614,7 @@ export default function Bounties() {
                                 {bounty.status === 'open' && (
                                   <Link
                                     to={`/bounties/${bounty.id}`}
-                                    className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-confirmed/40 bg-confirmed/10 px-2 py-1.5 text-xs font-bold text-confirmed transition-colors hover:bg-confirmed/15"
+                                    className="btn-wipe w-full gap-1.5 px-2 py-1.5 text-xs"
                                   >
                                     Apply <ArrowRight className="h-3 w-3" />
                                   </Link>
@@ -623,7 +623,7 @@ export default function Bounties() {
                                   <button
                                     type="button"
                                     onClick={() => { setSubmitFor(submitFor === bounty.id ? null : bounty.id); setFormMessage(null); }}
-                                    className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 px-2 py-1.5 text-xs font-bold text-primary transition-colors hover:bg-primary/15"
+                                    className="btn-wipe-outline w-full gap-1.5 px-2 py-1.5 text-xs"
                                   >
                                     <Send className="h-3 w-3" /> Send work update
                                   </button>
@@ -658,7 +658,7 @@ export default function Bounties() {
                                   <button
                                     type="button"
                                     onClick={() => void handleSubmitWork(bounty.id)}
-                                    className="flex items-center justify-center gap-1 rounded-md border border-primary/40 bg-primary/10 px-2 py-1.5 text-xs font-bold text-primary"
+                                    className="btn-wipe gap-1 px-2 py-1.5 text-xs"
                                   >
                                     <Send className="h-3 w-3" /> Submit
                                   </button>

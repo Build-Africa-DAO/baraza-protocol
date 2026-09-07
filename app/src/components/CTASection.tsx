@@ -5,10 +5,10 @@ import { toTitleCase } from "@/lib/utils";
 
 export default function CTASection() {
   return (
-    <section className="audience-band relative z-10 bg-primary text-foreground">
+    <section className="audience-band relative z-10 w-full bg-primary text-foreground">
       <div className="page-shell">
-        <div className="grid items-center gap-10 py-6 sm:py-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-14 lg:py-8">
-          <figure className="relative z-10 mx-auto -mt-20 w-[min(100%,36rem)] origin-bottom rotate-[5deg] bg-white p-3 shadow-[0_18px_40px_hsl(0_0%_0%/0.22)] sm:-mt-28 sm:w-[min(100%,40rem)] sm:p-4 lg:order-2 lg:-mt-40 lg:w-[min(100%,42rem)] lg:justify-self-end">
+        <div className="grid items-end gap-10 pb-12 pt-6 sm:pb-16 sm:pt-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-14 lg:pb-20 lg:pt-8">
+          <figure className="relative z-10 mx-auto -mt-20 mb-6 w-[min(100%,36rem)] origin-bottom rotate-[5deg] bg-white p-3 shadow-[0_18px_40px_hsl(0_0%_0%/0.22)] sm:-mt-28 sm:mb-8 sm:w-[min(100%,40rem)] sm:p-4 lg:order-2 lg:mb-0 lg:-mt-40 lg:w-[min(100%,42rem)] lg:justify-self-end">
             <img
               src="/cta/group.jpg"
               alt="Illustrated chama collecting dues and inspecting a shared record together"
@@ -18,7 +18,7 @@ export default function CTASection() {
             />
           </figure>
 
-          <div className="text-center lg:order-1 lg:text-left">
+          <div className="pb-2 text-center lg:order-1 lg:pb-6 lg:text-left">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] opacity-80">
               Start the group
             </p>

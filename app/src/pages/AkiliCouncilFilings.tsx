@@ -140,7 +140,7 @@ export default function AkiliCouncilFilings() {
           <button
             type="button"
             onClick={() => setVisible(true)}
-            className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground"
+            className="btn-wipe px-5 py-2 text-sm"
           >
             Connect wallet
           </button>
@@ -202,7 +202,7 @@ export default function AkiliCouncilFilings() {
             onClick={() => void load(selectedAgent)}
             disabled={loading}
             aria-label="Refresh"
-            className="ml-auto rounded-full border border-border bg-surface px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground disabled:opacity-50"
+            className="btn-wipe-outline ml-auto px-3 py-1.5 text-xs"
           >
             <RefreshCw className={`inline h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
           </button>

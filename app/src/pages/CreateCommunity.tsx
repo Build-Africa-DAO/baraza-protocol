@@ -607,7 +607,7 @@ const CreateCommunity: React.FC = () => {
             {/* Back button */}
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-sm mb-6"
+              className="btn-wipe-outline mb-6 h-9 gap-2 px-4 text-sm"
             >
               <ArrowLeft className="w-4 h-4" />
               Back
@@ -964,11 +964,11 @@ const CreateCommunity: React.FC = () => {
                       type="button"
                       aria-pressed={paymentMethod === id}
                       onClick={() => setPaymentMethod(id)}
-                      className={`flex min-h-12 items-center justify-center gap-2 rounded-lg border px-3 py-3 text-sm font-semibold transition-colors ${
+                      className={
                         paymentMethod === id
-                          ? 'border-primary bg-primary/10 text-primary'
-                          : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'
-                      }`}
+                          ? 'btn-wipe min-h-12 gap-2 px-3 py-3 text-sm'
+                          : 'btn-wipe-outline min-h-12 gap-2 px-3 py-3 text-sm'
+                      }
                     >
                       <Icon className="h-4 w-4 shrink-0" />
                       <span>{label}</span>

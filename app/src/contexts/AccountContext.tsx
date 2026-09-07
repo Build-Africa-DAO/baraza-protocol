@@ -1,5 +1,7 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { PrivyProvider, usePrivy } from '@privy-io/react-auth';
+import AuthModal, { type AuthIntent } from '@/components/auth/AuthModal';
+import { useTheme } from '@/hooks/useTheme';
 import {
   getAccountCountry,
   readAccountCountry,
@@ -31,13 +33,15 @@ interface AccountBridgeProps {
 }
 
 function AccountBridge({ country, setCountry, children }: AccountBridgeProps) {
-  const { ready, authenticated, user, login, logout } = usePrivy();
+  const { ready, authenticated, user, logout } = usePrivy();
+  const [authIntent, setAuthIntent] = useState<AuthIntent | null>(null);
   const displayName = user?.email?.address ?? user?.phone?.number ?? 'Baraza member';
   const accountId = user?.wallet?.address ?? user?.id ?? null;
-  const loginMethods = useMemo(
-    () => (isPrivyPhoneAuthEnabled() ? (['email', 'sms'] as const) : (['email'] as const)),
-    [],
-  );
+  const closeAuth = useCallback(() => setAuthIntent(null), []);
+
+  useEffect(() => {
+    if (authenticated) setAuthIntent(null);
+  }, [authenticated]);
 
   const value = useMemo<AccountContextValue>(() => ({
     configured: true,
@@ -47,16 +51,29 @@ function AccountBridge({ country, setCountry, children }: AccountBridgeProps) {
     displayName,
     country,
     setCountry,
-    login: () => login({ loginMethods: [...loginMethods] }),
-    createAccount: () => login({ loginMethods: [...loginMethods] }),
+    login: () => setAuthIntent('signin'),
+    createAccount: () => setAuthIntent('signup'),
     logout,
-  }), [accountId, authenticated, country, displayName, login, loginMethods, logout, ready, setCountry]);
+  }), [accountId, authenticated, country, displayName, logout, ready, setCountry]);
 
-  return <AccountContext.Provider value={value}>{children}</AccountContext.Provider>;
+  return (
+    <AccountContext.Provider value={value}>
+      {children}
+      {authIntent && (
+        <AuthModal
+          intent={authIntent}
+          countryCode={country.code}
+          onIntentChange={setAuthIntent}
+          onClose={closeAuth}
+        />
+      )}
+    </AccountContext.Provider>
+  );
 }
 
 export function AccountProvider({ children }: { children: React.ReactNode }) {
   const appId = getPrivyAppId();
+  const { theme } = useTheme();
   const [countryCode, setCountryCode] = useState<AccountCountryCode>(() => readAccountCountry());
   const country = getAccountCountry(countryCode);
   const setCountry = useCallback((nextCountry: AccountCountryCode) => {
@@ -92,8 +109,9 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
         loginMethods: phoneAuthEnabled ? ['email', 'sms'] : ['email'],
         intl: { defaultCountry: country.code },
         appearance: {
-          theme: 'dark',
+          theme: theme === 'dark' ? 'dark' : 'light',
           accentColor: '#f97316',
+          logo: '',
           landingHeader: 'Welcome to Baraza',
           loginMessage: phoneAuthEnabled
             ? 'Use your phone number or email to continue.'

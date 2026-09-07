@@ -98,7 +98,7 @@ export default function Onboarding() {
             <button
               type="button"
               onClick={handleSkip}
-              className="text-xs font-semibold uppercase tracking-widest text-muted-foreground transition-colors hover:text-primary"
+              className="btn-wipe-outline h-8 px-3 text-xs"
             >
               Skip
             </button>

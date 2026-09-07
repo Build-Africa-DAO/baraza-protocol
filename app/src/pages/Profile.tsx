@@ -13,6 +13,7 @@ import {
   UserPlus,
 } from 'lucide-react';
 import Layout from '@/components/Layout';
+import { Button } from '@/components/ui/button';
 import CommunityBanner from '@/components/CommunityBanner';
 import { AskAkili } from '@/akili/AskAkili';
 import { MemberBadges } from '@/components/MemberBadges';
@@ -179,7 +180,7 @@ export default function Profile() {
               <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-md border border-primary/30 bg-primary/10 text-primary">
                 <CircleUserRound className="h-7 w-7" />
               </div>
-              <p className="text-sm font-bold text-primary">Privy account</p>
+              <p className="text-sm font-bold text-primary">Baraza account</p>
               <h1 className="mt-2 text-balance font-display text-3xl font-bold">Your Baraza account</h1>
               <p className="mx-auto mt-3 max-w-md text-pretty text-sm leading-6 text-muted-foreground">
                 Log in to review memberships and decisions, or create an account with your phone number or email.
@@ -187,24 +188,27 @@ export default function Profile() {
             </div>
 
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="lg"
                 onClick={account.login}
                 disabled={!account.configured}
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-border bg-surface px-5 text-sm font-bold transition-colors hover:border-primary/45 disabled:cursor-not-allowed disabled:opacity-45"
+                className="min-h-12 w-full"
               >
                 <LogIn className="h-4 w-4" />
                 Log in
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                size="lg"
                 onClick={account.createAccount}
                 disabled={!account.configured}
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-primary px-5 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-45"
+                className="min-h-12 w-full"
               >
                 <UserPlus className="h-4 w-4" />
                 Create account
-              </button>
+              </Button>
             </div>
 
             {!account.configured && (
@@ -233,7 +237,7 @@ export default function Profile() {
                   <CircleUserRound className="h-8 w-8" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-primary">Privy account</p>
+                  <p className="text-sm font-semibold text-primary">Baraza account</p>
                   <h1 className="mt-1 truncate font-display text-2xl font-bold md:text-3xl">
                     {account.displayName}
                   </h1>
@@ -242,14 +246,10 @@ export default function Profile() {
                   </p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => void account.logout()}
-                className="btn-ghost inline-flex items-center justify-center gap-2 text-sm"
-              >
+              <Button type="button" variant="outline" onClick={() => void account.logout()}>
                 <LogOut className="h-4 w-4" />
                 Log out
-              </button>
+              </Button>
             </div>
           </CommunityBanner>
 
@@ -334,14 +334,18 @@ export default function Profile() {
                       Explore a community or launch one with your group.
                     </p>
                     <div className="mt-5 flex flex-col items-center justify-center gap-2 sm:flex-row">
-                      <Link to="/communities" className="btn-warm inline-flex items-center gap-2 text-sm">
-                        <Compass className="h-4 w-4" />
-                        Explore communities
-                      </Link>
-                      <Link to="/create/purpose" className="btn-ghost inline-flex items-center gap-2 text-sm">
-                        <PlusCircle className="h-4 w-4" />
-                        Launch a community
-                      </Link>
+                      <Button asChild>
+                        <Link to="/communities">
+                          <Compass className="h-4 w-4" />
+                          Explore communities
+                        </Link>
+                      </Button>
+                      <Button asChild variant="outline">
+                        <Link to="/create/purpose">
+                          <PlusCircle className="h-4 w-4" />
+                          Launch a community
+                        </Link>
+                      </Button>
                     </div>
                     <div className="mt-4 flex items-center justify-center gap-2">
                       <AskAkili
@@ -404,7 +408,7 @@ export default function Profile() {
                 <div className="baraza-card p-5">
                   <h2 className="mb-4 text-sm font-bold">Account security</h2>
                   <p className="text-sm text-muted-foreground">
-                    Privy secures sign-in and recovery through your verified phone number or email.
+                    Sign-in and recovery use your verified phone number or email.
                   </p>
                 </div>
               </div>

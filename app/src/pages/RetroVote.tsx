@@ -189,7 +189,7 @@ export default function RetroVote() {
           <button
             type="button"
             onClick={() => setVisible(true)}
-            className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground"
+            className="btn-wipe px-5 py-2 text-sm"
           >
             Connect wallet
           </button>
@@ -214,14 +214,14 @@ export default function RetroVote() {
                 setSubmitted(false);
                 void load();
               }}
-              className="rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-muted-foreground"
+              className="btn-wipe-outline px-4 py-2 text-sm"
             >
               Edit ballot
             </button>
             <button
               type="button"
               onClick={() => navigate(`/dashboard/${communityId}`)}
-              className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+              className="btn-wipe px-4 py-2 text-sm"
             >
               Back to community
             </button>
@@ -368,7 +368,7 @@ export default function RetroVote() {
                 type="button"
                 onClick={() => void submit()}
                 disabled={!ballotValidation.valid || submitting || loading}
-                className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
+                className="btn-wipe inline-flex items-center gap-2 px-5 py-2.5 text-sm disabled:opacity-50"
               >
                 <Send className="h-4 w-4" />
                 {submitting ? 'Submitting…' : 'Submit ballot'}
@@ -391,7 +391,7 @@ export default function RetroVote() {
             onClick={() => void load()}
             disabled={loading}
             aria-label="Refresh"
-            className="rounded-full border border-border bg-surface px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground disabled:opacity-50 inline-flex items-center gap-1"
+            className="btn-wipe-outline gap-1 px-3 py-2 text-xs"
           >
             <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
             Refresh
