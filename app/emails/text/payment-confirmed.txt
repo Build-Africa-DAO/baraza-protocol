@@ -1,0 +1,7 @@
+Payment confirmed for {{community_name}}
+
+Baraza Protocol
+
+We received {{amount_label}} for {{community_name}}. Your membership is active.
+
+Open the group: {{action_url}}

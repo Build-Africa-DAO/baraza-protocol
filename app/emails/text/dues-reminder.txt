@@ -1,0 +1,10 @@
+Dues reminder for {{community_name}}
+
+Baraza Protocol
+
+Dues reminder for {{community_name}}
+
+{{amount_label}} is due by {{due_date}}.
+
+Pay in the app: {{action_url}}
+Or dial *384#

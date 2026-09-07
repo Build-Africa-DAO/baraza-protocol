@@ -1,0 +1,11 @@
+Payout settled for {{community_name}}
+
+Baraza Protocol
+
+Payout settled in {{community_name}}.
+
+Amount: {{amount_label}}
+Recipient: {{recipient_name}}
+Reference: {{payout_id}}
+
+Ledger: {{action_url}}
