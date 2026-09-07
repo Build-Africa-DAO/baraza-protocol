@@ -10,7 +10,6 @@ import {
   WalletCards,
   type LucideIcon,
 } from 'lucide-react';
-import { BrandLogo } from '@/components/BrandLogo';
 import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
 import WalletGate from '@/components/auth/WalletGate';
@@ -100,8 +99,8 @@ export default function CommunityPurpose() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-background text-foreground">
-      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/95 backdrop-blur-xl">
+    <Layout>
+      <div className="flex min-h-[calc(100vh-4rem)] flex-col">
         <div className="h-1.5 w-full bg-surface">
           <div className="h-full w-1/2 bg-primary" />
         </div>
@@ -110,79 +109,78 @@ export default function CommunityPurpose() {
             <ArrowLeft className="h-4 w-4" />
             <span className="hidden sm:inline">Back</span>
           </Button>
-          <BrandLogo size="sm" />
           <span className="text-sm font-semibold text-muted-foreground">Step 1 of 2</span>
         </nav>
-      </header>
 
-      <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 py-8 sm:px-6 sm:py-12">
-        <div className="mx-auto w-full max-w-xl text-center">
-          <h1 className="mt-3 text-balance font-display text-3xl font-bold leading-tight sm:text-4xl">
-            What does your group do together?
-          </h1>
-          <p className="mx-auto mt-3 max-w-md text-pretty text-sm leading-6 text-muted-foreground sm:text-base">
-            Choose everything that applies. We will prepare a useful starting setup that you can adjust next.
-          </p>
-        </div>
+        <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 py-8 sm:px-6 sm:py-12">
+          <div className="mx-auto w-full max-w-xl text-center">
+            <h1 className="mt-3 text-balance font-display text-3xl font-bold leading-tight sm:text-4xl">
+              What does your group do together?
+            </h1>
+            <p className="mx-auto mt-3 max-w-md text-pretty text-sm leading-6 text-muted-foreground sm:text-base">
+              Choose everything that applies. We will prepare a useful starting setup that you can adjust next.
+            </p>
+          </div>
 
-        <div className="mt-8 grid gap-3 sm:grid-cols-2" aria-label="Community purposes">
-          {PURPOSE_OPTIONS.map((option) => {
-            const Icon = option.icon;
-            const isSelected = selectedSet.has(option.id);
-            return (
-              <button
-                key={option.id}
-                type="button"
-                aria-pressed={isSelected}
-                onClick={() => togglePurpose(option.id)}
-                className={cn(
-                  'flex min-h-28 items-start gap-4 rounded-lg border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 sm:p-5',
-                  isSelected
-                    ? 'border-primary bg-primary/10'
-                    : 'border-border bg-card hover:border-primary/45 hover:bg-surface',
-                )}
-              >
-                <span
+          <div className="mt-8 grid gap-3 sm:grid-cols-2" aria-label="Community purposes">
+            {PURPOSE_OPTIONS.map((option) => {
+              const Icon = option.icon;
+              const isSelected = selectedSet.has(option.id);
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  aria-pressed={isSelected}
+                  onClick={() => togglePurpose(option.id)}
                   className={cn(
-                    'grid h-11 w-11 shrink-0 place-items-center rounded-md',
-                    isSelected ? 'bg-primary text-primary-foreground' : 'bg-surface text-primary',
+                    'flex min-h-28 items-start gap-4 rounded-lg border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 sm:p-5',
+                    isSelected
+                      ? 'border-primary bg-primary/10'
+                      : 'border-border bg-card hover:border-primary/45 hover:bg-surface',
                   )}
                 >
-                  {isSelected ? <Check className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
-                </span>
-                <span className="min-w-0">
-                  <span className="block font-display text-lg font-bold text-foreground">
-                    {option.title}
+                  <span
+                    className={cn(
+                      'grid h-11 w-11 shrink-0 place-items-center rounded-md',
+                      isSelected ? 'bg-primary text-primary-foreground' : 'bg-surface text-primary',
+                    )}
+                  >
+                    {isSelected ? <Check className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
                   </span>
-                  <span className="mt-1 block text-sm leading-5 text-muted-foreground">
-                    {option.detail}
+                  <span className="min-w-0">
+                    <span className="block font-display text-lg font-bold text-foreground">
+                      {option.title}
+                    </span>
+                    <span className="mt-1 block text-sm leading-5 text-muted-foreground">
+                      {option.detail}
+                    </span>
                   </span>
-                </span>
-              </button>
-            );
-          })}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </main>
 
-      <footer className="border-t border-border/60 bg-background px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-4 sm:px-6">
-        <div className="mx-auto flex w-full max-w-4xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-center text-sm text-muted-foreground sm:text-left" aria-live="polite">
-            {selected.length === 0
-              ? 'Choose at least one focus to continue.'
-              : `${selected.length} ${selected.length === 1 ? 'focus' : 'focuses'} selected.`}
-          </p>
-          <Button
-            type="button"
-            size="lg"
-            disabled={selected.length === 0}
-            onClick={continueToSetup}
-            className="min-h-12 w-full sm:w-auto"
-          >
-            Continue to setup
-            <ArrowRight className="h-4 w-4" />
-          </Button>
+        <div className="border-t border-border/60 bg-background px-4 py-4 sm:px-6">
+          <div className="mx-auto flex w-full max-w-4xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-center text-sm text-muted-foreground sm:text-left" aria-live="polite">
+              {selected.length === 0
+                ? 'Choose at least one focus to continue.'
+                : `${selected.length} ${selected.length === 1 ? 'focus' : 'focuses'} selected.`}
+            </p>
+            <Button
+              type="button"
+              size="lg"
+              disabled={selected.length === 0}
+              onClick={continueToSetup}
+              className="min-h-12 w-full sm:w-auto"
+            >
+              Continue to setup
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
-      </footer>
-    </div>
+      </div>
+    </Layout>
   );
 }
