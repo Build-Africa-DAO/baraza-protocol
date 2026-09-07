@@ -136,7 +136,7 @@ export default function AuthModal({ intent, countryCode, onIntentChange, onClose
 
   return (
     <div
-      className="fixed inset-0 z-[90] flex items-center justify-center bg-foreground/40 p-3 backdrop-blur-sm sm:p-6"
+      className="fixed inset-0 z-[90] flex items-center justify-center bg-transparent p-3 backdrop-blur-md sm:p-6"
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
@@ -146,27 +146,27 @@ export default function AuthModal({ intent, countryCode, onIntentChange, onClose
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative grid w-full max-w-[56rem] overflow-hidden rounded-2xl border border-border bg-background text-foreground shadow-[var(--shadow-deep)] md:min-h-[34rem] md:grid-cols-2"
+        className="relative grid w-full max-w-[72rem] overflow-hidden rounded-2xl border border-border bg-background text-foreground shadow-[var(--shadow-deep)] md:min-h-[42rem] md:grid-cols-2"
       >
-        <div className="relative min-h-[10.5rem] overflow-hidden md:min-h-full">
+        <div className="relative min-h-[14rem] overflow-hidden md:min-h-full">
           <img
             src="/audience/group.jpg"
             alt=""
             className="absolute inset-0 h-full w-full object-cover object-center"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-black/20" />
-          <div className="relative flex h-full min-h-[10.5rem] flex-col justify-end p-6 text-white md:min-h-full md:p-10">
+          <div className="relative flex h-full min-h-[14rem] flex-col justify-end p-6 text-white md:min-h-full md:p-12">
             <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">Baraza</p>
-            <p className="mt-2 max-w-sm font-display text-2xl font-black leading-tight sm:text-3xl">
+            <p className="mt-2 max-w-md font-display text-3xl font-black leading-tight sm:text-4xl">
               Run the chama where every member can see the money.
             </p>
-            <p className="mt-3 max-w-sm text-sm leading-6 text-white/80">
+            <p className="mt-3 max-w-md text-sm leading-6 text-white/80 sm:text-base">
               Phone or email is enough. No seed phrases to join.
             </p>
           </div>
         </div>
 
-        <div className="relative flex flex-col justify-center px-5 py-8 sm:px-8 md:px-10 md:py-12">
+        <div className="relative flex flex-col justify-center px-6 py-10 sm:px-10 md:px-14 md:py-16">
           <button
             type="button"
             onClick={onClose}
@@ -177,7 +177,7 @@ export default function AuthModal({ intent, countryCode, onIntentChange, onClose
           </button>
 
           <BrandLogo size="sm" lockup="protocol" showIcon={false} />
-          <h2 id={titleId} className="mt-5 font-display text-2xl font-black tracking-tight">
+          <h2 id={titleId} className="mt-5 font-display text-3xl font-black tracking-tight">
             {isSignUp ? 'Create your account' : 'Welcome back'}
           </h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">

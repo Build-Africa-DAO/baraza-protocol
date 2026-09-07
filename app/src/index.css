@@ -190,7 +190,7 @@
     color: var(--btn-ink);
   }
   .audience-band .btn-wipe-outline {
-    --btn-cover: hsl(var(--background));
+    --btn-cover: hsl(var(--foreground));
     --btn-fill: transparent;
     --btn-ink: hsl(var(--foreground));
     --btn-ink-hover: hsl(var(--background));
@@ -209,7 +209,7 @@
     --btn-cover: hsl(var(--primary));
     --btn-fill: hsl(var(--foreground));
     --btn-ink: hsl(var(--background));
-    --btn-ink-hover: hsl(var(--primary-foreground));
+    --btn-ink-hover: hsl(0 0% 100%);
     position: relative;
     z-index: 0;
     isolation: isolate;
@@ -225,7 +225,7 @@
     text-decoration: none;
     color: var(--btn-ink);
     background: var(--btn-fill);
-    transition: color 0.4s, transform 0.2s cubic-bezier(0.3, 1, 0.8, 1);
+    transition: color 0.4s, background-color 0.4s, border-color 0.4s, transform 0.2s cubic-bezier(0.3, 1, 0.8, 1);
   }
   .btn-wipe::before,
   .btn-wipe-outline::before,
@@ -241,7 +241,7 @@
     width: 120%;
     height: 100%;
     background: var(--btn-cover);
-    transform: skew(30deg);
+    transform: skew(30deg) translate3d(-110%, 0, 0);
     transition: transform 0.4s cubic-bezier(0.3, 1, 0.8, 1);
     pointer-events: none;
   }
@@ -257,7 +257,7 @@
   .btn-warm:focus-visible::before,
   .btn-ghost:hover::before,
   .btn-ghost:focus-visible::before {
-    transform: translate3d(100%, 0, 0);
+    transform: skew(30deg) translate3d(0, 0, 0);
   }
   .btn-wipe:hover,
   .btn-wipe:focus-visible,
@@ -272,6 +272,8 @@
   .btn-ghost:hover,
   .btn-ghost:focus-visible {
     color: var(--btn-ink-hover);
+    background: var(--btn-cover);
+    border-color: var(--btn-cover);
   }
   .btn-wipe > *,
   .btn-wipe-outline > *,
@@ -281,6 +283,20 @@
   .btn-ghost > * {
     position: relative;
     z-index: 1;
+  }
+  .btn-wipe:hover > *,
+  .btn-wipe:focus-visible > *,
+  .btn-wipe-outline:hover > *,
+  .btn-wipe-outline:focus-visible > *,
+  .btn-wipe-destructive:hover > *,
+  .btn-wipe-destructive:focus-visible > *,
+  .btn-primary:hover > *,
+  .btn-primary:focus-visible > *,
+  .btn-warm:hover > *,
+  .btn-warm:focus-visible > *,
+  .btn-ghost:hover > *,
+  .btn-ghost:focus-visible > * {
+    color: inherit;
   }
   .btn-wipe:active,
   .btn-wipe-outline:active,
@@ -295,18 +311,32 @@
   .btn-wipe-destructive:disabled,
   .btn-primary:disabled,
   .btn-warm:disabled,
-  .btn-ghost:disabled {
+  .btn-ghost:disabled,
+  .btn-wipe:disabled:hover,
+  .btn-wipe-outline:disabled:hover,
+  .btn-wipe-destructive:disabled:hover,
+  .btn-primary:disabled:hover,
+  .btn-warm:disabled:hover,
+  .btn-ghost:disabled:hover {
     cursor: not-allowed;
     opacity: 0.45;
     transform: none;
+    color: var(--btn-ink);
+    background: var(--btn-fill);
   }
   .btn-wipe:disabled::before,
   .btn-wipe-outline:disabled::before,
   .btn-wipe-destructive:disabled::before,
   .btn-primary:disabled::before,
   .btn-warm:disabled::before,
-  .btn-ghost:disabled::before {
-    transform: skew(30deg);
+  .btn-ghost:disabled::before,
+  .btn-wipe:disabled:hover::before,
+  .btn-wipe-outline:disabled:hover::before,
+  .btn-wipe-destructive:disabled:hover::before,
+  .btn-primary:disabled:hover::before,
+  .btn-warm:disabled:hover::before,
+  .btn-ghost:disabled:hover::before {
+    transform: skew(30deg) translate3d(-110%, 0, 0);
   }
 
   .btn-primary,
@@ -320,7 +350,7 @@
     --btn-cover: hsl(var(--primary));
     --btn-fill: transparent;
     --btn-ink: hsl(var(--foreground));
-    --btn-ink-hover: hsl(var(--primary-foreground));
+    --btn-ink-hover: hsl(0 0% 100%);
     border: 1px solid hsl(var(--foreground));
     background: transparent;
     color: var(--btn-ink);
