@@ -50,7 +50,7 @@ export default function ProposalDetail() {
 
   if (!proposal) {
     return (
-      <Layout>
+      <Layout gate={{ title: 'Sign in to vote', description: 'Log in to read this proposal and cast your vote.' }}>
         <section className="py-20">
           <div className="mx-auto max-w-md px-4 text-center">
             <h1 className="font-display text-2xl font-bold">Proposal not found</h1>
@@ -140,7 +140,7 @@ export default function ProposalDetail() {
   };
 
   return (
-    <Layout>
+    <Layout gate={{ title: 'Sign in to vote', description: 'Log in to read this proposal and cast your vote.' }}>
       <section className="py-10 md:py-14">
         <div className="container mx-auto px-4">
           <Link to={`/dashboard/${id ?? proposal.communityId}`} className="mb-6 inline-flex items-center gap-2 text-sm">

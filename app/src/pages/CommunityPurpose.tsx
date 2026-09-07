@@ -12,6 +12,9 @@ import {
 } from 'lucide-react';
 import { BrandLogo } from '@/components/BrandLogo';
 import { Button } from '@/components/ui/button';
+import Layout from '@/components/Layout';
+import WalletGate from '@/components/auth/WalletGate';
+import { useAccount } from '@/contexts/AccountContext';
 import { useSeo } from '@/lib/seo';
 import { cn } from '@/lib/utils';
 
@@ -62,6 +65,7 @@ export default function CommunityPurpose() {
   });
 
   const navigate = useNavigate();
+  const account = useAccount();
   const [selected, setSelected] = useState<string[]>([]);
   const selectedSet = useMemo(() => new Set(selected), [selected]);
 
@@ -84,6 +88,17 @@ export default function CommunityPurpose() {
     navigate(`/create?${params.toString()}`);
   };
 
+  if (!account.ready || !account.authenticated) {
+    return (
+      <Layout>
+        <WalletGate
+          title="Sign in to launch a group"
+          description="Create an account or log in before you set up a chama, SACCO, or cooperative."
+        />
+      </Layout>
+    );
+  }
+
   return (
     <div className="flex min-h-dvh flex-col bg-background text-foreground">
       <header className="sticky top-0 z-40 border-b border-border/60 bg-background/95 backdrop-blur-xl">
@@ -91,7 +106,7 @@ export default function CommunityPurpose() {
           <div className="h-full w-1/2 bg-primary" />
         </div>
         <nav className="mx-auto flex w-full max-w-4xl items-center justify-between px-4 py-4 sm:px-6" aria-label="Creation progress">
-          <Button type="button" variant="ghost" onClick={() => navigate('/')}>
+          <Button type="button" variant="ghost" onClick={() => navigate('/home')}>
             <ArrowLeft className="h-4 w-4" />
             <span className="hidden sm:inline">Back</span>
           </Button>

@@ -53,7 +53,7 @@ function WalletAction() {
   return (
     <button
       type="button"
-      onClick={account.authenticated ? () => navigate('/profile') : account.login}
+      onClick={account.authenticated ? () => navigate('/profile') : () => account.login()}
       disabled={!account.ready || !account.configured}
       className={cn(
         'col-start-5 flex flex-col items-center gap-1 rounded-md px-2 py-2 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70',

@@ -192,7 +192,7 @@ export default function Profile() {
                 type="button"
                 variant="outline"
                 size="lg"
-                onClick={account.login}
+                onClick={() => account.login()}
                 disabled={!account.configured}
                 className="min-h-12 w-full"
               >
@@ -202,7 +202,7 @@ export default function Profile() {
               <Button
                 type="button"
                 size="lg"
-                onClick={account.createAccount}
+                onClick={() => account.createAccount()}
                 disabled={!account.configured}
                 className="min-h-12 w-full"
               >

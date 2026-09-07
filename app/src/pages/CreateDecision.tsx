@@ -47,7 +47,7 @@ const CreateDecision: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Layout>
+      <Layout gate={{ title: 'Sign in to propose', description: 'Log in to submit a proposal for this group.' }}>
         <section className="py-10 md:py-16">
           <div className="container mx-auto px-4">
             <div className="max-w-lg mx-auto space-y-5">
@@ -93,7 +93,7 @@ const CreateDecision: React.FC = () => {
 
   if (!community) {
     return (
-      <Layout>
+      <Layout gate={{ title: 'Sign in to propose', description: 'Log in to submit a proposal for this group.' }}>
         <section className="py-20">
           <div className="container mx-auto px-4 text-center">
             <h1 className="font-display text-2xl font-bold mb-3">
@@ -139,7 +139,7 @@ const CreateDecision: React.FC = () => {
   };
 
   return (
-    <Layout>
+    <Layout gate={{ title: 'Sign in to propose', description: 'Log in to submit a proposal for this group.' }}>
       <section className="py-10 md:py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-lg mx-auto">

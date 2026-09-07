@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { PrivyProvider, usePrivy } from '@privy-io/react-auth';
 import AuthModal, { type AuthIntent } from '@/components/auth/AuthModal';
 import { useTheme } from '@/hooks/useTheme';
@@ -9,7 +9,13 @@ import {
   type AccountCountry,
   type AccountCountryCode,
 } from '@/lib/accountLocale';
+import { currentLocationPath, isSafeReturnTo, isStayPath } from '@/lib/postAuth';
 import { getPrivyAppId, isPrivyPhoneAuthEnabled } from '@/lib/wallet/mpc';
+
+export interface AuthHandoff {
+  entryPath: string;
+  returnTo: string | null;
+}
 
 interface AccountContextValue {
   configured: boolean;
@@ -19,10 +25,13 @@ interface AccountContextValue {
   displayName: string;
   country: AccountCountry;
   setCountry: (country: AccountCountryCode) => void;
-  login: () => void;
-  createAccount: () => void;
+  login: (returnTo?: string) => void;
+  createAccount: (returnTo?: string) => void;
+  consumeAuthHandoff: () => AuthHandoff;
   logout: () => Promise<void>;
 }
+
+const EMPTY_HANDOFF: AuthHandoff = { entryPath: '/', returnTo: null };
 
 const AccountContext = createContext<AccountContextValue | null>(null);
 
@@ -35,6 +44,7 @@ interface AccountBridgeProps {
 function AccountBridge({ country, setCountry, children }: AccountBridgeProps) {
   const { ready, authenticated, user, logout } = usePrivy();
   const [authIntent, setAuthIntent] = useState<AuthIntent | null>(null);
+  const handoffRef = useRef<AuthHandoff>(EMPTY_HANDOFF);
   const displayName =
     user?.google?.name
     ?? user?.email?.address
@@ -43,6 +53,21 @@ function AccountBridge({ country, setCountry, children }: AccountBridgeProps) {
     ?? 'Baraza member';
   const accountId = user?.wallet?.address ?? user?.id ?? null;
   const closeAuth = useCallback(() => setAuthIntent(null), []);
+
+  const captureHandoff = useCallback((returnTo?: string) => {
+    const current = currentLocationPath();
+    const requested = returnTo && isSafeReturnTo(returnTo) ? returnTo : null;
+    handoffRef.current = {
+      entryPath: current,
+      returnTo: requested ?? (isStayPath(current) ? current : null),
+    };
+  }, []);
+
+  const consumeAuthHandoff = useCallback(() => {
+    const current = handoffRef.current;
+    handoffRef.current = EMPTY_HANDOFF;
+    return current;
+  }, []);
 
   useEffect(() => {
     if (authenticated) setAuthIntent(null);
@@ -56,10 +81,17 @@ function AccountBridge({ country, setCountry, children }: AccountBridgeProps) {
     displayName,
     country,
     setCountry,
-    login: () => setAuthIntent('signin'),
-    createAccount: () => setAuthIntent('signup'),
+    login: (returnTo?: string) => {
+      captureHandoff(returnTo);
+      setAuthIntent('signin');
+    },
+    createAccount: (returnTo?: string) => {
+      captureHandoff(returnTo);
+      setAuthIntent('signup');
+    },
+    consumeAuthHandoff,
     logout,
-  }), [accountId, authenticated, country, displayName, logout, ready, setCountry]);
+  }), [accountId, authenticated, captureHandoff, consumeAuthHandoff, country, displayName, logout, ready, setCountry]);
 
   return (
     <AccountContext.Provider value={value}>
@@ -86,20 +118,23 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     setCountryCode(nextCountry);
   }, []);
 
+  const fallbackValue = useMemo<AccountContextValue>(() => ({
+    configured: false,
+    ready: true,
+    authenticated: false,
+    accountId: null,
+    displayName: 'Baraza member',
+    country,
+    setCountry,
+    login: () => undefined,
+    createAccount: () => undefined,
+    consumeAuthHandoff: () => EMPTY_HANDOFF,
+    logout: async () => undefined,
+  }), [country, setCountry]);
+
   if (!appId) {
     return (
-      <AccountContext.Provider value={{
-        configured: false,
-        ready: true,
-        authenticated: false,
-        accountId: null,
-        displayName: 'Baraza member',
-        country,
-        setCountry,
-        login: () => undefined,
-        createAccount: () => undefined,
-        logout: async () => undefined,
-      }}>
+      <AccountContext.Provider value={fallbackValue}>
         {children}
       </AccountContext.Provider>
     );

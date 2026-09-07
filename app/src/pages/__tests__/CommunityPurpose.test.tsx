@@ -7,6 +7,16 @@ vi.mock('@/lib/seo', () => ({
   useSeo: vi.fn(),
 }));
 
+vi.mock('@/contexts/AccountContext', () => ({
+  useAccount: () => ({
+    ready: true,
+    authenticated: true,
+    configured: true,
+    login: vi.fn(),
+    createAccount: vi.fn(),
+  }),
+}));
+
 function SetupDestination() {
   const location = useLocation();
   return <div data-testid="setup-location">{`${location.pathname}${location.search}`}</div>;
