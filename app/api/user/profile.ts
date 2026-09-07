@@ -197,6 +197,29 @@ export default async function handler(req: Request): Promise<Response> {
       return jsonResponse({ error: 'database_error', message: delErr.message }, { status: 500 });
     }
 
+    // ODPC Push Subscription Purge (Package 1, Theorem 7)
+    // user_profiles are soft-anonymized (not hard-deleted), so ON DELETE CASCADE
+    // does not fire. Explicitly purge all push subscriptions for this user to
+    // comply with Kenya Data Protection Act 2019 §40 Right to Erasure.
+    await supabase
+      .from('user_push_subscriptions')
+      .delete()
+      .eq('user_profile_id', existing.id);
+
+    // Also purge by wallet_address and privy_did for defense-in-depth
+    if (identity.walletAddress) {
+      await supabase
+        .from('user_push_subscriptions')
+        .delete()
+        .eq('wallet_address', identity.walletAddress);
+    }
+    if (identity.privyDid) {
+      await supabase
+        .from('user_push_subscriptions')
+        .delete()
+        .eq('privy_did', identity.privyDid);
+    }
+
     return jsonResponse({
       ok: true,
       anonymized: true,
