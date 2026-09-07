@@ -32,7 +32,7 @@ export default function TreasuryDetail() {
   });
 
   return (
-    <Layout>
+    <Layout gate={{ title: 'Sign in to view group funds', description: 'Log in to see contributions, releases, and the shared record.' }}>
       <section className="py-10 md:py-14">
         <div className="container mx-auto px-4">
           <CommunityBanner type={community?.type} className="mb-8 p-5 md:p-6">

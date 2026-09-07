@@ -532,7 +532,7 @@ const CreateCommunity: React.FC = () => {
   if (isCreated) {
     const launchFeeLabel = formatKSh(totalFeeKes);
     return (
-      <Layout>
+      <Layout gate={{ title: 'Sign in to launch a group', description: 'Create an account or log in before you set up a chama, SACCO, or cooperative.' }}>
         <section className="py-20">
           <div className="container mx-auto px-4">
             <div className="max-w-md mx-auto text-center">
@@ -581,10 +581,10 @@ const CreateCommunity: React.FC = () => {
                   Go to Dashboard
                 </button>
                 <button
-                  onClick={() => navigate('/communities')}
+                  onClick={() => navigate('/home')}
                   className="btn-ghost text-sm"
                 >
-                  View All Communities
+                  My groups
                 </button>
               </div>
             </div>
@@ -599,7 +599,7 @@ const CreateCommunity: React.FC = () => {
   }
 
   return (
-    <Layout>
+    <Layout gate={{ title: 'Sign in to launch a group', description: 'Create an account or log in before you set up a chama, SACCO, or cooperative.' }}>
       <section className="py-10 md:py-16">
         <div className="container mx-auto px-4">
           <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[0.64fr_0.36fr]">

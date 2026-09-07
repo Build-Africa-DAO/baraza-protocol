@@ -9,8 +9,10 @@ import { OfflineProvider } from '@/contexts/OfflineContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import AkiliChat from '@/akili/AkiliChat';
 import { AccountProvider } from '@/contexts/AccountContext';
+import PostAuthRedirect from '@/components/app/PostAuthRedirect';
 
 const Index = lazy(() => import('./pages/Index'));
+const Home = lazy(() => import('./pages/Home'));
 const Communities = lazy(() => import('./pages/Communities'));
 const Bounties = lazy(() => import('./pages/Bounties'));
 const BountyDetail = lazy(() => import('./pages/BountyDetail'));
@@ -42,10 +44,11 @@ const App: React.FC = () => {
           <WalletProviders>
           <OfflineProvider>
           <AkiliChatProvider>
+            <PostAuthRedirect />
             <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<Index />} />
-              <Route path="/home" element={<Navigate to="/" replace />} />
+              <Route path="/home" element={<Home />} />
               <Route path="/communities" element={<Communities />} />
               <Route path="/bounties" element={<Bounties />} />
               <Route path="/bounties/:bountyId" element={<BountyDetail />} />
