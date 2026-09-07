@@ -35,7 +35,12 @@ interface AccountBridgeProps {
 function AccountBridge({ country, setCountry, children }: AccountBridgeProps) {
   const { ready, authenticated, user, logout } = usePrivy();
   const [authIntent, setAuthIntent] = useState<AuthIntent | null>(null);
-  const displayName = user?.email?.address ?? user?.phone?.number ?? 'Baraza member';
+  const displayName =
+    user?.google?.name
+    ?? user?.email?.address
+    ?? user?.phone?.number
+    ?? user?.google?.email
+    ?? 'Baraza member';
   const accountId = user?.wallet?.address ?? user?.id ?? null;
   const closeAuth = useCallback(() => setAuthIntent(null), []);
 
@@ -106,7 +111,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     <PrivyProvider
       appId={appId}
       config={{
-        loginMethods: phoneAuthEnabled ? ['email', 'sms'] : ['email'],
+        loginMethods: phoneAuthEnabled ? ['email', 'sms', 'google'] : ['email', 'google'],
         intl: { defaultCountry: country.code },
         appearance: {
           theme: theme === 'dark' ? 'dark' : 'light',
