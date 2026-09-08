@@ -1,4 +1,5 @@
 import LogoMarquee from "@/components/LogoMarquee";
+import { ParallaxPhoto, Reveal, REVEAL_STAGGER } from "@/components/landing/motion";
 
 const steps = [
   {
@@ -31,40 +32,42 @@ export default function FeaturesSection() {
   return (
     <section id="how-it-works" className="scroll-mt-20 py-12 lg:py-[3.75rem]">
       <div className="page-shell">
-        <p className="mb-6 text-center text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-          How it works
-        </p>
-        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-          {steps.map((step, index) => {
-            const visual = (
-              <div className="relative min-h-[18rem] flex-1 overflow-hidden">
-                <img
+        <div className="relative">
+          <p className="mb-6 text-center text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground lg:sticky lg:top-16 lg:z-20 lg:bg-background/95 lg:py-3 lg:pointer-events-none">
+            How it works
+          </p>
+          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+            {steps.map((step, index) => {
+              const visual = (
+                <ParallaxPhoto
                   src={step.image}
                   alt=""
-                  className="absolute inset-0 h-full w-full object-cover object-center"
+                  className="relative min-h-[18rem] flex-1"
+                  imgClassName="absolute inset-0 h-full w-full object-center"
                 />
-              </div>
-            );
+              );
 
-            return (
-              <article
-                key={step.title}
-                className="group flex min-h-[36rem] flex-col overflow-hidden rounded-xl bg-primary text-left text-primary-foreground transition-colors duration-300 hover:bg-foreground hover:text-background"
-              >
-                {step.imageFirst && visual}
-                <div className="p-6">
-                  <h2 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
-                    0{index + 1}. {step.title}
-                  </h2>
-                  <p className="mt-3 max-w-prose text-sm leading-6 opacity-85 sm:text-base sm:leading-7">{step.detail}</p>
-                </div>
-                {!step.imageFirst && visual}
-              </article>
-            );
-          })}
+              return (
+                <Reveal key={step.title} delay={index * REVEAL_STAGGER} className="h-full">
+                  <article className="group flex h-full min-h-[36rem] flex-col overflow-hidden rounded-xl bg-primary text-left text-primary-foreground transition-colors duration-300 hover:bg-foreground hover:text-background">
+                    {step.imageFirst && visual}
+                    <div className="p-6">
+                      <h2 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
+                        0{index + 1}. {step.title}
+                      </h2>
+                      <p className="mt-3 max-w-prose text-sm leading-6 opacity-85 sm:text-base sm:leading-7">{step.detail}</p>
+                    </div>
+                    {!step.imageFirst && visual}
+                  </article>
+                </Reveal>
+              );
+            })}
+          </div>
         </div>
 
-        <LogoMarquee />
+        <Reveal>
+          <LogoMarquee />
+        </Reveal>
       </div>
     </section>
   );

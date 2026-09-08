@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Marquee } from "@/components/ui/marquee";
+import { Reveal, REVEAL_STAGGER } from "@/components/landing/motion";
 import { toTitleCase } from "@/lib/utils";
 
 const stats = [
@@ -140,20 +141,27 @@ export default function AIPlatformSection() {
             </div>
 
             <div className="flex flex-col items-center justify-center px-6 py-8 text-center sm:px-10 sm:py-10 lg:pl-16 lg:pr-10 lg:py-10 xl:pl-20 xl:pr-14">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] opacity-80">
-                Everyone Is Welcome
-              </p>
-              <h2 className="mt-3 w-full font-display text-3xl font-black leading-[1.05] tracking-tight md:text-5xl">
-                {toTitleCase("Bring your group, or find one.")}
-              </h2>
-              <p className="mt-4 w-full max-w-3xl text-sm leading-7 opacity-85 sm:text-base sm:leading-8">
-                Whether you run a chama, you pay dues in one, or you have not joined yet, the
-                paid list and the payouts sit on one page that every member can open on their phone.
-                Browse a group that is already collecting, or start yours and share a link.
-                SACCOs and cooperatives use that same page.
-              </p>
+              <Reveal>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] opacity-80">
+                  Everyone Is Welcome
+                </p>
+              </Reveal>
+              <Reveal delay={REVEAL_STAGGER}>
+                <h2 className="mt-3 w-full font-display text-3xl font-black leading-[1.05] tracking-tight md:text-5xl">
+                  {toTitleCase("Bring your group, or find one.")}
+                </h2>
+              </Reveal>
+              <Reveal delay={REVEAL_STAGGER * 2}>
+                <p className="mt-4 w-full max-w-3xl text-sm leading-7 opacity-85 sm:text-base sm:leading-8">
+                  Whether you run a chama, you pay dues in one, or you have not joined yet, the
+                  paid list and the payouts sit on one page that every member can open on their phone.
+                  Browse a group that is already collecting, or start yours and share a link.
+                  SACCOs and cooperatives use that same page.
+                </p>
+              </Reveal>
 
-              <dl ref={ref} className="mt-6 grid w-full justify-items-center gap-6 sm:grid-cols-3">
+              <Reveal delay={REVEAL_STAGGER * 3}>
+                <dl ref={ref} className="mt-6 grid w-full justify-items-center gap-6 sm:grid-cols-3">
                 {stats.map((stat) => (
                   <CountStat
                     key={stat.label}
@@ -162,9 +170,11 @@ export default function AIPlatformSection() {
                     active={inView}
                   />
                 ))}
-              </dl>
+                </dl>
+              </Reveal>
 
-              <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <Reveal delay={REVEAL_STAGGER * 4}>
+                <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <Button asChild size="lg">
                   <Link to="/communities">
                     Browse Groups
@@ -174,7 +184,8 @@ export default function AIPlatformSection() {
                 <Button asChild variant="outline" size="lg">
                   <Link to="/create/purpose">Start a Group</Link>
                 </Button>
-              </div>
+                </div>
+              </Reveal>
             </div>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Reveal, REVEAL_STAGGER } from "@/components/landing/motion";
 import { toTitleCase } from "@/lib/utils";
 
 const faqs = [
@@ -40,16 +41,20 @@ export default function FaqSection() {
   return (
     <section className="scroll-mt-20 py-12 lg:py-[3.75rem]" id="faq">
       <div className="page-shell">
-        <p className="text-center text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-          Questions
-        </p>
-        <h2 className="mx-auto mt-3 text-center font-display text-3xl font-black leading-tight text-foreground md:text-4xl">
-          {toTitleCase("Common Questions")}
-        </h2>
+        <Reveal>
+          <p className="text-center text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+            Questions
+          </p>
+        </Reveal>
+        <Reveal delay={REVEAL_STAGGER}>
+          <h2 className="mx-auto mt-3 text-center font-display text-3xl font-black leading-tight text-foreground md:text-4xl">
+            {toTitleCase("Common Questions")}
+          </h2>
+        </Reveal>
         <div className="mx-auto mt-10 max-w-5xl divide-y divide-border border-t border-border">
-          {faqs.map((faq) => (
+          {faqs.map((faq, index) => (
+            <Reveal key={faq.question} delay={index * REVEAL_STAGGER}>
             <details
-              key={faq.question}
               className="group py-5"
               open={openQuestion === faq.question}
               onToggle={(event) => {
@@ -66,6 +71,7 @@ export default function FaqSection() {
               </summary>
               <p className="mt-3 text-base leading-8 text-muted-foreground">{faq.answer}</p>
             </details>
+            </Reveal>
           ))}
         </div>
       </div>

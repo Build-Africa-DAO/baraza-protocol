@@ -18,10 +18,13 @@ export const LANDING_SECTION_IDS = [
   'pricing',
   'faq',
   'contact',
+  'closing-cta',
+  'site-footer',
 ] as const;
 
 export function navHashForSection(sectionId: string): string {
   if (sectionId === 'who-its-for') return 'features';
+  if (sectionId === 'closing-cta' || sectionId === 'site-footer') return 'contact';
   return sectionId;
 }
 
@@ -40,10 +43,9 @@ export function isLandingNavActive(
 export function pickActiveLandingSection(
   sections: Array<{ id: string; top: number; height: number }>,
   viewportHeight: number,
-  headerPx = 72,
 ): string | null {
   const cutoff = viewportHeight * 0.45;
-  const inPlay = sections.filter((section) => section.top < cutoff && section.top + section.height > headerPx);
-  if (inPlay.length === 0) return null;
-  return [...inPlay].sort((a, b) => a.top - b.top)[0].id;
+  const started = sections.filter((section) => section.top < cutoff);
+  if (started.length === 0) return null;
+  return [...started].sort((a, b) => b.top - a.top)[0].id;
 }

@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react';
 import { Mail, Phone, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SUPPORT_EMAIL, SUPPORT_PHONE_DISPLAY, SUPPORT_PHONE_E164 } from '@/lib/support';
+import { Reveal, REVEAL_STAGGER } from '@/components/landing/motion';
 import { toTitleCase } from '@/lib/utils';
 
 const inputClass =
@@ -38,12 +39,17 @@ export default function ContactSection() {
     <section id="contact" className="relative z-10 scroll-mt-20 bg-background py-12 text-foreground lg:py-[3.75rem]">
       <div className="page-shell">
         <div className="mx-auto max-w-7xl">
-          <h2 className="text-center font-display text-3xl font-black leading-tight md:text-5xl">
+          <Reveal>
+            <h2 className="text-center font-display text-3xl font-black leading-tight md:text-5xl">
           Get in <span className="text-primary">Touch</span>
         </h2>
+          </Reveal>
+          <Reveal delay={REVEAL_STAGGER}>
         <p className="mx-auto mt-3 max-w-xl text-center text-sm leading-7 text-muted-foreground sm:text-base">
           Questions about dues, a vote, or starting a group. Write here or use the details below.
         </p>
+          </Reveal>
+          <Reveal delay={REVEAL_STAGGER * 2}>
         <div className="mx-auto mt-6 flex max-w-xl flex-col items-center justify-center gap-3 sm:flex-row sm:gap-8">
           <a
             href={`mailto:${SUPPORT_EMAIL}`}
@@ -60,7 +66,9 @@ export default function ContactSection() {
             {SUPPORT_PHONE_DISPLAY}
           </a>
         </div>
+          </Reveal>
 
+          <Reveal delay={REVEAL_STAGGER * 3}>
         <div className="mt-10 overflow-hidden rounded-2xl border border-border lg:grid lg:grid-cols-[1.1fr_0.9fr]">
           <div className="audience-band bg-primary p-6 text-foreground sm:p-8 lg:p-10">
             <h3 className="font-display text-2xl font-bold">{toTitleCase('Send a Message')}</h3>
@@ -133,6 +141,7 @@ export default function ContactSection() {
             </div>
           </div>
         </div>
+          </Reveal>
         </div>
       </div>
     </section>
