@@ -4,6 +4,7 @@ import { Coins, RefreshCw, Send, Sparkles, Check, AlertTriangle } from 'lucide-r
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import Layout from '@/components/Layout';
+import { StatusScreen } from '@/components/StatusPage';
 import { useSeo } from '@/lib/seo';
 import { truncateAddress } from '@/lib/utils';
 import { validateBallot } from '@/lib/brza/retroRounds';
@@ -179,22 +180,12 @@ export default function RetroVote() {
 
   if (!connected) {
     return (
-      <Layout>
-        <section className="mx-auto max-w-3xl px-4 py-16 text-center space-y-4">
-          <Sparkles className="mx-auto h-10 w-10 text-muted-foreground" />
-          <h1 className="text-2xl font-semibold">Connect to vote</h1>
-          <p className="text-sm text-muted-foreground">
-            Connect your wallet to cast a retro vote in this community.
-          </p>
-          <button
-            type="button"
-            onClick={() => setVisible(true)}
-            className="btn-wipe px-5 py-2 text-sm"
-          >
-            Connect wallet
-          </button>
-        </section>
-      </Layout>
+      <StatusScreen
+        kind="unauthorized"
+        title="Connect to Vote"
+        description="Connect your wallet to cast a retro vote in this community."
+        primary={{ label: 'Connect Wallet', onClick: () => setVisible(true), icon: 'login' }}
+      />
     );
   }
 

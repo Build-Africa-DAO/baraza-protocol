@@ -4,6 +4,7 @@ import { Toaster } from '@/components/ui/toaster';
 import WalletProviders from '@/components/WalletProviders';
 import ChainProvider from '@/components/ChainProvider';
 import PageLoader from '@/components/PageLoader';
+import AppErrorBoundary from '@/components/AppErrorBoundary';
 import { AkiliChatProvider } from '@/akili/AkiliChatContext';
 import { OfflineProvider } from '@/contexts/OfflineContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
@@ -45,6 +46,7 @@ const App: React.FC = () => {
           <OfflineProvider>
           <AkiliChatProvider>
             <PostAuthRedirect />
+            <AppErrorBoundary>
             <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<Index />} />
@@ -79,6 +81,7 @@ const App: React.FC = () => {
               <Route path="*" element={<NotFound />} />
             </Routes>
             </Suspense>
+            </AppErrorBoundary>
             <AkiliChat />
             <Toaster />
           </AkiliChatProvider>

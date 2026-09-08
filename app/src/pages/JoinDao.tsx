@@ -14,6 +14,8 @@ import {
 import { storePaymentOrderActivationSecret } from "@/lib/payments";
 import { calculateDynamicFee } from "@/lib/payments/feeEngine";
 import Layout from "@/components/Layout";
+import { StatusScreen } from "@/components/StatusPage";
+import PageLoader from "@/components/PageLoader";
 import { useCommunity } from "@/hooks/useCommunities";
 import { useToast } from "@/hooks/use-toast";
 import { formatKSh } from "@/lib/utils";
@@ -79,7 +81,7 @@ function generateLocalOrderId(): string {
 
 export default function JoinDao() {
   const { id } = useParams<{ id: string }>();
-  const { community } = useCommunity(id);
+  const { community, isLoading } = useCommunity(id);
   const account = useAccount();
   useSeo({
     title: community ? `Join ${community.name}` : "Join a community",
@@ -98,7 +100,6 @@ export default function JoinDao() {
   const amount = community?.membershipFee ?? 0;
   const feeBreakdown = calculateDynamicFee(amount * 100, 'KES', true);
   const isFree = feeBreakdown.isFree;
-  const estimatedXlm = Number(((feeBreakdown.totalExpectedMinor / 100) * (1 / 130) / 0.10).toFixed(4));
 
   const normalisedPhone = normaliseKenyanPhone(phone);
   const canSubmit = (isFree || (normalisedPhone !== null && amount > 0)) && !isSubmitting;
@@ -277,13 +278,25 @@ export default function JoinDao() {
     }
   }
 
+  if (isLoading) {
+    return (
+      <Layout>
+        <PageLoader label="Loading community" />
+      </Layout>
+    );
+  }
+
+  if (!community) {
+    return <StatusScreen kind="community" />;
+  }
+
   return (
     <Layout>
       <section className="relative overflow-hidden py-8 md:py-12">
         <div className="container relative z-10 mx-auto px-4">
           <Link to={community ? `/dashboard/${community.id}` : "/communities"} className="mb-6 inline-flex items-center gap-2 text-sm">
             <ArrowLeft className="h-4 w-4" />
-            Back to community
+            Back to Community
           </Link>
 
           <div className="mx-auto max-w-5xl space-y-5">
@@ -404,28 +417,28 @@ export default function JoinDao() {
                       <Stars className="h-5 w-5" />
                     </div>
                     <div>
-                      <h2 className="font-display text-base font-semibold">Bank or international transfer</h2>
-                      <p className="text-xs">Verify transfer proof</p>
+                      <h2 className="font-display text-base font-semibold">On-chain transfer</h2>
+                      <p className="text-xs">Verify a settlement transaction hash</p>
                     </div>
                   </div>
                   <p className="text-sm leading-6">
-                    Paste the transaction reference supplied by your transfer provider. Baraza verifies it before activating membership.
+                    Paste the 64-character transaction hash from the group settlement rail. This is not a bank or SWIFT transfer.
                   </p>
 
                   <div className="mb-3 mt-4 rounded-lg border bg-muted/20 p-3">
-                    <p className="text-[11px] text-muted-foreground">Required Transfer Value</p>
+                    <p className="text-[11px] text-muted-foreground">Amount to send</p>
                     <p className="font-mono text-sm font-bold">
-                      ≈ {estimatedXlm} XLM <span className="text-xs font-normal text-muted-foreground">({formatKSh(feeBreakdown.totalExpectedMinor / 100)})</span>
+                      {formatKSh(feeBreakdown.totalExpectedMinor / 100)}
                     </p>
                   </div>
 
-                  <label htmlFor="stellar-tx" className="mb-2 mt-3 block text-xs font-semibold">Transaction reference</label>
+                  <label htmlFor="stellar-tx" className="mb-2 mt-3 block text-xs font-semibold">Transaction hash</label>
                   <input
                     id="stellar-tx"
                     value={stellarTxHash}
                     onChange={(event) => setStellarTxHash(event.target.value)}
                     className="w-full rounded-lg border px-3 py-3 font-mono text-xs outline-none"
-                    placeholder="64-character transaction reference"
+                    placeholder="64-character transaction hash"
                   />
 
                   <button

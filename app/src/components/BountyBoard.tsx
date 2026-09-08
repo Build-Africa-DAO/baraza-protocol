@@ -139,7 +139,7 @@ function CompactCard({
               interested ? 'btn-wipe' : 'btn-wipe-outline',
             )}
           >
-            {interested ? 'Interested' : "I'm interested"}
+            {interested ? 'Interested' : "I'm in"}
           </button>
         )}
 
@@ -163,7 +163,7 @@ function CompactCard({
             onClick={() => onAdvanceStatus(bounty.id, 'in_review')}
             className="btn-wipe-outline flex-1 gap-1 px-2 py-1.5 text-[11px]"
           >
-            <CheckCircle2 className="h-3 w-3" /> Reopen review
+            <CheckCircle2 className="h-3 w-3 shrink-0" /> Reopen
           </button>
         )}
       </div>
@@ -381,7 +381,7 @@ function FullCard({
                 interested ? 'btn-wipe' : 'btn-wipe-outline',
               )}
             >
-              {interested ? 'Interested' : "I'm interested"}
+              {interested ? 'Interested' : "I'm in"}
             </button>
             <button
               type="button"

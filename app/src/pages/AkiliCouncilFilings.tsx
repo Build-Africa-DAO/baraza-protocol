@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ShieldOff, RefreshCw, FileText, Headphones, AlertTriangle } from 'lucide-react';
+import { RefreshCw, FileText, Headphones, AlertTriangle } from 'lucide-react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import Layout from '@/components/Layout';
+import { StatusScreen } from '@/components/StatusPage';
 import { useSeo } from '@/lib/seo';
 import { isAdminWallet } from '@/lib/access';
 import type { CouncilAgentName } from '@/akili/council';
@@ -130,36 +131,22 @@ export default function AkiliCouncilFilings() {
 
   if (!connected) {
     return (
-      <Layout>
-        <section className="mx-auto max-w-3xl px-4 py-16 text-center space-y-4">
-          <ShieldOff className="mx-auto h-10 w-10 text-muted-foreground" />
-          <h1 className="text-2xl font-semibold">Connect an admin wallet</h1>
-          <p className="text-sm text-muted-foreground">
-            Council filings are admin-gated. Connect a wallet on the admin list to continue.
-          </p>
-          <button
-            type="button"
-            onClick={() => setVisible(true)}
-            className="btn-wipe px-5 py-2 text-sm"
-          >
-            Connect wallet
-          </button>
-        </section>
-      </Layout>
+      <StatusScreen
+        kind="unauthorized"
+        title="Connect an Admin Wallet"
+        description="Council filings are admin-gated. Connect a wallet on the admin list to continue."
+        primary={{ label: 'Connect Wallet', onClick: () => setVisible(true), icon: 'login' }}
+      />
     );
   }
 
   if (!isAdmin) {
     return (
-      <Layout>
-        <section className="mx-auto max-w-3xl px-4 py-16 text-center space-y-4">
-          <ShieldOff className="mx-auto h-10 w-10 text-destructive" />
-          <h1 className="text-2xl font-semibold">Not authorised</h1>
-          <p className="text-sm text-muted-foreground">
-            This wallet is not on the admin list. Reach out to the founder if you should have access.
-          </p>
-        </section>
-      </Layout>
+      <StatusScreen
+        kind="forbidden"
+        title="Not Authorised"
+        description="This wallet is not on the admin list. Reach out to the founder if you should have access."
+      />
     );
   }
 

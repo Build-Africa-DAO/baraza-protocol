@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { BrandLogo } from '@/components/BrandLogo';
 import BackendStatus from '@/components/BackendStatus';
+import OfflineBanner from '@/components/OfflineBanner';
 import { Button } from '@/components/ui/button';
 import { GroupSidebarNav } from '@/components/app/GroupSidebarNav';
 import { useAccount } from '@/contexts/AccountContext';
@@ -50,7 +51,7 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
         <nav className="flex flex-col gap-0.5" aria-label="Workspace">
           <NavLink to="/home" end onClick={onNavigate} className={({ isActive }) => navClass(isActive)}>
             <Home className="h-4 w-4 shrink-0" />
-            My groups
+            My Groups
           </NavLink>
           <NavLink to="/communities" onClick={onNavigate} className={({ isActive }) => navClass(isActive)}>
             <Compass className="h-4 w-4 shrink-0" />
@@ -58,7 +59,7 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
           </NavLink>
           <NavLink to="/create/purpose" onClick={onNavigate} className={({ isActive }) => navClass(isActive)}>
             <PlusCircle className="h-4 w-4 shrink-0" />
-            Launch a group
+            Launch a Group
           </NavLink>
         </nav>
 
@@ -119,7 +120,7 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
           className={navClass(false) + ' w-full'}
         >
           {theme === 'dark' ? <Sun className="h-4 w-4 shrink-0" /> : <Moon className="h-4 w-4 shrink-0" />}
-          {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+          {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
         </button>
         <button
           type="button"
@@ -130,7 +131,7 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
           className={navClass(false) + ' w-full'}
         >
           <LogOut className="h-4 w-4 shrink-0" />
-          Log out
+          Log Out
         </button>
       </div>
     </div>
@@ -171,7 +172,7 @@ function AppBottomNav() {
             className="flex h-14 w-14 -translate-y-3 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[var(--shadow-warm)]"
           >
             <PlusCircle className="h-7 w-7" />
-            <span className="sr-only">Launch a group</span>
+            <span className="sr-only">Launch a Group</span>
           </Link>
         </div>
         {item('/profile', 'Account', CircleUserRound)}
@@ -237,6 +238,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
             <BrandLogo size="sm" showIcon={false} lockup="protocol" />
           </Link>
         </header>
+        <OfflineBanner />
 
         <main
           id="main-content"

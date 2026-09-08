@@ -60,29 +60,29 @@ export default function CommunityBanner({
       <div className="absolute inset-0 bg-gradient-to-r from-background via-background/88 to-background/22" />
       <div className="absolute inset-0 bg-gradient-to-t from-background/92 via-transparent to-background/30" />
       <div className="absolute inset-0 bg-primary/8 mix-blend-soft-light" />
-      {children && <div className="relative z-10">{children}</div>}
+      {children && <div className="relative z-10 text-foreground">{children}</div>}
 
       {activeCommunity && (
         <aside
-          className="absolute bottom-4 right-4 z-10 hidden w-[min(22rem,calc(100%-2rem))] rounded-lg border border-primary/20 bg-background/72 p-4 shadow-2xl backdrop-blur-xl md:block"
+          className="absolute bottom-4 right-4 z-10 hidden w-[min(22rem,calc(100%-2rem))] rounded-lg border border-border bg-card p-4 text-card-foreground shadow-lg md:block"
           aria-live="polite"
         >
           <div className="mb-3 flex items-center justify-between gap-3">
             <p className="text-[0.65rem] font-bold uppercase tracking-[0.24em] text-primary">
               Featured community
             </p>
-            <span className="rounded-full border border-primary/25 px-2 py-1 text-[0.65rem] font-semibold text-primary">
+            <span className="rounded-full border border-border px-2 py-1 text-[0.65rem] font-semibold text-foreground">
               {activeIndex + 1}/{slides.length}
             </span>
           </div>
 
-          <h2 className="font-display text-xl font-bold leading-tight" data-community-slide-title>
+          <h2 className="font-display text-xl font-bold leading-tight text-foreground" data-community-slide-title>
             {activeCommunity.name}
           </h2>
           <p className="mt-1 text-xs font-semibold text-muted-foreground">
             {formatType(activeCommunity.type)}
           </p>
-          <p className="mt-2 text-sm leading-relaxed text-foreground/84">
+          <p className="mt-2 text-sm leading-relaxed text-foreground">
             {activeCommunity.description}
           </p>
 
