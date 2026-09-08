@@ -1,4 +1,3 @@
-import LogoMarquee from "@/components/LogoMarquee";
 import { toTitleCase } from "@/lib/utils";
 
 const services = [
@@ -61,10 +60,10 @@ function Node() {
 
 export default function FlowWalkthrough() {
   return (
-    <section id="how-it-works" className="scroll-mt-20 border-t border-border py-20">
+    <section id="features" className="scroll-mt-20 border-t border-border py-20">
       <div className="page-shell">
         <p className="text-center text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-          How it works
+          Features
         </p>
         <h2 className="mx-auto mt-3 max-w-3xl text-center font-display text-3xl font-black leading-tight text-foreground md:text-4xl">
           {toTitleCase("From a New Group to the First Payout")}
@@ -140,8 +139,6 @@ export default function FlowWalkthrough() {
             );
           })}
         </ol>
-
-        <LogoMarquee />
       </div>
     </section>
   );

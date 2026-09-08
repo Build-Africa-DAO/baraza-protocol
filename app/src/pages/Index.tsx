@@ -38,8 +38,8 @@ export default function Index() {
   return (
     <Layout>
       <HeroSection />
-      <FlowWalkthrough />
       <FeaturesSection />
+      <FlowWalkthrough />
       <AIPlatformSection />
       <FaqSection />
       <ContactSection />
