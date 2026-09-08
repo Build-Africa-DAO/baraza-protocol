@@ -1,32 +1,40 @@
+import LogoMarquee from "@/components/LogoMarquee";
+
 const steps = [
+  {
+    title: "Create the Group",
+    detail: "Name it, pick the type, and set dues and the voting rule. People see that before they join.",
+    image: "/gallery/gallery-plan.jpg",
+    imageFirst: true,
+  },
   {
     title: "Collect Dues",
     detail: "Members pay with M-Pesa. The group page shows who has paid this month.",
     image: "/steps/collect-dues.jpg",
-    imageFirst: true,
+    imageFirst: false,
   },
   {
     title: "Vote First",
     detail: "Spending waits for a vote. The treasurer cannot send the money alone.",
     image: "/steps/vote-first.jpg",
-    imageFirst: false,
+    imageFirst: true,
   },
   {
     title: "Send After the Vote",
     detail: "When the vote passes, an officer sends the payout. The receipt stays on the group page.",
     image: "/steps/release-by-rule.jpg",
-    imageFirst: true,
+    imageFirst: false,
   },
 ];
 
 export default function FeaturesSection() {
   return (
-    <section id="features" className="scroll-mt-20 pt-14 pb-8 lg:pt-16 lg:pb-10">
+    <section id="how-it-works" className="scroll-mt-20 border-t border-border pt-14 pb-8 lg:pt-16 lg:pb-10">
       <div className="page-shell">
         <p className="mb-6 text-center text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-          How a Group Runs
+          How it works
         </p>
-        <div className="grid gap-5 md:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
           {steps.map((step, index) => {
             const visual = (
               <div className="relative min-h-[18rem] flex-1 overflow-hidden">
@@ -55,6 +63,8 @@ export default function FeaturesSection() {
             );
           })}
         </div>
+
+        <LogoMarquee />
       </div>
     </section>
   );
