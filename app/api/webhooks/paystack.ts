@@ -119,7 +119,26 @@ export default async function handler(req: Request): Promise<Response> {
   const order = rows[0];
 
   if (!order) {
-    return json({ ok: true, warning: `Order ${orderId} not found in database.` }, { status: 200 });
+    try {
+      await fetch(`${supabaseUrl}/rest/v1/payment_exceptions`, {
+        method: 'POST',
+        headers: {
+          ...supabaseHeaders(serviceKey),
+          Prefer: 'resolution=merge-duplicates',
+        },
+        body: JSON.stringify({
+          order_id: orderId,
+          provider: 'paystack',
+          payload: eventPayload,
+          error_code: 'ORDER_NOT_FOUND',
+          error_message: `Paystack webhook received for non-existent order ${orderId}`,
+          status: 'PENDING',
+        }),
+      });
+    } catch {
+      // Non-fatal
+    }
+    return json({ ok: true, dlq: true, warning: `Order ${orderId} not found in database; routed to DLQ.` }, { status: 200 });
   }
 
   // Idempotent: already confirmed

@@ -1,0 +1,17 @@
+Your Baraza sign in code
+
+Baraza Protocol
+
+Your Baraza sign in code
+
+{{otp}}
+
+Expires in {{expires_minutes}} minutes.
+
+This request came from:
+Device: {{device}}
+Browser: {{browser}}
+Location: {{location}}
+Time: {{signed_in_at}}
+
+If this was not you, ignore this email and do not share the code.

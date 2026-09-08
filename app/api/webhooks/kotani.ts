@@ -109,8 +109,27 @@ export default async function handler(req: Request): Promise<Response> {
 
   const order = await findOrder(supabaseUrl, serviceKey, payload.reference);
   if (!order) {
-    console.warn('[kotani-webhook] No order for reference', payload.reference);
-    return json({ received: true, matched: false });
+    console.warn('[kotani-webhook] No order for reference; routing to payment_exceptions DLQ', payload.reference);
+    try {
+      await fetch(`${supabaseUrl}/rest/v1/payment_exceptions`, {
+        method: 'POST',
+        headers: {
+          ...supabaseHeaders(serviceKey),
+          Prefer: 'resolution=merge-duplicates',
+        },
+        body: JSON.stringify({
+          order_id: payload.reference,
+          provider: 'kotani',
+          payload,
+          error_code: 'ORDER_NOT_FOUND',
+          error_message: `No payment order found matching Kotani reference ${payload.reference}`,
+          status: 'PENDING',
+        }),
+      });
+    } catch (dlqErr) {
+      console.warn('[kotani-webhook] Failed to route to DLQ:', dlqErr);
+    }
+    return json({ received: true, matched: false, dlq: true });
   }
 
   const kotaniStatus = payload.status.toLowerCase();

@@ -1,0 +1,13 @@
+New sign in to your Baraza account
+
+Baraza Protocol
+
+New sign in to your account
+
+Device: {{device}}
+Browser: {{browser}}
+Location: {{location}}
+Time: {{signed_in_at}}
+
+If this was you, you can ignore this email.
+If this was not you, open https://barazaprotocol.com and write to hello@barazaprotocol.com.
