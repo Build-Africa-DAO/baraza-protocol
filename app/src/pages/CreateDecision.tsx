@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Vote, ArrowLeft, Info, Loader2, ShieldCheck } from 'lucide-react';
 import Layout from '@/components/Layout';
+import { StatusScreen } from '@/components/StatusPage';
 import { formatKSh } from '@/lib/utils';
 import { useWalletGuard } from '@/hooks/useWalletGuard';
 import { useToast } from '@/hooks/use-toast';
@@ -30,7 +31,7 @@ const CreateDecision: React.FC = () => {
   });
   const [isPending, setIsPending] = useState(false);
 
-  const { community, isLoading, error } = useCommunity(id);
+  const { community, isLoading, error, reload } = useCommunity(id);
 
   useSeo({
     title: community ? `New proposal — ${community.name}` : "New proposal",
@@ -47,7 +48,7 @@ const CreateDecision: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Layout>
+      <Layout gate={{ title: 'Sign in to propose', description: 'Log in to submit a proposal for this group.' }}>
         <section className="py-10 md:py-16">
           <div className="container mx-auto px-4">
             <div className="max-w-lg mx-auto space-y-5">
@@ -92,22 +93,20 @@ const CreateDecision: React.FC = () => {
   }
 
   if (!community) {
+    if (error) {
+      return (
+        <StatusScreen
+          kind="server"
+          gate={{ title: 'Sign in to propose', description: 'Log in to submit a proposal for this group.' }}
+          onRetry={() => void reload()}
+        />
+      );
+    }
     return (
-      <Layout>
-        <section className="py-20">
-          <div className="container mx-auto px-4 text-center">
-            <h1 className="font-display text-2xl font-bold mb-3">
-              Community not found
-            </h1>
-            <p className="text-sm mb-6">
-              {error?.message ?? 'This proposal cannot be created because the community is not available in the current data.'}
-            </p>
-            <Link to="/communities" className="btn-primary text-sm inline-flex">
-              View Communities
-            </Link>
-          </div>
-        </section>
-      </Layout>
+      <StatusScreen
+        kind="community"
+        gate={{ title: 'Sign in to propose', description: 'Log in to submit a proposal for this group.' }}
+      />
     );
   }
 
@@ -139,14 +138,14 @@ const CreateDecision: React.FC = () => {
   };
 
   return (
-    <Layout>
+    <Layout gate={{ title: 'Sign in to propose', description: 'Log in to submit a proposal for this group.' }}>
       <section className="py-10 md:py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-lg mx-auto">
             {/* Back */}
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-sm mb-6"
+              className="btn-wipe-outline mb-6 h-9 gap-2 px-4 text-sm"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to {community.name}

@@ -1,0 +1,10 @@
+New proposal in {{community_name}}
+
+Baraza Protocol
+
+New proposal in {{community_name}}:
+
+"{{proposal_title}}"
+
+Vote in the app: {{action_url}}
+Or dial *384#

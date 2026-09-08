@@ -617,7 +617,7 @@ const AkiliChat: React.FC = () => {
                     <button
                       key={reply}
                       onClick={() => sendMessage(reply)}
-                      className="px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5 text-[10px] font-medium text-primary hover:bg-primary/15 transition-colors"
+                      className="btn-wipe-outline px-3 py-1.5 text-[10px]"
                     >
                       {reply}
                     </button>
@@ -666,14 +666,9 @@ const AkiliChat: React.FC = () => {
                 type="submit"
                 disabled={!input.trim() || isTyping}
                 aria-label="Send message"
-                className="w-9 h-9 rounded-xl flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                style={{ background: input.trim() && !isTyping ? 'var(--gradient-warm)' : undefined }}
+                className="btn-wipe h-9 w-9 disabled:cursor-not-allowed"
               >
-                <Send
-                  className={`w-4 h-4 ${
-                    input.trim() && !isTyping ? 'text-warm-foreground' : 'text-muted-foreground'
-                  }`}
-                />
+                <Send className="w-4 h-4" />
               </button>
             </form>
           </motion.div>

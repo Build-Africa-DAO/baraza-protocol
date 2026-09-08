@@ -1,0 +1,7 @@
+{{inviter_name}} invited you to {{community_name}}
+
+Baraza Protocol
+
+{{inviter_name}} invited you to {{community_name}} on Baraza.
+
+Join here: {{action_url}}

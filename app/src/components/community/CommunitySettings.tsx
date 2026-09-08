@@ -50,7 +50,7 @@ export default function CommunitySettings({ community, isMember }: Props) {
             <button
               type="button"
               onClick={copyId}
-              className="shrink-0 rounded border border-border/60 px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-all"
+              className="btn-wipe-outline shrink-0 px-3 py-1 text-[11px]"
             >
               {copied ? 'Copied!' : 'Copy'}
             </button>
@@ -139,7 +139,7 @@ export default function CommunitySettings({ community, isMember }: Props) {
                 </p>
                 <Link
                   to="/create"
-                  className="inline-flex items-center gap-1 rounded border border-primary/40 bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary"
+                  className="btn-wipe-outline inline-flex items-center gap-1 px-3 py-1.5 text-[11px]"
                 >
                   Add for {formatKSh(PAYBILL_ADDON_FEE_KES)}
                   <ExternalLink className="h-3 w-3" />
@@ -172,7 +172,7 @@ export default function CommunitySettings({ community, isMember }: Props) {
                 </p>
                 <Link
                   to="/create"
-                  className="inline-flex items-center gap-1 rounded border border-primary/40 bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary"
+                  className="btn-wipe-outline inline-flex items-center gap-1 px-3 py-1.5 text-[11px]"
                 >
                   Add for {formatKSh(USSD_ADDON_FEE_KES)}
                   <ExternalLink className="h-3 w-3" />
@@ -218,7 +218,7 @@ export default function CommunitySettings({ community, isMember }: Props) {
               ) : (
                 <Link
                   to={action.href!}
-                  className="shrink-0 inline-flex items-center gap-1 rounded border border-primary/40 bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary"
+                  className="btn-wipe-outline shrink-0 inline-flex items-center gap-1 px-3 py-1.5 text-[11px]"
                 >
                   Open
                   <ExternalLink className="h-3 w-3" />

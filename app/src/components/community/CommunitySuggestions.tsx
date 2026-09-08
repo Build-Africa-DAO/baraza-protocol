@@ -230,14 +230,14 @@ export default function CommunitySuggestions({ communityId }: Props) {
               <button
                 type="button"
                 onClick={handleSubmit}
-                className="rounded-lg border border-primary/40 bg-primary/10 px-4 py-2 text-xs font-bold text-primary"
+                className="btn-wipe px-4 py-2 text-xs"
               >
                 Post suggestion
               </button>
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="rounded-lg border border-border/60 px-4 py-2 text-xs font-semibold text-muted-foreground"
+                className="btn-wipe-outline px-4 py-2 text-xs"
               >
                 Cancel
               </button>
@@ -265,10 +265,8 @@ export default function CommunitySuggestions({ communityId }: Props) {
                     type="button"
                     onClick={() => handleVote(s.id)}
                     className={cn(
-                      'flex h-8 w-8 flex-col items-center justify-center rounded-lg border transition-all',
-                      voted
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-border/60 text-muted-foreground hover:border-primary/40 hover:text-foreground',
+                      'h-8 w-8',
+                      voted ? 'btn-wipe' : 'btn-wipe-outline',
                     )}
                     aria-label={voted ? 'Remove vote' : 'Upvote'}
                   >

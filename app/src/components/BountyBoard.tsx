@@ -135,13 +135,11 @@ function CompactCard({
             type="button"
             onClick={() => onToggleInterest(bounty.id)}
             className={cn(
-              'flex-1 rounded-lg border px-2 py-1.5 text-xs font-bold transition-all',
-              interested
-                ? 'border-primary bg-primary/10 text-primary'
-                : 'border-border/60 bg-surface/60 text-muted-foreground hover:border-primary/50 hover:text-foreground',
+              'flex-1 px-2 py-1.5 text-xs',
+              interested ? 'btn-wipe' : 'btn-wipe-outline',
             )}
           >
-            {interested ? 'Interested' : "I'm interested"}
+            {interested ? 'Interested' : "I'm in"}
           </button>
         )}
 
@@ -149,7 +147,7 @@ function CompactCard({
           <button
             type="button"
             onClick={() => onAdvanceStatus(bounty.id, 'in_review')}
-            className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-border/60 bg-surface/60 px-2 py-1.5 text-xs font-bold text-muted-foreground hover:border-accent/50 hover:text-accent transition-all"
+            className="btn-wipe-outline flex-1 gap-1 px-2 py-1.5 text-xs"
           >
             <Send className="h-3 w-3" /> Submit
           </button>
@@ -163,9 +161,9 @@ function CompactCard({
           <button
             type="button"
             onClick={() => onAdvanceStatus(bounty.id, 'in_review')}
-            className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-confirmed/30 bg-confirmed/5 px-2 py-1.5 text-[11px] font-semibold text-confirmed hover:border-accent/50 hover:text-accent transition-all"
+            className="btn-wipe-outline flex-1 gap-1 px-2 py-1.5 text-[11px]"
           >
-            <CheckCircle2 className="h-3 w-3" /> Reopen review
+            <CheckCircle2 className="h-3 w-3 shrink-0" /> Reopen
           </button>
         )}
       </div>
@@ -193,10 +191,8 @@ function ReviewActions({
         type="button"
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          'flex items-center justify-center gap-1 rounded-lg border px-2 py-1.5 text-xs font-bold transition-all',
-          open
-            ? 'border-accent bg-accent/10 text-accent'
-            : 'border-border/60 bg-surface/60 text-muted-foreground hover:border-accent/50 hover:text-foreground',
+          'gap-1 px-2 py-1.5 text-xs',
+          open ? 'btn-wipe' : 'btn-wipe-outline',
           !compact && 'w-full py-2',
         )}
       >
@@ -262,14 +258,14 @@ function SubmissionRow({
             <button
               type="button"
               onClick={onApprove}
-              className="flex items-center gap-1 rounded-lg border border-confirmed/40 bg-confirmed/10 px-2 py-1 text-[11px] font-bold text-confirmed"
+              className="btn-wipe gap-1 px-2 py-1 text-[11px]"
             >
               <ThumbsUp className="h-3 w-3" /> Approve
             </button>
             <button
               type="button"
               onClick={onRevise}
-              className="flex items-center gap-1 rounded-lg border border-border/60 bg-surface/60 px-2 py-1 text-[11px] font-bold text-muted-foreground hover:border-primary/50"
+              className="btn-wipe-outline gap-1 px-2 py-1 text-[11px]"
             >
               <ThumbsDown className="h-3 w-3" /> Revise
             </button>
@@ -381,20 +377,20 @@ function FullCard({
               type="button"
               onClick={() => onToggleInterest(bounty.id)}
               className={cn(
-                'rounded-lg border px-3 py-2 text-xs font-bold transition-all',
-                interested ? 'border-primary bg-primary/10 text-primary' : 'border-border/60 bg-surface/60 text-muted-foreground hover:border-primary/50 hover:text-foreground',
+                'px-3 py-2 text-xs',
+                interested ? 'btn-wipe' : 'btn-wipe-outline',
               )}
             >
-              {interested ? 'Interested' : "I'm interested"}
+              {interested ? 'Interested' : "I'm in"}
             </button>
             <button
               type="button"
               onClick={() => { setShowAssign((v) => !v); setMsg(null); }}
-              className="flex items-center gap-1 rounded-lg border border-border/60 bg-surface/60 px-3 py-2 text-xs font-bold text-muted-foreground hover:border-primary/50 hover:text-foreground transition-all"
+              className="btn-wipe-outline gap-1 px-3 py-2 text-xs"
             >
               <UserPlus className="h-3 w-3" /> Assign
             </button>
-            <Link to={`/bounties/${bounty.id}`} className="flex items-center gap-1 rounded-lg border border-border/60 bg-surface/60 px-3 py-2 text-xs font-bold text-muted-foreground hover:border-primary/50 hover:text-foreground transition-all">
+            <Link to={`/bounties/${bounty.id}`} className="btn-wipe-outline gap-1 px-3 py-2 text-xs">
               Details <ArrowRight className="h-3 w-3" />
             </Link>
           </>
@@ -405,8 +401,8 @@ function FullCard({
             type="button"
             onClick={() => { setShowSubmit((v) => !v); setMsg(null); }}
             className={cn(
-              'flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-bold transition-all',
-              showSubmit ? 'border-primary bg-primary/10 text-primary' : 'border-border/60 bg-surface/60 text-muted-foreground hover:border-primary/50 hover:text-foreground',
+              'gap-1.5 px-3 py-2 text-xs',
+              showSubmit ? 'btn-wipe' : 'btn-wipe-outline',
             )}
           >
             <Send className="h-3 w-3" /> Submit work
@@ -425,7 +421,7 @@ function FullCard({
             <button
               type="button"
               onClick={() => onAdvanceStatus(bounty.id, 'in_review')}
-              className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-surface/60 px-3 py-2 text-xs font-bold text-muted-foreground hover:border-accent/50 hover:text-accent transition-all"
+              className="btn-wipe-outline gap-1.5 px-3 py-2 text-xs"
             >
               <Clock className="h-3 w-3" /> Reopen for review
             </button>
@@ -443,7 +439,7 @@ function FullCard({
             placeholder="Assignee name or address"
             className="flex-1 rounded-lg border border-border/60 bg-surface/60 px-3 py-1.5 text-xs outline-none focus:border-primary/50"
           />
-          <button type="button" onClick={handleAssign} className="rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary">
+          <button type="button" onClick={handleAssign} className="btn-wipe px-3 py-1.5 text-xs">
             Start
           </button>
         </div>
@@ -455,7 +451,7 @@ function FullCard({
           <input value={workForm.contributor} onChange={(e) => setWorkForm((f) => ({ ...f, contributor: e.target.value }))} placeholder="Your name" className="rounded-lg border border-border/60 bg-background/60 px-3 py-1.5 text-xs outline-none focus:border-primary/50" />
           <input value={workForm.workUrl} onChange={(e) => setWorkForm((f) => ({ ...f, workUrl: e.target.value }))} placeholder="Link to your work" className="rounded-lg border border-border/60 bg-background/60 px-3 py-1.5 text-xs outline-none focus:border-primary/50" />
           <textarea value={workForm.note} onChange={(e) => setWorkForm((f) => ({ ...f, note: e.target.value }))} placeholder="Note to reviewer (optional)" rows={2} className="rounded-lg border border-border/60 bg-background/60 px-3 py-1.5 text-xs leading-5 outline-none focus:border-primary/50 resize-none" />
-          <button type="button" onClick={handleSubmitWork} className="flex items-center justify-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary">
+          <button type="button" onClick={handleSubmitWork} className="btn-wipe gap-1.5 px-3 py-1.5 text-xs">
             <Send className="h-3 w-3" /> Submit for review
           </button>
         </div>

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import Layout from "@/components/Layout";
 import HeroSection from "@/components/HeroSection";
 import FeaturesSection from "@/components/FeaturesSection";
@@ -7,6 +7,7 @@ import AIPlatformSection from "@/components/AIPlatformSection";
 import FlowWalkthrough from "@/components/FlowWalkthrough";
 import FaqSection from "@/components/FaqSection";
 import CTASection from "@/components/CTASection";
+import { useAccount } from "@/contexts/AccountContext";
 import { useSeo } from "@/lib/seo";
 
 export default function Index() {
@@ -17,6 +18,7 @@ export default function Index() {
     path: "/",
   });
 
+  const account = useAccount();
   const location = useLocation();
 
   useEffect(() => {
@@ -27,6 +29,10 @@ export default function Index() {
     }, 80);
     return () => window.clearTimeout(timer);
   }, [location.hash]);
+
+  if (account.ready && account.authenticated) {
+    return <Navigate to="/home" replace />;
+  }
 
   return (
     <Layout>

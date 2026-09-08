@@ -1,0 +1,7 @@
+Your vote in {{community_name}} was recorded
+
+Baraza Protocol
+
+Your vote {{decision}} on "{{proposal_title}}" in {{community_name}} has been recorded.
+
+See the tally: {{action_url}}

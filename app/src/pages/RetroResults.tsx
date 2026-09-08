@@ -221,7 +221,7 @@ export default function RetroResults() {
             type="button"
             onClick={() => void load()}
             disabled={loading}
-            className="rounded-full border border-border bg-surface px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground disabled:opacity-50 inline-flex items-center gap-1"
+            className="btn-wipe-outline gap-1 px-3 py-2 text-xs"
           >
             <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
             Refresh

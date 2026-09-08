@@ -298,7 +298,7 @@ export default function JoinStatus() {
                 {!account.authenticated && isComplete && (
                   <div className="rounded-lg border p-5">
                     <p className="text-sm leading-6">
-                      Log in with Privy to attach this membership to your Baraza account.
+                      Log in to attach this membership to your Baraza account.
                     </p>
                   </div>
                 )}

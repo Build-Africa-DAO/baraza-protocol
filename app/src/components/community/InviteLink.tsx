@@ -91,7 +91,7 @@ const InviteLink: React.FC<InviteLinkProps> = ({ communityId, communityName }) =
             type="button"
             onClick={copyLink}
             title="Copy link"
-            className="shrink-0 flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all"
+            className="btn-wipe-outline shrink-0 gap-1.5 px-3 py-1.5 text-[11px]"
           >
             {copied ? (
               <>
@@ -113,7 +113,7 @@ const InviteLink: React.FC<InviteLinkProps> = ({ communityId, communityName }) =
         <button
           type="button"
           onClick={share}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all"
+          className="btn-wipe gap-2 px-4 py-2 text-sm"
         >
           {canShare ? (
             <>
@@ -131,7 +131,7 @@ const InviteLink: React.FC<InviteLinkProps> = ({ communityId, communityName }) =
           <button
             type="button"
             onClick={openQr}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all"
+            className="btn-wipe-outline gap-2 px-4 py-2 text-sm"
           >
             <ExternalLink className="w-4 h-4" />
             Download QR

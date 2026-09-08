@@ -227,10 +227,10 @@ export default function CommunityRoadmap({ communityId }: Props) {
             </div>
             {formError && <p className="text-xs text-destructive">{formError}</p>}
             <div className="flex gap-2">
-              <button type="button" onClick={handleAdd} className="rounded-lg border border-primary/40 bg-primary/10 px-4 py-2 text-xs font-bold text-primary">
+              <button type="button" onClick={handleAdd} className="btn-wipe px-4 py-2 text-xs">
                 Add to roadmap
               </button>
-              <button type="button" onClick={() => setShowForm(false)} className="rounded-lg border border-border/60 px-4 py-2 text-xs font-semibold text-muted-foreground">
+              <button type="button" onClick={() => setShowForm(false)} className="btn-wipe-outline px-4 py-2 text-xs">
                 Cancel
               </button>
             </div>
@@ -300,7 +300,7 @@ export default function CommunityRoadmap({ communityId }: Props) {
                           <button
                             type="button"
                             onClick={() => handleAdvance(m.id, m.status)}
-                            className="mt-2 w-full rounded-lg border border-border/50 py-1 text-[11px] font-semibold text-muted-foreground transition-all hover:border-primary/40 hover:text-foreground"
+                            className="btn-wipe-outline mt-2 w-full py-1.5 text-[11px]"
                           >
                             {m.status === 'planned' ? 'Mark in progress' : 'Mark completed'}
                           </button>

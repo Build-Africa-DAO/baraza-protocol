@@ -614,7 +614,7 @@ export default function Bounties() {
                                 {bounty.status === 'open' && (
                                   <Link
                                     to={`/bounties/${bounty.id}`}
-                                    className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-confirmed/40 bg-confirmed/10 px-2 py-1.5 text-xs font-bold text-confirmed transition-colors hover:bg-confirmed/15"
+                                    className="btn-wipe w-full gap-1.5 px-2 py-1.5 text-xs"
                                   >
                                     Apply <ArrowRight className="h-3 w-3" />
                                   </Link>
@@ -623,14 +623,14 @@ export default function Bounties() {
                                   <button
                                     type="button"
                                     onClick={() => { setSubmitFor(submitFor === bounty.id ? null : bounty.id); setFormMessage(null); }}
-                                    className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 px-2 py-1.5 text-xs font-bold text-primary transition-colors hover:bg-primary/15"
+                                    className="btn-wipe-outline w-full gap-1.5 px-2 py-1.5 text-xs"
                                   >
-                                    <Send className="h-3 w-3" /> Send work update
+                                    <Send className="h-3 w-3 shrink-0" /> Update
                                   </button>
                                 )}
                                 {bounty.status === 'in_review' && (
                                   <span className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-accent/30 bg-accent/5 px-2 py-1.5 text-xs font-semibold text-accent">
-                                    <Clock className="h-3 w-3" /> In review · {submissionCounts[bounty.id] ?? bounty.submissions} subs
+                                    <Clock className="h-3 w-3 shrink-0" /> In review
                                   </span>
                                 )}
                                 {(bounty.status === 'paid' || bounty.status === 'awarded') && (
@@ -658,7 +658,7 @@ export default function Bounties() {
                                   <button
                                     type="button"
                                     onClick={() => void handleSubmitWork(bounty.id)}
-                                    className="flex items-center justify-center gap-1 rounded-md border border-primary/40 bg-primary/10 px-2 py-1.5 text-xs font-bold text-primary"
+                                    className="btn-wipe gap-1 px-2 py-1.5 text-xs"
                                   >
                                     <Send className="h-3 w-3" /> Submit
                                   </button>

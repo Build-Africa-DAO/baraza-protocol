@@ -515,7 +515,7 @@ export default function ShowReelSection() {
           </p>
           <Link
             to="/create"
-            className="group inline-flex items-center gap-2 rounded-full border border-primary/50 bg-primary/15 px-5 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+            className="btn-wipe gap-2 px-5 py-2.5 text-sm"
           >
             Start your community
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />

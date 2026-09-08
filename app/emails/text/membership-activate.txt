@@ -1,0 +1,8 @@
+Activate your {{community_name}} membership
+
+Baraza Protocol
+
+We received your dues payment for {{community_name}} ({{amount_label}}).
+
+Open this link to attach the membership to your Baraza account:
+{{action_url}}

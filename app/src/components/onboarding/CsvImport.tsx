@@ -112,7 +112,7 @@ const CsvImport: React.FC<CsvImportProps> = ({ onImport, onCancel }) => {
       <button
         type="button"
         onClick={downloadTemplate}
-        className="flex items-center gap-2 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+        className="btn-wipe-outline h-8 gap-2 px-3 text-xs"
       >
         <Download className="w-3.5 h-3.5" />
         Download sample template
@@ -216,7 +216,7 @@ const CsvImport: React.FC<CsvImportProps> = ({ onImport, onCancel }) => {
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground border border-border hover:border-border/80 transition-all"
+            className="btn-wipe-outline h-9 px-4 text-sm"
           >
             Cancel
           </button>
@@ -225,7 +225,7 @@ const CsvImport: React.FC<CsvImportProps> = ({ onImport, onCancel }) => {
           type="button"
           onClick={handleImport}
           disabled={!hasValid || isParsing}
-          className="px-5 py-2 rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          className="btn-wipe h-9 px-5 text-sm disabled:cursor-not-allowed disabled:opacity-40"
         >
           {hasValid
             ? `Import ${result.valid.length} Member${result.valid.length !== 1 ? 's' : ''}`

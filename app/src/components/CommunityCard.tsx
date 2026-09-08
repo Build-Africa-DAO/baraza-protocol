@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, BriefcaseBusiness, UserPlus, Users, TrendingUp, MessageSquare } from "lucide-react";
 import { MagicCard } from "@/components/ui/magic-card";
+import { Button } from "@/components/ui/button";
 import { formatKSh, cn } from "@/lib/utils";
 import { getCommunityBannerImage } from "@/lib/communityVisuals";
 import { getBountyStatsForCommunity } from "@/lib/bounties";
@@ -123,14 +124,18 @@ export default function CommunityCard({
           </div>
 
             <div className="mt-5 grid gap-2 sm:grid-cols-2">
-              <Link to={`/join/${id}`} className="btn-warm justify-center gap-2 px-3 py-2 text-xs font-bold">
-                <UserPlus className="h-3.5 w-3.5" />
-                Become a member
-              </Link>
-              <Link to={`/dashboard/${id}`} className="btn-ghost justify-center gap-2 px-3 py-2 text-xs font-bold">
-                View profile
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
+              <Button asChild size="sm" className="w-full">
+                <Link to={`/join/${id}`}>
+                  <UserPlus className="h-3.5 w-3.5" />
+                  Become a member
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="sm" className="w-full">
+                <Link to={`/dashboard/${id}`}>
+                  View profile
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </Button>
             </div>
           </div>
         </div>
