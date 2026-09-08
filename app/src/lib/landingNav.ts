@@ -2,6 +2,7 @@ export const LANDING_NAV = [
   { label: 'Home', to: '/#home', hash: 'home' },
   { label: 'How It Works', to: '/#how-it-works', hash: 'how-it-works' },
   { label: 'Features', to: '/#features', hash: 'features' },
+  { label: 'Pricing', to: '/#pricing', hash: 'pricing' },
   { label: 'FAQ', to: '/#faq', hash: 'faq' },
   { label: 'Contact', to: '/#contact', hash: 'contact' },
 ] as const;
@@ -14,6 +15,7 @@ export const LANDING_SECTION_IDS = [
   'how-it-works',
   'features',
   'who-its-for',
+  'pricing',
   'faq',
   'contact',
 ] as const;
