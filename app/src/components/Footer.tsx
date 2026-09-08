@@ -26,6 +26,7 @@ const columns = [
     title: toTitleCase("Company"),
     links: [
       { label: toTitleCase("Evaluate a Group"), to: "/evaluate" },
+      { label: toTitleCase("System status"), to: "/status" },
       { label: "GitHub", href: "https://github.com/Build-Africa-DAO/baraza-protocol" },
       { label: toTitleCase("Sign In"), to: "/profile" },
     ],

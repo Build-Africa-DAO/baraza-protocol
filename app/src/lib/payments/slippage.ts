@@ -106,3 +106,25 @@ export function evaluateFxSlippage(
 export function isWithinTelcoLimit(fiatAmountMinor: bigint): boolean {
   return fiatAmountMinor > 0n && fiatAmountMinor <= TELCO_MAX_SINGLE_TX_MINOR;
 }
+
+export interface TelcoTranchePlan {
+  exceeds: boolean;
+  trancheCount: number;
+  amountsMinor: bigint[];
+}
+
+/** Splits a fiat payout into Safaricom-legal tranches of at most KES 250,000. */
+export function planTelcoTranches(fiatAmountMinor: bigint): TelcoTranchePlan {
+  if (fiatAmountMinor <= 0n) return { exceeds: false, trancheCount: 0, amountsMinor: [] };
+  if (fiatAmountMinor <= TELCO_MAX_SINGLE_TX_MINOR) {
+    return { exceeds: false, trancheCount: 1, amountsMinor: [fiatAmountMinor] };
+  }
+  const amountsMinor: bigint[] = [];
+  let remaining = fiatAmountMinor;
+  while (remaining > 0n) {
+    const chunk = remaining > TELCO_MAX_SINGLE_TX_MINOR ? TELCO_MAX_SINGLE_TX_MINOR : remaining;
+    amountsMinor.push(chunk);
+    remaining -= chunk;
+  }
+  return { exceeds: true, trancheCount: amountsMinor.length, amountsMinor };
+}

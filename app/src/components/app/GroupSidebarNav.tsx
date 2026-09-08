@@ -6,12 +6,14 @@ import {
   CreditCard,
   Crown,
   Images,
+  Landmark,
   Layers,
   LayoutDashboard,
   Lightbulb,
   MapIcon,
   PlusCircle,
   ReceiptText,
+  Send,
   Settings,
   Trophy,
   Users,
@@ -99,6 +101,8 @@ export function GroupSidebarNav({
   const [searchParams] = useSearchParams();
   const active = getDashboardTab(searchParams, location.pathname);
   const onFunds = location.pathname.endsWith('/treasury');
+  const onPayouts = location.pathname.endsWith('/disbursements');
+  const onCompliance = location.pathname.endsWith('/compliance');
   const primary = DASHBOARD_TABS.filter((tab) => tab.nav === 'primary');
   const more = DASHBOARD_TABS.filter((tab) => tab.nav === 'more');
 
@@ -110,7 +114,7 @@ export function GroupSidebarNav({
           to={tab.key === 'overview' ? `/dashboard/${communityId}` : `/dashboard/${communityId}?tab=${tab.key}`}
           icon={tab.icon}
           label={tab.label}
-          isActive={!onFunds && active === tab.key}
+          isActive={!onFunds && !onPayouts && !onCompliance && active === tab.key}
           onNavigate={onNavigate}
         />
       ))}
@@ -120,6 +124,20 @@ export function GroupSidebarNav({
         icon={ReceiptText}
         label="Funds"
         isActive={onFunds}
+        onNavigate={onNavigate}
+      />
+      <NavLinkRow
+        to={`/dashboard/${communityId}/disbursements`}
+        icon={Send}
+        label="Payouts"
+        isActive={onPayouts}
+        onNavigate={onNavigate}
+      />
+      <NavLinkRow
+        to={`/dashboard/${communityId}/compliance`}
+        icon={Landmark}
+        label="Compliance"
+        isActive={onCompliance}
         onNavigate={onNavigate}
       />
 
@@ -132,7 +150,7 @@ export function GroupSidebarNav({
           to={`/dashboard/${communityId}?tab=${tab.key}`}
           icon={tab.icon}
           label={tab.label}
-          isActive={!onFunds && active === tab.key}
+          isActive={!onFunds && !onPayouts && !onCompliance && active === tab.key}
           onNavigate={onNavigate}
         />
       ))}

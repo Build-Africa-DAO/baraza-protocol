@@ -35,6 +35,18 @@ vi.mock('@/hooks/useCommunities', () => ({
   }),
 }));
 
+vi.mock('@/hooks/useBarazaData', () => ({
+  useDecisions: () => ({ all: [], active: [], past: [] }),
+}));
+
+vi.mock('@/contexts/AccountContext', () => ({
+  useAccount: () => ({
+    authenticated: false,
+    accountId: null,
+    getAccessToken: async () => null,
+  }),
+}));
+
 afterEach(cleanup);
 
 describe('TreasuryDetail', () => {

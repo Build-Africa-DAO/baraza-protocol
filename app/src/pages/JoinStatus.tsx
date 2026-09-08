@@ -86,6 +86,7 @@ export default function JoinStatus() {
   // ord_wallet_ ids predate the local prefix and never had a server-side order.
   const isLocalOrder = orderId.startsWith("ord_local_") || orderId.startsWith("ord_wallet_") || !orderId;
   const hasSupabase = isSupabaseConfigured();
+  const shouldPollServer = Boolean(orderId && !isLocalOrder && (activationSecret || hasSupabase));
 
   const [status, setStatus] = useState<PaymentOrderStatus>(
     isLocalOrder ? "PAYMENT_CONFIRMED" : "PAYMENT_REQUESTED",
@@ -96,7 +97,7 @@ export default function JoinStatus() {
   // ─── Local/mock progression: when there's no Supabase order, step through
   //     the happy-path sequence on a timer so the demo feels alive.
   useEffect(() => {
-    if (!isLocalOrder && hasSupabase) return;
+    if (shouldPollServer) return;
 
     let cancelled = false;
     let idx = 0;
@@ -114,11 +115,11 @@ export default function JoinStatus() {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [isLocalOrder, hasSupabase]);
+  }, [shouldPollServer]);
 
   // ─── Supabase polling: refetch the order until it reaches a terminal state.
   useEffect(() => {
-    if (isLocalOrder || !hasSupabase) return;
+    if (!shouldPollServer) return;
 
     let cancelled = false;
     let timer: number | undefined;
@@ -149,7 +150,7 @@ export default function JoinStatus() {
       cancelled = true;
       if (timer !== undefined) window.clearTimeout(timer);
     };
-  }, [isLocalOrder, hasSupabase, orderId, activationSecret]);
+  }, [shouldPollServer, orderId, activationSecret]);
 
   // ─── On RECONCILED (or INDEXER_CONFIRMED), record the membership locally and
   //     persist via /api/membership/activate. Works for both wallet-connected
@@ -194,7 +195,7 @@ export default function JoinStatus() {
             { code: "payment-confirmed", label: "Transfer verified", minStatus: "PAYMENT_CONFIRMED" },
           ]
         : [
-            { code: "payment-requested", label: "Check your phone for the M-Pesa prompt", minStatus: "PAYMENT_REQUESTED" },
+            { code: "payment-requested", label: "Check your phone for the M-Pesa STK PIN prompt", minStatus: "PAYMENT_REQUESTED" },
             { code: "payment-confirmed", label: "Payment received - activating membership", minStatus: "PAYMENT_CONFIRMED" },
           ];
 
@@ -207,7 +208,7 @@ export default function JoinStatus() {
   );
 
   const isFailed = isFailureStatus(status);
-  const isComplete = status === "RECONCILED";
+  const isComplete = status === "RECONCILED" || status === "INDEXER_CONFIRMED";
   const referenceParts = orderId.split("_");
   const displayReference = orderId ? referenceParts[referenceParts.length - 1] : "(none)";
 
@@ -290,9 +291,9 @@ export default function JoinStatus() {
 
                 <div className="rounded-lg border p-5">
                   <ShieldCheck className="mb-3 h-5 w-5" />
-                  <p className="text-sm leading-6">
-                    Your membership activates only after payment proof and approval are complete.
-                  </p>
+                    <p className="text-sm leading-6">
+                      Your membership activates after payment is confirmed on the ledger (INDEXER_CONFIRMED).
+                    </p>
                 </div>
 
                 {!account.authenticated && isComplete && (

@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -48,6 +48,8 @@ function renderStatus(path: string) {
 
 afterEach(() => {
   window.localStorage.clear();
+  window.sessionStorage.clear();
+  vi.unstubAllGlobals();
   cleanup();
 });
 
@@ -72,7 +74,7 @@ describe('JoinStatus payment rail copy', () => {
   it('keeps M-Pesa copy as the default payment rail', () => {
     renderStatus('/join/1/status?orderId=ord_mpesa_demo');
 
-    expect(screen.getByText('Check your phone for the M-Pesa prompt')).toBeInTheDocument();
+    expect(screen.getByText('Check your phone for the M-Pesa STK PIN prompt')).toBeInTheDocument();
     expect(screen.getByText(/M-Pesa confirmation/)).toBeInTheDocument();
     expect(screen.queryByText('Transfer verified')).not.toBeInTheDocument();
   });
@@ -82,5 +84,34 @@ describe('JoinStatus payment rail copy', () => {
 
     expect(screen.getByText('Recording your membership')).toBeInTheDocument();
     expect(screen.queryByText(/Stellar|Solana|Base/i)).not.toBeInTheDocument();
+  });
+});
+
+describe('JoinStatus membership activation', () => {
+  it('treats INDEXER_CONFIRMED as an active membership', async () => {
+    window.sessionStorage.setItem('baraza:payment-order-secret:ord_mpesa_live', 'sec_test');
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        order_id: 'ord_mpesa_live',
+        community_id: '1',
+        membership_tier_id: null,
+        status: 'INDEXER_CONFIRMED',
+        amount_expected: 51250,
+        amount_received: 51250,
+        currency: 'KES',
+        confirmed_at: '2026-09-08T00:00:00.000Z',
+        created_at: '2026-09-08T00:00:00.000Z',
+        updated_at: '2026-09-08T00:00:00.000Z',
+      }),
+    })));
+
+    renderStatus('/join/1/status?orderId=ord_mpesa_live');
+
+    await waitFor(() => {
+      expect(screen.getByText("You're an active member")).toBeInTheDocument();
+    });
+    expect(screen.getByText('Active')).toBeInTheDocument();
   });
 });

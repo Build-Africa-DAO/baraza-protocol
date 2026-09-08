@@ -22,6 +22,9 @@ import {
   voteOptionLabel,
 } from "@/lib/governance";
 import type { VoteOption } from "@/types";
+import { EXECUTE_LOCKED_COPY } from "@/components/TreasuryCircuitBreakerBanner";
+import { useAccount } from "@/contexts/AccountContext";
+import { sessionHeaders } from "@/lib/sessionHeaders";
 
 export default function ProposalDetail() {
   const { id, decisionId } = useParams<{ id: string; decisionId: string }>();
@@ -31,6 +34,9 @@ export default function ProposalDetail() {
   const { vote: submitVote, isLoading: isPending } = useCastVote();
   const existingVote = useVoteStatus(decisionId ?? '', address);
   const { toast } = useToast();
+  const account = useAccount();
+  const frozen = Boolean(community?.isPayoutFrozen || community?.communityStatus === 'paused');
+  const [executing, setExecuting] = useState(false);
   const { chainMeta } = useChain();
   const [commentBody, setCommentBody] = useState("");
   const [commentVersion, setCommentVersion] = useState(0);
@@ -74,7 +80,7 @@ export default function ProposalDetail() {
     ? Math.round((totalVotes / proposal.totalMembers) * 100)
     : 0;
   const days = daysRemaining(proposal.endsAt);
-  const stage = inferStage(proposal.status);
+  const stage = proposal.lifecycleStage ?? inferStage(proposal.status);
   const stageMeta = STAGE_META[stage];
   const StageIcon = stageMeta.icon;
   const isVotable = stageMeta.votable;
@@ -178,8 +184,8 @@ export default function ProposalDetail() {
                 </div>
                 <div className="space-y-3">
                   <div className="flex flex-wrap justify-between gap-x-3 text-sm">
-                    <span>Support ({proposal.votesFor})</span>
-                    <span>Object ({proposal.votesAgainst})</span>
+                    <span>Yes ({proposal.votesFor})</span>
+                    <span>No ({proposal.votesAgainst})</span>
                     <span className="text-muted-foreground">Abstain ({abstainVotes})</span>
                   </div>
                   <div className="flex h-4 overflow-hidden rounded-full bg-muted">
@@ -189,9 +195,16 @@ export default function ProposalDetail() {
                   </div>
                   <div className="flex justify-between font-mono text-xs">
                     <span>{support}% approval of decided votes</span>
-                    <span>{quorum}% quorum progress</span>
+                    <span>{quorum}% of {quorumRequiredPct}% quorum</span>
                   </div>
                 </div>
+                {(stage === 'tied' || stage === 'tied_extended') && (
+                  <p className="mt-4 rounded-lg border border-accent/40 bg-accent/10 px-3 py-2 text-sm">
+                    {stage === 'tied_extended'
+                      ? 'Proposal tied — deliberation extended 48 hours.'
+                      : 'Proposal Tied (Deadlocked — Not Executed)'}
+                  </p>
+                )}
 
                 <div className="mt-6 grid gap-3 md:grid-cols-3">
                   <button
@@ -227,6 +240,38 @@ export default function ProposalDetail() {
                     ? `You voted ${existingVote === 'for' ? 'yes' : existingVote === 'against' ? 'no' : 'abstain'} on this proposal.`
                     : "One vote per member. Your vote is recorded in the shared ledger."}
                 </p>
+                {(stage === 'succeeded' || stage === 'queued') && (
+                  <button
+                    type="button"
+                    disabled={frozen || executing}
+                    title={frozen ? EXECUTE_LOCKED_COPY : undefined}
+                    onClick={() => {
+                      void (async () => {
+                        setExecuting(true);
+                        try {
+                          const headers = await sessionHeaders(account.getAccessToken);
+                          const res = await fetch('/api/governance/execute', {
+                            method: 'POST',
+                            headers,
+                            body: JSON.stringify({ proposalId: proposal.id, executorWallet: account.accountId }),
+                          });
+                          const data = (await res.json().catch(() => ({}))) as { message?: string; circuitBreaker?: boolean };
+                          toast({
+                            title: res.ok ? 'Proposal executed' : 'Could not execute',
+                            description: res.ok ? 'Payout is queued from the treasury vault.' : (data.circuitBreaker ? EXECUTE_LOCKED_COPY : data.message),
+                            variant: res.ok ? 'default' : 'destructive',
+                          });
+                        } finally {
+                          setExecuting(false);
+                        }
+                      })();
+                    }}
+                    className="btn-warm mt-4 w-full justify-center py-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {executing ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                    Execute proposal
+                  </button>
+                )}
               </div>
 
               <div className="baraza-card p-5 md:p-6">

@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CalendarDays, CheckCircle2, Circle, CircleDot, Map, PlusCircle } from 'lucide-react';
 import { cn, formatRailDate } from '@/lib/utils';
 import { useChain } from '@/hooks/useChain';
+import { asRecordList, tryWorkspaceGet, tryWorkspaceMutate } from '@/lib/workspaceApi';
 
 type MilestoneStatus = 'planned' | 'in_progress' | 'completed';
 
@@ -134,6 +135,15 @@ export default function CommunityRoadmap({ communityId }: Props) {
   const [form, setForm] = useState({ title: '', description: '', targetDate: '', tags: '' });
   const [formError, setFormError] = useState<string | null>(null);
 
+  useEffect(() => {
+    let cancelled = false;
+    void tryWorkspaceGet(`/api/communities/${communityId}/roadmap`).then((payload) => {
+      const remote = asRecordList<Milestone>(payload, 'milestones') ?? asRecordList<Milestone>(payload, 'roadmap');
+      if (!cancelled && remote?.length) setMilestones(remote.map((item) => ({ ...item, communityId })));
+    });
+    return () => { cancelled = true; };
+  }, [communityId]);
+
   const handleAdd = () => {
     if (!form.title.trim()) { setFormError('Title is required.'); return; }
     if (!form.targetDate) { setFormError('Target date is required.'); return; }
@@ -148,6 +158,11 @@ export default function CommunityRoadmap({ communityId }: Props) {
     };
     writeMilestone(m);
     setMilestones((prev) => [m, ...prev]);
+    void tryWorkspaceMutate(`/api/communities/${communityId}/roadmap`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(m),
+    });
     setForm({ title: '', description: '', targetDate: '', tags: '' });
     setShowForm(false);
     setFormError(null);
@@ -161,6 +176,11 @@ export default function CommunityRoadmap({ communityId }: Props) {
     setMilestones((prev) =>
       prev.map((m) => m.id === id ? { ...m, status: next } : m),
     );
+    void tryWorkspaceMutate(`/api/communities/${communityId}/roadmap`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ id, status: next }),
+    });
   };
 
   return (

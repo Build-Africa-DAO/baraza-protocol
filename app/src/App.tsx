@@ -35,6 +35,9 @@ const RetroResults = lazy(() => import('./pages/RetroResults'));
 const RetroCommunity = lazy(() => import('./pages/RetroCommunity'));
 const Onboarding = lazy(() => import('./pages/LeverageOnboarding'));
 const ClaimIdentity = lazy(() => import('./pages/ClaimIdentity'));
+const StatusDashboard = lazy(() => import('./pages/StatusDashboard'));
+const Disbursements = lazy(() => import('./pages/Disbursements'));
+const SaccoCompliancePortal = lazy(() => import('./pages/SaccoCompliancePortal'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 const App: React.FC = () => {
@@ -68,6 +71,8 @@ const App: React.FC = () => {
               <Route path="/join/:id/status" element={<JoinStatus />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/dashboard/:id/treasury" element={<TreasuryDetail />} />
+              <Route path="/dashboard/:id/disbursements" element={<Disbursements />} />
+              <Route path="/dashboard/:id/compliance" element={<SaccoCompliancePortal />} />
               <Route path="/dashboard/:id/decisions/:decisionId" element={<ProposalDetail />} />
               <Route path="/onboard" element={<Onboarding />} />
               <Route path="/onboarding" element={<Navigate to="/onboard" replace />} />
@@ -78,6 +83,7 @@ const App: React.FC = () => {
               <Route path="/retro/:communityId" element={<RetroCommunity />} />
               <Route path="/retro/:communityId/vote" element={<RetroVote />} />
               <Route path="/retro/:communityId/results" element={<RetroResults />} />
+              <Route path="/status" element={<StatusDashboard />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             </Suspense>

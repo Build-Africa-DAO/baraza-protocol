@@ -93,10 +93,10 @@ describe('DecisionCard — lifecycle pill', () => {
 // ─── Vote-button gating ──────────────────────────────────────────────────────
 
 describe('DecisionCard — vote button visibility', () => {
-  it('shows Support and Object buttons when stage is votable (active)', () => {
+  it('shows Yes and No buttons when stage is votable (active)', () => {
     render(<DecisionCard {...defaults({ lifecycleStage: 'active' })} />);
-    expect(screen.getByRole('button', { name: /support/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /object/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^yes$/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^no$/i })).toBeInTheDocument();
   });
 
   const NON_VOTABLE: ProposalLifecycleStage[] = [
@@ -108,13 +108,14 @@ describe('DecisionCard — vote button visibility', () => {
     'expired',
     'canceled',
     'vetoed',
+    'tied',
   ];
 
   for (const stage of NON_VOTABLE) {
     it(`hides vote buttons when stage is ${stage}`, () => {
       render(<DecisionCard {...defaults({ lifecycleStage: stage })} />);
-      expect(screen.queryByRole('button', { name: /support/i })).not.toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /object/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^yes$/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^no$/i })).not.toBeInTheDocument();
     });
   }
 });
@@ -122,16 +123,16 @@ describe('DecisionCard — vote button visibility', () => {
 // ─── Voting interaction ──────────────────────────────────────────────────────
 
 describe('DecisionCard — voting', () => {
-  it('records a for vote when Support clicked', async () => {
+  it('records a for vote when Yes clicked', async () => {
     render(<DecisionCard {...defaults({ lifecycleStage: 'active' })} />);
-    fireEvent.click(screen.getByRole('button', { name: /support/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^yes$/i }));
     await waitFor(() => expect(mockCastVote).toHaveBeenCalledTimes(1));
     expect(mockCastVote).toHaveBeenCalledWith('d1', 'MockWallet11111111111111111111111111111111', 'for');
   });
 
-  it('records an against vote when Object clicked', async () => {
+  it('records an against vote when No clicked', async () => {
     render(<DecisionCard {...defaults({ lifecycleStage: 'active' })} />);
-    fireEvent.click(screen.getByRole('button', { name: /object/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^no$/i }));
     await waitFor(() => expect(mockCastVote).toHaveBeenCalledTimes(1));
     expect(mockCastVote).toHaveBeenCalledWith('d1', 'MockWallet11111111111111111111111111111111', 'against');
   });
@@ -145,20 +146,30 @@ describe('DecisionCard — voting', () => {
 
   it('prevents double-voting (second click is a no-op)', async () => {
     render(<DecisionCard {...defaults({ lifecycleStage: 'active' })} />);
-    fireEvent.click(screen.getByRole('button', { name: /support/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^yes$/i }));
     await waitFor(() => expect(mockCastVote).toHaveBeenCalledTimes(1));
-    fireEvent.click(screen.getByRole('button', { name: /support/i }));
-    fireEvent.click(screen.getByRole('button', { name: /object/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^yes$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^no$/i }));
     expect(mockCastVote).toHaveBeenCalledTimes(1);
   });
 
   it('rolls back optimistic update when castVote returns false', async () => {
     mockCastVote.mockResolvedValue(false);
     render(<DecisionCard {...defaults({ lifecycleStage: 'active' })} />);
-    fireEvent.click(screen.getByRole('button', { name: /support/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^yes$/i }));
     await waitFor(() => expect(mockCastVote).toHaveBeenCalledTimes(1));
-    // After rollback, support tally should reset to original 8.
-    // The "8 support" text confirms the bar didn't optimistically tick up to 9.
-    expect(screen.getByText(/8 support/i)).toBeInTheDocument();
+    // After rollback, yes tally should reset to original 8.
+    expect(screen.getByText(/8 yes/i)).toBeInTheDocument();
+  });
+
+  it('shows a quorum bar using the community threshold', () => {
+    render(<DecisionCard {...defaults({ lifecycleStage: 'active', votesFor: 8, votesAgainst: 4, totalMembers: 20, quorumPct: 51 })} />);
+    expect(screen.getByText(/Quorum 51%/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/quorum 60 of 51 percent/i)).toBeInTheDocument();
+  });
+
+  it('shows deadlock copy when the proposal is tied', () => {
+    render(<DecisionCard {...defaults({ lifecycleStage: 'tied', votesFor: 10, votesAgainst: 10 })} />);
+    expect(screen.getByText(/Proposal Tied \(Deadlocked — Not Executed\)/i)).toBeInTheDocument();
   });
 });

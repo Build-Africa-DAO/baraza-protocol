@@ -29,6 +29,7 @@ import { fetchDuesStreak, type StreakResult } from '@/lib/duesStreak';
 import { useSeo } from '@/lib/seo';
 import { formatKSh } from '@/lib/utils';
 import { ACCOUNT_COUNTRIES, formatAccountDate, type AccountCountryCode } from '@/lib/accountLocale';
+import { ProfileIdentitySettings } from '@/components/profile/ProfileIdentitySettings';
 
 export default function Profile() {
   useSeo({
@@ -237,6 +238,8 @@ export default function Profile() {
                 <h2 className="mb-4 text-sm font-bold">Country and currency</h2>
                 {countryControl}
               </div>
+
+              <ProfileIdentitySettings />
 
               <div className="baraza-card p-5">
                 <div className="mb-3 flex items-center justify-between">

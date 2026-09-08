@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ChevronUp, Lightbulb, PlusCircle, Tag } from 'lucide-react';
 import { cn, formatRailDate } from '@/lib/utils';
 import { useChain } from '@/hooks/useChain';
+import { asRecordList, tryWorkspaceGet, tryWorkspaceMutate } from '@/lib/workspaceApi';
 
 interface Suggestion {
   id: string;
@@ -116,6 +117,17 @@ export default function CommunitySuggestions({ communityId }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [voterTag] = useState(() => `v-${Math.random().toString(36).slice(2, 8)}`);
 
+  useEffect(() => {
+    let cancelled = false;
+    void tryWorkspaceGet(`/api/communities/${communityId}/suggestions`).then((payload) => {
+      const remote = asRecordList<Suggestion>(payload, 'suggestions');
+      if (!cancelled && remote?.length) {
+        setSuggestions(remote.map((item) => ({ ...item, communityId })).sort((a, b) => b.votes - a.votes));
+      }
+    });
+    return () => { cancelled = true; };
+  }, [communityId]);
+
   const handleSubmit = () => {
     if (!form.title.trim()) { setError('Add a title.'); return; }
     if (!form.author.trim()) { setError('Add your name.'); return; }
@@ -132,6 +144,11 @@ export default function CommunitySuggestions({ communityId }: Props) {
     };
     writeSuggestion(suggestion);
     setSuggestions((prev) => [suggestion, ...prev].sort((a, b) => b.votes - a.votes));
+    void tryWorkspaceMutate(`/api/communities/${communityId}/suggestions`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(suggestion),
+    });
     setForm({ title: '', description: '', author: '', category: 'Feature' });
     setShowForm(false);
     setError(null);
@@ -150,6 +167,11 @@ export default function CommunitySuggestions({ communityId }: Props) {
         };
       }).sort((a, b) => b.votes - a.votes),
     );
+    void tryWorkspaceMutate(`/api/communities/${communityId}/suggestions/${id}/vote`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ voter: voterTag }),
+    });
   };
 
   return (

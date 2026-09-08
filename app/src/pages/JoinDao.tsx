@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -24,6 +24,9 @@ import CommunityBanner from "@/components/CommunityBanner";
 import { useSeo } from "@/lib/seo";
 import { PRODUCT_ENVIRONMENT } from "@/lib/network";
 import { useAccount } from "@/contexts/AccountContext";
+import { acceptInviteCode } from "@/lib/inviteAccept";
+import type { FeeBreakdown } from "@/lib/payments/feeEngine";
+import type { VerificationTier } from "@/lib/constants";
 
 const joinSteps = [
   { label: "Invite opened", state: "current" },
@@ -81,6 +84,7 @@ function generateLocalOrderId(): string {
 
 export default function JoinDao() {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const { community, isLoading } = useCommunity(id);
   const account = useAccount();
   useSeo({
@@ -96,10 +100,17 @@ export default function JoinDao() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVerifyingStellar, setIsVerifyingStellar] = useState(false);
   const [pendingWalletJoin, setPendingWalletJoin] = useState(false);
+  const [quotedFee, setQuotedFee] = useState<FeeBreakdown | null>(null);
+  const [showOtherRails, setShowOtherRails] = useState(false);
 
   const amount = community?.membershipFee ?? 0;
-  const feeBreakdown = calculateDynamicFee(amount * 100, 'KES', true);
+  const localFee = calculateDynamicFee(Math.round(amount * 100), 'KES', true);
+  const feeBreakdown = quotedFee ?? localFee;
   const isFree = feeBreakdown.isFree;
+  const verificationTier: VerificationTier = community?.verificationTier ?? 'activation';
+  const vouchThreshold = community?.vouchThreshold ?? 2;
+  const needsLogin = !account.authenticated;
+  const joinBlockedByTier = verificationTier === 'vouching' || verificationTier === 'proof_of_personhood';
 
   const normalisedPhone = normaliseKenyanPhone(phone);
   const canSubmit = (isFree || (normalisedPhone !== null && amount > 0)) && !isSubmitting;
@@ -122,8 +133,53 @@ export default function JoinDao() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account.accountId, account.authenticated, pendingWalletJoin]);
 
+  useEffect(() => {
+    const code = searchParams.get('invite');
+    if (!code || !/^[a-zA-Z0-9_-]{6,32}$/.test(code) || !account.authenticated) return;
+    let cancelled = false;
+    void acceptInviteCode(code, account.getAccessToken).then((accepted) => {
+      if (cancelled || !accepted.ok || !accepted.communityId) return;
+      if (accepted.alreadyMember) {
+        toast({ title: 'You already belong to this group', description: 'Opening the group workspace.' });
+        navigate(`/dashboard/${accepted.communityId}`);
+      } else if (accepted.joined) {
+        toast({ title: 'Invite accepted', description: 'Continue with activation dues if this group charges a fee.' });
+      }
+    });
+    return () => { cancelled = true; };
+  }, [account.authenticated, account.getAccessToken, navigate, searchParams, toast]);
+
+  useEffect(() => {
+    if (!id || !community || isFree) return;
+    let cancelled = false;
+    void fetch("/api/stellar/create-payment-intent", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ communityId: id }),
+    })
+      .then(async (res) => {
+        if (!res.ok || cancelled) return;
+        const data = (await res.json()) as { feeBreakdown?: FeeBreakdown; zeroFee?: boolean };
+        if (cancelled) return;
+        if (data.feeBreakdown) setQuotedFee(data.feeBreakdown);
+      })
+      .catch(() => {
+        // Intent signing is optional; local feeEngine is the same formula the API uses.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [community, id, isFree]);
+
+  function requireLogin(): boolean {
+    if (account.authenticated) return true;
+    account.login();
+    return false;
+  }
+
   async function handleFreeJoin() {
     if (!id || isSubmitting) return;
+    if (!requireLogin()) return;
     setIsSubmitting(true);
     try {
       const walletAddress = account.accountId || (phone ? `phone:${phone}` : `phone:anon_${crypto.randomUUID()}`);
@@ -164,6 +220,7 @@ export default function JoinDao() {
     if (isFree) {
       return handleFreeJoin();
     }
+    if (!requireLogin()) return;
     if (!canSubmit || !id || !normalisedPhone) return;
     setIsSubmitting(true);
 
@@ -197,10 +254,10 @@ export default function JoinDao() {
     }
 
     toast({
-      title: usedFallback ? "Simulator unreachable - using local order" : "M-Pesa prompt sent",
+      title: usedFallback ? "Simulator unreachable - using local order" : "Check your phone for the M-Pesa STK PIN prompt",
       description: usedFallback
         ? "Run local dev server to exercise the real /api/mpesa/simulate endpoint."
-        : `Enter your M-Pesa PIN on your phone to confirm ${formatKSh(feeBreakdown.totalExpectedMinor / 100)}.`,
+        : `Enter your M-Pesa PIN to confirm ${formatKSh(feeBreakdown.totalExpectedMinor / 100)}.`,
     });
 
     setIsSubmitting(false);
@@ -209,6 +266,7 @@ export default function JoinDao() {
   }
 
   async function handleStellarSubmit() {
+    if (!requireLogin()) return;
     if (!id || !canVerifyStellar) return;
     setIsVerifyingStellar(true);
 
@@ -294,7 +352,7 @@ export default function JoinDao() {
     <Layout>
       <section className="relative overflow-hidden py-8 md:py-12">
         <div className="container relative z-10 mx-auto px-4">
-          <Link to={community ? `/dashboard/${community.id}` : "/communities"} className="mb-6 inline-flex items-center gap-2 text-sm">
+          <Link to={account.authenticated ? '/home' : (community ? `/dashboard/${community.id}` : '/communities')} className="mb-6 inline-flex items-center gap-2 text-sm">
             <ArrowLeft className="h-4 w-4" />
             Back to Community
           </Link>
@@ -324,188 +382,268 @@ export default function JoinDao() {
               </CommunityBanner>
 
               {/* Pre-Transaction Itemized Fee Disclosure */}
-              {!isFree && (
+              {!isFree && verificationTier === 'activation' && (
                 <div className="mx-5 mt-5 rounded-lg border p-4 bg-muted/30 md:mx-6">
                   <h3 className="font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-                    Pre-Transaction Fee Breakdown
+                    Dues breakdown
                   </h3>
+                  <p className="mb-3 text-[11px] text-muted-foreground">
+                    Total = activation fee + 2.0% platform fee + 0.5% carrier cost (capped at KES 200). Same protocol formula the payment API uses.
+                  </p>
                   <div className="grid gap-2 text-xs sm:text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Base Community Dues</span>
+                      <span className="text-muted-foreground">Activation fee</span>
                       <span className="font-medium">{formatKSh(feeBreakdown.baseAmountMinor / 100)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Baraza Platform Fee (2.0%)</span>
+                      <span className="text-muted-foreground">Baraza platform fee (2.0%)</span>
                       <span className="font-medium">{formatKSh(feeBreakdown.platformFeeMinor / 100)}</span>
                     </div>
                     {feeBreakdown.carrierCostMinor > 0 && (
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Carrier Processing Cost (0.5% capped)</span>
+                        <span className="text-muted-foreground">Carrier processing cost (0.5% capped)</span>
                         <span className="font-medium">{formatKSh(feeBreakdown.carrierCostMinor / 100)}</span>
                       </div>
                     )}
                     <div className="border-t pt-2 flex justify-between font-semibold text-sm">
-                      <span>Total Expected Payment</span>
+                      <span>Total expected payment</span>
                       <span className="text-primary font-bold">{formatKSh(feeBreakdown.totalExpectedMinor / 100)}</span>
                     </div>
                   </div>
                 </div>
               )}
 
-              <div className="grid gap-4 p-5 lg:grid-cols-3 md:p-6">
-                <div className="rounded-lg border p-5">
-                  <div className="mb-4 flex items-center gap-3">
-                    <div className="grid h-10 w-10 place-items-center rounded-lg">
-                      <Phone className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h2 className="font-display text-base font-semibold">Phone-first M-Pesa</h2>
-                      <p className="text-xs">Primary mobile money rail</p>
-                    </div>
-                  </div>
-
-                  {!isFree ? (
-                    <>
-                      <label htmlFor="join-phone" className="mb-2 block text-xs font-semibold">M-Pesa phone number</label>
-                      <div className="flex rounded-lg border focus-within:border-current">
-                        <span className="border-r px-3 py-3 text-sm">+254</span>
-                        <input
-                          id="join-phone"
-                          value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
-                          className="min-w-0 flex-1 px-3 py-3 text-sm outline-none"
-                          placeholder="e.g. 0712 345 678"
-                          type="tel"
-                          inputMode="numeric"
-                          autoComplete="tel-national"
-                        />
-                      </div>
-                      <p className="mt-2 text-[11px]">We&apos;ll send an STK prompt. Your number stays private.</p>
-                    </>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">This community has no activation dues. You can join immediately.</p>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={isFree ? handleFreeJoin : handleMpesaSubmit}
-                    disabled={!canSubmit}
-                    className="btn-warm mt-5 w-full justify-center gap-2 py-3 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        {isFree ? "Activating..." : "Sending prompt..."}
-                      </>
-                    ) : isFree ? (
-                      <>
-                        <CheckCircle2 className="h-4 w-4" />
-                        Join Free Community
-                      </>
-                    ) : (
-                      <>
-                        <CreditCard className="h-4 w-4" />
-                        Request M-Pesa Prompt
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                <div className="rounded-lg border p-5">
-                  <div className="mb-4 flex items-center gap-3">
-                    <div className="grid h-10 w-10 place-items-center rounded-lg">
-                      <Stars className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h2 className="font-display text-base font-semibold">On-chain transfer</h2>
-                      <p className="text-xs">Verify a settlement transaction hash</p>
-                    </div>
-                  </div>
-                  <p className="text-sm leading-6">
-                    Paste the 64-character transaction hash from the group settlement rail. This is not a bank or SWIFT transfer.
-                  </p>
-
-                  <div className="mb-3 mt-4 rounded-lg border bg-muted/20 p-3">
-                    <p className="text-[11px] text-muted-foreground">Amount to send</p>
-                    <p className="font-mono text-sm font-bold">
-                      {formatKSh(feeBreakdown.totalExpectedMinor / 100)}
+              <div className="space-y-4 p-5 md:p-6">
+                {verificationTier === 'vouching' && (
+                  <div className="rounded-lg border border-accent/40 bg-accent/10 p-5">
+                    <h2 className="font-display text-base font-semibold">Waiting for member vouches</h2>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                      Waiting for {vouchThreshold} member {vouchThreshold === 1 ? 'vouch' : 'vouches'} before this group can activate your membership. Ask a current member to vouch for you.
                     </p>
                   </div>
+                )}
 
-                  <label htmlFor="stellar-tx" className="mb-2 mt-3 block text-xs font-semibold">Transaction hash</label>
-                  <input
-                    id="stellar-tx"
-                    value={stellarTxHash}
-                    onChange={(event) => setStellarTxHash(event.target.value)}
-                    className="w-full rounded-lg border px-3 py-3 font-mono text-xs outline-none"
-                    placeholder="64-character transaction hash"
-                  />
+                {verificationTier === 'proof_of_personhood' && (
+                  <div className="rounded-lg border p-5">
+                    <h2 className="font-display text-base font-semibold">Proof of personhood</h2>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                      This group requires proof of personhood. That check is not available in this app yet. Ask an officer how to complete it.
+                    </p>
+                  </div>
+                )}
 
-                  <button
-                    type="button"
-                    onClick={() => void handleStellarSubmit()}
-                    disabled={!canVerifyStellar}
-                    className="btn-warm mt-5 w-full justify-center gap-2 py-3 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {isVerifyingStellar ? (
+                {verificationTier === 'phone' && (
+                  <div className="rounded-lg border p-5">
+                    <h2 className="font-display text-base font-semibold">Phone verification</h2>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                      This group verifies members by phone. Sign in with your phone number, then continue.
+                    </p>
+                    {needsLogin ? (
+                      <button
+                        type="button"
+                        onClick={() => account.login()}
+                        className="btn-wipe mt-4 w-full justify-center py-3 text-sm font-bold"
+                      >
+                        Sign in with phone
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => void handleFreeJoin()}
+                        disabled={isSubmitting}
+                        className="btn-wipe mt-4 w-full justify-center gap-2 py-3 text-sm font-bold"
+                      >
+                        {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                        Continue with verified phone
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {!joinBlockedByTier && verificationTier !== 'phone' && (
+                  <div className="rounded-lg border p-5">
+                    <div className="mb-4 flex items-center gap-3">
+                      <div className="grid h-10 w-10 place-items-center rounded-lg">
+                        <Phone className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h2 className="font-display text-base font-semibold">M-Pesa (default)</h2>
+                        <p className="text-xs">Check your phone for the M-Pesa STK PIN prompt</p>
+                      </div>
+                    </div>
+
+                    {needsLogin && (
+                      <p className="mb-4 rounded-lg border bg-muted/30 px-3 py-2 text-xs leading-5">
+                        Sign in to attach this membership to your Baraza account before you pay.
+                      </p>
+                    )}
+
+                    {!isFree ? (
                       <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Verifying transfer...
+                        <label htmlFor="join-phone" className="mb-2 block text-xs font-semibold">M-Pesa phone number</label>
+                        <div className="flex rounded-lg border focus-within:border-current">
+                          <span className="border-r px-3 py-3 text-sm">+254</span>
+                          <input
+                            id="join-phone"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            className="min-w-0 flex-1 px-3 py-3 text-sm outline-none"
+                            placeholder="e.g. 0712 345 678"
+                            type="tel"
+                            inputMode="numeric"
+                            autoComplete="tel-national"
+                          />
+                        </div>
+                        <p className="mt-2 text-[11px]">We send an STK PIN prompt. Your number stays private.</p>
                       </>
                     ) : (
-                      <>
-                        <Stars className="h-4 w-4" />
-                        Verify transfer
-                      </>
+                      <p className="text-xs text-muted-foreground">This community has no activation dues. You can join immediately after signing in.</p>
                     )}
-                  </button>
-                </div>
 
-                <div className="rounded-lg border p-5">
-                  <div className="mb-4 flex items-center gap-3">
-                    <div className="grid h-10 w-10 place-items-center rounded-lg">
-                      <Wallet className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h2 className="font-display text-base font-semibold">Baraza account</h2>
-                      <p className="text-xs">Private account access</p>
-                    </div>
-                  </div>
-                  <p className="text-sm leading-6">
-                    Log in or create an account to pay, receive membership credentials, and vote.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (account.authenticated && account.accountId) {
-                        startAccountJoin(account.accountId);
-                        return;
-                      }
-                      setPendingWalletJoin(true);
-                      account.login();
-                    }}
-                    disabled={!account.ready || !account.configured}
-                    className="btn-ghost mt-5 w-full justify-center gap-2 py-3 text-sm font-bold"
-                  >
-                    <Wallet className="h-4 w-4" />
-                    {!account.ready ? "Loading..." : account.authenticated ? "Pay from your account" : "Log in"}
-                  </button>
-                  {!account.authenticated && account.configured && (
                     <button
                       type="button"
                       onClick={() => {
-                        setPendingWalletJoin(true);
-                        account.createAccount();
+                        if (needsLogin) {
+                          account.login();
+                          return;
+                        }
+                        void (isFree ? handleFreeJoin() : handleMpesaSubmit());
                       }}
-                      className="btn-wipe-outline mt-3 w-full justify-center py-2 text-xs"
+                      disabled={needsLogin ? !account.ready : !canSubmit}
+                      className="btn-warm mt-5 w-full justify-center gap-2 py-3 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      Create an account
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          {isFree ? "Activating..." : "Sending STK prompt..."}
+                        </>
+                      ) : needsLogin ? (
+                        "Sign in to pay"
+                      ) : isFree ? (
+                        <>
+                          <CheckCircle2 className="h-4 w-4" />
+                          Join free community
+                        </>
+                      ) : (
+                        <>
+                          <CreditCard className="h-4 w-4" />
+                          Send M-Pesa STK PIN prompt
+                        </>
+                      )}
                     </button>
-                  )}
-                  <Link to="/profile" className="mt-3 inline-flex text-xs font-semibold">
-                    Manage Baraza account
-                  </Link>
-                </div>
+                  </div>
+                )}
+
+                {!joinBlockedByTier && (
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => setShowOtherRails((open) => !open)}
+                      className="text-xs font-semibold text-muted-foreground"
+                    >
+                      {showOtherRails ? "Hide other payment methods" : "Other payment methods (wallet, transfer, card)"}
+                    </button>
+                    {showOtherRails && (
+                      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                        <div className="rounded-lg border p-5">
+                          <div className="mb-4 flex items-center gap-3">
+                            <div className="grid h-10 w-10 place-items-center rounded-lg">
+                              <Stars className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <h2 className="font-display text-base font-semibold">On-chain transfer</h2>
+                              <p className="text-xs">Verify a settlement transaction hash</p>
+                            </div>
+                          </div>
+                          <p className="text-sm leading-6">
+                            Paste the 64-character transaction hash from the group settlement rail.
+                          </p>
+
+                          <div className="mb-3 mt-4 rounded-lg border bg-muted/20 p-3">
+                            <p className="text-[11px] text-muted-foreground">Amount to send</p>
+                            <p className="font-mono text-sm font-bold">
+                              {formatKSh(feeBreakdown.totalExpectedMinor / 100)}
+                            </p>
+                          </div>
+
+                          <label htmlFor="stellar-tx" className="mb-2 mt-3 block text-xs font-semibold">Transaction hash</label>
+                          <input
+                            id="stellar-tx"
+                            value={stellarTxHash}
+                            onChange={(event) => setStellarTxHash(event.target.value)}
+                            className="w-full rounded-lg border px-3 py-3 font-mono text-xs outline-none"
+                            placeholder="64-character transaction hash"
+                          />
+
+                          <button
+                            type="button"
+                            onClick={() => void handleStellarSubmit()}
+                            disabled={!canVerifyStellar}
+                            className="btn-warm mt-5 w-full justify-center gap-2 py-3 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {isVerifyingStellar ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Verifying transfer...
+                              </>
+                            ) : (
+                              <>
+                                <Stars className="h-4 w-4" />
+                                Verify transfer
+                              </>
+                            )}
+                          </button>
+                        </div>
+
+                        <div className="rounded-lg border p-5">
+                          <div className="mb-4 flex items-center gap-3">
+                            <div className="grid h-10 w-10 place-items-center rounded-lg">
+                              <Wallet className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <h2 className="font-display text-base font-semibold">Baraza account</h2>
+                              <p className="text-xs">Private account access</p>
+                            </div>
+                          </div>
+                          <p className="text-sm leading-6">
+                            Log in or create an account to pay, receive membership credentials, and vote.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (account.authenticated && account.accountId) {
+                                startAccountJoin(account.accountId);
+                                return;
+                              }
+                              setPendingWalletJoin(true);
+                              account.login();
+                            }}
+                            disabled={!account.ready || !account.configured}
+                            className="btn-ghost mt-5 w-full justify-center gap-2 py-3 text-sm font-bold"
+                          >
+                            <Wallet className="h-4 w-4" />
+                            {!account.ready ? "Loading..." : account.authenticated ? "Pay from your account" : "Log in"}
+                          </button>
+                          {!account.authenticated && account.configured && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPendingWalletJoin(true);
+                                account.createAccount();
+                              }}
+                              className="btn-wipe-outline mt-3 w-full justify-center py-2 text-xs"
+                            >
+                              Create an account
+                            </button>
+                          )}
+                          <Link to="/profile" className="mt-3 inline-flex text-xs font-semibold">
+                            Manage Baraza account
+                          </Link>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="mx-5 mb-5 rounded-lg border p-4 md:mx-6 md:mb-6">

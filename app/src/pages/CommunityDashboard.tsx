@@ -6,6 +6,8 @@ import {
   Wallet as WalletIcon, ExternalLink, Activity,
   BriefcaseBusiness, ChevronRight, Menu, X,
 } from 'lucide-react';
+import { SaccoComplianceBadge } from '@/components/SaccoComplianceBadge';
+import { TreasuryCircuitBreakerBanner } from '@/components/TreasuryCircuitBreakerBanner';
 import LiveStatCard from '@/components/community/LiveStatCard';
 import ActivityFeed from '@/components/community/ActivityFeed';
 import MemberDirectory from '@/components/community/MemberDirectory';
@@ -33,6 +35,9 @@ import { getBountyStatsForCommunity } from '@/lib/bounties';
 import { useChain } from '@/hooks/useChain';
 import { useAccount } from '@/contexts/AccountContext';
 import { DASHBOARD_TABS, getDashboardTab, GroupSidebarNav, type DashboardTab } from '@/components/app/GroupSidebarNav';
+import { DEFAULT_GOVERNANCE } from '@/lib/constants';
+import { PROPOSAL_BUCKETS, proposalBucket, type ProposalBucket } from '@/lib/proposalStatus';
+import { OfficerAdminPanel } from '@/components/officer/OfficerAdminPanel';
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -46,6 +51,7 @@ const CommunityDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<DashboardTab>(() => getDashboardTab(searchParams, location.pathname));
   const [isMember, setIsMember] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [proposalView, setProposalView] = useState<ProposalBucket>('active');
 
   const { community, isLoading, error, reload } = useCommunity(id);
   const { active: activeDecisions, past: pastDecisions, all: allDecisions } = useDecisions(id ?? '');
@@ -126,6 +132,9 @@ const CommunityDashboard: React.FC = () => {
   const canPostBounties = isMember;
   const communityChain = community.chain ?? chain;
   const communityChainMeta = CHAINS[communityChain];
+  const payoutFrozen = Boolean(community.isPayoutFrozen || community.communityStatus === 'paused');
+  const quorumPct = community.quorumPct ?? DEFAULT_GOVERNANCE.quorumPct;
+  const visibleDecisions = allDecisions.filter((decision) => proposalBucket(decision) === proposalView);
 
   return (
     <Layout>
@@ -158,6 +167,7 @@ const CommunityDashboard: React.FC = () => {
                     <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-medium capitalize">
                       {community.type}
                     </span>
+                    <SaccoComplianceBadge type={community.type} status={community.saccoLicenseStatus} />
                     <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-medium">
                       Community group funds
                     </span>
@@ -184,6 +194,8 @@ const CommunityDashboard: React.FC = () => {
               </div>
             </CommunityBanner>
           </div>
+
+          <TreasuryCircuitBreakerBanner frozen={payoutFrozen} />
 
           {/* Live stats */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
@@ -375,7 +387,7 @@ const CommunityDashboard: React.FC = () => {
               {/* ── Governance ── */}
               {activeTab === 'governance' && (
                 <div className="space-y-6">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <h3 className="font-display text-base font-semibold">Decisions</h3>
                     {isMember && (
                       <Link
@@ -388,28 +400,45 @@ const CommunityDashboard: React.FC = () => {
                     )}
                   </div>
 
-                  {activeDecisions.length > 0 && (
-                    <div>
-                      <h4 className="font-display text-sm font-semibold mb-4 text-muted-foreground uppercase tracking-wider text-[11px]">Active</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {activeDecisions.map((d) => <DecisionCard key={d.id} {...d} chainMeta={communityChainMeta} />)}
-                      </div>
-                    </div>
-                  )}
+                  <div className="flex flex-wrap gap-2" role="tablist" aria-label="Proposal filters">
+                    {PROPOSAL_BUCKETS.map((bucket) => (
+                      <button
+                        key={bucket.key}
+                        type="button"
+                        role="tab"
+                        aria-selected={proposalView === bucket.key}
+                        onClick={() => setProposalView(bucket.key)}
+                        className={cn(
+                          'rounded-full border px-3 py-1.5 text-xs font-semibold',
+                          proposalView === bucket.key
+                            ? 'border-primary bg-primary/10 text-primary'
+                            : 'text-muted-foreground hover:bg-muted/50',
+                        )}
+                      >
+                        {bucket.label}
+                      </button>
+                    ))}
+                  </div>
 
-                  {pastDecisions.length > 0 && (
-                    <div>
-                      <h4 className="font-display text-sm font-semibold mb-4 text-muted-foreground uppercase tracking-wider text-[11px]">Past</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {pastDecisions.map((d) => <DecisionCard key={d.id} {...d} chainMeta={communityChainMeta} />)}
-                      </div>
+                  {visibleDecisions.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {visibleDecisions.map((d) => (
+                        <DecisionCard
+                          key={d.id}
+                          {...d}
+                          chainMeta={communityChainMeta}
+                          quorumPct={quorumPct}
+                        />
+                      ))}
                     </div>
-                  )}
-
-                  {allDecisions.length === 0 && (
+                  ) : (
                     <div className="baraza-card p-10 text-center">
                       <Vote className="w-8 h-8 mx-auto mb-3" />
-                      <p className="text-sm">No decisions yet.</p>
+                      <p className="text-sm">
+                        {allDecisions.length === 0
+                          ? 'No decisions yet.'
+                          : `No ${proposalView} proposals.`}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -547,7 +576,10 @@ const CommunityDashboard: React.FC = () => {
 
               {/* ── Settings ── */}
               {activeTab === 'settings' && (
-                <CommunitySettings community={community} isMember={isMember} />
+                <div className="space-y-4">
+                  <CommunitySettings community={community} isMember={isMember} />
+                  {isMember && <OfficerAdminPanel communityId={community.id} />}
+                </div>
               )}
 
             </main>

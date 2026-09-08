@@ -55,10 +55,33 @@ export const STAGE_META: Record<ProposalLifecycleStage, StageMeta> = {
  */
 export function inferStage(status: string): ProposalLifecycleStage {
   if (status === 'completed' || status === 'executed') return 'executed';
-  if (status === 'failed') return 'defeated';
+  if (status === 'failed' || status === 'rejected') return 'defeated';
   if (status === 'passed' || status === 'succeeded') return 'succeeded';
   if (status === 'active') return 'active';
   if (status === 'tied_extended') return 'tied_extended';
   if (status === 'tied') return 'tied';
   return 'pending';
+}
+
+export type ProposalBucket = 'active' | 'passed' | 'executed' | 'rejected' | 'tied';
+
+export const PROPOSAL_BUCKETS: { key: ProposalBucket; label: string }[] = [
+  { key: 'active', label: 'Active' },
+  { key: 'passed', label: 'Passed' },
+  { key: 'executed', label: 'Executed' },
+  { key: 'rejected', label: 'Rejected' },
+  { key: 'tied', label: 'Tied' },
+];
+
+export function proposalBucket(
+  decision: { status: string; lifecycleStage?: ProposalLifecycleStage },
+): ProposalBucket {
+  const stage = decision.lifecycleStage ?? inferStage(decision.status);
+  if (stage === 'tied') return 'tied';
+  if (stage === 'executed') return 'executed';
+  if (stage === 'succeeded' || stage === 'queued') return 'passed';
+  if (stage === 'defeated' || stage === 'expired' || stage === 'canceled' || stage === 'vetoed') {
+    return 'rejected';
+  }
+  return 'active';
 }

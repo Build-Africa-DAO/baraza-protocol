@@ -31,7 +31,17 @@ export interface Community {
    * authorship. Optional because legacy rows and mock seeds may not carry it.
    */
   createdBy?: string;
+  /** How new members prove they belong. Defaults to activation-fee payment. */
+  verificationTier?: VerificationTier;
+  /** Member vouches required when `verificationTier` is `vouching`. */
+  vouchThreshold?: number;
+  saccoRegistrationNumber?: string;
+  saccoLicenseStatus?: string;
+  isPayoutFrozen?: boolean;
+  communityStatus?: 'active' | 'paused';
 }
+
+export type VerificationTier = 'activation' | 'vouching' | 'phone' | 'proof_of_personhood';
 
 export const DEFAULT_GOVERNANCE = {
   quorumPct: 51,
@@ -104,6 +114,9 @@ export const MOCK_DECISIONS: Decision[] = [
   { id: '3', communityId: '1', title: 'Skill Training Workshop', description: 'Organize a 3-day financial literacy and digital skills workshop covering digital payments, budgeting, and mobile money tools.', fundingAmount: 30000, proposedBy: 'Ochieng D.', votesFor: 28, votesAgainst: 12, totalMembers: 47, status: 'completed', createdAt: '2025-03-10', endsAt: '2025-04-01' },
   { id: '4', communityId: '2', title: 'Bulk Purchase: Tomatoes & Onions', description: 'Negotiate bulk pricing with suppliers in Wakulima Market. Estimated 30% savings on procurement costs for all members.', fundingAmount: 120000, proposedBy: 'Aisha O.', votesFor: 98, votesAgainst: 15, totalMembers: 123, status: 'active', createdAt: '2025-05-03', endsAt: '2026-08-20' },
   { id: '5', communityId: '3', title: 'Hackathon Sponsorship', description: 'Sponsor 5 members to attend NairobiHacks 2025 with accommodation and entry fees covered by community fund.', fundingAmount: 75000, proposedBy: 'Kelvin N.', votesFor: 67, votesAgainst: 10, totalMembers: 89, status: 'active', createdAt: '2025-04-20', endsAt: '2026-08-10' },
+  { id: '6', communityId: '1', title: 'Shared water tank', description: 'Split the cost of a 5,000-litre tank for the compound. The vote closed even.', fundingAmount: 42000, proposedBy: 'Njeri W.', votesFor: 20, votesAgainst: 20, totalMembers: 47, status: 'failed', lifecycleStage: 'tied', createdAt: '2025-02-01', endsAt: '2025-02-20' },
+  { id: '7', communityId: '1', title: 'Office rent subsidy', description: 'Cover three months of a shared workspace. Members voted this down.', fundingAmount: 90000, proposedBy: 'Otieno P.', votesFor: 10, votesAgainst: 28, totalMembers: 47, status: 'failed', createdAt: '2025-01-12', endsAt: '2025-02-01' },
+  { id: '8', communityId: '1', title: 'Seed grant for two kiosks', description: 'Passed member vote. Waiting for the treasurer to release funds.', fundingAmount: 40000, proposedBy: 'Amani K.', votesFor: 30, votesAgainst: 6, totalMembers: 47, status: 'completed', lifecycleStage: 'succeeded', createdAt: '2025-01-05', endsAt: '2025-01-25' },
 ];
 
 // Canonical community type list — this is the single source of truth for every

@@ -15,6 +15,7 @@ describe('isStayPath', () => {
     expect(isStayPath('/communities')).toBe(true);
     expect(isStayPath('/onboard')).toBe(false);
     expect(isStayPath('/onboarding')).toBe(false);
+    expect(isStayPath('/status')).toBe(true);
   });
 
   it('does not treat the marketing homepage as a stay path', () => {

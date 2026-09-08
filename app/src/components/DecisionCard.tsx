@@ -5,6 +5,7 @@ import { formatRailAmountFromKes, daysRemaining, cn } from '@/lib/utils';
 import { useWalletGuard } from '@/hooks/useWalletGuard';
 import { useCastVote, useVoteStatus } from '@/hooks/useBarazaData';
 import type { ProposalLifecycleStage } from '@/lib/constants';
+import { DEFAULT_GOVERNANCE } from '@/lib/constants';
 import { STAGE_META, inferStage } from '@/lib/proposalStatus';
 import { CHAINS, type ChainMeta } from '@/lib/chain';
 
@@ -23,6 +24,7 @@ interface DecisionCardProps {
   createdAt: string;
   endsAt: string;
   chainMeta?: ChainMeta;
+  quorumPct?: number;
 }
 
 const DecisionCard: React.FC<DecisionCardProps> = ({
@@ -38,6 +40,7 @@ const DecisionCard: React.FC<DecisionCardProps> = ({
   lifecycleStage,
   endsAt,
   chainMeta = CHAINS.solana,
+  quorumPct = DEFAULT_GOVERNANCE.quorumPct,
 }) => {
   const { requireWallet, isReady, address } = useWalletGuard({ action: 'vote on decisions' });
   const { vote: submitVote } = useCastVote();
@@ -59,6 +62,8 @@ const DecisionCard: React.FC<DecisionCardProps> = ({
   const forPct = decidedVotes > 0 ? Math.round((votesFor / decidedVotes) * 100) : 0;
   const againstPct = decidedVotes > 0 ? 100 - forPct : 0;
   const participationPct = totalMembers > 0 ? Math.round((totalVotes / totalMembers) * 100) : 0;
+  const requiredQuorumPct = quorumPct > 0 ? quorumPct : DEFAULT_GOVERNANCE.quorumPct;
+  const quorumMet = participationPct >= requiredQuorumPct;
 
   const stage: ProposalLifecycleStage = lifecycleStage ?? inferStage(status);
   const stageMeta = STAGE_META[stage];
@@ -134,8 +139,8 @@ const DecisionCard: React.FC<DecisionCardProps> = ({
       {/* Vote progress bars */}
       <div className="space-y-2 mb-4">
         <div className="flex justify-between text-xs">
-          <span className="text-primary font-medium">Support {forPct}%</span>
-          <span className="text-destructive font-medium">Object {againstPct}%</span>
+          <span className="text-primary font-medium">Yes {forPct}%</span>
+          <span className="text-destructive font-medium">No {againstPct}%</span>
         </div>
         <div className="h-2.5 rounded-full bg-muted overflow-hidden flex">
           <motion.div
@@ -153,11 +158,32 @@ const DecisionCard: React.FC<DecisionCardProps> = ({
           />
         </div>
         <div className="flex justify-between text-[10px] text-muted-foreground">
-          <span>{votesFor} support</span>
-          <span>{participationPct}% voted</span>
-          <span>{votesAgainst} object</span>
+          <span>{votesFor} yes</span>
+          <span>{votesAgainst} no</span>
+        </div>
+        <div>
+          <div className="mb-1 flex justify-between text-[10px] text-muted-foreground">
+            <span>Quorum {requiredQuorumPct}%</span>
+            <span className={quorumMet ? 'font-semibold text-primary' : undefined}>
+              {participationPct}% voted{quorumMet ? ' — met' : ''}
+            </span>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={participationPct} aria-valuemin={0} aria-valuemax={100} aria-label={`Quorum ${participationPct} of ${requiredQuorumPct} percent`}>
+            <div
+              className={cn('h-full rounded-full', quorumMet ? 'bg-primary' : 'bg-accent')}
+              style={{ width: `${Math.min(100, participationPct)}%` }}
+            />
+          </div>
         </div>
       </div>
+
+      {(stage === 'tied' || stage === 'tied_extended') && (
+        <p className="mb-4 rounded-lg border border-accent/40 bg-accent/10 px-3 py-2 text-xs font-medium leading-5">
+          {stage === 'tied_extended'
+            ? 'Proposal tied — deliberation extended 48 hours.'
+            : 'Proposal Tied (Deadlocked — Not Executed)'}
+        </p>
+      )}
 
       {/* Vote buttons */}
       {isActive && (
@@ -165,7 +191,7 @@ const DecisionCard: React.FC<DecisionCardProps> = ({
           {(['for', 'against', 'abstain'] as const).map((side) => {
             const isThisSide = userVote === side;
             const isOtherSide = userVote !== null && userVote !== side;
-            const label = side === 'for' ? 'Support' : side === 'against' ? 'Object' : 'Abstain';
+            const label = side === 'for' ? 'Yes' : side === 'against' ? 'No' : 'Abstain';
             const Icon = side === 'for' ? ThumbsUp : side === 'against' ? ThumbsDown : CircleMinus;
             const solid = isThisSide || (userVote === null && side === 'for');
 

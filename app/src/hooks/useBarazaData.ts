@@ -10,6 +10,7 @@ import { useAnchorWallet, useConnection } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
 
 import { dataStore } from '@/lib/dataStore';
+import { proposalBucket } from '@/lib/proposalStatus';
 import { createBarazaClient, toSlug, communityPda, proposalPda, type VoteSupportArg } from '@/lib/programs';
 import type { BarazaChainClient } from '@/lib/programs';
 import {
@@ -20,6 +21,8 @@ import {
 } from '@/lib/chainMappings';
 import { useStellarWallet } from '@/hooks/useStellarWallet';
 import { BarazaStellarClient } from '@/lib/programs/stellarClient';
+import { useAccount } from '@/contexts/AccountContext';
+import { sessionHeaders } from '@/lib/sessionHeaders';
 
 // ---------- Low-level subscription ----------
 
@@ -68,8 +71,8 @@ export function useCommunity(id: string) {
 
 export function useDecisions(communityId: string) {
   const all = useStoreSnapshot(() => dataStore.getDecisionsForCommunity(communityId));
-  const active = all.filter((d) => d.status === 'active');
-  const past = all.filter((d) => d.status === 'completed');
+  const active = all.filter((d) => proposalBucket(d) === 'active');
+  const past = all.filter((d) => proposalBucket(d) !== 'active');
   return { all, active, past };
 }
 
@@ -286,6 +289,7 @@ export function useCreateDecision() {
 export function useCastVote() {
   const client = useBarazaChain();
   const stellarWallet = useStellarWallet();
+  const account = useAccount();
   const [isLoading, setIsLoading] = useState(false);
 
   const vote = useCallback(async (
@@ -329,12 +333,26 @@ export function useCastVote() {
           }
         }
       }
+      try {
+        const headers = await sessionHeaders(account.getAccessToken);
+        await fetch('/api/governance/vote', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            proposalId: decisionId,
+            voter: walletKey,
+            option: voteType === 'for' ? 'yes' : voteType === 'against' ? 'no' : 'abstain',
+          }),
+        });
+      } catch {
+        // Local tally still records if the vote API is unreachable.
+      }
       const ok = await dataStore.castVote(decisionId, walletKey, voteType);
       return ok;
     } finally {
       setIsLoading(false);
     }
-  }, [client, stellarWallet.address, stellarWallet.signTransaction]);
+  }, [account.getAccessToken, client, stellarWallet.address, stellarWallet.signTransaction]);
 
   return { vote, isLoading };
 }
