@@ -20,7 +20,7 @@ const columns = [
       { label: "Chamas", to: "/create?type=savings" },
       { label: "SACCOs", to: "/create?type=sacco" },
       { label: toTitleCase("Cooperatives"), to: "/create?type=cooperative" },
-      { label: toTitleCase("Who It's For"), to: "/#groups" },
+      { label: toTitleCase("Who It's For"), to: "/#who-its-for" },
     ],
   },
   {
