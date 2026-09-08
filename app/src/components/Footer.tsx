@@ -10,6 +10,7 @@ const columns = [
       { label: toTitleCase("Start a Group"), to: "/create/purpose" },
       { label: toTitleCase("How It Works"), to: "/#how-it-works" },
       { label: toTitleCase("Features"), to: "/#features" },
+      { label: toTitleCase("Pricing"), to: "/#pricing" },
       { label: toTitleCase("FAQ"), to: "/#faq" },
       { label: toTitleCase("Contact"), to: "/#contact" },
     ],
