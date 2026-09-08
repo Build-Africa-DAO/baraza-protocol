@@ -35,7 +35,7 @@ export default function ContactSection() {
   }
 
   return (
-    <section id="contact" className="relative z-10 scroll-mt-20 bg-background pb-8 pt-10 text-foreground lg:pb-10">
+    <section id="contact" className="relative z-10 scroll-mt-20 bg-background py-12 text-foreground lg:py-[3.75rem]">
       <div className="page-shell">
         <div className="mx-auto max-w-7xl">
           <h2 className="text-center font-display text-3xl font-black leading-tight md:text-5xl">
