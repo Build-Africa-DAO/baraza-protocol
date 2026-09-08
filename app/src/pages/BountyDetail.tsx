@@ -9,10 +9,10 @@ import {
   Loader2,
   Send,
   ShieldCheck,
-  Trophy,
   UsersRound,
 } from 'lucide-react';
 import Layout from '@/components/Layout';
+import { StatusScreen } from '@/components/StatusPage';
 import CommunityBanner from '@/components/CommunityBanner';
 import {
   getBounty,
@@ -55,25 +55,7 @@ function daysLeft(deadline: string) {
 }
 
 function BountyNotFound() {
-  return (
-    <Layout>
-      <section className="py-20">
-        <div className="container mx-auto max-w-2xl px-4 text-center">
-          <div className="baraza-card p-8">
-            <Trophy className="mx-auto mb-4 h-9 w-9 text-muted-foreground" />
-            <h1 className="font-display text-2xl font-bold">Bounty not found</h1>
-            <p className="mt-3 text-sm text-muted-foreground">
-              This bounty may have been removed or the link may be incomplete.
-            </p>
-            <Link to="/bounties" className="btn-warm mt-6 inline-flex items-center gap-2 text-sm">
-              Back to bounty board
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
-    </Layout>
-  );
+  return <StatusScreen kind="bounty" />;
 }
 
 export default function BountyDetail() {

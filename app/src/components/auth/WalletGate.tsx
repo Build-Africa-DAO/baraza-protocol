@@ -2,6 +2,7 @@ import React from 'react';
 import { Loader2, LogIn, Shield, Users, Vote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAccount } from '@/contexts/AccountContext';
+import { toTitleCase } from '@/lib/utils';
 
 interface WalletGateProps {
   children?: React.ReactNode;
@@ -41,7 +42,7 @@ const WalletGate: React.FC<WalletGateProps> = ({
           <div className="mx-auto mb-6 grid h-14 w-14 place-items-center rounded-2xl bg-primary text-primary-foreground">
             <LogIn className="h-7 w-7" />
           </div>
-          <h2 className="mb-2 text-center font-display text-2xl font-bold">{title}</h2>
+          <h2 className="mb-2 text-center font-display text-2xl font-bold">{toTitleCase(title)}</h2>
           <p className="mb-8 text-center text-sm leading-relaxed text-muted-foreground">{description}</p>
           <ul className="mb-8 space-y-3">
             {perks.map(({ icon: Icon, text }) => (

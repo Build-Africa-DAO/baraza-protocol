@@ -98,6 +98,12 @@ describe('toTitleCase', () => {
   it('preserves product names with inner capitals', () => {
     expect(toTitleCase('link your GitHub account')).toBe('Link Your GitHub Account');
   });
+
+  it('title-cases error page headings and button labels', () => {
+    expect(toTitleCase("this page isn't part of Baraza.")).toBe("This Page Isn't Part of Baraza.");
+    expect(toTitleCase('browse communities')).toBe('Browse Communities');
+    expect(toTitleCase('sign in to continue')).toBe('Sign in to Continue');
+  });
 });
 
 describe('cn', () => {

@@ -20,7 +20,7 @@ export default function Home() {
 
   const account = useAccount();
   const navigate = useNavigate();
-  const { memberships, isLoading } = useMyMemberships();
+  const { memberships, isLoading, error } = useMyMemberships();
   const [invite, setInvite] = useState('');
   const [inviteError, setInviteError] = useState<string | null>(null);
 
@@ -51,6 +51,12 @@ export default function Home() {
             </p>
           </div>
 
+          {error && (
+            <p className="mb-6 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+              {error}
+            </p>
+          )}
+
           {isLoading ? (
             <div className="grid gap-3 md:grid-cols-2">
               {Array.from({ length: 2 }).map((_, index) => (
@@ -78,8 +84,7 @@ export default function Home() {
                     </div>
                     <p className="mt-1 text-xs text-muted-foreground">
                       Joined {formatAccountDate(record.joinedAt, account.country.code)}
-                      {' · '}
-                      {formatKSh(community.membershipFee)}/mo
+                      {community.membershipFee > 0 ? ` · ${formatKSh(community.membershipFee)}/mo` : ''}
                     </p>
                   </div>
                   <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-foreground" />

@@ -13,6 +13,8 @@ describe('isStayPath', () => {
     expect(isStayPath('/dashboard/abc?tab=governance')).toBe(true);
     expect(isStayPath('/create/purpose')).toBe(true);
     expect(isStayPath('/communities')).toBe(true);
+    expect(isStayPath('/onboard')).toBe(false);
+    expect(isStayPath('/onboarding')).toBe(false);
   });
 
   it('does not treat the marketing homepage as a stay path', () => {

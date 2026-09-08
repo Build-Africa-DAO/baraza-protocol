@@ -1,10 +1,11 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Loader2, Mail, Phone, X } from 'lucide-react';
 import { useLoginWithEmail, useLoginWithOAuth, useLoginWithSms } from '@privy-io/react-auth';
 import { BrandLogo } from '@/components/BrandLogo';
 import { isPrivyPhoneAuthEnabled } from '@/lib/wallet/mpc';
 import { isValidEmail } from '@/lib/phoneAuth';
-import { cn } from '@/lib/utils';
+import { cn, toTitleCase } from '@/lib/utils';
+import { digitsOnly, formatPrivyAuthError, isCompletePrivyOtp } from '@/lib/privyAuth';
 import type { AccountCountryCode } from '@/lib/accountLocale';
 
 export type AuthIntent = 'signin' | 'signup';
@@ -25,12 +26,7 @@ function dialForCountry(country: AccountCountryCode): string {
   return DIAL_CODES.find((item) => item.country === country)?.code ?? '+254';
 }
 
-function errorMessage(err: unknown): string {
-  if (err && typeof err === 'object' && 'message' in err && typeof err.message === 'string' && err.message.trim()) {
-    return err.message;
-  }
-  return 'Something went wrong. Try again.';
-}
+const INCOMPLETE_OTP_MESSAGE = 'Enter all 6 digits, including a 0 at the start if there is one.';
 
 function GoogleMark({ className }: { className?: string }) {
   return (
@@ -75,25 +71,56 @@ export default function AuthModal({ intent, countryCode, onIntentChange, onClose
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const previouslyFocused = useRef<HTMLElement | null>(null);
+  const verifyingRef = useRef(false);
 
   const e164 = `${dial}${localNumber.replace(/\s/g, '').replace(/^0+/, '')}`;
   const destination = method === 'email' ? email.trim() : e164;
   const isSignUp = intent === 'signup';
 
   useEffect(() => {
-    const previous = document.body.style.overflow;
+    const previousOverflow = document.body.style.overflow;
+    previouslyFocused.current = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
     document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = previous;
-    };
-  }, []);
 
-  useEffect(() => {
+    const focusables = () => Array.from(
+      dialogRef.current?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ) ?? [],
+    ).filter((el) => !el.hasAttribute('disabled') && el.getAttribute('aria-hidden') !== 'true');
+
+    const first = focusables()[0];
+    first?.focus();
+
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const items = focusables();
+      if (items.length === 0) return;
+      const firstItem = items[0];
+      const lastItem = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === firstItem) {
+        event.preventDefault();
+        lastItem.focus();
+      } else if (!event.shiftKey && document.activeElement === lastItem) {
+        event.preventDefault();
+        firstItem.focus();
+      }
     };
+
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = previousOverflow;
+      previouslyFocused.current?.focus();
+    };
   }, [onClose]);
 
   async function sendOtp() {
@@ -118,7 +145,7 @@ export default function AuthModal({ intent, countryCode, onIntentChange, onClose
       setStep('code');
       setCode('');
     } catch (err) {
-      setError(errorMessage(err));
+      setError(formatPrivyAuthError(err));
     } finally {
       setBusy(false);
     }
@@ -130,79 +157,84 @@ export default function AuthModal({ intent, countryCode, onIntentChange, onClose
     try {
       await initOAuth({ provider: 'google', disableSignup: !isSignUp });
     } catch (err) {
-      setError(errorMessage(err));
+      setError(formatPrivyAuthError(err));
     } finally {
       setBusy(false);
     }
   }
 
-  async function handleVerify(event: React.FormEvent) {
-    event.preventDefault();
-    setError(null);
-    if (code.replace(/\D/g, '').length < 4) {
-      setError('Enter the code we sent you.');
+  async function handleVerify(event?: React.FormEvent, submittedCode?: string) {
+    event?.preventDefault();
+    if (verifyingRef.current) return;
+    const digits = digitsOnly(submittedCode ?? code);
+    if (!isCompletePrivyOtp(digits)) {
+      setError(INCOMPLETE_OTP_MESSAGE);
       return;
     }
 
+    verifyingRef.current = true;
     setBusy(true);
+    setError(null);
     try {
       if (method === 'email') {
-        await loginWithEmailCode({ code: code.replace(/\D/g, '') });
+        await loginWithEmailCode({ code: digits });
       } else {
-        await loginWithSmsCode({ code: code.replace(/\D/g, '') });
+        await loginWithSmsCode({ code: digits });
       }
     } catch (err) {
-      setError(errorMessage(err));
+      setError(formatPrivyAuthError(err));
     } finally {
+      verifyingRef.current = false;
       setBusy(false);
     }
   }
 
   return (
     <div
-      className="fixed inset-0 z-[90] flex items-center justify-center bg-transparent p-3 backdrop-blur-md sm:p-6"
+      className="fixed inset-0 z-[90] flex items-end justify-center overflow-y-auto bg-background/80 p-0 backdrop-blur-md sm:items-center sm:p-6"
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
     >
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative grid w-full max-w-[72rem] overflow-hidden rounded-2xl border border-border bg-background text-foreground shadow-[var(--shadow-deep)] md:min-h-[42rem] md:grid-cols-2"
+        className="relative grid w-full max-h-[100dvh] max-w-[72rem] overflow-y-auto rounded-t-2xl border border-border bg-background text-foreground shadow-[var(--shadow-deep)] sm:max-h-[min(42rem,calc(100dvh-3rem))] sm:rounded-2xl md:grid-cols-2"
       >
-        <div className="relative min-h-[14rem] overflow-hidden md:min-h-full">
+        <div className="relative hidden overflow-hidden md:block md:min-h-full">
           <img
             src="/audience/group.jpg"
             alt=""
             className="absolute inset-0 h-full w-full object-cover object-center"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-black/20" />
-          <div className="relative flex h-full min-h-[14rem] flex-col justify-end p-6 text-white md:min-h-full md:p-12">
+          <div className="relative flex h-full flex-col justify-end p-12 text-white">
             <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">Baraza</p>
             <p className="mt-2 max-w-md font-display text-3xl font-black leading-tight sm:text-4xl">
               Run the chama where every member can see the money.
             </p>
             <p className="mt-3 max-w-md text-sm leading-6 text-white/80 sm:text-base">
-              Phone or email is enough. No seed phrases to join.
+              Phone or email is enough to join a group.
             </p>
           </div>
         </div>
 
-        <div className="relative flex flex-col justify-center px-6 py-10 sm:px-10 md:px-14 md:py-16">
+        <div className="relative flex flex-col justify-center px-5 py-8 sm:px-10 md:px-14 md:py-16">
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="btn-icon absolute right-4 top-4 h-9 w-9"
+            className="btn-icon absolute right-3 top-3 h-9 w-9"
           >
             <X className="h-4 w-4" />
           </button>
 
           <BrandLogo size="sm" lockup="protocol" showIcon={false} />
           <h2 id={titleId} className="mt-5 font-display text-3xl font-black tracking-tight">
-            {isSignUp ? 'Create your account' : 'Welcome back'}
+            {isSignUp ? toTitleCase('Create your account') : toTitleCase('Welcome back')}
           </h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
             {isSignUp
@@ -258,7 +290,7 @@ export default function AuthModal({ intent, countryCode, onIntentChange, onClose
                   />
                 </label>
               ) : (
-                <label className="block">
+                <div>
                   <span className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
                     Phone number
                   </span>
@@ -280,13 +312,14 @@ export default function AuthModal({ intent, countryCode, onIntentChange, onClose
                       inputMode="numeric"
                       autoComplete="tel-national"
                       autoFocus
+                      aria-label="Phone number"
                       value={localNumber}
                       onChange={(event) => { setLocalNumber(event.target.value); setError(null); }}
                       placeholder="712 345 678"
                       className="min-w-0 flex-1 bg-background px-4 py-3 text-sm outline-none"
                     />
                   </div>
-                </label>
+                </div>
               )}
 
               {error && <p className="text-xs text-destructive">{error}</p>}
@@ -299,7 +332,7 @@ export default function AuthModal({ intent, countryCode, onIntentChange, onClose
           ) : (
             <form onSubmit={(event) => void handleVerify(event)} className="mt-6 space-y-4">
               <p className="text-sm text-muted-foreground">
-                We sent a code to{' '}
+                We sent a 6-digit code to{' '}
                 <span className="font-semibold text-foreground">{maskDestination(destination, method)}</span>
               </p>
               <label className="block">
@@ -312,16 +345,25 @@ export default function AuthModal({ intent, countryCode, onIntentChange, onClose
                   autoComplete="one-time-code"
                   autoFocus
                   maxLength={6}
+                  pattern="[0-9]{6}"
+                  aria-label="Verification code"
                   value={code}
-                  onChange={(event) => { setCode(event.target.value.replace(/\D/g, '').slice(0, 6)); setError(null); }}
+                  onChange={(event) => {
+                    const next = digitsOnly(event.target.value);
+                    setCode(next);
+                    setError(null);
+                    if (isCompletePrivyOtp(next) && !busy && !verifyingRef.current) {
+                      void handleVerify(undefined, next);
+                    }
+                  }}
                   placeholder="000000"
-                  className="w-full rounded-xl border border-border bg-background px-4 py-3 text-center font-mono text-2xl tracking-[0.4em] outline-none focus:border-foreground focus:ring-2 focus:ring-ring"
+                  className="w-full rounded-xl border border-border bg-background px-4 py-3 text-center font-mono text-2xl tracking-[0.35em] outline-none focus:border-foreground focus:ring-2 focus:ring-ring"
                 />
               </label>
 
               {error && <p className="text-xs text-destructive">{error}</p>}
 
-              <button type="submit" disabled={busy || code.length < 4} className="btn-wipe h-11 w-full gap-2 text-sm">
+              <button type="submit" disabled={busy || !isCompletePrivyOtp(code)} className="btn-wipe h-11 w-full gap-2 text-sm">
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 {busy ? 'Checking…' : isSignUp ? 'Create account' : 'Sign in'}
               </button>

@@ -3,6 +3,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import BackendStatus from '@/components/BackendStatus';
+import OfflineBanner from '@/components/OfflineBanner';
 import AppShell from '@/components/app/AppShell';
 import WalletGate from '@/components/auth/WalletGate';
 import { useAccount } from '@/contexts/AccountContext';
@@ -22,6 +23,7 @@ function PublicShell({ children }: { children: React.ReactNode }) {
         Skip to main content
       </a>
       <Header />
+      <OfflineBanner />
       <main
         id="main-content"
         className="flex-1 pb-24 pt-16 md:pb-0"

@@ -44,10 +44,10 @@ describe('CommunityPurpose', () => {
   it('requires a selection and carries the selected purpose into setup', () => {
     renderPurpose();
 
-    const continueButton = screen.getByRole('button', { name: 'Continue to setup' });
+    const continueButton = screen.getByRole('button', { name: 'Continue to Setup' });
     expect(continueButton).toBeDisabled();
 
-    const businessOption = screen.getByRole('button', { name: /Business ventures/ });
+    const businessOption = screen.getByRole('button', { name: /Business Ventures/ });
     fireEvent.click(businessOption);
 
     expect(businessOption).toHaveAttribute('aria-pressed', 'true');

@@ -75,7 +75,7 @@ export default function Communities() {
               Browse groups
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Payment rails are configured inside join, onramp, and offramp flows.
+              Filter by group type, then open a group to see dues and how to join.
             </p>
           </div>
 

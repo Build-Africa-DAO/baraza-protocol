@@ -21,11 +21,11 @@ import { DuesStreakChip } from '@/components/DuesStreakChip';
 import { ReferralProgress } from '@/components/ReferralProgress';
 import { useAccount } from '@/contexts/AccountContext';
 import { useCommunities } from '@/hooks/useCommunities';
+import { useMyMemberships } from '@/hooks/useMyMemberships';
 import { deriveBadges } from '@/lib/badges';
 import { getBountyStatsForCommunity, getOpenBountiesForCommunity } from '@/lib/bounties';
 import { dataStore } from '@/lib/dataStore';
 import { fetchDuesStreak, type StreakResult } from '@/lib/duesStreak';
-import { fetchMembershipsForWallet, listMembershipsForWallet } from '@/lib/memberships';
 import { useSeo } from '@/lib/seo';
 import { formatKSh } from '@/lib/utils';
 import { ACCOUNT_COUNTRIES, formatAccountDate, type AccountCountryCode } from '@/lib/accountLocale';
@@ -40,47 +40,14 @@ export default function Profile() {
 
   const account = useAccount();
   const { communities } = useCommunities();
+  const { memberships: myMemberships } = useMyMemberships();
   const address = account.accountId ?? '';
-
-  type MembershipPair = {
-    record: ReturnType<typeof listMembershipsForWallet>[number];
-    community: (typeof communities)[number];
-  };
-
-  const initialMemberships = useMemo<MembershipPair[]>(() => {
-    if (!address) return [];
-    return listMembershipsForWallet(address)
-      .map((record) => {
-        const community = communities.find((item) => item.id === record.communityId);
-        return community ? { record, community } : null;
-      })
-      .filter((entry): entry is MembershipPair => entry !== null);
-    // This only seeds the first authenticated render; the effect below refreshes it.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const [myMemberships, setMyMemberships] = useState<MembershipPair[]>(initialMemberships);
   const [streak, setStreak] = useState<StreakResult>({
     consecutiveMonthsPaid: 0,
     lastPaidAt: null,
     perCommunity: {},
   });
   const [badgeEvaluatedAt] = useState(() => Date.now());
-
-  useEffect(() => {
-    if (!address) return;
-    const toPairs = (records: ReturnType<typeof listMembershipsForWallet>) => records
-      .map((record) => {
-        const community = communities.find((item) => item.id === record.communityId);
-        return community ? { record, community } : null;
-      })
-      .filter((entry): entry is MembershipPair => entry !== null);
-
-    setMyMemberships(toPairs(listMembershipsForWallet(address)));
-    fetchMembershipsForWallet(address)
-      .then((records) => setMyMemberships(toPairs(records)))
-      .catch(() => undefined);
-  }, [address, communities]);
 
   useEffect(() => {
     if (!address) return;

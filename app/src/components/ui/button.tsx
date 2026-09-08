@@ -1,6 +1,6 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "@/lib/utils";
+import { cn, titleCaseLabelChildren } from "@/lib/utils";
 
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap font-bold tracking-wide disabled:pointer-events-none disabled:opacity-45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
@@ -40,15 +40,16 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const classes = cn(buttonVariants({ variant, size }), className);
 
     if (asChild && React.isValidElement(children)) {
-      const child = children as React.ReactElement<{ className?: string }>;
+      const child = children as React.ReactElement<{ className?: string; children?: React.ReactNode }>;
       return React.cloneElement(child, {
         className: cn(classes, child.props.className),
+        children: titleCaseLabelChildren(child.props.children),
       });
     }
 
     return (
       <button className={classes} ref={ref} {...props}>
-        {children}
+        {titleCaseLabelChildren(children)}
       </button>
     );
   },

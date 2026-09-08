@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, CircleMinus, Loader2, MessageCircle, ThumbsDown, ThumbsUp } from "lucide-react";
 import Layout from "@/components/Layout";
+import { StatusScreen } from "@/components/StatusPage";
 import { DEFAULT_GOVERNANCE } from "@/lib/constants";
 import { useCastVote, useDecision, useVoteStatus } from "@/hooks/useBarazaData";
 import { daysRemaining, formatRailAmountFromKes, formatRailDate } from "@/lib/utils";
@@ -50,20 +51,11 @@ export default function ProposalDetail() {
 
   if (!proposal) {
     return (
-      <Layout gate={{ title: 'Sign in to vote', description: 'Log in to read this proposal and cast your vote.' }}>
-        <section className="py-20">
-          <div className="mx-auto max-w-md px-4 text-center">
-            <h1 className="font-display text-2xl font-bold">Proposal not found</h1>
-            <p className="mt-3 text-sm">
-              This governance proposal doesn&apos;t exist or has been removed.
-            </p>
-            <Link to={id ? `/dashboard/${id}` : "/communities"} className="btn-warm mt-6 inline-flex items-center gap-2 text-sm">
-              <ArrowLeft className="h-4 w-4" />
-              Back to dashboard
-            </Link>
-          </div>
-        </section>
-      </Layout>
+      <StatusScreen
+        kind="proposal"
+        gate={{ title: 'Sign in to vote', description: 'Log in to read this proposal and cast your vote.' }}
+        primary={id ? { label: 'Back to Group', to: `/dashboard/${id}`, icon: 'arrow-left' } : undefined}
+      />
     );
   }
 

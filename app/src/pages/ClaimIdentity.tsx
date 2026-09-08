@@ -24,6 +24,7 @@ import { Loader2, Phone, ShieldCheck, KeyRound, CheckCircle2 } from 'lucide-reac
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import Layout from '@/components/Layout';
+import { StatusScreen } from '@/components/StatusPage';
 import CommunityBanner from '@/components/CommunityBanner';
 import { useSeo } from '@/lib/seo';
 import { truncateAddress } from '@/lib/utils';
@@ -57,26 +58,12 @@ export default function ClaimIdentity() {
 
   if (!connected || !publicKey) {
     return (
-      <Layout>
-        <section className="py-20">
-          <div className="mx-auto max-w-md px-4 text-center">
-            <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl">
-              <ShieldCheck className="h-7 w-7" />
-            </div>
-            <h1 className="font-display text-2xl font-bold">Connect a wallet first</h1>
-            <p className="mt-3 text-sm">
-              You're linking a phone number to a Baraza wallet. Connect the wallet you want
-              the phone to point at.
-            </p>
-            <button
-              onClick={() => setVisible(true)}
-              className="btn-warm mt-6 inline-flex items-center gap-2 text-sm"
-            >
-              Connect wallet
-            </button>
-          </div>
-        </section>
-      </Layout>
+      <StatusScreen
+        kind="unauthorized"
+        title="Connect a Wallet First"
+        description="You're linking a phone number to a Baraza wallet. Connect the wallet you want the phone to point at."
+        primary={{ label: 'Connect Wallet', onClick: () => setVisible(true), icon: 'login' }}
+      />
     );
   }
 

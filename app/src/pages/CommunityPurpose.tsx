@@ -15,7 +15,7 @@ import Layout from '@/components/Layout';
 import WalletGate from '@/components/auth/WalletGate';
 import { useAccount } from '@/contexts/AccountContext';
 import { useSeo } from '@/lib/seo';
-import { cn } from '@/lib/utils';
+import { cn, toTitleCase } from '@/lib/utils';
 
 interface PurposeOption {
   id: string;
@@ -28,28 +28,28 @@ interface PurposeOption {
 const PURPOSE_OPTIONS: PurposeOption[] = [
   {
     id: 'monthly-savings',
-    title: 'Monthly savings',
+    title: 'Monthly Savings',
     detail: 'Regular contributions and pooled funds for the group.',
     preset: 'savings',
     icon: WalletCards,
   },
   {
     id: 'community-service',
-    title: 'Community service',
+    title: 'Community Service',
     detail: 'Organize care work, events, and mutual support.',
     preset: 'welfare',
     icon: HeartHandshake,
   },
   {
     id: 'social-gathering',
-    title: 'Social gathering',
+    title: 'Social Gathering',
     detail: 'Coordinate meetups, milestones, and community rituals.',
     preset: 'professional',
     icon: PartyPopper,
   },
   {
     id: 'business-ventures',
-    title: 'Business ventures',
+    title: 'Business Ventures',
     detail: 'Track shared investments and commercial activity together.',
     preset: 'investment',
     icon: BriefcaseBusiness,
@@ -115,7 +115,7 @@ export default function CommunityPurpose() {
         <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 py-8 sm:px-6 sm:py-12">
           <div className="mx-auto w-full max-w-xl text-center">
             <h1 className="mt-3 text-balance font-display text-3xl font-bold leading-tight sm:text-4xl">
-              What does your group do together?
+              {toTitleCase('What does your group do together?')}
             </h1>
             <p className="mx-auto mt-3 max-w-md text-pretty text-sm leading-6 text-muted-foreground sm:text-base">
               Choose everything that applies. We will prepare a useful starting setup that you can adjust next.

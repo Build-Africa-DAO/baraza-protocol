@@ -28,6 +28,7 @@ interface AccountContextValue {
   login: (returnTo?: string) => void;
   createAccount: (returnTo?: string) => void;
   consumeAuthHandoff: () => AuthHandoff;
+  getAccessToken: () => Promise<string | null>;
   logout: () => Promise<void>;
 }
 
@@ -42,7 +43,7 @@ interface AccountBridgeProps {
 }
 
 function AccountBridge({ country, setCountry, children }: AccountBridgeProps) {
-  const { ready, authenticated, user, logout } = usePrivy();
+  const { ready, authenticated, user, logout, getAccessToken } = usePrivy();
   const [authIntent, setAuthIntent] = useState<AuthIntent | null>(null);
   const handoffRef = useRef<AuthHandoff>(EMPTY_HANDOFF);
   const displayName =
@@ -69,6 +70,15 @@ function AccountBridge({ country, setCountry, children }: AccountBridgeProps) {
     return current;
   }, []);
 
+  const readAccessToken = useCallback(async () => {
+    if (!authenticated) return null;
+    try {
+      return await getAccessToken();
+    } catch {
+      return null;
+    }
+  }, [authenticated, getAccessToken]);
+
   useEffect(() => {
     if (authenticated) setAuthIntent(null);
   }, [authenticated]);
@@ -90,8 +100,9 @@ function AccountBridge({ country, setCountry, children }: AccountBridgeProps) {
       setAuthIntent('signup');
     },
     consumeAuthHandoff,
+    getAccessToken: readAccessToken,
     logout,
-  }), [accountId, authenticated, captureHandoff, consumeAuthHandoff, country, displayName, logout, ready, setCountry]);
+  }), [accountId, authenticated, captureHandoff, consumeAuthHandoff, country, displayName, logout, readAccessToken, ready, setCountry]);
 
   return (
     <AccountContext.Provider value={value}>
@@ -129,6 +140,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     login: () => undefined,
     createAccount: () => undefined,
     consumeAuthHandoff: () => EMPTY_HANDOFF,
+    getAccessToken: async () => null,
     logout: async () => undefined,
   }), [country, setCountry]);
 
