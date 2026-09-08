@@ -3,34 +3,34 @@ import { toTitleCase } from "@/lib/utils";
 
 const faqs = [
   {
-    question: toTitleCase("Do I Need a Crypto Wallet?"),
+    question: toTitleCase("How Do I Sign In?"),
     answer:
-      "No. Members join with a phone number, not a seed phrase and not a browser wallet. Baraza is built so a chama treasurer can send a link and let people in the same way they already collect dues: by phone. The group record is shared. Nobody has to babysit keys, recover a lost phrase, or explain a seed to someone who only wanted to pay this month’s contribution.",
+      "Use a phone number or an email. Google works too. You do not need a separate money app to join.",
   },
   {
     question: toTitleCase("How Do Members Pay?"),
     answer:
-      "Paid groups collect dues in local currency. In Kenya that includes M-Pesa. On the join screen you see three lines before you pay: your dues, the 2.0% platform fee, and the 0.5% carrier fee capped at KES 200. The amount charged is the server total, not a figure typed into the page. If the group is not charging activation, join is free and those fee lines do not apply.",
+      "In Kenya, dues go out as an M-Pesa prompt on the member's phone. The join page shows the amount before they pay. If the group charges nothing to join, that step is skipped.",
   },
   {
-    question: toTitleCase("Is There a Fixed Launch Fee?"),
+    question: toTitleCase("What Does It Cost to Start?"),
     answer:
-      "No. There is no hardcoded KES 6,500 to create or join. Create and join use the activation amount the group is actually charging. A treasurer can set that to whatever the chama or SACCO needs, including zero. When activation is zero, members join without paying. When it is not, they pay the live total shown on the join screen.",
+      "The group sets what members pay to join, including nothing. If opening a group has a setup charge, you see that amount on the last step, before you pay.",
   },
   {
     question: toTitleCase("Can a SACCO Use This?"),
     answer:
-      "Yes. A SACCO can launch on Baraza, with one extra gate that a chama does not have. Before the group goes live, the launch flow asks for a license number and a public certificate URL. That check sits in front of the same dues, vote, and release tools every other group uses, so members still pay in, vote on spending, and see the same balance.",
+      "Yes. Dues, votes, and payouts work the same as a chama. Officers add a license in settings. Lending tools stay off until that review is done.",
   },
   {
-    question: toTitleCase("Who Can Spend the Money?"),
+    question: toTitleCase("Who Can Send Money Out?"),
     answer:
-      "Nobody spends from a private chat or a treasurer-only float. A spending request becomes a proposal. Active members vote, and the group sees quorum and the outcome before any payout is allowed. Funds release only after the group’s own approval rules pass, and the trail stays on the dashboard for every member — not in a screenshot half the chama never saw.",
+      "Money leaves after a vote passes. An officer sends the payout. Every member can open the receipt on the group page.",
   },
   {
     question: toTitleCase("How Do I Start?"),
     answer:
-      "Launch a group: name it, pick the type, set dues, quorum, and the vote window. Members see those rules before they join. Share the link, collect the first contribution, and run spending through a vote. If you are joining rather than starting, browse groups that are already collecting and pay in with your phone.",
+      "Start a group, set dues, and share the link. If you are joining instead, browse groups that are already collecting and pay with your phone.",
   },
 ];
 
@@ -44,7 +44,7 @@ export default function FaqSection() {
           Questions
         </p>
         <h2 className="mx-auto mt-3 text-center font-display text-3xl font-black leading-tight text-foreground md:text-4xl">
-          {toTitleCase("Talk to Us. We Always Listen.")}
+          {toTitleCase("Common Questions")}
         </h2>
         <div className="mx-auto mt-10 max-w-5xl divide-y divide-border border-t border-border">
           {faqs.map((faq) => (

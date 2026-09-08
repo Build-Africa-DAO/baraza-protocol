@@ -6,8 +6,8 @@ import { toTitleCase } from "@/lib/utils";
 
 const stats = [
   { value: 27, label: toTitleCase("Group types, from chama to SACCO") },
-  { value: 4, label: toTitleCase("Markets: Kenya, Uganda, Tanzania, Rwanda") },
-  { value: 0, label: toTitleCase("Seed phrases required to join") },
+  { value: 4, label: toTitleCase("Countries: Kenya, Uganda, Tanzania, Rwanda") },
+  { value: 1, label: toTitleCase("Phone number to join") },
 ];
 
 function prefersReducedMotion() {
@@ -90,7 +90,7 @@ export default function AIPlatformSection() {
   return (
     <section
       className="audience-band relative z-10 scroll-mt-20 bg-primary text-foreground"
-      id="who-its-for"
+      id="groups"
     >
       <div className="page-shell">
         <div className="grid items-center gap-10 py-6 sm:py-8 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.35fr)] lg:gap-12 lg:py-8">
@@ -107,12 +107,9 @@ export default function AIPlatformSection() {
             <div className="relative z-10 mt-12 flex w-full flex-col items-center justify-center gap-3 sm:mt-14 sm:flex-row">
               <Button asChild size="lg">
                 <Link to="/create/purpose">
-                  Launch a Group
+                  Start a Group
                   <ArrowRight className="h-4 w-4" />
                 </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg">
-                <Link to="/communities">Browse Groups</Link>
               </Button>
             </div>
           </div>
@@ -122,10 +119,10 @@ export default function AIPlatformSection() {
               {toTitleCase("Built for groups that already exist.")}
             </h2>
             <p className="mt-5 text-base leading-7 opacity-85 sm:text-lg sm:leading-8">
-              For treasurers who are tired of chasing dues in a chat thread. Chamas, SACCOs, and
-              cooperatives already collect money and decide together. Baraza puts those two jobs in
-              one place: members pay in, vote on spending, and see the same balance. SACCOs get an
-              extra license check before a group can launch.
+              For treasurers tired of chasing dues in a chat thread. Chamas, SACCOs, and
+              cooperatives already collect money and decide as a group. Baraza keeps the paid
+              list and the payouts on one page. SACCOs add a license in settings before
+              lending tools turn on.
             </p>
 
             <dl ref={ref} className="mt-10 grid justify-items-center gap-8 text-center sm:grid-cols-3">

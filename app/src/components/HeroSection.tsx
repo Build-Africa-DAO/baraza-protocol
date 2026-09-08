@@ -7,19 +7,19 @@ import LogoMarquee from "@/components/LogoMarquee";
 const steps = [
   {
     title: "Collect Dues",
-    detail: "Members pay in local currency. The group sees who is current.",
+    detail: "Members pay with M-Pesa. The group page shows who has paid this month.",
     image: "/steps/collect-dues.jpg",
     imageFirst: true,
   },
   {
     title: "Vote First",
-    detail: "Spending waits for quorum. No quiet withdrawals.",
+    detail: "Spending waits for a vote. The treasurer cannot send the money alone.",
     image: "/steps/vote-first.jpg",
     imageFirst: false,
   },
   {
-    title: "Release by Rule",
-    detail: "Approved money moves with a trail every member can inspect.",
+    title: "Send After the Vote",
+    detail: "When the vote passes, an officer sends the payout. The receipt stays on the group page.",
     image: "/steps/release-by-rule.jpg",
     imageFirst: true,
   },
@@ -31,19 +31,19 @@ export default function HeroSection() {
       <div className="page-shell">
         <div className="mx-auto max-w-3xl text-center xl:max-w-5xl">
           <p className="mb-5 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-            Group money, in the open
+            For chamas, SACCOs, and cooperatives
           </p>
           <h1 className="font-display text-[clamp(2.4rem,5.2vw,5.25rem)] font-black leading-[0.94] tracking-tight text-foreground">
             Run the Chama Where Every Member Can See the Money.
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
-            Baraza is for savings groups, SACCOs, and cooperatives. Collect dues, vote on spending,
-            and release funds with a shared record — no seed phrases to join.
+            Put the monthly collection on a page the whole group can open.
+            Members sign in with a phone number.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button asChild size="lg">
               <Link to="/create/purpose">
-                Launch a Group
+                Start a Group
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>

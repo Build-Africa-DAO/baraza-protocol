@@ -20,24 +20,23 @@ export default function CTASection() {
 
           <div className="pb-2 text-center lg:order-1 lg:pb-6 lg:text-left">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] opacity-80">
-              Start the group
+              Your group
             </p>
             <h2 className="mt-4 font-display text-3xl font-black leading-tight md:text-5xl">
-              {toTitleCase("Put the Next Contribution Where Every Member Can See It.")}
+              {toTitleCase("Move the Books Off WhatsApp")}
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-sm leading-7 opacity-85 sm:text-base lg:mx-0">
-              Launch a chama, SACCO, or cooperative in minutes. Members join with a phone number and
-              pay into a record they can inspect.
+              Name the group, set the dues, and send a link. Members pay with M-Pesa.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
               <Button asChild size="lg">
                 <Link to="/create/purpose">
-                  Launch a Group
+                  Start a Group
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg">
-                <Link to="/communities">Browse Groups</Link>
+                <Link to="/#faq">Read the FAQ</Link>
               </Button>
             </div>
           </div>
