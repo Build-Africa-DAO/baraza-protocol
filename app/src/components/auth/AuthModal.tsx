@@ -12,6 +12,7 @@ export type AuthIntent = 'signin' | 'signup';
 
 const DIAL_CODES: { code: string; label: string; country: AccountCountryCode }[] = [
   { code: '+254', label: 'KE +254', country: 'KE' },
+  { code: '+250', label: 'RW +250', country: 'RW' },
   { code: '+255', label: 'TZ +255', country: 'TZ' },
   { code: '+256', label: 'UG +256', country: 'UG' },
   { code: '+251', label: 'ET +251', country: 'ET' },

@@ -16,6 +16,7 @@ const STAY_PREFIXES = [
   '/claim',
   '/admin',
   '/retro',
+  '/status',
 ];
 
 export function pathOnly(path: string): string {

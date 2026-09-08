@@ -15,6 +15,7 @@ import {
 import { formatRailAmountFromKes, cn } from '@/lib/utils';
 import { useChain } from '@/hooks/useChain';
 import type { ChainMeta } from '@/lib/chain';
+import { asRecordList, tryWorkspaceGet, tryWorkspaceMutate } from '@/lib/workspaceApi';
 
 interface BountyBoardProps {
   communityId: string;
@@ -312,6 +313,11 @@ function FullCard({
     try {
       submitBountyWork({ bountyId: bounty.id, ...workForm });
       onAdvanceStatus(bounty.id, 'in_review', workForm.contributor.trim());
+      void tryWorkspaceMutate(`/api/bounties/${bounty.id}/submit`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(workForm),
+      });
       setWorkForm({ contributor: '', workUrl: '', note: '' });
       setShowSubmit(false);
       setMsg('Work submitted for review.');
@@ -543,12 +549,21 @@ export default function BountyBoard({ communityId, communityName = 'this communi
     getBountiesForCommunityAsync(communityId)
       .then((next) => { if (!cancelled) setBounties(next); })
       .catch(() => { if (!cancelled) setBounties(getBountiesForCommunity(communityId)); });
+    void tryWorkspaceGet(`/api/communities/${communityId}/bounties`).then((payload) => {
+      const remote = asRecordList<Bounty>(payload, 'bounties');
+      if (!cancelled && remote?.length) setBounties(remote);
+    });
     return () => { cancelled = true; };
   }, [communityId]);
 
   const handleToggleInterest = (id: string) => {
     toggleInterest(id);
     setInterested(readInterest());
+    void tryWorkspaceMutate(`/api/bounties/${id}/apply`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ communityId }),
+    });
   };
 
   const handleAdvanceStatus = (id: string, status: BountyStatus, assignee?: string) => {

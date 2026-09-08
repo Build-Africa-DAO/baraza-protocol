@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { DEFAULT_GOVERNANCE, type Community, MOCK_COMMUNITIES } from '@/lib/constants';
+import { DEFAULT_GOVERNANCE, type Community, type VerificationTier, MOCK_COMMUNITIES } from '@/lib/constants';
 import type { Chain } from '@/lib/chain';
 
 type TreasuryPolicy = 'multisig-ready' | 'proposal-only' | 'manual-review';
@@ -21,6 +21,9 @@ export type CommunityInsert = {
   paybillNumber?: string;
   ussdShortcode?: string;
   createdBy?: string;
+  verificationTier?: VerificationTier;
+  vouchThreshold?: number;
+  saccoRegistrationNumber?: string;
   walletProofHeaders?: Record<string, string>;
 };
 
@@ -62,6 +65,18 @@ export type CommunityRow = {
   ussdShortcode?: string | null;
   created_by?: string | null;
   createdBy?: string | null;
+  verification_tier?: string | null;
+  verificationTier?: string | null;
+  vouch_threshold?: number | null;
+  vouchThreshold?: number | null;
+  sacco_registration_number?: string | null;
+  saccoRegistrationNumber?: string | null;
+  sacco_license_status?: string | null;
+  saccoLicenseStatus?: string | null;
+  is_payout_frozen?: boolean | null;
+  isPayoutFrozen?: boolean | null;
+  status?: string | null;
+  communityStatus?: string | null;
 };
 
 const VALID_TREASURY_POLICIES: TreasuryPolicy[] = ['multisig-ready', 'proposal-only', 'manual-review'];
@@ -70,6 +85,12 @@ function parseTreasuryPolicy(raw: string | null | undefined): TreasuryPolicy {
   return VALID_TREASURY_POLICIES.includes(raw as TreasuryPolicy)
     ? (raw as TreasuryPolicy)
     : DEFAULT_GOVERNANCE.treasuryPolicy;
+}
+
+const VERIFICATION_TIERS: VerificationTier[] = ['activation', 'vouching', 'phone', 'proof_of_personhood'];
+
+function parseVerificationTier(raw: string | null | undefined): VerificationTier {
+  return VERIFICATION_TIERS.includes(raw as VerificationTier) ? (raw as VerificationTier) : 'activation';
 }
 
 const LOCAL_STORAGE_KEY = 'baraza.communities.v1';
@@ -159,6 +180,12 @@ function communityFromRow(row: CommunityRow): Community {
     paybillNumber: row.paybill_number ?? row.paybillNumber ?? undefined,
     ussdShortcode: row.ussd_shortcode ?? row.ussdShortcode ?? undefined,
     createdBy: row.created_by ?? row.createdBy ?? undefined,
+    verificationTier: parseVerificationTier(row.verification_tier ?? row.verificationTier),
+    vouchThreshold: row.vouch_threshold ?? row.vouchThreshold ?? undefined,
+    saccoRegistrationNumber: row.sacco_registration_number ?? row.saccoRegistrationNumber ?? undefined,
+    saccoLicenseStatus: row.sacco_license_status ?? row.saccoLicenseStatus ?? undefined,
+    isPayoutFrozen: row.is_payout_frozen ?? row.isPayoutFrozen ?? false,
+    communityStatus: row.status === 'paused' || row.communityStatus === 'paused' ? 'paused' : 'active',
   };
 }
 
@@ -256,6 +283,9 @@ export async function createCommunityRecord(input: CommunityInsert): Promise<Com
     paybillNumber: input.paybillNumber || undefined,
     ussdShortcode: input.ussdShortcode || undefined,
     createdBy: input.createdBy || undefined,
+    verificationTier: input.verificationTier ?? 'activation',
+    vouchThreshold: input.vouchThreshold,
+    saccoRegistrationNumber: input.saccoRegistrationNumber || undefined,
   };
 
   try {

@@ -14,6 +14,7 @@ export interface MinisendOffRampParams {
   chain: 'stellar' | 'base' | 'polygon' | 'celo';
   currency?: 'KES' | 'UGX' | 'GHS' | 'NGN';
   memo?: string;
+  headers?: Record<string, string>;
 }
 
 export interface MinisendOffRampResult {
@@ -22,6 +23,7 @@ export interface MinisendOffRampResult {
   reference: string;
   kesAmount: number;
   error?: string;
+  circuitBreaker?: boolean;
 }
 
 /**
@@ -30,8 +32,10 @@ export interface MinisendOffRampResult {
 export async function usdcToMobileMoney(params: MinisendOffRampParams): Promise<MinisendOffRampResult> {
   try {
     const proxySecret = typeof window === 'undefined' ? process.env.PAYMENT_ADAPTER_PROXY_SECRET : undefined;
+    const { headers: extraHeaders, ...body } = params;
     const headers: Record<string, string> = {
       'content-type': 'application/json',
+      ...extraHeaders,
     };
 
     if (proxySecret) {
@@ -41,17 +45,19 @@ export async function usdcToMobileMoney(params: MinisendOffRampParams): Promise<
     const response = await fetch('/api/payments/minisend', {
       method: 'POST',
       headers,
-      body: JSON.stringify(params),
+      body: JSON.stringify(body),
     });
 
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
+      const payload = data as { message?: string; circuitBreaker?: boolean };
       return {
         ok: false,
         reference: '',
         kesAmount: 0,
-        error: (data as { message?: string })?.message || 'Minisend off-ramp request failed.',
+        error: payload?.message || 'Minisend off-ramp request failed.',
+        circuitBreaker: Boolean(payload?.circuitBreaker),
       };
     }
 

@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { Users, ArrowLeft, CheckCircle2, Loader2, Phone, ShieldCheck, Wallet, Hash, Smartphone, MessageCircle, Landmark, Link2 } from 'lucide-react';
 import Layout from '@/components/Layout';
-import { DAO_CREATION_FEE_KES, PAYBILL_ADDON_FEE_KES, USSD_ADDON_FEE_KES, isCommunityType, type CommunityType } from '@/lib/constants';
+import { DAO_CREATION_FEE_KES, PAYBILL_ADDON_FEE_KES, USSD_ADDON_FEE_KES, isCommunityType, type CommunityType, type VerificationTier } from '@/lib/constants';
 import { formatKSh } from '@/lib/utils';
 import { normaliseKenyanPhone } from '@/lib/phone';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -301,13 +301,18 @@ const CreateCommunity: React.FC = () => {
     approvalThreshold: string;
     votingPeriod: string;
     treasuryPolicy: string;
+    verificationTier: VerificationTier;
+    vouchThreshold: string;
+    saccoRegistrationNumber: string;
+    saccoCertificateUrl: string;
+    saccoCertificateName: string;
   }>(() => {
     const requestedType = searchParams.get('type') ?? '';
     const preset = isCommunityType(requestedType) ? GOVERNANCE_PRESETS[requestedType] : undefined;
     return {
       name: '',
       type: preset ? requestedType : '',
-      fee: '500',
+      fee: '',
       feeType: 'recurring_monthly',
       carrierPassThrough: true,
       description: '',
@@ -316,6 +321,11 @@ const CreateCommunity: React.FC = () => {
       approvalThreshold: preset?.approvalThreshold ?? '66',
       votingPeriod: preset?.votingPeriod ?? '7',
       treasuryPolicy: preset?.treasuryPolicy ?? 'multisig-ready',
+      verificationTier: 'activation',
+      vouchThreshold: '2',
+      saccoRegistrationNumber: '',
+      saccoCertificateUrl: '',
+      saccoCertificateName: '',
     };
   });
 
@@ -331,6 +341,9 @@ const CreateCommunity: React.FC = () => {
     (addUssd ? USSD_ADDON_FEE_KES : 0);
   const selectedCommunityChain = walletChain;
   const selectedPreset = isCommunityType(form.type) ? GOVERNANCE_PRESETS[form.type] : null;
+  const isRegulatedCoop = form.type === 'sacco' || form.type === 'cooperative' || form.type === 'housing';
+  const saccoLicenseLooksValid = /^CS\/[0-9]{1,7}$/i.test(form.saccoRegistrationNumber.trim())
+    || /^SASRA\/(DT|NWDT)\/[0-9]{2,5}\/[0-9]{2,4}$/i.test(form.saccoRegistrationNumber.trim());
   const requiresPhone = paymentMethod === 'mobile-money' || paymentMethod === 'whatsapp';
   const isValid = !!(
     form.name.trim() &&
@@ -494,6 +507,9 @@ const CreateCommunity: React.FC = () => {
           ussdShortcode: ussd,
           createdBy: founderAddress ?? undefined,
           walletProofHeaders,
+          verificationTier: form.verificationTier,
+          vouchThreshold: form.verificationTier === 'vouching' ? Number(form.vouchThreshold) || 2 : undefined,
+          saccoRegistrationNumber: isRegulatedCoop ? form.saccoRegistrationNumber.trim() || undefined : undefined,
         });
         if (chainResult) {
           saveCommunityChainMapping({
@@ -506,6 +522,21 @@ const CreateCommunity: React.FC = () => {
         }
         setCreatedCommunityId(community.id);
         setIsCreated(true);
+        if (isRegulatedCoop && saccoLicenseLooksValid && form.saccoCertificateUrl.startsWith('https://')) {
+          void fetch('/api/compliance/sacco-license-submit', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json', ...(walletProofHeaders ?? {}) },
+            body: JSON.stringify({
+              communityId: community.id,
+              licenseNumber: form.saccoRegistrationNumber.trim(),
+              certificateUrl: form.saccoCertificateUrl.trim(),
+              documentType: 'cooperative_registration',
+              wallet: founderAddress,
+            }),
+          }).catch(() => {
+            // License review is officer-side; local community record already keeps the registration number.
+          });
+        }
         const launchFeeLabel = formatKSh(totalFeeKes);
         toast({
           title: charge.persisted
@@ -669,7 +700,7 @@ const CreateCommunity: React.FC = () => {
                 <div className="grid grid-cols-3 gap-2 mb-3">
                   <button
                     type="button"
-                    onClick={() => setForm({ ...form, feeType: 'recurring_monthly', fee: form.fee === '0' || !form.fee ? '500' : form.fee })}
+                    onClick={() => setForm({ ...form, feeType: 'recurring_monthly', fee: form.fee === '0' ? '' : form.fee })}
                     className={`p-3 rounded-xl border text-xs font-medium text-center transition-colors ${
                       form.feeType === 'recurring_monthly' ? 'border-primary bg-primary/10 font-bold text-primary' : 'hover:bg-muted/50'
                     }`}
@@ -678,7 +709,7 @@ const CreateCommunity: React.FC = () => {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setForm({ ...form, feeType: 'one_time', fee: form.fee === '0' || !form.fee ? '500' : form.fee })}
+                    onClick={() => setForm({ ...form, feeType: 'one_time', fee: form.fee === '0' ? '' : form.fee })}
                     className={`p-3 rounded-xl border text-xs font-medium text-center transition-colors ${
                       form.feeType === 'one_time' ? 'border-primary bg-primary/10 font-bold text-primary' : 'hover:bg-muted/50'
                     }`}
@@ -733,6 +764,94 @@ const CreateCommunity: React.FC = () => {
                   </div>
                 )}
               </div>
+
+              {/* Verification tier */}
+              <div>
+                <label className="block text-xs font-semibold mb-2">How members join</label>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {([
+                    { key: 'activation', label: 'Tier 1 — Activation fee', detail: 'Pay the dues amount you set above.' },
+                    { key: 'vouching', label: 'Tier 2 — Social vouching', detail: 'Existing members vouch for the new member.' },
+                    { key: 'phone', label: 'Tier 3 — Phone verification', detail: 'Sign in with a phone number to join.' },
+                    { key: 'proof_of_personhood', label: 'Tier 4 — Proof of personhood', detail: 'Personhood check before membership activates.' },
+                  ] as const).map((tier) => (
+                    <button
+                      key={tier.key}
+                      type="button"
+                      onClick={() => setForm({ ...form, verificationTier: tier.key })}
+                      className={`rounded-xl border p-3 text-left transition-colors ${
+                        form.verificationTier === tier.key ? 'border-primary bg-primary/10' : 'hover:bg-muted/50'
+                      }`}
+                    >
+                      <p className="text-xs font-semibold">{tier.label}</p>
+                      <p className="mt-1 text-[11px] text-muted-foreground">{tier.detail}</p>
+                    </button>
+                  ))}
+                </div>
+                {form.verificationTier === 'vouching' && (
+                  <div className="mt-3">
+                    <label htmlFor="vouch-threshold" className="mb-2 block text-xs font-semibold">Vouch threshold</label>
+                    <input
+                      id="vouch-threshold"
+                      type="number"
+                      min="1"
+                      name="vouchThreshold"
+                      value={form.vouchThreshold}
+                      onChange={handleChange}
+                      className="w-full rounded-xl border px-4 py-3 text-sm outline-none"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {isRegulatedCoop && (
+                <div className="rounded-xl border border-accent/40 bg-accent/10 p-4">
+                  <p className="text-xs font-semibold">
+                    Regulated SACCO features (loans and capital mobilization) will remain gated until statutory verification is approved.
+                  </p>
+                  <label htmlFor="sacco-reg" className="mb-2 mt-4 block text-xs font-semibold">
+                    Statutory registration number
+                  </label>
+                  <input
+                    id="sacco-reg"
+                    name="saccoRegistrationNumber"
+                    value={form.saccoRegistrationNumber}
+                    onChange={handleChange}
+                    placeholder="CS/12345 or SASRA/DT/102/2021"
+                    className="w-full rounded-xl border bg-background px-4 py-3 text-sm outline-none"
+                  />
+                  {form.saccoRegistrationNumber && !saccoLicenseLooksValid && (
+                    <p className="mt-2 text-[11px] text-destructive">Use CS/12345 or a SASRA/DT or SASRA/NWDT license number.</p>
+                  )}
+                  <label htmlFor="sacco-file" className="mb-2 mt-4 block text-xs font-semibold">
+                    Certificate (PDF or PNG)
+                  </label>
+                  <input
+                    id="sacco-file"
+                    type="file"
+                    accept=".pdf,.png,application/pdf,image/png"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      setForm({ ...form, saccoCertificateName: file?.name ?? '' });
+                    }}
+                    className="w-full text-xs"
+                  />
+                  {form.saccoCertificateName && (
+                    <p className="mt-1 text-[11px] text-muted-foreground">Selected: {form.saccoCertificateName}. Upload to a public HTTPS URL to submit for review.</p>
+                  )}
+                  <label htmlFor="sacco-url" className="mb-2 mt-3 block text-xs font-semibold">
+                    Certificate URL (optional, HTTPS)
+                  </label>
+                  <input
+                    id="sacco-url"
+                    name="saccoCertificateUrl"
+                    value={form.saccoCertificateUrl}
+                    onChange={handleChange}
+                    placeholder="https://"
+                    className="w-full rounded-xl border bg-background px-4 py-3 text-sm outline-none"
+                  />
+                </div>
+              )}
 
               {/* Description */}
               <div>

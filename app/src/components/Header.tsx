@@ -31,7 +31,8 @@ function isAppRoute(pathname: string) {
     pathname.startsWith("/join") ||
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/dao") ||
-    pathname.startsWith("/profile")
+    pathname.startsWith("/profile") ||
+    pathname.startsWith("/status")
   );
 }
 

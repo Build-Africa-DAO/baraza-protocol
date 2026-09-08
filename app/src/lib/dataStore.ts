@@ -7,6 +7,8 @@
  * the hook API stays the same.
  */
 
+import type { ProposalLifecycleStage } from '@/lib/constants';
+
 // ---------- Types ----------
 
 export interface Community {
@@ -34,7 +36,8 @@ export interface Decision {
   votesAgainst: number;
   votesAbstain?: number;
   totalMembers: number;
-  status: 'active' | 'completed';
+  status: 'active' | 'completed' | 'failed';
+  lifecycleStage?: ProposalLifecycleStage;
   createdAt: string;
   endsAt: string;
   voters: Record<string, 'for' | 'against' | 'abstain'>; // walletKey -> vote
@@ -330,6 +333,54 @@ const SEED_DECISIONS: Decision[] = [
     endsAt: '2026-07-14',
     voters: {},
   },
+  {
+    id: 'd8',
+    communityId: '1',
+    title: 'Shared water tank',
+    description: 'Split the cost of a 5,000-litre tank for the compound. The vote closed even.',
+    fundingAmount: 42000,
+    proposedBy: 'Njeri W.',
+    votesFor: 20,
+    votesAgainst: 20,
+    totalMembers: 47,
+    status: 'failed',
+    lifecycleStage: 'tied',
+    createdAt: '2025-02-01',
+    endsAt: '2025-02-20',
+    voters: {},
+  },
+  {
+    id: 'd9',
+    communityId: '1',
+    title: 'Office rent subsidy',
+    description: 'Cover three months of a shared workspace. Members voted this down.',
+    fundingAmount: 90000,
+    proposedBy: 'Otieno P.',
+    votesFor: 10,
+    votesAgainst: 28,
+    totalMembers: 47,
+    status: 'failed',
+    lifecycleStage: 'defeated',
+    createdAt: '2025-01-12',
+    endsAt: '2025-02-01',
+    voters: {},
+  },
+  {
+    id: 'd10',
+    communityId: '1',
+    title: 'Seed grant for two kiosks',
+    description: 'Passed member vote. Waiting for the treasurer to release funds.',
+    fundingAmount: 40000,
+    proposedBy: 'Amani K.',
+    votesFor: 30,
+    votesAgainst: 6,
+    totalMembers: 47,
+    status: 'completed',
+    lifecycleStage: 'succeeded',
+    createdAt: '2025-01-05',
+    endsAt: '2025-01-25',
+    voters: {},
+  },
 ];
 
 // ---------- Simulated names for live events ----------
@@ -353,7 +404,7 @@ class BarazaDataStore {
   private memberRegistry: Map<string, Member[]> = new Map(); // communityId -> members
   private listeners: Set<Listener> = new Set();
   private nextCommunityId = 5;
-  private nextDecisionId = 8;
+  private nextDecisionId = 11;
   private nextMemberId = 100;
   private simulationTimers: ReturnType<typeof setInterval>[] = [];
 

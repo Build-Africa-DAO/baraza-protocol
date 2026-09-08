@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useAccount } from '@/contexts/AccountContext';
 import { useMyMemberships } from '@/hooks/useMyMemberships';
 import { formatAccountDate } from '@/lib/accountLocale';
+import { acceptInviteCode, extractInviteCode } from '@/lib/inviteAccept';
 import { parseJoinTarget } from '@/lib/postAuth';
 import { useSeo } from '@/lib/seo';
 import { formatKSh } from '@/lib/utils';
@@ -23,16 +24,37 @@ export default function Home() {
   const { memberships, isLoading, error } = useMyMemberships();
   const [invite, setInvite] = useState('');
   const [inviteError, setInviteError] = useState<string | null>(null);
+  const [inviteBusy, setInviteBusy] = useState(false);
 
-  const handleJoin = (event: FormEvent) => {
+  const handleJoin = async (event: FormEvent) => {
     event.preventDefault();
+    const code = extractInviteCode(invite);
+    if (code) {
+      if (!account.authenticated) {
+        account.login();
+        return;
+      }
+      setInviteBusy(true);
+      const accepted = await acceptInviteCode(code, account.getAccessToken);
+      setInviteBusy(false);
+      if (accepted.ok && accepted.communityId) {
+        setInviteError(null);
+        navigate(accepted.alreadyMember ? `/dashboard/${accepted.communityId}` : `/join/${accepted.communityId}`);
+        return;
+      }
+      if (accepted.status === 401) {
+        account.login();
+        return;
+      }
+    }
     const target = parseJoinTarget(invite);
     if (!target) {
-      setInviteError('Paste an invite link or group id.');
+      setInviteError('Paste an invite link, invite code, or group id.');
       return;
     }
     setInviteError(null);
-    navigate(`/join/${target}`);
+    const inviteQuery = code && code !== target ? `?invite=${encodeURIComponent(code)}` : '';
+    navigate(`/join/${target}${inviteQuery}`);
   };
 
   return (
@@ -112,8 +134,8 @@ export default function Home() {
                   className="w-full rounded-md border bg-background px-3 py-3 text-sm outline-none focus:border-primary"
                 />
                 {inviteError && <p className="mt-2 text-xs text-destructive">{inviteError}</p>}
-                <Button type="submit" className="mt-4 w-full sm:w-auto">
-                  Continue to join
+                <Button type="submit" className="mt-4 w-full sm:w-auto" disabled={inviteBusy}>
+                  {inviteBusy ? 'Checking invite…' : 'Continue to join'}
                 </Button>
               </form>
 

@@ -1,5 +1,6 @@
 export const ACCOUNT_COUNTRIES = [
   { code: 'KE', name: 'Kenya', currency: 'KES', locale: 'en-KE', timeZone: 'Africa/Nairobi', usdPerUnit: 0.0077 },
+  { code: 'RW', name: 'Rwanda', currency: 'RWF', locale: 'en-RW', timeZone: 'Africa/Kigali', usdPerUnit: 0.00069 },
   { code: 'TZ', name: 'Tanzania', currency: 'TZS', locale: 'sw-TZ', timeZone: 'Africa/Dar_es_Salaam', usdPerUnit: 0.00039 },
   { code: 'UG', name: 'Uganda', currency: 'UGX', locale: 'en-UG', timeZone: 'Africa/Kampala', usdPerUnit: 0.00027 },
   { code: 'ET', name: 'Ethiopia', currency: 'ETB', locale: 'en-ET', timeZone: 'Africa/Addis_Ababa', usdPerUnit: 0.0091 },
@@ -32,6 +33,7 @@ export function inferAccountCountry(): AccountCountryCode {
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const timeZoneCountries: Record<string, AccountCountryCode> = {
     'Africa/Nairobi': 'KE',
+    'Africa/Kigali': 'RW',
     'Africa/Dar_es_Salaam': 'TZ',
     'Africa/Kampala': 'UG',
     'Africa/Addis_Ababa': 'ET',

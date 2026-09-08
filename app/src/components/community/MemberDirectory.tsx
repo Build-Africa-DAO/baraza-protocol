@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, ChevronDown, ChevronUp, Users, Shield, ShieldCheck,
   Calendar, PiggyBank, Vote, FileText, TrendingUp, Clock,
-  ArrowUpDown, X
+  ArrowUpDown, X, Download
 } from 'lucide-react';
 import { useMembers } from '@/hooks/useBarazaData';
 import { formatRailAmountFromKes, formatRailDate } from '@/lib/utils';
@@ -227,7 +227,7 @@ const MemberDirectory: React.FC<MemberDirectoryProps> = ({ communityId, totalCou
   const [sortField, setSortField] = useState<SortField>('contributed');
   const [sortAsc, setSortAsc] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [roleFilter, setRoleFilter] = useState<'all' | 'founder' | 'admin' | 'member'>('all');
+  const [roleFilter, setRoleFilter] = useState<'all' | 'founder' | 'admin' | 'member' | 'officer' | 'active' | 'overdue_dues'>('all');
 
   // Batched dues-streak fetch — one round trip for all visible members.
   // Witnessed standing — chama culture surfaces, not just self-view.
@@ -245,7 +245,13 @@ const MemberDirectory: React.FC<MemberDirectoryProps> = ({ communityId, totalCou
   const filtered = useMemo(() => {
     const result = members.filter((m) => {
       const matchesSearch = m.name.toLowerCase().includes(search.toLowerCase());
-      const matchesRole = roleFilter === 'all' || m.role === roleFilter;
+      const overdue = Date.now() - m.lastContributionAt > 40 * 86400000;
+      const matchesRole =
+        roleFilter === 'all'
+        || (roleFilter === 'officer' && (m.role === 'founder' || m.role === 'admin'))
+        || (roleFilter === 'active' && m.status === 'active' && !overdue)
+        || (roleFilter === 'overdue_dues' && overdue)
+        || m.role === roleFilter;
       return matchesSearch && matchesRole;
     });
 
@@ -270,6 +276,27 @@ const MemberDirectory: React.FC<MemberDirectoryProps> = ({ communityId, totalCou
 
     return result;
   }, [members, search, sortField, sortAsc, roleFilter]);
+
+  const handleExportCsv = () => {
+    const rows = [
+      ['name', 'role', 'status', 'wallet', 'total_contributed', 'joined_at'],
+      ...filtered.map((m) => [
+        m.name,
+        m.role,
+        m.status,
+        m.walletKey,
+        String(m.totalContributed),
+        new Date(m.joinedAt).toISOString(),
+      ]),
+    ];
+    const csv = rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    const a = document.createElement('a');
+    a.href = href;
+    a.download = `baraza-roster-${communityId}.csv`;
+    a.click();
+    URL.revokeObjectURL(href);
+  };
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -335,7 +362,7 @@ const MemberDirectory: React.FC<MemberDirectoryProps> = ({ communityId, totalCou
 
         {/* Role filter chips */}
         <div className="flex items-center gap-1.5 flex-wrap">
-          {(['all', 'founder', 'admin', 'member'] as const).map((role) => (
+          {(['all', 'active', 'overdue_dues', 'officer', 'founder', 'admin', 'member'] as const).map((role) => (
             <button
               key={role}
               onClick={() => setRoleFilter(role)}
@@ -345,9 +372,13 @@ const MemberDirectory: React.FC<MemberDirectoryProps> = ({ communityId, totalCou
                   : 'bg-surface text-muted-foreground border-border hover:border-primary/20'
               }`}
             >
-              {role === 'all' ? 'All' : role.charAt(0).toUpperCase() + role.slice(1) + 's'}
+              {role === 'all' ? 'All' : role === 'overdue_dues' ? 'Overdue dues' : role === 'officer' ? 'Officers' : role.charAt(0).toUpperCase() + role.slice(1)}
             </button>
           ))}
+          <button type="button" onClick={handleExportCsv} className="btn-wipe-outline ml-auto gap-1 px-3 py-1.5 text-[11px]">
+            <Download className="h-3 w-3" />
+            CSV
+          </button>
         </div>
       </div>
 
