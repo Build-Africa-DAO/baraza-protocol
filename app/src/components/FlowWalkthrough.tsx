@@ -4,22 +4,22 @@ const services = [
   {
     title: toTitleCase("Create the Group"),
     detail:
-      "Name it, pick the type, set dues, quorum, and the vote window. Members see those rules before they join.",
+      "Name it, pick the type, and set dues and the voting rule. People see that before they join.",
   },
   {
     title: toTitleCase("Join and Pay"),
     detail:
-      "Share a link. Members join with a phone number, see dues, platform, and carrier fees, then pay — or join free when the group charges nothing.",
+      "Share a link. Members sign in with a phone number and pay the dues, or join free if you charge nothing.",
   },
   {
     title: toTitleCase("Vote on Spending"),
     detail:
-      "A request becomes a proposal. Active members vote. The group sees quorum before any payout is allowed.",
+      "Someone asks to spend. Members vote. You see if enough people took part before any payout.",
   },
   {
-    title: toTitleCase("Release by the Rule"),
+    title: toTitleCase("Send After the Vote"),
     detail:
-      "Approved money moves the way the group configured. The trail stays on the dashboard for every member.",
+      "If the vote passes, an officer sends the money. The receipt shows up for everyone on the group page.",
   },
 ];
 
@@ -66,7 +66,7 @@ export default function FlowWalkthrough() {
           How it works
         </p>
         <h2 className="mx-auto mt-3 max-w-3xl text-center font-display text-3xl font-black leading-tight text-foreground md:text-4xl">
-          {toTitleCase("Four Steps from Empty Group to Money That Cannot Move in Secret.")}
+          {toTitleCase("From a New Group to the First Payout")}
         </h2>
 
         {/* Desktop: horizontal spine, odd steps up, even steps down */}

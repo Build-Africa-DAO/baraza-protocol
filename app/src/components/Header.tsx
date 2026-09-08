@@ -18,12 +18,8 @@ import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
 import { useAccount } from "@/contexts/AccountContext";
 
-const navLinks = [
-  { label: "Groups", to: "/communities" },
-  { label: "How It Works", to: "/#how-it-works", hash: "how-it-works" },
-  { label: "Features", to: "/#features", hash: "features" },
-  { label: "FAQ", to: "/#faq", hash: "faq" },
-] as const;
+import { LANDING_NAV, LANDING_SECTION_IDS, isLandingNavActive } from "@/lib/landingNav";
+import { useScrollSpy } from "@/hooks/useScrollSpy";
 
 function isAppRoute(pathname: string) {
   return (
@@ -36,9 +32,13 @@ function isAppRoute(pathname: string) {
   );
 }
 
-function isLinkActive(pathname: string, hash: string, link: (typeof navLinks)[number]) {
-  if ("hash" in link && link.hash) return pathname === "/" && hash === `#${link.hash}`;
-  return pathname === link.to || pathname.startsWith(`${link.to}/`);
+function isLinkActive(
+  pathname: string,
+  hash: string,
+  scrollId: string | null,
+  link: (typeof LANDING_NAV)[number],
+) {
+  return isLandingNavActive(pathname, hash, scrollId, link.hash);
 }
 
 function ProfileMenu({
@@ -142,6 +142,7 @@ export default function Header() {
   const { theme, toggleTheme } = useTheme();
   const account = useAccount();
   const showChain = account.authenticated || isAppRoute(location.pathname);
+  const scrollId = useScrollSpy(LANDING_SECTION_IDS, location.pathname === "/");
 
   const handleSignIn = () => {
     if (account.configured) {
@@ -170,9 +171,9 @@ export default function Header() {
           <BrandLogo size="sm" showIcon={false} lockup="protocol" />
         </Link>
 
-        <nav className="hidden items-center gap-7 xl:flex" aria-label="Main navigation">
-          {navLinks.map((link) => {
-            const active = isLinkActive(location.pathname, location.hash, link);
+        <nav className="hidden items-center gap-5 xl:flex" aria-label="Main navigation">
+          {LANDING_NAV.map((link) => {
+            const active = isLinkActive(location.pathname, location.hash, scrollId, link);
             return (
               <Link
                 key={link.label}
@@ -238,11 +239,23 @@ export default function Header() {
       {mobileOpen && (
         <div className="border-t border-border bg-background xl:hidden">
           <nav className="page-shell flex flex-col gap-1 py-4" aria-label="Site menu">
-            {navLinks.map((link) => (
-              <Link key={link.label} to={link.to} className="rounded-md px-3 py-2.5 text-sm font-semibold">
-                {link.label}
-              </Link>
-            ))}
+            {LANDING_NAV.map((link) => {
+              const active = isLinkActive(location.pathname, location.hash, scrollId, link);
+              return (
+                <Link
+                  key={link.label}
+                  to={link.to}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "relative rounded-md px-3 py-2.5 text-sm font-semibold",
+                    active ? "text-foreground" : "text-muted-foreground",
+                  )}
+                >
+                  {link.label}
+                  {active && <span className="absolute inset-x-3 bottom-1 h-0.5 rounded-full bg-primary" />}
+                </Link>
+              );
+            })}
 
             <div className="my-2 border-t border-border" />
 

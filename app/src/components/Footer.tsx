@@ -7,10 +7,11 @@ const columns = [
     title: toTitleCase("Product"),
     links: [
       { label: toTitleCase("Browse Groups"), to: "/communities" },
-      { label: toTitleCase("Launch a Group"), to: "/create/purpose" },
+      { label: toTitleCase("Start a Group"), to: "/create/purpose" },
       { label: toTitleCase("How It Works"), to: "/#how-it-works" },
       { label: toTitleCase("Features"), to: "/#features" },
       { label: toTitleCase("FAQ"), to: "/#faq" },
+      { label: toTitleCase("Contact"), to: "/#contact" },
     ],
   },
   {
@@ -19,7 +20,7 @@ const columns = [
       { label: "Chamas", to: "/create?type=savings" },
       { label: "SACCOs", to: "/create?type=sacco" },
       { label: toTitleCase("Cooperatives"), to: "/create?type=cooperative" },
-      { label: toTitleCase("Who It's For"), to: "/#who-its-for" },
+      { label: toTitleCase("Who It's For"), to: "/#groups" },
     ],
   },
   {
@@ -43,8 +44,8 @@ export default function Footer() {
               <BrandLogo size="md" showIcon={false} lockup="protocol" className="mb-4" />
             </Link>
             <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">
-              Group money for chamas, SACCOs, and cooperatives. Collect dues, vote, and release funds
-              where every member can see the trail. Join with a phone number — no seed phrases.
+              Group money for chamas, SACCOs, and cooperatives. Members pay dues, vote on spending,
+              and open the same record. You sign in with a phone number.
             </p>
           </div>
 
