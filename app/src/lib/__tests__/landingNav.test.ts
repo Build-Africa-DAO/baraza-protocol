@@ -12,8 +12,19 @@ describe('isLandingNavActive', () => {
     expect(isLandingNavActive('/', '', null, 'features')).toBe(false);
   });
 
+  it('keeps Features active through the group-runs stats band', () => {
+    expect(isLandingNavActive('/', '#who-its-for', 'who-its-for', 'features')).toBe(true);
+    expect(isLandingNavActive('/', '#who-its-for', null, 'features')).toBe(true);
+    expect(isLandingNavActive('/', '#who-its-for', 'who-its-for', 'faq')).toBe(false);
+  });
+
+  it('treats the top of the landing page as Home when there is no hash', () => {
+    expect(isLandingNavActive('/', '', null, 'home')).toBe(true);
+    expect(isLandingNavActive('/', '', null, 'faq')).toBe(false);
+  });
+
   it('stays inactive off the landing page', () => {
-    expect(isLandingNavActive('/communities', '', 'groups', 'groups')).toBe(false);
+    expect(isLandingNavActive('/communities', '', 'home', 'home')).toBe(false);
   });
 });
 

@@ -35,9 +35,10 @@ export default function ContactSection() {
   }
 
   return (
-    <section id="contact" className="relative z-10 scroll-mt-20 bg-background pb-36 pt-8 text-foreground lg:pb-48">
+    <section id="contact" className="relative z-10 scroll-mt-20 bg-background pb-8 pt-10 text-foreground lg:pb-10">
       <div className="page-shell">
-        <h2 className="text-center font-display text-3xl font-black leading-tight md:text-5xl">
+        <div className="mx-auto max-w-7xl">
+          <h2 className="text-center font-display text-3xl font-black leading-tight md:text-5xl">
           Get in <span className="text-primary">Touch</span>
         </h2>
         <p className="mx-auto mt-3 max-w-xl text-center text-sm leading-7 text-muted-foreground sm:text-base">
@@ -131,6 +132,7 @@ export default function ContactSection() {
               </p>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </section>

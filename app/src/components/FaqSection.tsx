@@ -38,7 +38,7 @@ export default function FaqSection() {
   const [openQuestion, setOpenQuestion] = useState<string | null>(faqs[0].question);
 
   return (
-    <section className="scroll-mt-20 pt-20 pb-36 lg:pb-48" id="faq">
+    <section className="scroll-mt-20 pt-16 pb-10 lg:pt-20 lg:pb-12" id="faq">
       <div className="page-shell">
         <p className="text-center text-xs font-semibold uppercase tracking-[0.18em] text-primary">
           Questions

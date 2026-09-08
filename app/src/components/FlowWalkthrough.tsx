@@ -1,3 +1,4 @@
+import LogoMarquee from "@/components/LogoMarquee";
 import { toTitleCase } from "@/lib/utils";
 
 const services = [
@@ -139,6 +140,8 @@ export default function FlowWalkthrough() {
             );
           })}
         </ol>
+
+        <LogoMarquee />
       </div>
     </section>
   );

@@ -5,39 +5,49 @@ import { toTitleCase } from "@/lib/utils";
 
 export default function CTASection() {
   return (
-    <section className="audience-band relative z-10 w-full bg-primary text-foreground">
+    <section className="relative z-10 w-full py-8 sm:py-10 lg:py-12">
       <div className="page-shell">
-        <div className="grid items-end gap-10 pb-12 pt-6 sm:pb-16 sm:pt-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-14 lg:pb-20 lg:pt-8">
-          <figure className="relative z-10 mx-auto -mt-20 mb-6 w-[min(100%,36rem)] origin-bottom rotate-[5deg] bg-white p-3 shadow-[0_18px_40px_hsl(0_0%_0%/0.22)] sm:-mt-28 sm:mb-8 sm:w-[min(100%,40rem)] sm:p-4 lg:order-2 lg:mb-0 lg:-mt-40 lg:w-[min(100%,42rem)] lg:justify-self-end">
-            <img
-              src="/cta/group.jpg"
-              alt="Illustrated chama collecting dues and inspecting a shared record together"
-              width={1024}
-              height={768}
-              className="aspect-[4/3] w-full object-cover"
-            />
-          </figure>
+        <div className="audience-band relative overflow-hidden rounded-[2rem] bg-primary text-foreground lg:rounded-[2.75rem]">
+          <div className="grid lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+            <div className="flex flex-col justify-center px-6 py-10 sm:px-10 sm:py-12 lg:px-14 lg:py-16">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] opacity-80">
+                Your group
+              </p>
+              <h2 className="mt-4 max-w-xl font-display text-3xl font-black leading-tight md:text-5xl">
+                {toTitleCase("Move the Books Off WhatsApp")}
+              </h2>
+              <p className="mt-4 max-w-xl text-sm leading-7 opacity-85 sm:text-base sm:leading-8">
+                Name the group, set the dues, and send a link. Members pay with M-Pesa
+                and open the same record on their phone.
+              </p>
+              <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+                <Button asChild size="lg">
+                  <Link to="/create/purpose">
+                    Start a Group
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="lg">
+                  <Link to="/#faq">Read the FAQ</Link>
+                </Button>
+              </div>
+            </div>
 
-          <div className="pb-2 text-center lg:order-1 lg:pb-6 lg:text-left">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] opacity-80">
-              Your group
-            </p>
-            <h2 className="mt-4 font-display text-3xl font-black leading-tight md:text-5xl">
-              {toTitleCase("Move the Books Off WhatsApp")}
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-sm leading-7 opacity-85 sm:text-base lg:mx-0">
-              Name the group, set the dues, and send a link. Members pay with M-Pesa.
-            </p>
-            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
-              <Button asChild size="lg">
-                <Link to="/create/purpose">
-                  Start a Group
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg">
-                <Link to="/#faq">Read the FAQ</Link>
-              </Button>
+            <div className="relative min-h-[20rem] overflow-hidden sm:min-h-[24rem] lg:min-h-[28rem]">
+              <div className="absolute bottom-[-1.25rem] left-1/2 w-[12.75rem] -translate-x-1/2 sm:w-[15rem] lg:left-auto lg:right-[-1.35rem] lg:w-[16.75rem] lg:translate-x-0">
+                <div className="rounded-[2.4rem] bg-foreground p-[0.55rem] shadow-[0_24px_50px_hsl(0_0%_0%/0.28)]">
+                  <div className="relative overflow-hidden rounded-[1.85rem] bg-background">
+                    <span className="absolute left-1/2 top-2 z-10 h-[1.15rem] w-[5.4rem] -translate-x-1/2 rounded-full bg-foreground" />
+                    <img
+                      src="/gallery/gallery-vote.jpg"
+                      alt="Two members checking a vote on a phone"
+                      width={720}
+                      height={900}
+                      className="aspect-[9/17] w-full object-cover object-[center_20%]"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

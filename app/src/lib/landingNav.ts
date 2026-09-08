@@ -1,5 +1,5 @@
 export const LANDING_NAV = [
-  { label: 'Groups', to: '/#groups', hash: 'groups' },
+  { label: 'Home', to: '/#home', hash: 'home' },
   { label: 'How It Works', to: '/#how-it-works', hash: 'how-it-works' },
   { label: 'Features', to: '/#features', hash: 'features' },
   { label: 'FAQ', to: '/#faq', hash: 'faq' },
@@ -8,7 +8,20 @@ export const LANDING_NAV = [
 
 export type LandingSectionId = (typeof LANDING_NAV)[number]['hash'];
 
-export const LANDING_SECTION_IDS = LANDING_NAV.map((link) => link.hash);
+/** DOM ids the landing spy watches. The stats band belongs to Features. */
+export const LANDING_SECTION_IDS = [
+  'home',
+  'how-it-works',
+  'features',
+  'who-its-for',
+  'faq',
+  'contact',
+] as const;
+
+export function navHashForSection(sectionId: string): string {
+  if (sectionId === 'who-its-for') return 'features';
+  return sectionId;
+}
 
 export function isLandingNavActive(
   pathname: string,
@@ -17,8 +30,9 @@ export function isLandingNavActive(
   linkHash: string,
 ): boolean {
   if (pathname !== '/') return false;
-  if (scrollId) return scrollId === linkHash;
-  return hash === `#${linkHash}`;
+  if (scrollId) return navHashForSection(scrollId) === linkHash;
+  if (!hash || hash === '#') return linkHash === 'home';
+  return navHashForSection(hash.replace('#', '')) === linkHash;
 }
 
 export function pickActiveLandingSection(
