@@ -216,7 +216,12 @@ export default function Header() {
               <Button type="button" variant="outline" onClick={handleSignIn} disabled={!account.ready}>
                 Sign In
               </Button>
-              <Button type="button" onClick={handleSignUp} disabled={!account.ready}>
+              <Button
+                type="button"
+                onClick={handleSignUp}
+                disabled={!account.ready}
+                className="[--btn-cover:hsl(var(--foreground))] [--btn-fill:hsl(var(--primary))] [--btn-ink:hsl(var(--foreground))] [--btn-ink-hover:hsl(var(--background))]"
+              >
                 Sign Up
               </Button>
             </div>
@@ -293,7 +298,12 @@ export default function Header() {
                   <LogIn className="h-4 w-4" />
                   Sign In
                 </Button>
-                <Button type="button" onClick={handleSignUp} disabled={!account.ready}>
+                <Button
+                  type="button"
+                  onClick={handleSignUp}
+                  disabled={!account.ready}
+                  className="[--btn-cover:hsl(var(--foreground))] [--btn-fill:hsl(var(--primary))] [--btn-ink:hsl(var(--foreground))] [--btn-ink-hover:hsl(var(--background))]"
+                >
                   <UserPlus className="h-4 w-4" />
                   Sign Up
                 </Button>

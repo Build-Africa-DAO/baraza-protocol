@@ -52,10 +52,13 @@ export default function Footer() {
   }
 
   return (
-    <footer className="audience-band w-full rounded-t-[2rem] bg-primary text-foreground lg:rounded-t-[2.75rem]">
+    <footer
+      id="site-footer"
+      className="audience-band w-full rounded-t-[2rem] bg-primary text-foreground lg:rounded-t-[2.75rem]"
+    >
       <div className="page-shell py-16">
-        <div className="grid gap-12 md:grid-cols-[1.2fr_1.5fr_1fr_1fr]">
-          <div>
+        <div className="grid grid-cols-2 gap-12 md:grid-cols-[1.2fr_1.5fr_1fr_1fr]">
+          <div className="col-span-2 md:col-span-1">
             <Link to="/" className="inline-flex" aria-label="Baraza Protocol home">
               <BrandLogo
                 size="md"
@@ -70,8 +73,8 @@ export default function Footer() {
             </p>
           </div>
 
-          {columns.map((column) => (
-            <div key={column.title}>
+          {columns.map((column, index) => (
+            <div key={column.title} className={index === 0 ? "col-span-2 md:col-span-1" : undefined}>
               <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider">
                 {column.title}
               </h4>

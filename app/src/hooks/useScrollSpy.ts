@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { pickActiveLandingSection } from '@/lib/landingNav';
 
 export function useScrollSpy(ids: readonly string[], enabled: boolean) {
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -15,18 +16,31 @@ export function useScrollSpy(ids: readonly string[], enabled: boolean) {
 
     if (elements.length === 0) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-        if (visible[0]?.target.id) setActiveId(visible[0].target.id);
-      },
-      { rootMargin: '-28% 0px -55% 0px', threshold: [0, 0.2, 0.45, 0.7] },
-    );
+    const update = () => {
+      const sections = elements.map((el) => {
+        const rect = el.getBoundingClientRect();
+        return { id: el.id, top: rect.top, height: rect.height };
+      });
+      setActiveId(pickActiveLandingSection(sections, window.innerHeight));
+    };
 
-    elements.forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
+    let frame = 0;
+    const onScroll = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = 0;
+        update();
+      });
+    };
+
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
   }, [enabled, ids]);
 
   return activeId;
