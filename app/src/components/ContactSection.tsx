@@ -5,9 +5,9 @@ import { SUPPORT_EMAIL, SUPPORT_PHONE_DISPLAY, SUPPORT_PHONE_E164 } from '@/lib/
 import { toTitleCase } from '@/lib/utils';
 
 const inputClass =
-  'w-full rounded-xl border border-border bg-background px-4 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/40';
+  'w-full rounded-xl border border-black/15 bg-white px-4 text-sm text-neutral-900 outline-none placeholder:text-neutral-500 focus:border-black focus:ring-2 focus:ring-black/20';
 const fieldClass = `h-12 ${inputClass}`;
-const labelClass = 'grid gap-1.5 text-xs font-semibold tracking-wide text-muted-foreground';
+const labelClass = 'grid gap-1.5 text-xs font-semibold tracking-wide text-foreground/80';
 
 export default function ContactSection() {
   const [sent, setSent] = useState(false);
@@ -61,17 +61,17 @@ export default function ContactSection() {
           </a>
         </div>
 
-        <div className="mt-10 overflow-hidden rounded-2xl border border-border bg-card lg:grid lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="p-6 sm:p-8 lg:p-10">
-            <h3 className="font-display text-2xl font-bold text-foreground">{toTitleCase('Send a Message')}</h3>
-            <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
+        <div className="mt-10 overflow-hidden rounded-2xl border border-border lg:grid lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="audience-band bg-primary p-6 text-foreground sm:p-8 lg:p-10">
+            <h3 className="font-display text-2xl font-bold">{toTitleCase('Send a Message')}</h3>
+            <p className="mt-2 max-w-md text-sm leading-6 opacity-85">
               Tell us the group name if you have one. We reply by email.
             </p>
 
             {sent ? (
-              <p className="mt-8 rounded-xl border border-border bg-surface px-4 py-6 text-sm leading-6 text-foreground">
+              <p className="mt-8 rounded-xl border border-foreground/20 bg-background px-4 py-6 text-sm leading-6 text-foreground">
                 Your email app should open with the message filled in. If it does not, write to{' '}
-                <a className="font-semibold text-primary underline-offset-4 hover:underline" href={`mailto:${SUPPORT_EMAIL}`}>
+                <a className="font-semibold underline-offset-4 hover:underline" href={`mailto:${SUPPORT_EMAIL}`}>
                   {SUPPORT_EMAIL}
                 </a>
                 .
