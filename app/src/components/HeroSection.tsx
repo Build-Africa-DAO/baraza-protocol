@@ -5,7 +5,7 @@ import PolaroidGallery from "@/components/PolaroidGallery";
 
 export default function HeroSection() {
   return (
-    <section id="home" className="relative overflow-x-clip scroll-mt-20 bg-background pt-10 pb-16 sm:pt-16 sm:pb-20 lg:pt-20">
+    <section id="home" className="relative overflow-x-clip scroll-mt-20 bg-background pt-10 pb-12 sm:pt-16 lg:pt-20 lg:pb-[3.75rem]">
       <div className="page-shell">
         <div className="mx-auto max-w-3xl text-center xl:max-w-5xl">
           <p className="mb-5 text-xs font-semibold uppercase tracking-[0.18em] text-primary">

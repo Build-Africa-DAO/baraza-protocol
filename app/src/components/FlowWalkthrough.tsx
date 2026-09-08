@@ -60,7 +60,7 @@ function Node() {
 
 export default function FlowWalkthrough() {
   return (
-    <section id="features" className="scroll-mt-20 border-t border-border py-20">
+    <section id="features" className="scroll-mt-20 py-12 lg:py-[3.75rem]">
       <div className="page-shell">
         <p className="text-center text-xs font-semibold uppercase tracking-[0.18em] text-primary">
           Features

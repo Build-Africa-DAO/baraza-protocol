@@ -108,12 +108,12 @@ export default function AIPlatformSection() {
   const rightCards = groupCards.filter((_, index) => index % 2 === 1);
 
   return (
-    <section className="scroll-mt-20 py-8 sm:py-10 lg:py-12" id="who-its-for">
+    <section className="scroll-mt-20 py-12 lg:py-[3.75rem]" id="who-its-for">
       <div className="page-shell">
         <div className="audience-band relative overflow-hidden rounded-[2rem] bg-primary text-foreground lg:rounded-[2.75rem]">
-          <div className="grid lg:grid-cols-[minmax(20rem,0.58fr)_minmax(0,1.42fr)]">
+          <div className="grid lg:grid-cols-[minmax(18rem,0.48fr)_minmax(0,1.52fr)]">
             <div
-              className="relative h-56 overflow-hidden sm:h-72 lg:h-auto lg:min-h-[28rem]"
+              className="relative h-56 overflow-hidden sm:h-72 lg:h-auto lg:min-h-[22rem]"
               aria-hidden="true"
             >
               <div className="absolute inset-0 flex justify-center gap-5 px-5 sm:gap-6 sm:px-6 lg:justify-end lg:px-0 lg:pl-8">
@@ -139,19 +139,21 @@ export default function AIPlatformSection() {
               </div>
             </div>
 
-            <div className="flex flex-col items-center justify-center px-6 py-8 text-center sm:px-10 sm:py-12 lg:pl-8 lg:pr-14 lg:py-16">
+            <div className="flex flex-col items-center justify-center px-6 py-8 text-center sm:px-10 sm:py-10 lg:pl-16 lg:pr-10 lg:py-10 xl:pl-20 xl:pr-14">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] opacity-80">
                 Everyone Is Welcome
               </p>
-              <h2 className="mt-4 max-w-xl font-display text-3xl font-black leading-[1.05] tracking-tight md:text-5xl">
+              <h2 className="mt-3 w-full font-display text-3xl font-black leading-[1.05] tracking-tight md:text-5xl">
                 {toTitleCase("Bring your group, or find one.")}
               </h2>
-              <p className="mt-5 max-w-xl text-sm leading-7 opacity-85 sm:text-base sm:leading-8">
+              <p className="mt-4 w-full max-w-3xl text-sm leading-7 opacity-85 sm:text-base sm:leading-8">
                 Whether you run a chama, you pay dues in one, or you have not joined yet, the
                 paid list and the payouts sit on one page that every member can open on their phone.
+                Browse a group that is already collecting, or start yours and share a link.
+                SACCOs and cooperatives use that same page.
               </p>
 
-              <dl ref={ref} className="mt-8 grid w-full max-w-xl justify-items-center gap-6 sm:grid-cols-3">
+              <dl ref={ref} className="mt-6 grid w-full justify-items-center gap-6 sm:grid-cols-3">
                 {stats.map((stat) => (
                   <CountStat
                     key={stat.label}
@@ -162,7 +164,7 @@ export default function AIPlatformSection() {
                 ))}
               </dl>
 
-              <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <Button asChild size="lg">
                   <Link to="/communities">
                     Browse Groups

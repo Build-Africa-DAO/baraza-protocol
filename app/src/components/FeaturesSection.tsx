@@ -29,7 +29,7 @@ const steps = [
 
 export default function FeaturesSection() {
   return (
-    <section id="how-it-works" className="scroll-mt-20 border-t border-border pt-14 pb-8 lg:pt-16 lg:pb-10">
+    <section id="how-it-works" className="scroll-mt-20 py-12 lg:py-[3.75rem]">
       <div className="page-shell">
         <p className="mb-6 text-center text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
           How it works
