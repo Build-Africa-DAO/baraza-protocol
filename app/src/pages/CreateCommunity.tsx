@@ -436,35 +436,33 @@ const CreateCommunity: React.FC = () => {
 
         // Step 2: create the community record
         let chainResult: { chain: 'solana' | 'stellar'; slug: string; communityAddress: string; signature: string } | null = null;
-        if (selectedCommunityChain === 'solana' && chainClient) {
-          const slug = toSlug(form.name);
-          try {
-            const signature = await chainClient.createCommunity(slug, form.name, '');
-            const [communityKey] = communityPda(slug);
-            chainResult = {
-              chain: 'solana',
-              slug,
-              communityAddress: communityKey.toBase58(),
-              signature,
-            };
-          } catch (chainErr) {
-            console.warn('[baraza] createCommunity on-chain failed (record-only fallback):', chainErr);
+        if (selectedCommunityChain === 'solana') {
+          if (!chainClient) {
+            throw new Error('Solana wallet connection required to register community on-chain.');
           }
-        } else if (selectedCommunityChain === 'stellar' && stellarWallet.address && stellarWallet.signTransaction) {
           const slug = toSlug(form.name);
-          try {
-            const stellarSigner = { publicKey: stellarWallet.address, signTransaction: stellarWallet.signTransaction };
-            const stellarClient = new BarazaStellarClient(stellarSigner);
-            const signature = await stellarClient.registerCommunity(slug, form.name);
-            chainResult = {
-              chain: 'stellar',
-              slug,
-              communityAddress: stellarClient.communityRegistryContractId,
-              signature,
-            };
-          } catch (chainErr) {
-            console.warn('[baraza] createCommunity on-chain failed (record-only fallback):', chainErr);
+          const signature = await chainClient.createCommunity(slug, form.name, '');
+          const [communityKey] = communityPda(slug);
+          chainResult = {
+            chain: 'solana',
+            slug,
+            communityAddress: communityKey.toBase58(),
+            signature,
+          };
+        } else if (selectedCommunityChain === 'stellar') {
+          if (!stellarWallet.address || !stellarWallet.signTransaction) {
+            throw new Error('Stellar wallet connection required to register community on-chain.');
           }
+          const slug = toSlug(form.name);
+          const stellarSigner = { publicKey: stellarWallet.address, signTransaction: stellarWallet.signTransaction };
+          const stellarClient = new BarazaStellarClient(stellarSigner);
+          const signature = await stellarClient.registerCommunity(slug, form.name);
+          chainResult = {
+            chain: 'stellar',
+            slug,
+            communityAddress: stellarClient.communityRegistryContractId,
+            signature,
+          };
         }
 
         const paybill = addPaybill ? provisionPaybill(form.name) : undefined;
