@@ -641,10 +641,104 @@ describe('Master 50-Iteration Backend Endurance & Stress Suite', () => {
   });
 
   // ---------------------------------------------------------------------------
+  // 13. Live Docker PostgreSQL 16 & PostgREST Database Write & Read (50 Iterations)
+  // ---------------------------------------------------------------------------
+  describe('Endpoint 13: Live PostgreSQL 16 & PostgREST Database Write/Read (50 Runs)', () => {
+    it(`writes, reads, updates, and deletes from real PostgreSQL database ${ITERATION_COUNT} times`, async () => {
+      const durations: number[] = [];
+      let successCount = 0;
+      let failCount = 0;
+      const LIVE_DB_URL = 'http://localhost:54321';
+      const SERVICE_KEY =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE2MDAwMDAwMDAsImV4cCI6MjUwMDAwMDAwMH0.YEHFlsDyYXjxJ5oIZyJ6HuS62T6qaal7bGnWI5GxbRs';
+
+      for (let i = 0; i < ITERATION_COUNT; i++) {
+        const t0 = performance.now();
+        const testId = `stress-db-50-${Date.now()}-${i}`;
+        try {
+          // 13a. Write: INSERT into communities table in live PostgreSQL
+          const insertRes = await fetch(`${LIVE_DB_URL}/rest/v1/communities`, {
+            method: 'POST',
+            headers: {
+              apikey: SERVICE_KEY,
+              Authorization: `Bearer ${SERVICE_KEY}`,
+              'content-type': 'application/json',
+              Prefer: 'return=minimal',
+            },
+            body: JSON.stringify({
+              id: testId,
+              name: `Database Endurance Chamber ${i}`,
+              type: 'chama',
+              membership_fee: 100,
+              sacco_license_status: 'UNLICENSED',
+            }),
+          });
+          expect([201, 204]).toContain(insertRes.status);
+
+          // 13b. Read: SELECT from communities table in live PostgreSQL
+          const readRes = await fetch(`${LIVE_DB_URL}/rest/v1/communities?id=eq.${testId}&select=id,name,type`, {
+            headers: {
+              apikey: SERVICE_KEY,
+              Authorization: `Bearer ${SERVICE_KEY}`,
+            },
+          });
+          expect(readRes.status).toBe(200);
+          const rows = (await readRes.json()) as Array<{ id: string; name: string; type: string }>;
+          expect(rows.length).toBe(1);
+          expect(rows[0].id).toBe(testId);
+          expect(rows[0].name).toBe(`Database Endurance Chamber ${i}`);
+
+          // 13c. Update: PATCH record in live PostgreSQL
+          const updateRes = await fetch(`${LIVE_DB_URL}/rest/v1/communities?id=eq.${testId}`, {
+            method: 'PATCH',
+            headers: {
+              apikey: SERVICE_KEY,
+              Authorization: `Bearer ${SERVICE_KEY}`,
+              'content-type': 'application/json',
+            },
+            body: JSON.stringify({
+              name: `Database Endurance Chamber Updated ${i}`,
+            }),
+          });
+          expect([200, 204]).toContain(updateRes.status);
+
+          // 13d. Read back verified update
+          const verifyRes = await fetch(`${LIVE_DB_URL}/rest/v1/communities?id=eq.${testId}&select=name`, {
+            headers: {
+              apikey: SERVICE_KEY,
+              Authorization: `Bearer ${SERVICE_KEY}`,
+            },
+          });
+          const updatedRows = (await verifyRes.json()) as Array<{ name: string }>;
+          expect(updatedRows[0].name).toBe(`Database Endurance Chamber Updated ${i}`);
+
+          // 13e. Clean up row
+          await fetch(`${LIVE_DB_URL}/rest/v1/communities?id=eq.${testId}`, {
+            method: 'DELETE',
+            headers: {
+              apikey: SERVICE_KEY,
+              Authorization: `Bearer ${SERVICE_KEY}`,
+            },
+          });
+
+          successCount++;
+        } catch {
+          failCount++;
+        }
+        durations.push(performance.now() - t0);
+      }
+
+      recordSample('PostgreSQL 16 & PostgREST DB Operations', 'Database Write/Read Endurance', durations, successCount, failCount);
+      expect(successCount).toBe(ITERATION_COUNT);
+      expect(failCount).toBe(0);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
   // Summary Audit Telemetry Output
   // ---------------------------------------------------------------------------
   it('aggregates and certifies S&P 500 endurance telemetry', () => {
-    expect(telemetryReports.length).toBe(12);
+    expect(telemetryReports.length).toBe(13);
     for (const report of telemetryReports) {
       expect(report.successes).toBe(ITERATION_COUNT);
       expect(report.failures).toBe(0);
