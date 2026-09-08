@@ -192,7 +192,7 @@ const WalletStatus: React.FC = () => {
     return (
       <button
         disabled
-        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/20 text-primary text-sm font-semibold opacity-70 cursor-not-allowed"
+        className="btn-wipe h-10 gap-2 px-5 text-sm"
       >
         <RefreshCw className="w-3.5 h-3.5 animate-spin" />
         Connecting...
@@ -224,7 +224,7 @@ const WalletStatus: React.FC = () => {
       <div className="relative" ref={ref}>
         <button
           onClick={() => setOpen((o) => !o)}
-          className="flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-primary/50"
+          className="btn-wipe-outline h-10 gap-2 px-4 text-sm"
         >
           {phoneSession.phone ? <Phone className="h-3.5 w-3.5 text-primary" /> : <Mail className="h-3.5 w-3.5 text-primary" />}
           {phoneIdentifier}
@@ -261,7 +261,7 @@ const WalletStatus: React.FC = () => {
         <div className="flex flex-col items-end gap-1">
           <button
             onClick={handleConnect}
-            className="rounded-md bg-secondary px-6 py-2.5 text-sm font-bold text-secondary-foreground transition-colors hover:bg-secondary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+            className="btn-wipe h-10 px-6 text-sm"
           >
             {chainMeta.accountCta}
           </button>
@@ -344,7 +344,7 @@ const WalletStatus: React.FC = () => {
             <button
               type="button"
               onClick={handleSavePhone}
-              className="mt-2.5 w-full rounded-lg bg-primary px-3 py-2 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90"
+              className="btn-wipe mt-2.5 w-full px-3 py-2 text-sm"
             >
               {chain === 'mpesa' ? 'Save M-Pesa contact' : 'Save contact'}
             </button>
@@ -365,11 +365,11 @@ const WalletStatus: React.FC = () => {
 
       <button
         onClick={() => setOpen((o) => !o)}
-        className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-semibold transition-all ${
+        className={
           wrongChain
-            ? 'bg-destructive/10 border-destructive/40 text-destructive'
-            : 'bg-surface border-border hover:border-primary/50 text-foreground'
-        }`}
+            ? 'btn-wipe-destructive h-10 gap-2 px-4 text-sm'
+            : 'btn-wipe-outline h-10 gap-2 px-4 text-sm'
+        }
       >
         {chain === 'solana' && wallet?.adapter.icon && (
           <img

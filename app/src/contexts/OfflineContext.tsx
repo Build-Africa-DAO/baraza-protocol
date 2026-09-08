@@ -108,3 +108,7 @@ export function useOffline(): OfflineContextValue {
   }
   return ctx;
 }
+
+export function useOptionalOffline(): OfflineContextValue | null {
+  return useContext(OfflineContext);
+}

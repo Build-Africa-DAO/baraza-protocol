@@ -40,10 +40,8 @@ export function AskAkili({
   const base = 'inline-flex items-center gap-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60';
 
   const styles: Record<NonNullable<AskAkiliProps['variant']>, string> = {
-    pill:
-      'rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 active:scale-[0.98]',
-    chip:
-      'rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 text-[11px] font-semibold text-primary hover:border-primary/60 hover:bg-primary/15',
+    pill: 'btn-wipe h-9 px-4 text-xs',
+    chip: 'btn-wipe-outline h-8 px-3 text-[11px]',
     inline:
       'text-xs font-semibold text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary',
   };

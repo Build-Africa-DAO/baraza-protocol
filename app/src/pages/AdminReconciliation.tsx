@@ -9,7 +9,6 @@ import {
   FileWarning,
   RefreshCw,
   ShieldCheck,
-  ShieldOff,
   Sparkles,
   Network,
   Users,
@@ -18,6 +17,7 @@ import {
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import Layout from "@/components/Layout";
+import { StatusScreen } from "@/components/StatusPage";
 import { cn, formatKSh, formatRailAmountFromKes, truncateAddress } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useSeo } from "@/lib/seo";
@@ -163,45 +163,42 @@ export default function AdminReconciliation() {
       description: "The operator UI is ready. This action will connect when admin endpoints ship.",
     });
 
+  if (!connected) {
+    return (
+      <StatusScreen
+        kind="unauthorized"
+        title="Connect an Operator Account"
+        description="Connect with an authorised Baraza operator account to review communities, payments, bounties, and security flags."
+        primary={{ label: 'Connect Operator Account', onClick: () => setVisible(true), icon: 'login' }}
+      />
+    );
+  }
+
   if (!isAdmin) {
     return (
-      <Layout>
-        <section className="py-20">
-          <div className="mx-auto max-w-md px-4 text-center">
-            <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl border">
-              <ShieldOff className="h-7 w-7" />
-            </div>
-            <h1 className="font-display text-2xl font-bold">Admin access restricted</h1>
-            <p className="mt-3 text-sm text-muted-foreground">
-              Connect with an authorised Baraza operator account to review communities, payments, bounties, and security flags.
-            </p>
-            {connected && publicKey ? (
-              <p className="mt-4 font-mono text-xs text-muted-foreground">
-                Signed in as {truncateAddress(publicKey.toBase58())}
-              </p>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setVisible(true)}
-                className="btn-warm mt-6 inline-flex items-center gap-2 text-sm"
-              >
-                Connect operator account
-              </button>
-            )}
-            {!allowlistConfigured && (
-              <p className="mt-4 text-[11px] text-muted-foreground">
+      <StatusScreen
+        kind="forbidden"
+        title="Admin Access Restricted"
+        description="This account is not on the operator list. If you should have access, ask a founder."
+        details={
+          <div className="space-y-2">
+            {publicKey ? (
+              <p className="font-mono text-xs">Signed in as {truncateAddress(publicKey.toBase58())}</p>
+            ) : null}
+            {!allowlistConfigured ? (
+              <p className="text-[11px]">
                 Operators: set <code className="font-mono">VITE_ADMIN_WALLETS</code> to enable this dashboard.
               </p>
-            )}
-            {allowlistConfigured && nftGateConfigured && !nftGatePassed && (
-              <p className="mt-4 text-[11px] text-muted-foreground">
+            ) : null}
+            {allowlistConfigured && nftGateConfigured && !nftGatePassed ? (
+              <p className="text-[11px]">
                 Admin NFT gate requires {ADMIN_NFT_THRESHOLD} credential{ADMIN_NFT_THRESHOLD === 1 ? "" : "s"}.
                 Current configured count: {ADMIN_NFT_COUNT}.
               </p>
-            )}
+            ) : null}
           </div>
-        </section>
-      </Layout>
+        }
+      />
     );
   }
 

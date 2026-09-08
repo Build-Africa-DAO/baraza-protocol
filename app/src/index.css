@@ -185,13 +185,13 @@
   .audience-band .btn-wipe {
     --btn-cover: hsl(var(--foreground));
     --btn-fill: hsl(var(--background));
-    --btn-ink: hsl(var(--background));
-    --btn-ink-hover: hsl(var(--foreground));
+    --btn-ink: hsl(var(--foreground));
+    --btn-ink-hover: hsl(var(--background));
     color: var(--btn-ink);
   }
   .audience-band .btn-wipe-outline {
-    --btn-cover: hsl(var(--background));
-    --btn-fill: hsl(var(--foreground));
+    --btn-cover: hsl(var(--foreground));
+    --btn-fill: transparent;
     --btn-ink: hsl(var(--foreground));
     --btn-ink-hover: hsl(var(--background));
     border-color: hsl(var(--foreground));
@@ -201,13 +201,15 @@
 
   /* Buttons — pill + skew wipe (Uiverse-style), theme-aware */
   .btn-wipe,
+  .btn-wipe-outline,
+  .btn-wipe-destructive,
   .btn-primary,
   .btn-warm,
   .btn-ghost {
     --btn-cover: hsl(var(--primary));
     --btn-fill: hsl(var(--foreground));
-    --btn-ink: hsl(var(--primary-foreground));
-    --btn-ink-hover: hsl(var(--background));
+    --btn-ink: hsl(var(--background));
+    --btn-ink-hover: hsl(0 0% 100%);
     position: relative;
     z-index: 0;
     isolation: isolate;
@@ -220,11 +222,14 @@
     cursor: pointer;
     font-weight: 700;
     letter-spacing: 0.04em;
+    text-decoration: none;
     color: var(--btn-ink);
     background: var(--btn-fill);
-    transition: color 0.4s, transform 0.2s cubic-bezier(0.3, 1, 0.8, 1);
+    transition: color 0.4s, background-color 0.4s, border-color 0.4s, transform 0.2s cubic-bezier(0.3, 1, 0.8, 1);
   }
   .btn-wipe::before,
+  .btn-wipe-outline::before,
+  .btn-wipe-destructive::before,
   .btn-primary::before,
   .btn-warm::before,
   .btn-ghost::before {
@@ -236,22 +241,30 @@
     width: 120%;
     height: 100%;
     background: var(--btn-cover);
-    transform: skew(30deg);
+    transform: skew(30deg) translate3d(-110%, 0, 0);
     transition: transform 0.4s cubic-bezier(0.3, 1, 0.8, 1);
     pointer-events: none;
   }
   .btn-wipe:hover::before,
   .btn-wipe:focus-visible::before,
+  .btn-wipe-outline:hover::before,
+  .btn-wipe-outline:focus-visible::before,
+  .btn-wipe-destructive:hover::before,
+  .btn-wipe-destructive:focus-visible::before,
   .btn-primary:hover::before,
   .btn-primary:focus-visible::before,
   .btn-warm:hover::before,
   .btn-warm:focus-visible::before,
   .btn-ghost:hover::before,
   .btn-ghost:focus-visible::before {
-    transform: translate3d(100%, 0, 0);
+    transform: skew(30deg) translate3d(0, 0, 0);
   }
   .btn-wipe:hover,
   .btn-wipe:focus-visible,
+  .btn-wipe-outline:hover,
+  .btn-wipe-outline:focus-visible,
+  .btn-wipe-destructive:hover,
+  .btn-wipe-destructive:focus-visible,
   .btn-primary:hover,
   .btn-primary:focus-visible,
   .btn-warm:hover,
@@ -259,33 +272,71 @@
   .btn-ghost:hover,
   .btn-ghost:focus-visible {
     color: var(--btn-ink-hover);
+    background: var(--btn-cover);
+    border-color: var(--btn-cover);
   }
   .btn-wipe > *,
+  .btn-wipe-outline > *,
+  .btn-wipe-destructive > *,
   .btn-primary > *,
   .btn-warm > *,
   .btn-ghost > * {
     position: relative;
     z-index: 1;
   }
+  .btn-wipe:hover > *,
+  .btn-wipe:focus-visible > *,
+  .btn-wipe-outline:hover > *,
+  .btn-wipe-outline:focus-visible > *,
+  .btn-wipe-destructive:hover > *,
+  .btn-wipe-destructive:focus-visible > *,
+  .btn-primary:hover > *,
+  .btn-primary:focus-visible > *,
+  .btn-warm:hover > *,
+  .btn-warm:focus-visible > *,
+  .btn-ghost:hover > *,
+  .btn-ghost:focus-visible > * {
+    color: inherit;
+  }
   .btn-wipe:active,
+  .btn-wipe-outline:active,
+  .btn-wipe-destructive:active,
   .btn-primary:active,
   .btn-warm:active,
   .btn-ghost:active {
     transform: scale(0.97);
   }
   .btn-wipe:disabled,
+  .btn-wipe-outline:disabled,
+  .btn-wipe-destructive:disabled,
   .btn-primary:disabled,
   .btn-warm:disabled,
-  .btn-ghost:disabled {
+  .btn-ghost:disabled,
+  .btn-wipe:disabled:hover,
+  .btn-wipe-outline:disabled:hover,
+  .btn-wipe-destructive:disabled:hover,
+  .btn-primary:disabled:hover,
+  .btn-warm:disabled:hover,
+  .btn-ghost:disabled:hover {
     cursor: not-allowed;
     opacity: 0.45;
     transform: none;
+    color: var(--btn-ink);
+    background: var(--btn-fill);
   }
   .btn-wipe:disabled::before,
+  .btn-wipe-outline:disabled::before,
+  .btn-wipe-destructive:disabled::before,
   .btn-primary:disabled::before,
   .btn-warm:disabled::before,
-  .btn-ghost:disabled::before {
-    transform: skew(30deg);
+  .btn-ghost:disabled::before,
+  .btn-wipe:disabled:hover::before,
+  .btn-wipe-outline:disabled:hover::before,
+  .btn-wipe-destructive:disabled:hover::before,
+  .btn-primary:disabled:hover::before,
+  .btn-warm:disabled:hover::before,
+  .btn-ghost:disabled:hover::before {
+    transform: skew(30deg) translate3d(-110%, 0, 0);
   }
 
   .btn-primary,
@@ -297,11 +348,12 @@
   .btn-ghost,
   .btn-wipe-outline {
     --btn-cover: hsl(var(--primary));
-    --btn-fill: hsl(var(--foreground));
-    --btn-ink: hsl(var(--primary-foreground));
-    --btn-ink-hover: hsl(var(--background));
-    border: 1px solid hsl(var(--primary));
-    background: var(--btn-fill);
+    --btn-fill: transparent;
+    --btn-ink: hsl(var(--foreground));
+    --btn-ink-hover: hsl(0 0% 100%);
+    border: 1px solid hsl(var(--foreground));
+    background: transparent;
+    color: var(--btn-ink);
   }
 
   .btn-wipe-destructive {
@@ -331,6 +383,8 @@
 
   @media (prefers-reduced-motion: reduce) {
     .btn-wipe,
+    .btn-wipe-outline,
+    .btn-wipe-destructive,
     .btn-primary,
     .btn-warm,
     .btn-ghost,
@@ -338,6 +392,8 @@
       transition: none;
     }
     .btn-wipe::before,
+    .btn-wipe-outline::before,
+    .btn-wipe-destructive::before,
     .btn-primary::before,
     .btn-warm::before,
     .btn-ghost::before {
@@ -413,25 +469,26 @@
     transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
   }
 
-  /* Wallet adapter overrides */
+  /* Wallet adapter overrides — match homepage pill + orange hover */
   .wallet-adapter-button-trigger {
-    background: hsl(var(--primary)) !important;
+    background: hsl(var(--foreground)) !important;
     color: hsl(var(--background)) !important;
     border-radius: 9999px !important;
     font-family: Geist, system-ui, sans-serif !important;
-    font-weight: 600 !important;
+    font-weight: 700 !important;
     font-size: 0.875rem !important;
+    letter-spacing: 0.04em !important;
     height: 2.5rem !important;
     padding: 0 1.25rem !important;
-    transition: all 0.25s cubic-bezier(0.4,0,0.2,1) !important;
+    transition: background-color 0.4s, color 0.4s, transform 0.2s cubic-bezier(0.3, 1, 0.8, 1) !important;
     border: none !important;
   }
-  .wallet-adapter-button-trigger:hover {
-    opacity: 0.9 !important;
-    box-shadow: var(--shadow-glow) !important;
-  }
+  .wallet-adapter-button-trigger:hover,
   .wallet-adapter-button-trigger:not([disabled]):hover {
-    background: var(--gradient-primary) !important;
+    background: hsl(var(--primary)) !important;
+    color: hsl(var(--primary-foreground)) !important;
+    opacity: 1 !important;
+    box-shadow: none !important;
   }
   .wallet-adapter-modal-wrapper {
     background: hsl(var(--card)) !important;

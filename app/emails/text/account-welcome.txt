@@ -1,0 +1,9 @@
+Welcome to Baraza
+
+Baraza Protocol
+
+Welcome to Baraza
+
+Hi {{first_name}}. Your account is ready. You can start a group or join one. Pay dues on M-Pesa. Vote with the rest of the members. We do not give you a seed phrase.
+
+Open Baraza: {{action_url}}

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Grid2X2, List, Search, PlusCircle, SlidersHorizontal } from "lucide-react";
 import Layout from "@/components/Layout";
+import { Button } from "@/components/ui/button";
 import CommunityCard from "@/components/CommunityCard";
 import { COMMUNITY_TYPES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -74,7 +75,7 @@ export default function Communities() {
               Browse groups
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Payment rails are configured inside join, onramp, and offramp flows.
+              Filter by group type, then open a group to see dues and how to join.
             </p>
           </div>
 
@@ -153,13 +154,12 @@ export default function Communities() {
             </div>
 
             {/* Launch CTA — full width on mobile */}
-            <Link
-              to="/create"
-              className="text-sm font-bold px-5 py-3 rounded-lg whitespace-nowrap inline-flex items-center justify-center gap-2 border border-border/70 hover:border-primary/50 transition-colors lg:justify-start"
-            >
-              <PlusCircle className="w-4 h-4" />
-              Launch a group
-            </Link>
+            <Button asChild className="w-full whitespace-nowrap lg:w-auto">
+              <Link to="/create">
+                <PlusCircle className="w-4 h-4" />
+                Launch a group
+              </Link>
+            </Button>
           </div>
           </div>
 
@@ -249,9 +249,11 @@ export default function Communities() {
               <p className="text-sm mb-6">
                 {emptyResultDescription(search)}
               </p>
-              <Link to="/create" className="btn-primary inline-flex items-center gap-2 text-sm">
-                <PlusCircle className="w-4 h-4" /> Launch a group
-              </Link>
+              <Button asChild>
+                <Link to="/create">
+                  <PlusCircle className="w-4 h-4" /> Launch a group
+                </Link>
+              </Button>
             </div>
           )}
         </div>

@@ -532,7 +532,7 @@ const CreateCommunity: React.FC = () => {
   if (isCreated) {
     const launchFeeLabel = formatKSh(totalFeeKes);
     return (
-      <Layout>
+      <Layout gate={{ title: 'Sign in to launch a group', description: 'Create an account or log in before you set up a chama, SACCO, or cooperative.' }}>
         <section className="py-20">
           <div className="container mx-auto px-4">
             <div className="max-w-md mx-auto text-center">
@@ -581,10 +581,10 @@ const CreateCommunity: React.FC = () => {
                   Go to Dashboard
                 </button>
                 <button
-                  onClick={() => navigate('/communities')}
+                  onClick={() => navigate('/home')}
                   className="btn-ghost text-sm"
                 >
-                  View All Communities
+                  My groups
                 </button>
               </div>
             </div>
@@ -599,7 +599,7 @@ const CreateCommunity: React.FC = () => {
   }
 
   return (
-    <Layout>
+    <Layout gate={{ title: 'Sign in to launch a group', description: 'Create an account or log in before you set up a chama, SACCO, or cooperative.' }}>
       <section className="py-10 md:py-16">
         <div className="container mx-auto px-4">
           <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[0.64fr_0.36fr]">
@@ -607,7 +607,7 @@ const CreateCommunity: React.FC = () => {
             {/* Back button */}
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-sm mb-6"
+              className="btn-wipe-outline mb-6 h-9 gap-2 px-4 text-sm"
             >
               <ArrowLeft className="w-4 h-4" />
               Back
@@ -964,11 +964,11 @@ const CreateCommunity: React.FC = () => {
                       type="button"
                       aria-pressed={paymentMethod === id}
                       onClick={() => setPaymentMethod(id)}
-                      className={`flex min-h-12 items-center justify-center gap-2 rounded-lg border px-3 py-3 text-sm font-semibold transition-colors ${
+                      className={
                         paymentMethod === id
-                          ? 'border-primary bg-primary/10 text-primary'
-                          : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'
-                      }`}
+                          ? 'btn-wipe min-h-12 gap-2 px-3 py-3 text-sm'
+                          : 'btn-wipe-outline min-h-12 gap-2 px-3 py-3 text-sm'
+                      }
                     >
                       <Icon className="h-4 w-4 shrink-0" />
                       <span>{label}</span>

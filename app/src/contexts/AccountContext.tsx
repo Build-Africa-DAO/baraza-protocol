@@ -1,5 +1,7 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { PrivyProvider, usePrivy } from '@privy-io/react-auth';
+import AuthModal, { type AuthIntent } from '@/components/auth/AuthModal';
+import { useTheme } from '@/hooks/useTheme';
 import {
   getAccountCountry,
   readAccountCountry,
@@ -7,7 +9,13 @@ import {
   type AccountCountry,
   type AccountCountryCode,
 } from '@/lib/accountLocale';
+import { currentLocationPath, isSafeReturnTo, isStayPath } from '@/lib/postAuth';
 import { getPrivyAppId, isPrivyPhoneAuthEnabled } from '@/lib/wallet/mpc';
+
+export interface AuthHandoff {
+  entryPath: string;
+  returnTo: string | null;
+}
 
 interface AccountContextValue {
   configured: boolean;
@@ -17,10 +25,14 @@ interface AccountContextValue {
   displayName: string;
   country: AccountCountry;
   setCountry: (country: AccountCountryCode) => void;
-  login: () => void;
-  createAccount: () => void;
+  login: (returnTo?: string) => void;
+  createAccount: (returnTo?: string) => void;
+  consumeAuthHandoff: () => AuthHandoff;
+  getAccessToken: () => Promise<string | null>;
   logout: () => Promise<void>;
 }
+
+const EMPTY_HANDOFF: AuthHandoff = { entryPath: '/', returnTo: null };
 
 const AccountContext = createContext<AccountContextValue | null>(null);
 
@@ -31,13 +43,45 @@ interface AccountBridgeProps {
 }
 
 function AccountBridge({ country, setCountry, children }: AccountBridgeProps) {
-  const { ready, authenticated, user, login, logout } = usePrivy();
-  const displayName = user?.email?.address ?? user?.phone?.number ?? 'Baraza member';
+  const { ready, authenticated, user, logout, getAccessToken } = usePrivy();
+  const [authIntent, setAuthIntent] = useState<AuthIntent | null>(null);
+  const handoffRef = useRef<AuthHandoff>(EMPTY_HANDOFF);
+  const displayName =
+    user?.google?.name
+    ?? user?.email?.address
+    ?? user?.phone?.number
+    ?? user?.google?.email
+    ?? 'Baraza member';
   const accountId = user?.wallet?.address ?? user?.id ?? null;
-  const loginMethods = useMemo(
-    () => (isPrivyPhoneAuthEnabled() ? (['email', 'sms'] as const) : (['email'] as const)),
-    [],
-  );
+  const closeAuth = useCallback(() => setAuthIntent(null), []);
+
+  const captureHandoff = useCallback((returnTo?: string) => {
+    const current = currentLocationPath();
+    const requested = returnTo && isSafeReturnTo(returnTo) ? returnTo : null;
+    handoffRef.current = {
+      entryPath: current,
+      returnTo: requested ?? (isStayPath(current) ? current : null),
+    };
+  }, []);
+
+  const consumeAuthHandoff = useCallback(() => {
+    const current = handoffRef.current;
+    handoffRef.current = EMPTY_HANDOFF;
+    return current;
+  }, []);
+
+  const readAccessToken = useCallback(async () => {
+    if (!authenticated) return null;
+    try {
+      return await getAccessToken();
+    } catch {
+      return null;
+    }
+  }, [authenticated, getAccessToken]);
+
+  useEffect(() => {
+    if (authenticated) setAuthIntent(null);
+  }, [authenticated]);
 
   const value = useMemo<AccountContextValue>(() => ({
     configured: true,
@@ -47,16 +91,37 @@ function AccountBridge({ country, setCountry, children }: AccountBridgeProps) {
     displayName,
     country,
     setCountry,
-    login: () => login({ loginMethods: [...loginMethods] }),
-    createAccount: () => login({ loginMethods: [...loginMethods] }),
+    login: (returnTo?: string) => {
+      captureHandoff(returnTo);
+      setAuthIntent('signin');
+    },
+    createAccount: (returnTo?: string) => {
+      captureHandoff(returnTo);
+      setAuthIntent('signup');
+    },
+    consumeAuthHandoff,
+    getAccessToken: readAccessToken,
     logout,
-  }), [accountId, authenticated, country, displayName, login, loginMethods, logout, ready, setCountry]);
+  }), [accountId, authenticated, captureHandoff, consumeAuthHandoff, country, displayName, logout, readAccessToken, ready, setCountry]);
 
-  return <AccountContext.Provider value={value}>{children}</AccountContext.Provider>;
+  return (
+    <AccountContext.Provider value={value}>
+      {children}
+      {authIntent && (
+        <AuthModal
+          intent={authIntent}
+          countryCode={country.code}
+          onIntentChange={setAuthIntent}
+          onClose={closeAuth}
+        />
+      )}
+    </AccountContext.Provider>
+  );
 }
 
 export function AccountProvider({ children }: { children: React.ReactNode }) {
   const appId = getPrivyAppId();
+  const { theme } = useTheme();
   const [countryCode, setCountryCode] = useState<AccountCountryCode>(() => readAccountCountry());
   const country = getAccountCountry(countryCode);
   const setCountry = useCallback((nextCountry: AccountCountryCode) => {
@@ -64,20 +129,24 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     setCountryCode(nextCountry);
   }, []);
 
+  const fallbackValue = useMemo<AccountContextValue>(() => ({
+    configured: false,
+    ready: true,
+    authenticated: false,
+    accountId: null,
+    displayName: 'Baraza member',
+    country,
+    setCountry,
+    login: () => undefined,
+    createAccount: () => undefined,
+    consumeAuthHandoff: () => EMPTY_HANDOFF,
+    getAccessToken: async () => null,
+    logout: async () => undefined,
+  }), [country, setCountry]);
+
   if (!appId) {
     return (
-      <AccountContext.Provider value={{
-        configured: false,
-        ready: true,
-        authenticated: false,
-        accountId: null,
-        displayName: 'Baraza member',
-        country,
-        setCountry,
-        login: () => undefined,
-        createAccount: () => undefined,
-        logout: async () => undefined,
-      }}>
+      <AccountContext.Provider value={fallbackValue}>
         {children}
       </AccountContext.Provider>
     );
@@ -89,11 +158,12 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     <PrivyProvider
       appId={appId}
       config={{
-        loginMethods: phoneAuthEnabled ? ['email', 'sms'] : ['email'],
+        loginMethods: phoneAuthEnabled ? ['email', 'sms', 'google'] : ['email', 'google'],
         intl: { defaultCountry: country.code },
         appearance: {
-          theme: 'dark',
+          theme: theme === 'dark' ? 'dark' : 'light',
           accentColor: '#f97316',
+          logo: '',
           landingHeader: 'Welcome to Baraza',
           loginMessage: phoneAuthEnabled
             ? 'Use your phone number or email to continue.'

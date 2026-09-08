@@ -187,14 +187,14 @@ export default function RetroCommunity() {
               <div className="flex flex-wrap gap-2 pt-2 border-t border-border">
                 <Link
                   to={`/retro/${communityId}/vote`}
-                  className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+                  className="btn-wipe inline-flex items-center gap-2 px-4 py-2 text-sm"
                 >
                   <Vote className="h-4 w-4" />
                   Cast a vote
                 </Link>
                 <Link
                   to={`/retro/${communityId}/results`}
-                  className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-muted-foreground"
+                  className="btn-wipe-outline inline-flex items-center gap-2 px-4 py-2 text-sm"
                 >
                   <Trophy className="h-4 w-4" />
                   See latest results
@@ -210,7 +210,7 @@ export default function RetroCommunity() {
                 <button
                   type="button"
                   onClick={() => setVisible(true)}
-                  className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+                  className="btn-wipe px-4 py-2 text-sm"
                 >
                   Connect to open a round
                 </button>
@@ -219,7 +219,7 @@ export default function RetroCommunity() {
                   type="button"
                   onClick={() => void openRound()}
                   disabled={opening || !communityId}
-                  className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+                  className="btn-wipe px-4 py-2 text-sm disabled:opacity-50"
                 >
                   {opening ? 'Opening…' : 'Open this week’s round'}
                 </button>
@@ -237,7 +237,7 @@ export default function RetroCommunity() {
             type="button"
             onClick={() => void loadActive()}
             disabled={loading}
-            className="rounded-full border border-border bg-surface px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground disabled:opacity-50 inline-flex items-center gap-1"
+            className="btn-wipe-outline gap-1 px-3 py-2 text-xs"
           >
             <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
             Refresh

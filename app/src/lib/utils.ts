@@ -1,3 +1,4 @@
+import { Children, type ReactNode } from 'react';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { type Chain, type ChainMeta } from '@/lib/chain';
@@ -64,6 +65,18 @@ export function toTitleCase(input: string): string {
         /[A-Za-z]/.test(token) ? titleCaseToken(token, index === first || index === last) : token,
       )
       .join("");
+  });
+}
+
+/** Title-case string children of buttons and links, leaving icons and elements intact. */
+export function titleCaseLabelChildren(children: ReactNode): ReactNode {
+  return Children.map(children, (child) => {
+    if (typeof child !== "string") return child;
+    const leading = child.match(/^\s*/)?.[0] ?? "";
+    const trailing = child.match(/\s*$/)?.[0] ?? "";
+    const body = child.slice(leading.length, child.length - trailing.length);
+    if (!body) return child;
+    return `${leading}${toTitleCase(body)}${trailing}`;
   });
 }
 
