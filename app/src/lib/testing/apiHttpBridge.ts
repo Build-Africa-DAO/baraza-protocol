@@ -19,6 +19,7 @@ import handleKotaniWebhook from '../../../api/webhooks/kotani.js';
 import handlePaystackWebhook from '../../../api/webhooks/paystack.js';
 import handleClearingWebhook from '../../../api/webhooks/clearing.js';
 import handleArtizenWebhook from '../../../api/webhooks/artizen.js';
+import handleWhatsAppWebhook from '../../../api/webhooks/whatsapp.js';
 import handleChat from '../../../api/agent/chat.js';
 
 export interface ApiHttpBridgeInstance {
@@ -85,6 +86,8 @@ export async function startApiHttpBridge(preferredPort = 4000): Promise<ApiHttpB
           webRes = await handleClearingWebhook(webReq);
         } else if (pathname === '/api/webhooks/artizen') {
           webRes = await handleArtizenWebhook(webReq);
+        } else if (pathname === '/api/webhooks/whatsapp') {
+          webRes = await handleWhatsAppWebhook(webReq);
         } else if (pathname === '/api/agent/chat') {
           webRes = await handleChat(webReq);
         } else {

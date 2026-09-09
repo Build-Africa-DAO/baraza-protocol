@@ -389,5 +389,28 @@ describe('Master Curl End-to-End Endpoint Audit Suite', () => {
       expect([200, 400, 500]).toContain(res.statusCode);
       expect(res.body).toContain('error');
     });
+
+    it('3.8 curl POST /api/webhooks/whatsapp (Conversational Gateway Turn)', async () => {
+      const payload = {
+        event: 'messages.upsert',
+        data: {
+          key: {
+            remoteJid: '254700000001@s.whatsapp.net',
+            fromMe: false,
+          },
+          message: {
+            conversation: 'Habari Baraza',
+          },
+        },
+      };
+      const res = await runCurl([
+        '-X', 'POST',
+        `${apiBridge.url}/api/webhooks/whatsapp`,
+        '-H', 'content-type: application/json',
+        '-d', JSON.stringify(payload),
+      ]);
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toContain('Karibu Baraza Protocol');
+    });
   });
 });
