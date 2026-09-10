@@ -154,7 +154,7 @@ describe('ADR-007: Conversational Bot FSM Engine', () => {
     });
 
     it('executes failure ladder from clarification to Akili rephrase to escalation', () => {
-      let state: BotSessionState = {
+      const state: BotSessionState = {
         currentNode: 'ACCOUNT_INTENT',
         slots: { locale: 'en', phone: '254712345678', failureCount: 0 },
       };

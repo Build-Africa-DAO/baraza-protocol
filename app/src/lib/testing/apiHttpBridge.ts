@@ -57,7 +57,7 @@ export async function startApiHttpBridge(preferredPort = 4000): Promise<ApiHttpB
         body: method !== 'GET' && method !== 'HEAD' ? rawBody : undefined,
       });
 
-      let webRes: Response | null = null;
+      let webRes: Response;
 
       try {
         if (pathname === '/api/health/ready') {
@@ -99,13 +99,6 @@ export async function startApiHttpBridge(preferredPort = 4000): Promise<ApiHttpB
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         webRes = new Response(JSON.stringify({ error: 'internal_error', message }), {
-          status: 500,
-          headers: { 'content-type': 'application/json' },
-        });
-      }
-
-      if (!webRes) {
-        webRes = new Response(JSON.stringify({ error: 'no_response' }), {
           status: 500,
           headers: { 'content-type': 'application/json' },
         });
