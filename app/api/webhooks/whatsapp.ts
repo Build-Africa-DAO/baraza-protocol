@@ -5,6 +5,7 @@
 export const config = { runtime: 'nodejs' };
 
 import { processTurn, type BotSessionState, type BotWriteCommand } from '../../src/lib/bot/fsm.js';
+import { constantTimeCompare } from '../_lib/crypto';
 
 // In-Memory Session Cache (backed by phone key; production loads from user_profiles / auth_sessions)
 const sessionStore = new Map<string, BotSessionState>();
@@ -42,10 +43,16 @@ export async function handleEvolutionWebhook(
   apiKeyHeader?: string,
   expectedSecret?: string
 ): Promise<{ ok: boolean; replyText?: string; commands?: BotWriteCommand[]; error?: string }> {
-  // 1. ApiKey / Secret Authorization Guard
-  if (expectedSecret && apiKeyHeader) {
+  // 1. ApiKey / Secret Authorization Guard (Fail-Closed & Constant-Time when configured)
+  if (expectedSecret !== undefined) {
+    if (!expectedSecret || expectedSecret.trim() === '') {
+      return { ok: false, error: 'server_misconfigured' };
+    }
+    if (!apiKeyHeader || apiKeyHeader.trim() === '') {
+      return { ok: false, error: 'unauthorized' };
+    }
     const token = apiKeyHeader.replace(/^Bearer\s+/i, '').trim();
-    if (token !== expectedSecret.trim()) {
+    if (!constantTimeCompare(token, expectedSecret.trim())) {
       return { ok: false, error: 'unauthorized' };
     }
   }
@@ -105,9 +112,9 @@ export default async function handler(req: Request): Promise<Response> {
     return json({ error: 'invalid_json' }, { status: 400 });
   }
 
-  const res = await handleEvolutionWebhook(body, authHeader, expectedSecret);
+  const res = await handleEvolutionWebhook(body, authHeader, expectedSecret || '');
   if (!res.ok) {
-    const status = res.error === 'unauthorized' ? 401 : 400;
+    const status = res.error === 'server_misconfigured' ? 503 : (res.error === 'unauthorized' ? 401 : 400);
     return json({ error: res.error }, { status });
   }
 

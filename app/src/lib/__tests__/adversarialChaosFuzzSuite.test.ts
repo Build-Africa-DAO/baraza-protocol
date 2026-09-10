@@ -10,7 +10,7 @@ import { promisify } from 'node:util';
 import crypto from 'node:crypto';
 import { startMockRailServer, type MockRailServerInstance } from '../testing/mockRailServer';
 import { startApiHttpBridge, type ApiHttpBridgeInstance } from '../testing/apiHttpBridge';
-import { normaliseKenyanPhone, toE164Kenyan, toE164, isValidE164 } from '../phone';
+import { normaliseKenyanPhone, isValidE164 } from '../phone';
 import { isValidSaccoLicenseNumber, isValidCertificateUrl, SASRA_STATUTORY_DEPOSIT_CEILING_MINOR } from '../compliance/saccoGate';
 import { calculateArtizenSplit, MAX_ARTIZEN_RAISED_MINOR } from '../financial/artizenSplitEngine';
 

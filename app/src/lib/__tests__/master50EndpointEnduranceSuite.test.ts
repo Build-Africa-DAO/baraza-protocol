@@ -3,7 +3,7 @@
 // Objective: Execute every backend API endpoint and integration adapter at least 50 times,
 // measuring latency percentiles (p50, p95, p99), error rates, and idempotency invariants.
 
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { startMockRailServer, type MockRailServerInstance } from '../testing/mockRailServer';
 import { SwyptCustodialClearingAdapter } from '../adapters/clearing/SwyptCustodialClearingAdapter';
 import { requestStkPush, requestTransactionStatusQuery, verifyDarajaWebhookSignature } from '../payments/daraja';
@@ -11,7 +11,6 @@ import { calculateArtizenSplit } from '../financial/artizenSplitEngine';
 import { isValidSaccoLicenseNumber, SASRA_STATUTORY_DEPOSIT_CEILING_MINOR } from '../compliance/saccoGate';
 import { classifyChatError } from '../../../api/agent/chat';
 import { renderEmailTemplate, sendTransactionalEmail } from '../../../api/_lib/mail';
-import { hashSessionToken } from '../../../api/_lib/auth-session';
 
 const ITERATION_COUNT = 50;
 
@@ -347,6 +346,7 @@ describe('Master 50-Iteration Backend Endurance & Stress Suite', () => {
             amountMinor: 250000n + BigInt(i),
             currency: 'KES',
             sourceAccount: `+2547112233${(i % 90 + 10).toString()}`,
+            destinationAccount: '0xSWYPT_POOL_ACC',
           });
 
           expect(clearRes.success).toBe(true);

@@ -38,6 +38,8 @@ CREATE TABLE IF NOT EXISTS public.auth_otp_challenges (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+ALTER TABLE public.auth_otp_challenges ENABLE ROW LEVEL SECURITY;
+
 -- Active unconsumed challenge uniqueness: invalidates prior challenge per destination/purpose
 CREATE INDEX IF NOT EXISTS idx_active_otp_challenge
     ON public.auth_otp_challenges(destination, purpose)
@@ -61,6 +63,8 @@ CREATE TABLE IF NOT EXISTS public.auth_sessions (
     user_agent TEXT,
     ip_address TEXT
 );
+
+ALTER TABLE public.auth_sessions ENABLE ROW LEVEL SECURITY;
 
 CREATE INDEX IF NOT EXISTS idx_auth_sessions_token_hash
     ON public.auth_sessions(session_token_hash)
@@ -86,6 +90,8 @@ CREATE TABLE IF NOT EXISTS public.notification_outbox (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     sent_at TIMESTAMPTZ
 );
+
+ALTER TABLE public.notification_outbox ENABLE ROW LEVEL SECURITY;
 
 CREATE INDEX IF NOT EXISTS idx_outbox_pending
     ON public.notification_outbox(status, created_at)

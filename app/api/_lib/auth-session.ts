@@ -52,18 +52,22 @@ export async function resolveCallerIdentity(
   purpose: string,
   targetWallet?: string | null
 ): Promise<AuthenticatedIdentity | null> {
-  // Test Mode Bypass / Mock Ingress for Vitest Testing
-  const testPrivyDid = req.headers.get('x-test-privy-did');
-  if (testPrivyDid) {
-    return { privyDid: testPrivyDid, authMethod: 'TEST_MOCK' };
-  }
-  const testWallet = req.headers.get('x-test-wallet-address');
-  if (testWallet) {
-    return { walletAddress: testWallet, authMethod: 'TEST_MOCK' };
-  }
-  const testUserProfileId = req.headers.get('x-test-user-profile-id');
-  if (testUserProfileId) {
-    return { userProfileId: testUserProfileId, authMethod: 'TEST_MOCK' };
+  const isTestEnv = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true';
+
+  // Test Mode Bypass / Mock Ingress for Vitest Testing (Strictly Gated by Invariant I-AUTH-1)
+  if (isTestEnv) {
+    const testPrivyDid = req.headers.get('x-test-privy-did');
+    if (testPrivyDid) {
+      return { privyDid: testPrivyDid, authMethod: 'TEST_MOCK' };
+    }
+    const testWallet = req.headers.get('x-test-wallet-address');
+    if (testWallet) {
+      return { walletAddress: testWallet, authMethod: 'TEST_MOCK' };
+    }
+    const testUserProfileId = req.headers.get('x-test-user-profile-id');
+    if (testUserProfileId) {
+      return { userProfileId: testUserProfileId, authMethod: 'TEST_MOCK' };
+    }
   }
 
   // Path A: Web3 Wallet Proof (Stellar StrKey Base32 or Solana Base58)
@@ -89,7 +93,7 @@ export async function resolveCallerIdentity(
 
   // Path B: Baraza Custom Session Token (256-bit CSPRNG)
   if (candidateToken) {
-    if (candidateToken.startsWith('test_baraza_token_')) {
+    if (isTestEnv && candidateToken.startsWith('test_baraza_token_')) {
       const profileId = candidateToken.replace('test_baraza_token_', '');
       return {
         userProfileId: profileId,
@@ -131,8 +135,8 @@ export async function resolveCallerIdentity(
   if (bearerToken) {
     const appId = process.env.PRIVY_APP_ID || 'cm1234567890';
 
-    // Support mock verification in test environments
-    if (bearerToken.startsWith('test_privy_token_')) {
+    // Support mock verification strictly in test environments (Invariant I-AUTH-1)
+    if (isTestEnv && bearerToken.startsWith('test_privy_token_')) {
       const did = bearerToken.replace('test_privy_token_', 'did:privy:');
       return { privyDid: did, authMethod: 'PRIVY_BEARER' };
     }

@@ -6,6 +6,7 @@
 export const config = { runtime: 'nodejs' };
 
 import { getSupabaseAdmin, jsonResponse } from '../_lib/supabase';
+import { verifyWebhookSignature } from '../_lib/crypto';
 
 export interface ArtizenWebhookPayload {
   campaignId: string;
@@ -20,16 +21,28 @@ export default async function handler(req: Request): Promise<Response> {
     return jsonResponse({ error: 'method_not_allowed' }, { status: 405 });
   }
 
+  const rawBody = await req.text();
   const webhookSecret = process.env.ARTIZEN_WEBHOOK_SECRET || process.env.PAYMENT_ADAPTER_PROXY_SECRET;
   const signature = req.headers.get('x-artizen-signature') || req.headers.get('x-signature');
 
-  if (webhookSecret && signature !== webhookSecret) {
-    return jsonResponse({ error: 'unauthorized', message: 'Invalid Artizen webhook signature' }, { status: 401 });
+  // Invariant I-SEC-1: Fail-Closed HMAC & Constant-Time Verification
+  const authCheck = verifyWebhookSignature(rawBody, signature, webhookSecret);
+  if (!authCheck.valid) {
+    if (authCheck.reason === 'MISSING_SECRET') {
+      return jsonResponse(
+        { error: 'server_misconfigured', message: 'Artizen webhook secret is not configured' },
+        { status: 503 }
+      );
+    }
+    return jsonResponse(
+      { error: 'unauthorized', message: 'Invalid Artizen webhook signature' },
+      { status: 401 }
+    );
   }
 
   let payload: ArtizenWebhookPayload;
   try {
-    payload = (await req.json()) as ArtizenWebhookPayload;
+    payload = JSON.parse(rawBody) as ArtizenWebhookPayload;
   } catch {
     return jsonResponse({ error: 'invalid_json', message: 'Payload must be valid JSON' }, { status: 400 });
   }

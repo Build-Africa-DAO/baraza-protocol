@@ -7,6 +7,7 @@ export const config = { runtime: 'nodejs' };
 import { getSupabaseAdmin, jsonResponse } from '../_lib/supabase';
 import { hashOtp } from './signup/request';
 import { hashSessionToken } from '../_lib/auth-session';
+import { enforceMaxActiveSessions } from '../_lib/crypto';
 
 export function generateSessionToken(): string {
   const bytes = new Uint8Array(32); // 256 bits of CSPRNG entropy
@@ -135,7 +136,10 @@ export default async function handler(req: Request): Promise<Response> {
     userRecord = newProfile;
   }
 
-  // 5. Mint 256-bit CSPRNG Bearer Session Token (30 Days TTL)
+  // 5. Enforce Invariant I-AUTH-2: Bounded Concurrent Sessions (Max 5 active sessions)
+  await enforceMaxActiveSessions(userProfileId);
+
+  // 6. Mint 256-bit CSPRNG Bearer Session Token (30 Days TTL)
   const rawSessionToken = generateSessionToken();
   const sessionTokenHash = await hashSessionToken(rawSessionToken);
   const sessionExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();

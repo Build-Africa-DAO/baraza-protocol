@@ -6,6 +6,7 @@
 export const config = { runtime: 'nodejs' };
 
 import { getSupabaseAdmin, jsonResponse } from '../_lib/supabase';
+import { verifyWebhookSignature } from '../_lib/crypto';
 
 export interface ClearingWebhookPayload {
   intentId: string;
@@ -23,17 +24,28 @@ export default async function handler(req: Request): Promise<Response> {
     return jsonResponse({ error: 'method_not_allowed' }, { status: 405 });
   }
 
-  // HMAC Signature Verification
+  const rawBody = await req.text();
   const webhookSecret = process.env.CLEARING_WEBHOOK_SECRET || process.env.PAYMENT_ADAPTER_PROXY_SECRET;
   const signature = req.headers.get('x-clearing-signature') || req.headers.get('x-signature');
 
-  if (webhookSecret && signature !== webhookSecret) {
-    return jsonResponse({ error: 'unauthorized', message: 'Invalid clearing webhook signature' }, { status: 401 });
+  // Invariant I-SEC-1: Fail-Closed HMAC & Constant-Time Verification
+  const authCheck = verifyWebhookSignature(rawBody, signature, webhookSecret);
+  if (!authCheck.valid) {
+    if (authCheck.reason === 'MISSING_SECRET') {
+      return jsonResponse(
+        { error: 'server_misconfigured', message: 'Clearing webhook secret is not configured' },
+        { status: 503 }
+      );
+    }
+    return jsonResponse(
+      { error: 'unauthorized', message: 'Invalid clearing webhook signature' },
+      { status: 401 }
+    );
   }
 
   let payload: ClearingWebhookPayload;
   try {
-    payload = (await req.json()) as ClearingWebhookPayload;
+    payload = JSON.parse(rawBody) as ClearingWebhookPayload;
   } catch {
     return jsonResponse({ error: 'invalid_json', message: 'Payload must be valid JSON' }, { status: 400 });
   }
@@ -54,23 +66,31 @@ export default async function handler(req: Request): Promise<Response> {
 
   // 2. Invariant I8: Dead Letter Queue (DLQ) Isolation for Missing / Orphaned Orders
   if (orderLookupErr || !order) {
-    // Record to payment_exceptions DLQ with status = 'PENDING'
-    await supabase.from('payment_exceptions').upsert(
-      {
+    // Record to payment_exceptions DLQ with status = 'PENDING' if not already pending
+    const { data: existingPending } = await supabase
+      .from('payment_exceptions')
+      .select('id')
+      .eq('order_id', orderId)
+      .eq('provider', 'swypt')
+      .eq('status', 'PENDING')
+      .maybeSingle();
+
+    if (!existingPending) {
+      await supabase.from('payment_exceptions').insert({
         order_id: orderId,
         provider: 'swypt',
         payload: payload as unknown as Record<string, unknown>,
         error_code: 'ORDER_NOT_FOUND',
         error_message: `Webhook received for non-existent order ${orderId}`,
         status: 'PENDING',
-      },
-      { onConflict: 'order_id,provider' }
-    );
+      });
+    }
 
     // Return HTTP 200 to acknowledge webhook receipt and prevent upstream endless retry hammering
     return jsonResponse({
       ok: true,
       dlq: true,
+      orderId,
       message: 'Order not found; routed to payment_exceptions DLQ.',
     });
   }

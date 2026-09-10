@@ -17,6 +17,10 @@ GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO service_role;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO anon, authenticated;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;
 
+-- Enforce strict role quarantine on CR-007 and sovereign auth subsystem tables
+REVOKE ALL ON public.steward_mutations, public.payment_exceptions, public.artizen_settlement_ledger, public.auth_otp_challenges, public.auth_sessions, public.notification_outbox FROM anon, authenticated;
+REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER ON public.artizen_campaigns FROM anon, authenticated;
+
 DO $$
 DECLARE
   r RECORD;

@@ -7,6 +7,7 @@ export const config = { runtime: 'nodejs' };
 import { getSupabaseAdmin, jsonResponse } from '../_lib/supabase';
 import { generateSessionToken } from './verify';
 import { hashSessionToken } from '../_lib/auth-session';
+import { enforceMaxActiveSessions } from '../_lib/crypto';
 
 interface GoogleTokenInfo {
   sub: string;
@@ -32,10 +33,11 @@ export default async function handler(req: Request): Promise<Response> {
     return jsonResponse({ error: 'invalid_request', message: 'Google credential token is required.' }, { status: 400 });
   }
 
+  const isTestEnv = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true';
   let tokenInfo: GoogleTokenInfo;
 
-  // Mock token support for testing and sandbox environments
-  if (credential.startsWith('test_google_token_')) {
+  // Mock token support strictly for test runners (Invariant I-AUTH-1)
+  if (isTestEnv && credential.startsWith('test_google_token_')) {
     const email = credential.replace('test_google_token_', '');
     tokenInfo = {
       sub: `google_sub_${email}`,
@@ -109,7 +111,10 @@ export default async function handler(req: Request): Promise<Response> {
     await supabase.from('user_profiles').update({ google_sub: tokenInfo.sub }).eq('id', user.id);
   }
 
-  // 5. Mint 256-Bit Bearer Session Token
+  // 5. Enforce Invariant I-AUTH-2: Bounded Concurrent Sessions (Max 5 active sessions)
+  await enforceMaxActiveSessions(user.id);
+
+  // 6. Mint 256-Bit Bearer Session Token
   const rawSessionToken = generateSessionToken();
   const sessionTokenHash = await hashSessionToken(rawSessionToken);
   const sessionExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();

@@ -31,6 +31,8 @@ CREATE TABLE IF NOT EXISTS public.payment_exceptions (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+ALTER TABLE public.payment_exceptions ENABLE ROW LEVEL SECURITY;
+
 -- ---------------------------------------------------------------------------
 -- 2. Indices for Fast Operator Triage & Idempotent Webhook Replay Protection
 -- ---------------------------------------------------------------------------

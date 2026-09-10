@@ -104,6 +104,13 @@ export async function startApiHttpBridge(preferredPort = 4000): Promise<ApiHttpB
         });
       }
 
+      if (!webRes) {
+        webRes = new Response(JSON.stringify({ error: 'no_response' }), {
+          status: 500,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+
       res.writeHead(webRes.status, Object.fromEntries(webRes.headers.entries()));
       const resBuf = Buffer.from(await webRes.arrayBuffer());
       res.end(resBuf);

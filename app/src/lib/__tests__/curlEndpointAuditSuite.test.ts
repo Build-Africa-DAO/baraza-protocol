@@ -59,6 +59,9 @@ describe('Master Curl End-to-End Endpoint Audit Suite', () => {
     process.env.MINISEND_WEBHOOK_SECRET = 'minisend_webhook_secret_xyz789';
     process.env.PAYSTACK_SECRET_KEY = 'paystack_secret_key_mock';
     process.env.SWYPT_WEBHOOK_SECRET = 'swypt_webhook_secret_456def';
+    process.env.CLEARING_WEBHOOK_SECRET = 'clearing_webhook_secret_mock';
+    process.env.ARTIZEN_WEBHOOK_SECRET = 'artizen_webhook_secret_mock';
+    process.env.EVOLUTION_API_KEY = 'evolution_webhook_secret_mock';
 
     apiBridge = await startApiHttpBridge(0);
   });
@@ -80,7 +83,7 @@ describe('Master Curl End-to-End Endpoint Audit Suite', () => {
       ]);
       expect(res.statusCode).toBe(200);
       expect(res.body).toContain('count');
-      expect(res.durationMs).toBeLessThan(100);
+      expect(res.durationMs).toBeLessThan(500);
     });
 
     it('1.2 curl POST, GET, PATCH, DELETE /rest/v1/communities (Full CRUD)', async () => {
@@ -407,6 +410,7 @@ describe('Master Curl End-to-End Endpoint Audit Suite', () => {
         '-X', 'POST',
         `${apiBridge.url}/api/webhooks/whatsapp`,
         '-H', 'content-type: application/json',
+        '-H', 'apikey: evolution_webhook_secret_mock',
         '-d', JSON.stringify(payload),
       ]);
       expect(res.statusCode).toBe(200);

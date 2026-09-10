@@ -115,7 +115,6 @@ export function processTurn(state: BotSessionState, rawInput: string): BotTurnRe
   const input = rawInput.trim();
   const lower = input.toLowerCase();
   const slots: BotSlots = { ...state.slots };
-  const commands: BotWriteCommand[] = [];
 
   // Global Interrupt: Human Escalation Request
   if (['help', 'msaada', 'admin', 'human', 'ongea na mtu'].includes(lower)) {

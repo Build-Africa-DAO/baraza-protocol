@@ -28,6 +28,8 @@ CREATE TABLE IF NOT EXISTS public.artizen_campaigns (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+ALTER TABLE public.artizen_campaigns ENABLE ROW LEVEL SECURITY;
+
 -- ---------------------------------------------------------------------------
 -- 2. Create public.artizen_settlement_ledger Table
 --    Strict Invariant I5: platform_fee_minor + treasury_net_minor == total_raised_minor
@@ -47,6 +49,8 @@ CREATE TABLE IF NOT EXISTS public.artizen_settlement_ledger (
     CONSTRAINT chk_artizen_split_conservation
         CHECK (total_raised_minor = platform_fee_minor + treasury_net_minor)
 );
+
+ALTER TABLE public.artizen_settlement_ledger ENABLE ROW LEVEL SECURITY;
 
 CREATE INDEX IF NOT EXISTS idx_artizen_campaigns_community ON public.artizen_campaigns(community_id, status);
 CREATE INDEX IF NOT EXISTS idx_artizen_settlement_campaign ON public.artizen_settlement_ledger(campaign_id);

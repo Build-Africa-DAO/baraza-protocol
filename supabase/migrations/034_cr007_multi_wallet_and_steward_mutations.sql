@@ -38,6 +38,30 @@ ALTER TABLE public.communities
     ALTER COLUMN steward_address SET NOT NULL;
 
 -- ---------------------------------------------------------------------------
+-- 2b. Default Multi-Wallet Fallback Trigger for Backward Compatibility
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.set_default_community_multi_wallets()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF NEW.operational_address IS NULL THEN
+        NEW.operational_address := '0xOP_' || md5(COALESCE(NEW.id, gen_random_uuid()::text) || '_operational');
+    END IF;
+    IF NEW.steward_address IS NULL THEN
+        NEW.steward_address := '0xST_' || md5(COALESCE(NEW.id, gen_random_uuid()::text) || '_steward');
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_set_default_community_multi_wallets ON public.communities;
+CREATE TRIGGER trg_set_default_community_multi_wallets
+    BEFORE INSERT ON public.communities
+    FOR EACH ROW
+    EXECUTE FUNCTION public.set_default_community_multi_wallets();
+
+-- ---------------------------------------------------------------------------
 -- 3. Multi-Wallet Disjointness & Clearing Rail Domain Constraints
 -- ---------------------------------------------------------------------------
 ALTER TABLE public.communities DROP CONSTRAINT IF EXISTS chk_multi_wallet_disjoint;
@@ -75,6 +99,8 @@ CREATE TABLE IF NOT EXISTS public.steward_mutations (
     rejection_reason TEXT,
     metadata JSONB DEFAULT '{}'::jsonb
 );
+
+ALTER TABLE public.steward_mutations ENABLE ROW LEVEL SECURITY;
 
 -- Unique partial index: exactly one pending timelocked rotation per community
 CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_timelocked_steward_mutation
