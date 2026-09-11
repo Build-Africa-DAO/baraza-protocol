@@ -6,9 +6,9 @@ export const config = { runtime: 'edge' };
 import { getSupabaseAdmin, jsonResponse } from '../_lib/supabase';
 import { resolveCallerIdentity } from '../_lib/auth-session';
 import { assertValidSlug } from '../_lib/validation';
-import type { OfficerMutationRequest, OfficerRole } from '../user/types';
+import type { OfficerMutationRequest, OfficerMutationResponse, OfficerRole } from '../user/types';
 
-const VALID_ROLES: OfficerRole[] = ['founder', 'admin', 'treasurer', 'member'];
+const VALID_ROLES: OfficerRole[] = ['founder', 'admin', 'treasurer', 'secretary', 'member'];
 
 export default async function handler(req: Request): Promise<Response> {
   if (req.method === 'OPTIONS') {
@@ -38,7 +38,9 @@ export default async function handler(req: Request): Promise<Response> {
     return jsonResponse({ error: 'invalid_json', message: 'Request body must be valid JSON.' }, { status: 400 });
   }
 
-  const { communityId, targetWallet, newRole, action } = body;
+  const { communityId, targetWallet, action } = body;
+  // Normalize incoming role case for DX (audit remediation F-09)
+  const newRole = (body.newRole?.toLowerCase() || '') as OfficerRole;
   try {
     assertValidSlug(communityId, 'communityId');
   } catch (err: unknown) {
@@ -146,13 +148,25 @@ export default async function handler(req: Request): Promise<Response> {
   // Determine final role
   const finalRole: OfficerRole = action === 'REVOKE' ? 'member' : newRole;
 
-  // Execute mutation
+  // Execute mutation — wrapped in try/catch to handle DB trigger SOLE_ADMIN_DEADLOCK
+  // The trg_sole_admin_guard trigger (migration 033) provides correctness under
+  // concurrent interleavings via FOR UPDATE on the parent community row.
+  // The app-level check above (I-ROLE-2) provides fast-fail UX.
   const { error: updErr } = await supabase
     .from('members')
     .update({ role: finalRole, updated_at: new Date().toISOString() })
     .eq('member_id', targetMember.member_id);
 
   if (updErr) {
+    // Catch PostgreSQL trigger error for sole admin protection (audit finding F-11)
+    const errCode = updErr.code;
+    const errMsg = updErr.message || '';
+    if (errCode === '23514' || errMsg.includes('SOLE_ADMIN_DEADLOCK')) {
+      return jsonResponse({
+        error: 'conflict',
+        message: 'Cannot revoke or demote the sole remaining Community Administrator.',
+      }, { status: 409 });
+    }
     return jsonResponse({ error: 'database_error', message: updErr.message }, { status: 500 });
   }
 
@@ -169,12 +183,14 @@ export default async function handler(req: Request): Promise<Response> {
     },
   });
 
-  return jsonResponse({
+  const response: OfficerMutationResponse = {
     ok: true,
     communityId,
     targetWallet,
-    previousRole: targetMember.role,
+    previousRole: targetMember.role as OfficerRole,
     newRole: finalRole,
     action,
-  });
+  };
+
+  return jsonResponse(response);
 }

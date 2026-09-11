@@ -155,6 +155,7 @@ export default async function handler(req: Request): Promise<Response> {
         return json(
           {
             error: 'treasury_circuit_breaker_active',
+            circuitBreaker: true,
             message: solvency.error || 'Proposal execution blocked: Community treasury is frozen.',
           },
           { status: 403 },

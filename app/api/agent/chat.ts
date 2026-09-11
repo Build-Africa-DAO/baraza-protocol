@@ -6,6 +6,8 @@ import {
   invokeCouncilAgent,
   type CouncilAgentName,
 } from '../../src/akili/council.js';
+import { resolveCallerIdentity } from '../_lib/auth-session.js';
+import { resolveClientIp } from '../_lib/crypto.js';
 
 export const config = { runtime: 'nodejs' };
 
@@ -17,6 +19,53 @@ interface ChatRequest {
   agent?: CouncilAgentName;
   /** When set, inject relationship-tension context into the relay-mode system prompt. */
   activePrincipals?: ReadonlyArray<AkiliPrincipalName>;
+}
+
+// In-Memory Rate Limiter (Token-Bucket per Caller / Client IP)
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(key: string, limit = 20, windowMs = 60_000): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(key);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(key, { count: 1, resetAt: now + windowMs });
+    return true;
+  }
+  if (entry.count >= limit) {
+    return false;
+  }
+  entry.count++;
+  return true;
+}
+
+export function clearRateLimitStore(): void {
+  rateLimitMap.clear();
+}
+
+function getCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get('origin');
+  const allowed = [
+    'https://barazaprotocol.com',
+    'https://www.barazaprotocol.com',
+  ];
+  const isDevOrTest = process.env.NODE_ENV !== 'production';
+
+  let allowOrigin = '';
+  if (origin) {
+    if (allowed.includes(origin) || (isDevOrTest && (origin.includes('localhost') || origin.includes('127.0.0.1')))) {
+      allowOrigin = origin;
+    }
+  }
+
+  const headers: Record<string, string> = {
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-privy-authorization, Cookie, x-test-privy-did, x-test-wallet-address, x-test-user-profile-id',
+  };
+  if (allowOrigin) {
+    headers['Access-Control-Allow-Origin'] = allowOrigin;
+    headers['Access-Control-Allow-Credentials'] = 'true';
+  }
+  return headers;
 }
 
 /**
@@ -46,14 +95,19 @@ export interface ChatErrorEvent {
  * String-match is fragile but it's the only signal the API exposes today.
  */
 export function classifyChatError(error: unknown): ChatErrorEvent {
-  // SDK throws subclasses of APIError with .status set. Fall back to
-  // duck-typing for the rare case where a raw fetch error escapes.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const anyErr = error as any;
+  const anyErr = (typeof error === 'object' && error !== null ? error : {}) as {
+    status?: number;
+    message?: string;
+  };
   const status: number | undefined = anyErr?.status;
-  const rawMessage: string = anyErr?.message ?? String(error ?? 'Unknown error');
+  const rawMessage: string =
+    error instanceof Error
+      ? error.message
+      : typeof anyErr?.message === 'string'
+        ? anyErr.message
+        : String(error ?? 'Unknown error');
 
-  if (status === 401 || status === 403) {
+  if (status === 401 || status === 403 || /unauthorized|api key/i.test(rawMessage)) {
     return {
       category: 'auth_failed',
       message:
@@ -61,14 +115,14 @@ export function classifyChatError(error: unknown): ChatErrorEvent {
     };
   }
 
-  if (status === 429) {
+  if (status === 429 || /rate limit/i.test(rawMessage)) {
     return {
       category: 'rate_limited',
       message: 'Akili is busy right now. Give it a moment and try again.',
     };
   }
 
-  if (status === 529 || /overloaded/i.test(rawMessage)) {
+  if (status === 529 || status === 503 || /overloaded/i.test(rawMessage)) {
     return {
       category: 'overloaded',
       message: 'Akili is overloaded right now. Try again in a moment.',
@@ -90,34 +144,81 @@ export function classifyChatError(error: unknown): ChatErrorEvent {
 }
 
 // Named HTTP-method exports (POST, OPTIONS) for web standards fetch API
-export function OPTIONS(): Response {
+export function OPTIONS(req: Request): Response {
   return new Response(null, {
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
+    status: 204,
+    headers: getCorsHeaders(req),
   });
 }
 
 export async function POST(req: Request): Promise<Response> {
+  const corsHeaders = getCorsHeaders(req);
+
+  // 1. Enforce Authentication (OWASP API2 / PEN-10)
+  const caller = await resolveCallerIdentity(req, 'agent_chat');
+  if (!caller) {
+    return new Response(
+      JSON.stringify({
+        error: 'unauthorized',
+        message: 'Authentication required to access Akili AI assistant.',
+      }),
+      { status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+    );
+  }
+
+  // 2. Enforce Token-Bucket Rate Limiting (NET-05)
+  const clientIp = resolveClientIp(req);
+  const rateLimitKey = caller.userProfileId || caller.privyDid || caller.walletAddress || clientIp;
+  if (!checkRateLimit(rateLimitKey, 20, 60_000)) {
+    return new Response(
+      JSON.stringify({
+        error: 'rate_limited',
+        message: 'Too many requests. Please slow down and try again shortly.',
+      }),
+      { status: 429, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+    );
+  }
+
   // Belt-and-suspenders: any unexpected throw inside the handler body
   // becomes a classified JSON event so the chat UI shows a clean member-facing message.
   try {
-    return await handleChat(req);
+    return await handleChat(req, corsHeaders);
   } catch (err) {
     const classified = classifyChatError(err);
     return new Response(JSON.stringify(classified), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
+        ...corsHeaders,
       },
     });
   }
 }
 
-async function handleChat(req: Request): Promise<Response> {
+export default POST;
+
+async function handleChat(req: Request, corsHeaders: Record<string, string>): Promise<Response> {
+  let body: ChatRequest;
+  try {
+    body = (await req.json()) as ChatRequest;
+  } catch {
+    return new Response('Bad Request', { status: 400, headers: corsHeaders });
+  }
+
+  const { message, communityId, history = [], agent, activePrincipals } = body;
+  if (!message?.trim()) return new Response('Bad Request', { status: 400, headers: corsHeaders });
+
+  // 3. Enforce Payload Length Ceiling (PEN-12 / NET-04)
+  if (message.trim().length > 2000) {
+    return new Response(
+      JSON.stringify({
+        error: 'payload_too_large',
+        message: 'Prompt message exceeds maximum length of 2,000 characters.',
+      }),
+      { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+    );
+  }
+
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     // Surface as a classified event so the chat UI renders the same
@@ -131,20 +232,10 @@ async function handleChat(req: Request): Promise<Response> {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
+        ...corsHeaders,
       },
     });
   }
-
-  let body: ChatRequest;
-  try {
-    body = (await req.json()) as ChatRequest;
-  } catch {
-    return new Response('Bad Request', { status: 400 });
-  }
-
-  const { message, communityId, history = [], agent, activePrincipals } = body;
-  if (!message?.trim()) return new Response('Bad Request', { status: 400 });
 
   const communityContext = communityId ? await loadCommunityContext(communityId) : '';
   const encoder = new TextEncoder();
@@ -173,7 +264,7 @@ async function handleChat(req: Request): Promise<Response> {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         Connection: 'keep-alive',
-        'Access-Control-Allow-Origin': '*',
+        ...corsHeaders,
       },
     });
   }
@@ -230,7 +321,7 @@ async function handleChat(req: Request): Promise<Response> {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       Connection: 'keep-alive',
-      'Access-Control-Allow-Origin': '*',
+      ...corsHeaders,
     },
   });
 }
