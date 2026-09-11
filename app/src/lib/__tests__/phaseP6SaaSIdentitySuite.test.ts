@@ -36,7 +36,7 @@ describe('Phase P6: SaaS Identity, Multi-Tenant Memberships, Statements & Disput
   const adminWallet = 'SolanaAdminWallet1111111111111111111111111111111'; // Solana Base58
   const memberWallet = 'SolanaMemberWallet11111111111111111111111111111';
   const strangerWallet = 'SolanaStrangerWallet111111111111111111111111111';
-  const privyUserDid = 'did:privy:cm_p6_test_user_777';
+  const privyUserDid = `did:privy:cm_p6_test_user_${Date.now()}`;
 
   beforeAll(async () => {
     process.env.SUPABASE_URL = LIVE_DB_URL;

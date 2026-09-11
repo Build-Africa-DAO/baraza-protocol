@@ -49,7 +49,30 @@ export default async function handler(req: Request): Promise<Response> {
   if (!supabaseUrl || !serviceKey) return json({ error: 'supabase_not_configured' }, { status: 503 });
 
   const order = await findOrderByProviderReference(supabaseUrl, serviceKey, transactionId);
-  if (!order) return json({ received: true, matched: false });
+  if (!order) {
+    try {
+      await fetch(`${supabaseUrl}/rest/v1/payment_exceptions`, {
+        method: 'POST',
+        headers: {
+          apikey: serviceKey,
+          Authorization: `Bearer ${serviceKey}`,
+          'content-type': 'application/json',
+          Prefer: 'resolution=merge-duplicates',
+        },
+        body: JSON.stringify({
+          order_id: transactionId,
+          provider: 'kotani',
+          payload: body,
+          error_code: 'ORDER_NOT_FOUND',
+          error_message: `Mpesa timeout callback for unknown transaction ${transactionId}`,
+          status: 'PENDING',
+        }),
+      });
+    } catch {
+      // Non-fatal
+    }
+    return json({ received: true, matched: false, dlq: true });
+  }
 
   if (order.status === 'PROVIDER_CONFIRMED') {
     return json({ received: true, changed: false, retriable: true, status: order.status });

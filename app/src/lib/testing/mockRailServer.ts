@@ -40,11 +40,13 @@ export interface MockRailServerInstance {
   generateKotaniSignature: (payload: unknown, secret: string) => string;
   generatePaystackSignature: (payload: unknown, secret: string) => string;
   generateMinisendSignature: (payload: unknown, secret: string) => string;
+  generateSwyptSignature: (payload: unknown, secret: string) => string;
+  generatePrivyToken: (did: string, appId?: string) => string;
   triggerAsyncWebhook: (
     targetUrl: string,
     payload: unknown,
     secret: string,
-    provider?: 'kotani' | 'minisend' | 'paystack',
+    provider?: 'kotani' | 'minisend' | 'paystack' | 'swypt',
     delayMs?: number,
   ) => Promise<Response>;
 }
@@ -217,6 +219,53 @@ export async function startMockRailServer(preferredPort = 0): Promise<MockRailSe
       return;
     }
 
+    if (pathname.includes('/mpesa/transactionstatus/v1/query')) {
+      const transactionId = typeof parsedBody.TransactionID === 'string' ? parsedBody.TransactionID : 'ws_MOCK_' + Date.now();
+      const conversationId = 'AG_STATUS_' + Date.now();
+      const origConversationId = 'ORIG_STATUS_' + Date.now();
+
+      // Dispatch asynchronous status callback if ResultURL provided
+      if (typeof parsedBody.ResultURL === 'string' && parsedBody.ResultURL.startsWith('http')) {
+        const resultUrl = parsedBody.ResultURL;
+        const callbackPayload = {
+          Result: {
+            ResultType: 0,
+            ResultCode: 0,
+            ResultDesc: 'The service request is processed successfully.',
+            OriginatorConversationID: origConversationId,
+            ConversationID: conversationId,
+            TransactionID: transactionId,
+            ResultParameters: {
+              ResultParameter: [
+                { Key: 'ReceiptNo', Value: transactionId },
+                { Key: 'ConversationID', Value: conversationId },
+                { Key: 'FinalisedTime', Value: Number(new Date().toISOString().replace(/\D/g, '').slice(0, 14)) },
+                { Key: 'Amount', Value: 1500 },
+                { Key: 'TransactionStatus', Value: 'Completed' },
+              ],
+            },
+          },
+        };
+        setTimeout(() => {
+          fetch(resultUrl, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(callbackPayload),
+          }).catch(() => {});
+        }, 50);
+      }
+
+      sendJson(200, {
+        ResponseCode: '0',
+        ResponseDescription: 'The service request is processed successfully.',
+        ConversationID: conversationId,
+        OriginatorConversationID: origConversationId,
+        ResultCode: '0',
+        ResultDesc: 'The service request is processed successfully.',
+      });
+      return;
+    }
+
     // -------------------------------------------------------------------------
     // 2. Kotani Pay Rails
     // -------------------------------------------------------------------------
@@ -362,6 +411,118 @@ export async function startMockRailServer(preferredPort = 0): Promise<MockRailSe
       return;
     }
 
+    // -------------------------------------------------------------------------
+    // 7. Swypt Custodial Escrow Rails
+    // -------------------------------------------------------------------------
+    if (pathname.startsWith('/v1/escrow/deposit')) {
+      sendJson(200, {
+        ok: true,
+        status: 'SETTLED',
+        external_ref: 'swypt_ext_' + Date.now(),
+        fee_minor: '500',
+        order_id: parsedBody.order_id || 'ord_mock',
+      });
+      return;
+    }
+
+    if (pathname.startsWith('/v1/escrow/disburse')) {
+      sendJson(200, {
+        ok: true,
+        status: 'SETTLED',
+        external_ref: 'swypt_disb_' + Date.now(),
+        disbursement_id: parsedBody.disbursement_id || 'disb_mock',
+      });
+      return;
+    }
+
+    // -------------------------------------------------------------------------
+    // 8. Base EVM & Gnosis Safe JSON-RPC Simulator
+    // -------------------------------------------------------------------------
+    if (pathname === '/rpc' || parsedBody.jsonrpc === '2.0') {
+      const id = parsedBody.id ?? 1;
+      const rpcMethod = parsedBody.method;
+
+      if (rpcMethod === 'eth_chainId') {
+        sendJson(200, { jsonrpc: '2.0', id, result: '0x2105' }); // Base Mainnet (8453)
+        return;
+      }
+      if (rpcMethod === 'eth_blockNumber') {
+        sendJson(200, { jsonrpc: '2.0', id, result: '0x10f4c20' }); // Block 17779744
+        return;
+      }
+      if (rpcMethod === 'eth_getBalance') {
+        sendJson(200, { jsonrpc: '2.0', id, result: '0xde0b6b3a7640000' }); // 1 ETH
+        return;
+      }
+      if (rpcMethod === 'eth_call') {
+        // Return 1 (true / active balance) as 32-byte word
+        sendJson(200, { jsonrpc: '2.0', id, result: '0x0000000000000000000000000000000000000000000000000000000000000001' });
+        return;
+      }
+      if (rpcMethod === 'eth_sendRawTransaction') {
+        sendJson(200, { jsonrpc: '2.0', id, result: '0x' + crypto.randomBytes(32).toString('hex') });
+        return;
+      }
+      if (rpcMethod === 'eth_getTransactionReceipt') {
+        sendJson(200, {
+          jsonrpc: '2.0',
+          id,
+          result: {
+            status: '0x1',
+            transactionHash: '0x' + crypto.randomBytes(32).toString('hex'),
+            blockNumber: '0x10f4c20',
+            confirmations: '0x5',
+          },
+        });
+        return;
+      }
+
+      sendJson(200, { jsonrpc: '2.0', id, result: '0x0' });
+      return;
+    }
+
+    // -------------------------------------------------------------------------
+    // 9. Privy Auth JWKS & OIDC Discovery Rails
+    // -------------------------------------------------------------------------
+    if (pathname === '/.well-known/jwks.json' || pathname.includes('/jwks.json')) {
+      sendJson(200, {
+        keys: [
+          {
+            kty: 'RSA',
+            kid: 'privy-mock-key-1',
+            use: 'sig',
+            alg: 'RS256',
+            n: 'u1lK_mock_modulus_for_testing_purposes_only_1234567890',
+            e: 'AQAB',
+          },
+        ],
+      });
+      return;
+    }
+
+    if (pathname.startsWith('/api/v1/users/')) {
+      const did = pathname.replace('/api/v1/users/', '');
+      sendJson(200, {
+        id: did,
+        created_at: Math.floor(Date.now() / 1000) - 86400,
+        linked_accounts: [
+          {
+            type: 'wallet',
+            address: '0x' + crypto.randomBytes(20).toString('hex'),
+            chain_type: 'ethereum',
+            verified_at: Math.floor(Date.now() / 1000),
+          },
+        ],
+      });
+      return;
+    }
+
+    // Evolution API Health Ping (Port 8080 simulation / alias)
+    if (pathname === '/evolution-ping' || (pathname === '/' && req.headers.host?.includes('8080'))) {
+      sendJson(200, { status: 200, message: 'Welcome to the Evolution API' });
+      return;
+    }
+
     // Default Fallback
     sendJson(200, { ok: true, message: 'Baraza Mock Rail Endpoint', pathname, method });
   });
@@ -376,18 +537,20 @@ export async function startMockRailServer(preferredPort = 0): Promise<MockRailSe
 
   // Auxiliary Mock: Evolution WhatsApp API (Port 8080) for Scenario 100
   let evolutionServer: http.Server | null = null;
-  try {
-    const evo = http.createServer((_req, res) => {
-      res.writeHead(200, { 'content-type': 'application/json' });
-      res.end(JSON.stringify({ status: 200, message: 'Welcome to the Evolution API' }));
-    });
-    await new Promise<void>((resolve) => {
-      evo.listen(8080, '127.0.0.1', () => resolve());
-      evo.on('error', () => resolve());
-    });
-    evolutionServer = evo;
-  } catch {
-    // Port 8080 already bound by external service
+  if (preferredPort === 9099 || preferredPort === 8080) {
+    try {
+      const evo = http.createServer((_req, res) => {
+        res.writeHead(200, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ status: 200, message: 'Welcome to the Evolution API' }));
+      });
+      await new Promise<void>((resolve) => {
+        evo.listen(8080, '127.0.0.1', () => resolve());
+        evo.on('error', () => resolve());
+      });
+      evolutionServer = evo;
+    } catch {
+      // Port 8080 already bound by external service
+    }
   }
 
   const setChaos = (config: Partial<ChaosConfig>): void => {
@@ -413,11 +576,31 @@ export async function startMockRailServer(preferredPort = 0): Promise<MockRailSe
     return crypto.createHmac('sha256', secret).update(data).digest('hex');
   };
 
+  const generateSwyptSignature = (payload: unknown, secret: string): string => {
+    const data = typeof payload === 'string' ? payload : JSON.stringify(payload);
+    return crypto.createHmac('sha256', secret).update(data).digest('hex');
+  };
+
+  const generatePrivyToken = (did: string, appId = 'mock-privy-app-id'): string => {
+    const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT', kid: 'privy-mock-key-1' })).toString('base64url');
+    const payload = Buffer.from(
+      JSON.stringify({
+        sub: did,
+        iss: 'privy.io',
+        aud: appId,
+        exp: Math.floor(Date.now() / 1000) + 3600,
+        iat: Math.floor(Date.now() / 1000),
+      })
+    ).toString('base64url');
+    const signature = crypto.createHmac('sha256', 'mock-privy-secret').update(`${header}.${payload}`).digest('base64url');
+    return `${header}.${payload}.${signature}`;
+  };
+
   const triggerAsyncWebhook = async (
     targetUrl: string,
     payload: unknown,
     secret: string,
-    provider: 'kotani' | 'minisend' | 'paystack' = 'kotani',
+    provider: 'kotani' | 'minisend' | 'paystack' | 'swypt' = 'kotani',
     delayMs = 50,
   ): Promise<Response> => {
     if (delayMs > 0) {
@@ -434,6 +617,8 @@ export async function startMockRailServer(preferredPort = 0): Promise<MockRailSe
       headers['x-minisend-timestamp'] = Math.floor(Date.now() / 1000).toString();
     } else if (provider === 'paystack') {
       headers['x-paystack-signature'] = generatePaystackSignature(rawBody, secret);
+    } else if (provider === 'swypt') {
+      headers['x-swypt-signature'] = generateSwyptSignature(rawBody, secret);
     }
 
     return fetch(targetUrl, {
@@ -462,6 +647,8 @@ export async function startMockRailServer(preferredPort = 0): Promise<MockRailSe
     generateKotaniSignature,
     generatePaystackSignature,
     generateMinisendSignature,
+    generateSwyptSignature,
+    generatePrivyToken,
     triggerAsyncWebhook,
   };
 }

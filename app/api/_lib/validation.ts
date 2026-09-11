@@ -26,12 +26,12 @@ export function sanitizeText(input: string | null | undefined, maxLength: number
   return cleaned.trim().slice(0, maxLength);
 }
 
-export function assertValidHttpsUrl(url: string | null | undefined, paramName: string): string | undefined {
+export function assertValidHttpsUrl(url: string | null | undefined, paramName: string, maxLength: number = 512): string | undefined {
   if (!url) return undefined;
   const trimmed = url.trim();
   if (trimmed.length === 0) return undefined;
-  if (trimmed.length > 512) {
-    throw new HttpError(400, `Invalid ${paramName}: maximum length is 512 characters.`);
+  if (trimmed.length > maxLength) {
+    throw new HttpError(400, `Invalid ${paramName}: maximum length is ${maxLength} characters.`);
   }
   // Anti-SSRF check: Must be https and not target private IP space
   const httpsRegex = /^https:\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(\/.*)?$/;
