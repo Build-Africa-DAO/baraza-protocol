@@ -12,7 +12,9 @@ import { StatusChip } from '@/components/ui/status-chip';
 import { Stepper } from '@/components/ui/stepper';
 import { useAccount } from '@/contexts/AccountContext';
 import { formatAccountDate } from '@/lib/accountLocale';
+import { apiFetch, submitGuard } from '@/lib/api';
 import { isPaymentSimulatorEnabled, RAIL_UNAVAILABLE_COPY } from '@/lib/devMode';
+import { nextPollDelay } from '@/lib/polling';
 import { fetchDuesStreak } from '@/lib/duesStreak';
 import { groupCurrency } from '@/lib/money';
 import {
@@ -21,8 +23,7 @@ import {
   isTerminalStatus,
   PAYMENT_HAPPY_PATH,
   storePaymentOrderActivationSecret,
-  type PaymentOrderStatus,
-} from '@/lib/payments';
+  type PaymentOrderStatus, getPaymentOrderActivationSecret } from '@/lib/payments';
 import { normaliseKenyanPhone } from '@/lib/phone';
 import { SUPPORT_EMAIL } from '@/lib/support';
 import type { Community } from '@/lib/constants';
@@ -51,7 +52,6 @@ export default function GroupPay() {
 type Stage = 'amount' | 'sending' | 'confirming' | 'done';
 
 const STEPS = [{ label: 'Amount' }, { label: 'Pay' }, { label: 'Confirming' }, { label: 'Done' }];
-const POLL_MS = 2500;
 
 function statusIndex(status: PaymentOrderStatus): number {
   return PAYMENT_HAPPY_PATH.indexOf(status);
@@ -98,9 +98,10 @@ function PayPanel({ community, membership }: { community: Community; membership:
     if (stage !== 'confirming' || !orderId) return;
     let cancelled = false;
     let timer: number | undefined;
+    const startedAt = Date.now();
     const poll = async () => {
       try {
-        const order = await fetchPaymentOrder(orderId);
+        const order = await fetchPaymentOrder(orderId, getPaymentOrderActivationSecret(orderId));
         if (cancelled) return;
         if (!order) {
           setError(`We have no record of payment ${orderId}. If money left your account, email ${SUPPORT_EMAIL} with that reference. Do not pay again.`);
@@ -113,10 +114,10 @@ function PayPanel({ community, membership }: { community: Community; membership:
           setStage('done');
           return;
         }
-        timer = window.setTimeout(poll, POLL_MS);
+        timer = window.setTimeout(poll, nextPollDelay(startedAt));
       } catch {
         if (cancelled) return;
-        timer = window.setTimeout(poll, POLL_MS);
+        timer = window.setTimeout(poll, nextPollDelay(startedAt));
       }
     };
     void poll();
@@ -170,29 +171,28 @@ function PayPanel({ community, membership }: { community: Community; membership:
       return;
     }
     setStage('sending');
-    try {
-      const res = await fetch('/api/mpesa/simulate', {
+    const result = await submitGuard.run(`pay:${community.id}`, () =>
+      apiFetch<{ orderId?: string; activationSecret?: string }>('/api/mpesa/simulate', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
+        body: {
           phone: `+254${normalisedPhone}`,
           communityId: community.id,
           amount: Math.round(duesOwedMinor / 100),
           currency,
-        }),
-      });
-      const data = (await res.json().catch(() => ({}))) as { orderId?: string; activationSecret?: string; message?: string };
-      if (!res.ok || !data.orderId) {
-        throw new Error(data.message ?? 'The payment could not be started. Nothing has been charged.');
-      }
-      if (data.activationSecret) storePaymentOrderActivationSecret(data.orderId, data.activationSecret);
-      setOrderId(data.orderId);
-      setOrderAt(new Date().toISOString());
-      setStage('confirming');
-    } catch (err) {
+        },
+        auth: 'omit',
+      }),
+    );
+    if (!result) return; // a second tap while the first request is in flight
+    if (!result.ok || !result.data?.orderId) {
       setStage('amount');
-      setError(err instanceof Error ? err.message : 'The payment could not be started. Nothing has been charged.');
+      setError(result.ok ? 'The payment could not be started. Nothing has been charged.' : `${result.error.message} Nothing has been charged.`);
+      return;
     }
+    if (result.data.activationSecret) storePaymentOrderActivationSecret(result.data.orderId, result.data.activationSecret);
+    setOrderId(result.data.orderId);
+    setOrderAt(new Date().toISOString());
+    setStage('confirming');
   }
 
   const stepIndex = stage === 'amount' ? 0 : stage === 'sending' ? 1 : stage === 'confirming' ? 2 : 3;

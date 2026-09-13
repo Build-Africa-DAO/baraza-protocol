@@ -2,11 +2,9 @@ export type StatusKind =
   | 'not-found'
   | 'community'
   | 'bounty'
-  | 'proposal'
   | 'unauthorized'
   | 'forbidden'
-  | 'server'
-  | 'offline';
+  | 'server';
 
 export type StatusActionIcon = 'home' | 'compass' | 'refresh' | 'login' | 'shield' | 'trophy' | 'arrow-left';
 
@@ -52,14 +50,6 @@ export const STATUS_COPY: Record<StatusKind, StatusCopy> = {
     primary: { label: 'Browse Bounties', to: '/bounties', icon: 'trophy' },
     secondary: { label: 'Browse Groups', to: '/groups', icon: 'compass' },
   },
-  proposal: {
-    code: '404',
-    title: "This Proposal Isn't on Baraza.",
-    description: "This proposal doesn't exist or has been removed.",
-    seoTitle: 'Proposal Not Found',
-    primary: { label: 'Browse Groups', to: '/groups', icon: 'compass' },
-    secondary: { label: 'Go Home', to: '/', icon: 'home' },
-  },
   unauthorized: {
     code: '401',
     title: 'Sign in to Continue.',
@@ -82,15 +72,6 @@ export const STATUS_COPY: Record<StatusKind, StatusCopy> = {
     title: 'Something Went Wrong.',
     description: 'Baraza hit an unexpected error. Try again, or head home while we sort it out.',
     seoTitle: 'Server Error',
-    primary: { label: 'Try Again', icon: 'refresh' },
-    secondary: { label: 'Go Home', to: '/', icon: 'home' },
-  },
-  offline: {
-    code: 'Offline',
-    title: "You're Offline.",
-    description:
-      "Baraza can't reach the network right now. Check your connection. Work you started will wait.",
-    seoTitle: "You're Offline",
     primary: { label: 'Try Again', icon: 'refresh' },
     secondary: { label: 'Go Home', to: '/', icon: 'home' },
   },

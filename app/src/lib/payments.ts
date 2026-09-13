@@ -1,3 +1,4 @@
+import { apiFetch } from '@/lib/api';
 import { getSupabaseClient } from '@/lib/communities';
 
 /**
@@ -112,12 +113,15 @@ export function getPaymentOrderActivationSecret(orderId: string): string {
 export async function fetchPaymentOrder(orderId: string, activationSecret?: string): Promise<PaymentOrder | null> {
   if (activationSecret) {
     const params = new URLSearchParams({ orderId });
-    const res = await fetch(`/api/payment-orders/status?${params.toString()}`, {
+    const result = await apiFetch<PaymentOrder>(`/api/payment-orders/status?${params.toString()}`, {
       headers: { 'x-activation-secret': activationSecret },
+      auth: 'omit',
     });
-    if (res.status === 404) return null;
-    if (!res.ok) throw new Error(`Could not fetch payment order (${res.status}).`);
-    return (await res.json()) as PaymentOrder;
+    if (!result.ok) {
+      if (result.error.kind === 'not_found') return null;
+      throw new Error(result.error.message);
+    }
+    return result.data;
   }
 
   const client = getSupabaseClient();

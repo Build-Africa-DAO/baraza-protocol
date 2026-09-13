@@ -15,6 +15,7 @@ import { Stepper } from '@/components/ui/stepper';
 import { useAccount } from '@/contexts/AccountContext';
 import { useCommunity } from '@/hooks/useCommunities';
 import { useToast } from '@/hooks/use-toast';
+import { apiFetch, submitGuard } from '@/lib/api';
 import { isPaymentSimulatorEnabled, RAIL_UNAVAILABLE_COPY } from '@/lib/devMode';
 import { acceptInviteCode } from '@/lib/inviteAccept';
 import { formatMoney, groupCurrency } from '@/lib/money';
@@ -24,7 +25,6 @@ import { calculateDynamicFee, type FeeBreakdown } from '@/lib/payments/feeEngine
 import { normaliseKenyanPhone } from '@/lib/phone';
 import { useSeo } from '@/lib/seo';
 import { rulesSentence } from '@/lib/voteCopy';
-import type { VerificationTier } from '@/lib/constants';
 
 /**
  * §13.11 Join — one page, four stages on the stepper at the top.
@@ -86,11 +86,8 @@ export default function JoinDao() {
   const amountMajor = community?.membershipFee ?? 0;
   const fee = quote ?? calculateDynamicFee(Math.round(amountMajor * 100), currency, true);
   const isFree = fee.totalExpectedMinor <= 0;
-  const tier: VerificationTier = community?.verificationTier ?? 'activation';
-  const vouchThreshold = community?.vouchThreshold ?? 2;
   const needsLogin = !account.authenticated;
-  const queued = tier === 'vouching' || tier === 'proof_of_personhood';
-  const stage = needsLogin || queued ? 0 : 1;
+  const stage = needsLogin ? 0 : 1;
   const normalisedPhone = normaliseKenyanPhone(phone);
   const hashOk = /^[a-f0-9]{64}$/i.test(txHash.trim());
 
@@ -117,17 +114,13 @@ export default function JoinDao() {
   useEffect(() => {
     if (!id || !community || amountMajor <= 0) return;
     let cancelled = false;
-    void fetch('/api/stellar/create-payment-intent', {
+    void apiFetch<{ feeBreakdown?: FeeBreakdown }>('/api/stellar/create-payment-intent', {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ communityId: id }),
-    })
-      .then(async (res) => {
-        if (!res.ok || cancelled) return;
-        const data = (await res.json()) as { feeBreakdown?: FeeBreakdown };
-        if (!cancelled && data.feeBreakdown) setQuote(data.feeBreakdown);
-      })
-      .catch(() => undefined);
+      body: { communityId: id },
+      auth: 'omit',
+    }).then((result) => {
+      if (result.ok && !cancelled && result.data?.feeBreakdown) setQuote(result.data.feeBreakdown);
+    });
     return () => {
       cancelled = true;
     };
@@ -143,22 +136,25 @@ export default function JoinDao() {
     setError(null);
     try {
       const walletAddress = account.accountId ?? `phone:${normalisedPhone ?? 'unknown'}`;
-      const res = await fetch('/api/membership/activate', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          orderId: `ord_free_${id}_${Date.now().toString(36)}`,
-          communityId: id,
-          walletAddress,
-          activationSecret: `sec_free_${crypto.randomUUID()}`,
+      const result = await submitGuard.run(`join-free:${id}`, () =>
+        apiFetch<{ ok?: boolean }>('/api/membership/activate', {
+          method: 'POST',
+          body: {
+            orderId: `ord_free_${id}_${Date.now().toString(36)}`,
+            communityId: id,
+            walletAddress,
+            activationSecret: `sec_free_${crypto.randomUUID()}`,
+          },
+          auth: 'omit',
         }),
-      });
-      const data = (await res.json().catch(() => ({}))) as { ok?: boolean; message?: string };
-      if (!res.ok || !data.ok) throw new Error(data.message ?? 'Baraza could not activate the membership.');
+      );
+      if (!result) return;
+      if (!result.ok || !result.data?.ok) {
+        setError(result.ok ? 'Baraza could not activate the membership. Try again.' : result.error.message);
+        return;
+      }
       toast({ title: "You're In", description: `Welcome to ${community?.name ?? 'the group'}.` });
       navigate(`/dashboard/${id}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Baraza could not activate the membership. Try again.');
     } finally {
       setBusy(false);
     }
@@ -178,22 +174,25 @@ export default function JoinDao() {
     }
     setBusy(true);
     try {
-      const res = await fetch('/api/mpesa/simulate', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          phone: `+254${normalisedPhone}`,
-          communityId: id,
-          amount: Math.round(fee.totalExpectedMinor / 100),
-          currency,
+      const result = await submitGuard.run(`join-pay:${id}`, () =>
+        apiFetch<{ orderId?: string; activationSecret?: string }>('/api/mpesa/simulate', {
+          method: 'POST',
+          body: {
+            phone: `+254${normalisedPhone}`,
+            communityId: id,
+            amount: Math.round(fee.totalExpectedMinor / 100),
+            currency,
+          },
+          auth: 'omit',
         }),
-      });
-      const data = (await res.json().catch(() => ({}))) as { orderId?: string; activationSecret?: string; message?: string };
-      if (!res.ok || !data.orderId) throw new Error(data.message ?? 'The payment could not be started. Nothing has been charged.');
-      if (data.activationSecret) storePaymentOrderActivationSecret(data.orderId, data.activationSecret);
-      navigate(`/join/${id}/status?orderId=${encodeURIComponent(data.orderId)}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'The payment could not be started. Nothing has been charged.');
+      );
+      if (!result) return;
+      if (!result.ok || !result.data?.orderId) {
+        setError(result.ok ? 'The payment could not be started. Nothing has been charged.' : `${result.error.message} Nothing has been charged.`);
+        return;
+      }
+      if (result.data.activationSecret) storePaymentOrderActivationSecret(result.data.orderId, result.data.activationSecret);
+      navigate(`/join/${id}/status?orderId=${encodeURIComponent(result.data.orderId)}`);
     } finally {
       setBusy(false);
     }
@@ -208,32 +207,37 @@ export default function JoinDao() {
     setVerifying(true);
     setError(null);
     try {
-      let intentToken: string | null = null;
-      try {
-        const intentRes = await fetch('/api/stellar/create-payment-intent', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ communityId: id, amountKes: amountMajor, environment: PRODUCT_ENVIRONMENT }),
-        });
-        if (intentRes.ok) intentToken = ((await intentRes.json()) as { intentToken?: string }).intentToken ?? null;
-      } catch {
-        /* the intent service is optional */
-      }
-      const res = await fetch('/api/stellar/verify-payment', {
+      // The intent is optional off mainnet; on mainnet verify-payment requires it.
+      const intent = await apiFetch<{ intentToken?: string }>('/api/stellar/create-payment-intent', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(
-          intentToken
+        body: { communityId: id, amountKes: amountMajor, environment: PRODUCT_ENVIRONMENT },
+        auth: 'omit',
+      });
+      const intentToken = intent.ok ? intent.data?.intentToken ?? null : null;
+      const result = await submitGuard.run(`verify:${txHash.trim().toLowerCase()}`, () =>
+        apiFetch<{ orderId?: string; activationSecret?: string | null }>('/api/stellar/verify-payment', {
+          method: 'POST',
+          body: intentToken
             ? { intentToken, txHash: txHash.trim().toLowerCase(), environment: PRODUCT_ENVIRONMENT }
             : { communityId: id, txHash: txHash.trim().toLowerCase(), environment: PRODUCT_ENVIRONMENT },
-        ),
-      });
-      const data = (await res.json().catch(() => ({}))) as { orderId?: string; activationSecret?: string | null; message?: string };
-      if (!res.ok || !data.orderId) throw new Error(data.message ?? 'The transfer could not be verified. Check the reference and try again.');
-      if (data.activationSecret) storePaymentOrderActivationSecret(data.orderId, data.activationSecret);
-      navigate(`/join/${id}/status?orderId=${encodeURIComponent(data.orderId)}&rail=stellar`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'The transfer could not be verified.');
+          auth: 'omit',
+        }),
+      );
+      if (!result) return;
+      if (!result.ok || !result.data?.orderId) {
+        setError(
+          !result.ok && (result.error.code === 'stellar_payment_reused' || result.error.code === 'stellar_intent_reused')
+            ? 'That transfer has already been used for a membership.'
+            : !result.ok && result.error.code === 'stellar_verification_failed'
+              ? 'We could not find a matching payment to the group account for that reference. Check it and try again.'
+              : !result.ok
+                ? result.error.message
+                : 'The transfer could not be verified. Check the reference and try again.',
+        );
+        return;
+      }
+      if (result.data.activationSecret) storePaymentOrderActivationSecret(result.data.orderId, result.data.activationSecret);
+      navigate(`/join/${id}/status?orderId=${encodeURIComponent(result.data.orderId)}&rail=stellar`);
     } finally {
       setVerifying(false);
     }
@@ -313,33 +317,14 @@ export default function JoinDao() {
           </section>
 
           {/* Stage B — how they get in. */}
-          {tier === 'vouching' ? (
-            <section className="baraza-card p-5">
-              <StatusChip kind="pending" label="You're In the Queue" size="md" />
-              <p className="mt-3 text-sm text-muted-foreground">
-                This group admits people once {vouchThreshold} current {vouchThreshold === 1 ? 'member vouches' : 'members vouch'} for them. Ask a member you know to vouch for you; there is nothing to pay yet.
-              </p>
-              {needsLogin ? (
-                <Button type="button" className="mt-4" onClick={() => account.login()} disabled={!account.ready}>
-                  Sign In
-                </Button>
-              ) : null}
-            </section>
-          ) : tier === 'proof_of_personhood' ? (
-            <section className="baraza-card p-5">
-              <StatusChip kind="hold" label="Not Available Here Yet" size="md" />
-              <p className="mt-3 text-sm text-muted-foreground">
-                This group checks each person's identity before admitting them. That check is not available in this app yet; ask an officer how to complete it.
-              </p>
-            </section>
-          ) : (
+          {(
             <section className="baraza-card p-5" aria-labelledby="join-pay">
               <h2 id="join-pay" className="font-display text-base font-bold">
-                {isFree || tier === 'phone' ? 'Join' : 'Pay With M-Pesa'}
+                {isFree ? 'Join' : 'Pay With M-Pesa'}
               </h2>
               {needsLogin ? (
                 <p className="mt-2 text-sm text-muted-foreground">Sign in first so this membership is attached to your Baraza account.</p>
-              ) : isFree || tier === 'phone' ? (
+              ) : isFree ? (
                 <p className="mt-2 text-sm text-muted-foreground">Nothing to pay. Your account becomes the membership.</p>
               ) : (
                 <div className="mt-4">
@@ -360,11 +345,11 @@ export default function JoinDao() {
                 type="button"
                 fullWidth
                 className="mt-5"
-                onClick={() => void (isFree || tier === 'phone' ? joinFree() : payWithMpesa())}
-                disabled={needsLogin ? !account.ready : busy || (!isFree && tier !== 'phone' && !normalisedPhone)}
+                onClick={() => void (isFree ? joinFree() : payWithMpesa())}
+                disabled={needsLogin ? !account.ready : busy || (!isFree && !normalisedPhone)}
               >
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
-                {needsLogin ? 'Sign in to pay' : busy ? 'Check Your Phone' : isFree || tier === 'phone' ? 'Join This Group' : 'Pay With M-Pesa'}
+                {needsLogin ? 'Sign in to pay' : busy ? 'Check Your Phone' : isFree ? 'Join This Group' : 'Pay With M-Pesa'}
               </Button>
 
               <p className="mt-3 text-xs text-muted-foreground">
@@ -373,7 +358,7 @@ export default function JoinDao() {
             </section>
           )}
 
-          {!isFree && !queued ? (
+          {!isFree ? (
             <section className="baraza-card p-5">
               <button
                 type="button"

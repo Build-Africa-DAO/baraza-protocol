@@ -10,6 +10,8 @@
  * server splits them.
  */
 
+import { apiFetch } from '@/lib/api';
+
 export interface JournalEntry {
   id?: string;
   created_at: string;
@@ -99,22 +101,17 @@ export async function fetchStatement(
   options: { limit?: number } = {},
 ): Promise<StatementResult> {
   const params = new URLSearchParams({ communityId, format: 'ndjson' });
-  let res: Response;
-  try {
-    res = await fetch(`/api/communities/statement?${params.toString()}`, { headers });
-  } catch {
-    return { ok: false, status: 0, message: 'We could not reach Baraza. Check your connection and try again.' };
-  }
-  if (!res.ok) {
-    const body = (await res.json().catch(() => ({}))) as { message?: string };
+  const result = await apiFetch<string>(`/api/communities/statement?${params.toString()}`, { headers, parse: 'text' });
+  if (!result.ok) {
     const message =
-      res.status === 401 || res.status === 403
+      result.error.kind === 'auth' || result.error.kind === 'forbidden'
         ? 'Sign in as a member of this group to see its money.'
-        : body.message ?? 'The statement could not be loaded.';
-    return { ok: false, status: res.status, message };
+        : result.error.message;
+    return { ok: false, status: result.status, message };
   }
-  const entries = parseStatementNdjson(await res.text());
+  const entries = parseStatementNdjson(result.data ?? '');
   const rows = entries.map(rowFromEntry).sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
   const limit = options.limit ?? rows.length;
-  return { ok: true, rows: rows.slice(0, limit), hasMore: rows.length > limit || res.headers.get('x-total-count') === '5000' };
+  const hasMoreHeader = result.response.headers.get('x-has-more-records') === 'true' || result.response.headers.get('x-total-count') === '5000';
+  return { ok: true, rows: rows.slice(0, limit), hasMore: rows.length > limit || hasMoreHeader };
 }

@@ -1,7 +1,9 @@
 import { ListRow } from '@/components/app/ListRow';
 import { EmptyState } from '@/components/ui/empty-state';
 import { StatusChip } from '@/components/ui/status-chip';
-import { useActivities } from '@/hooks/useBarazaData';
+import { useCommunityActivity } from '@/hooks/useProposals';
+import { SkeletonList } from '@/components/ui/skeletons';
+import { InlineError } from '@/components/ui/inline-error';
 import { formatAccountDate } from '@/lib/accountLocale';
 import type { ActivityEvent } from '@/lib/dataStore';
 
@@ -17,6 +19,9 @@ const LABEL: Record<ActivityEvent['type'], string> = {
   decision_completed: 'Decided',
   fund_deposit: 'Paid in',
   bounty_opened: 'Bounty',
+  officer_changed: 'Officers',
+  invite_created: 'Invite',
+  other: 'Activity',
 };
 
 interface ActivityFeedProps {
@@ -25,9 +30,11 @@ interface ActivityFeedProps {
 }
 
 export default function ActivityFeed({ communityId, limit = 10 }: ActivityFeedProps) {
-  const activities = useActivities(communityId);
-  const shown = activities.slice(0, limit);
+  const { events, isLoading, error } = useCommunityActivity(communityId, limit);
+  const shown = events.slice(0, limit);
 
+  if (isLoading) return <SkeletonList count={3} />;
+  if (error) return <InlineError message={error} />;
   if (shown.length === 0) {
     return <EmptyState title="Nothing Has Happened Yet" body="Joins, payments and votes appear here as they happen." />;
   }

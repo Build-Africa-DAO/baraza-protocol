@@ -1,3 +1,4 @@
+import { apiFetch } from '@/lib/api';
 import type { Community } from '@/lib/constants';
 import type { MembershipRecord, MembershipStatus } from '@/lib/memberships';
 
@@ -81,19 +82,19 @@ export function communityFromSummary(
   };
 }
 
-export async function fetchUserMemberships(token: string): Promise<UserMembershipSummary[]> {
-  const response = await fetch('/api/user/memberships', {
-    headers: { Authorization: `Bearer ${token}` },
+/**
+ * `token` is optional: when omitted the registered sign-in provider supplies it.
+ * Throws `unauthorized` on 401/403 and `memberships_unavailable` otherwise so
+ * `useMyMemberships` can fall back to the cached membership list.
+ */
+export async function fetchUserMemberships(token?: string): Promise<UserMembershipSummary[]> {
+  const result = await apiFetch<UserMembershipsResponse>('/api/user/memberships', {
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
-
-  if (response.status === 401 || response.status === 403) {
-    throw new Error('unauthorized');
+  if (!result.ok) {
+    throw new Error(result.error.kind === 'auth' || result.error.kind === 'forbidden' ? 'unauthorized' : 'memberships_unavailable');
   }
-  if (!response.ok) {
-    throw new Error('memberships_unavailable');
-  }
-
-  const body = await response.json() as UserMembershipsResponse;
+  const body = result.data;
   if (!body?.ok || !Array.isArray(body.memberships)) {
     throw new Error('memberships_unavailable');
   }

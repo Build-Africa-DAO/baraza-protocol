@@ -86,6 +86,8 @@ function ProposeForm({ community, isMember, pending }: { community: Community; i
         description: purpose.trim(),
         fundingAmount: amountNumber,
         proposedBy: account.displayName,
+        proposer: account.accountId ?? account.displayName,
+        quorumPct: community.quorumPct,
         durationDays: Number(days),
       });
       if (!decision) {

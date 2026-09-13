@@ -6,7 +6,7 @@ import { AmountBlock } from '@/components/ui/amount-block';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { StatusChip } from '@/components/ui/status-chip';
-import { useActivities, useDecisions } from '@/hooks/useBarazaData';
+import { useCommunityActivity, useProposals } from '@/hooks/useProposals';
 import type { GroupMembership } from '@/hooks/useGroupMembership';
 import { formatMajor, formatMoney } from '@/lib/money';
 import { proposalBucket } from '@/lib/proposalStatus';
@@ -56,10 +56,10 @@ function HomePanel({
   membership: GroupMembership;
   isOfficer: boolean;
 }) {
-  const { all } = useDecisions(communityId);
+  const { all } = useProposals(communityId);
   const openVotes = all.filter((decision) => proposalBucket(decision) === 'active' && isVotingOpen(decision));
   const awaitingSend = all.filter((decision) => proposalBucket(decision) === 'passed');
-  const activities = useActivities(communityId);
+  const { events: activities } = useCommunityActivity(communityId);
   const hasBalance = typeof fundBalance === 'number';
 
   return (
@@ -183,6 +183,9 @@ const MOVEMENT_LABEL: Record<ActivityEvent['type'], string> = {
   decision_completed: 'Decided',
   fund_deposit: 'Paid in',
   bounty_opened: 'Bounty',
+  officer_changed: 'Officers',
+  invite_created: 'Invite',
+  other: 'Activity',
 };
 
 function MovementRow({ event }: { event: ActivityEvent }) {

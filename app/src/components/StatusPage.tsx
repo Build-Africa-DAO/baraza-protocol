@@ -37,11 +37,9 @@ const KIND_ICON: Record<StatusKind, LucideIcon> = {
   'not-found': Compass,
   community: Compass,
   bounty: Trophy,
-  proposal: ShieldOff,
   unauthorized: LogIn,
   forbidden: ShieldOff,
   server: RefreshCw,
-  offline: RefreshCw,
 };
 
 export interface StatusAction extends StatusActionSpec {
@@ -122,7 +120,7 @@ export default function StatusPage({
   const primaryAction = resolveAction(primarySpec, primary, onRetry);
   const secondaryAction = resolveAction(copy.secondary, secondary, onRetry);
   const KindIcon = KIND_ICON[kind];
-  const alert = kind === 'server' || kind === 'offline';
+  const alert = kind === 'server';
 
   useSeo({
     title: copy.seoTitle,

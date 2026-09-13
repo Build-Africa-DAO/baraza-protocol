@@ -1,3 +1,4 @@
+import { apiFetch } from '@/lib/api';
 import { useEffect, useState } from 'react';
 import { Activity, Database, Radio } from 'lucide-react';
 import Layout from '@/components/Layout';
@@ -36,15 +37,16 @@ export default function StatusDashboard() {
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      try {
-        const res = await fetch('/api/health/ready');
-        const data = (await res.json()) as ReadinessResponse;
-        if (!cancelled) {
-          setReady(data);
-          setError(null);
-        }
-      } catch {
-        if (!cancelled) setError('Could not reach the health endpoint. The web app is still available.');
+      // `ready` answers 503 with the same JSON body when a hard dependency is down,
+      // so a non-ok response with a parsable body is still a valid reading.
+      const result = await apiFetch<ReadinessResponse>('/api/health/ready', { auth: 'omit' });
+      if (cancelled) return;
+      const body = result.ok ? result.data : (result.data as ReadinessResponse | null);
+      if (body && typeof body === 'object' && 'components' in body) {
+        setReady(body);
+        setError(null);
+      } else {
+        setError('Could not reach the health endpoint. The web app is still available.');
       }
     };
     void load();

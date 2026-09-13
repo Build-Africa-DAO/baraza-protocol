@@ -1,6 +1,6 @@
 import { InitialsTile, ListRow } from '@/components/app/ListRow';
 import { StatusChip, type StatusKind } from '@/components/ui/status-chip';
-import { useDecisions } from '@/hooks/useBarazaData';
+import { useProposals } from '@/hooks/useProposals';
 import type { MembershipPair } from '@/hooks/useMyMemberships';
 import { formatMoney } from '@/lib/money';
 import { proposalBucket } from '@/lib/proposalStatus';
@@ -14,7 +14,7 @@ import { isVotingOpen } from '@/lib/voteCopy';
  */
 export function GroupRow({ pair }: { pair: MembershipPair }) {
   const { community, record, summary } = pair;
-  const { all } = useDecisions(community.id);
+  const { all } = useProposals(community.id);
   const openVotes = all.filter((decision) => proposalBucket(decision) === 'active' && isVotingOpen(decision)).length;
 
   const status = summary?.activationStatus ?? record.status;

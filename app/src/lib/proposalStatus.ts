@@ -42,7 +42,7 @@ export const STAGE_META: Record<ProposalLifecycleStage, StageMeta> = {
   canceled:  { label: 'Canceled',  icon: Ban,          className: 'bg-muted text-muted-foreground',     votable: false, terminal: true  },
   vetoed:    { label: 'Vetoed',    icon: ShieldOff,    className: 'bg-destructive/15 text-destructive', votable: false, terminal: true  },
   tied:      { label: 'Tied',      icon: XCircle,      className: 'bg-muted text-muted-foreground',     votable: false, terminal: true  },
-  tied_extended: { label: 'Deliberation Extended (48h)', icon: Clock3, className: 'bg-accent/15 text-accent font-semibold', votable: true, terminal: false },
+  tied_extended: { label: 'Tie (48h Extension)', icon: Clock3, className: 'bg-accent/15 text-accent font-semibold', votable: true, terminal: false },
 };
 
 /**

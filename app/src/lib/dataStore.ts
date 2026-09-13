@@ -71,7 +71,16 @@ export interface Contribution {
 export interface ActivityEvent {
   id: string;
   communityId: string;
-  type: 'member_joined' | 'decision_created' | 'vote_cast' | 'decision_completed' | 'fund_deposit' | 'bounty_opened';
+  type:
+    | 'member_joined'
+    | 'decision_created'
+    | 'vote_cast'
+    | 'decision_completed'
+    | 'fund_deposit'
+    | 'bounty_opened'
+    | 'officer_changed'
+    | 'invite_created'
+    | 'other';
   message: string;
   timestamp: number;
 }

@@ -22,7 +22,10 @@ import {
 import { useStellarWallet } from '@/hooks/useStellarWallet';
 import { BarazaStellarClient } from '@/lib/programs/stellarClient';
 import { useAccount } from '@/contexts/AccountContext';
-import { sessionHeaders } from '@/lib/sessionHeaders';
+import { apiFetch, type ApiError } from '@/lib/api';
+import { isSupabaseConfigured } from '@/lib/communities';
+import { getMyVote, onMyVotesChange, recordMyVote } from '@/lib/myVotes';
+import { createProposal } from '@/lib/proposals';
 
 // ---------- Low-level subscription ----------
 
@@ -57,12 +60,13 @@ export function useBarazaChain(): BarazaChainClient | null {
 
 // ---------- Communities ----------
 
-export function useCommunities() {
+/** Synthetic-store communities (dev only). The real list is `hooks/useCommunities`. */
+export function useStoreCommunities() {
   const communities = useStoreSnapshot(() => dataStore.getAllCommunities());
   return communities;
 }
 
-export function useCommunity(id: string) {
+export function useStoreCommunity(id: string) {
   const community = useStoreSnapshot(() => dataStore.getCommunity(id));
   return community;
 }
@@ -108,9 +112,10 @@ export function useMember(communityId: string, memberId: string) {
 // ---------- Voting ----------
 
 export function useVoteStatus(decisionId: string, walletKey: string | null) {
-  return useStoreSnapshot(
-    () => (walletKey ? dataStore.hasVoted(decisionId, walletKey) : null),
-  );
+  const [, force] = useReducer((c: number) => c + 1, 0);
+  useEffect(() => onMyVotesChange(force), []);
+  const local = useStoreSnapshot(() => (walletKey ? dataStore.hasVoted(decisionId, walletKey) : null));
+  return getMyVote(decisionId, walletKey) ?? local;
 }
 
 // ---------- Mutations ----------
@@ -201,10 +206,32 @@ export function useCreateDecision() {
     durationDays: number;
     /** On-chain member account for the creator (Phase 2: from membership program) */
     creatorMemberKey?: string;
+    /** Account id sent to the server as the proposer. Defaults to `proposedBy`. */
+    proposer?: string;
+    /** The group's quorum percentage, sent as basis points. */
+    quorumPct?: number;
   }) => {
     setIsLoading(true);
     setError(null);
     try {
+      // With a database behind the app the server is the only place a proposal
+      // is created; a failure is an error, never a silent local write.
+      if (isSupabaseConfigured()) {
+        const created = await createProposal({
+          communityId: data.communityId,
+          proposer: data.proposer ?? data.proposedBy,
+          title: data.title,
+          description: data.description,
+          fundingAmountMinor: Math.round(data.fundingAmount * 100),
+          votingPeriodDays: data.durationDays,
+          quorumPct: data.quorumPct,
+        });
+        if (!created.ok) {
+          setError(created.error.message);
+          return null;
+        }
+        return created.decision;
+      }
       // Attempt on-chain proposal creation when member account is available
       if (client && data.creatorMemberKey) {
         const community = dataStore.getCommunity(data.communityId);
@@ -353,29 +380,20 @@ export function useCastVote() {
 
       // The server is the authority on whether this ballot exists. A network
       // error or a 409/422/500 is a failure, not a reason to write locally.
-      try {
-        const headers = await sessionHeaders(account.getAccessToken);
-        const res = await fetch('/api/governance/vote', {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            proposalId: decisionId,
-            voter: walletKey,
-            option: voteType === 'for' ? 'yes' : 'no',
-          }),
-        });
-        if (!res.ok) {
-          const body = (await res.json().catch(() => ({}))) as { error?: string; message?: string };
-          return { ok: false, stage: 'failed', reason: voteErrorCopy(res.status, body.error, body.message) };
-        }
-      } catch {
-        return {
-          ok: false,
-          stage: 'failed',
-          reason: 'We could not reach Baraza. Your vote was not recorded — check your connection and try again.',
-        };
+      const result = await apiFetch('/api/governance/vote', {
+        method: 'POST',
+        body: {
+          proposalId: decisionId,
+          voter: walletKey,
+          option: voteType === 'for' ? 'yes' : 'no',
+        },
+      });
+      if (!result.ok) {
+        if (result.error.code === 'already_voted') recordMyVote(decisionId, walletKey, voteType);
+        return { ok: false, stage: 'failed', reason: voteErrorCopy(result.error) };
       }
 
+      recordMyVote(decisionId, walletKey, voteType);
       await dataStore.castVote(decisionId, walletKey, voteType);
       return chainFailed
         ? {
@@ -392,10 +410,11 @@ export function useCastVote() {
   return { vote, isLoading };
 }
 
-function voteErrorCopy(status: number, code?: string, message?: string): string {
-  if (code === 'already_voted' || status === 409) return 'You have already voted on this decision.';
-  if (code === 'voting_ended') return 'Voting on this decision has closed.';
-  if (code === 'proposal_not_active') return 'This decision is not open for voting.';
-  if (status === 401 || status === 403) return 'Sign in again to vote — your session has expired.';
-  return message ?? 'Your vote was not recorded. Please try again.';
+function voteErrorCopy(error: ApiError): string {
+  if (error.code === 'already_voted' || error.kind === 'conflict') return 'You have already voted on this decision.';
+  if (error.code === 'voting_ended') return 'Voting on this decision has closed.';
+  if (error.code === 'proposal_not_active') return 'This decision is not open for voting.';
+  if (error.kind === 'network') return 'We could not reach Baraza. Your vote was not recorded. Check your connection and try again.';
+  if (error.kind === 'auth' || error.kind === 'forbidden') return 'Sign in again to vote. Your session has expired.';
+  return error.message || 'Your vote was not recorded. Please try again.';
 }

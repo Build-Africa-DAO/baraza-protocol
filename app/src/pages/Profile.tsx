@@ -16,6 +16,7 @@ import { useAccount } from '@/contexts/AccountContext';
 import { useMyMemberships } from '@/hooks/useMyMemberships';
 import { useToast } from '@/hooks/use-toast';
 import { ACCOUNT_COUNTRIES, type AccountCountryCode } from '@/lib/accountLocale';
+import { subscribeWebPush } from '@/lib/push';
 import { useSeo } from '@/lib/seo';
 import {
   DEFAULT_NOTIFICATIONS,
@@ -24,7 +25,6 @@ import {
   fetchUserProfile,
   patchUserProfile,
   readLocalLocale,
-  subscribeWebPush,
   writeLocalLocale,
   type SupportedLocale,
   type UserNotificationPreferences,
@@ -141,10 +141,12 @@ function AccountPanel() {
     }
   }
 
+  const [confirmLogout, setConfirmLogout] = useState(false);
+
   async function enablePush() {
     setPushBusy(true);
     try {
-      const result = await subscribeWebPush(account.getAccessToken);
+      const result = await subscribeWebPush();
       if (result.ok) setNotifications((prev) => ({ ...prev, push: true }));
       toast({ title: result.ok ? 'Push Notifications' : 'Push Not Enabled', description: result.message, variant: result.ok ? 'default' : 'destructive' });
     } finally {
@@ -271,9 +273,23 @@ function AccountPanel() {
         </section>
 
         <div className="border-t border-border pt-6">
-          <Button type="button" variant="destructive" onClick={() => void account.logout()}>
-            Log Out
-          </Button>
+          {confirmLogout ? (
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <p className="text-sm font-semibold">Log out of Baraza on this device?</p>
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" onClick={() => setConfirmLogout(false)}>
+                  Cancel
+                </Button>
+                <Button type="button" variant="destructive" onClick={() => void account.logout()}>
+                  Log Out
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Button type="button" variant="destructive" onClick={() => setConfirmLogout(true)}>
+              Log Out
+            </Button>
+          )}
         </div>
       </div>
     </section>

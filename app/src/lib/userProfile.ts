@@ -92,38 +92,6 @@ export async function patchUserProfile(
   }
 }
 
-export async function subscribeWebPush(
-  getAccessToken?: () => Promise<string | null>,
-): Promise<{ ok: boolean; message: string }> {
-  if (typeof window === 'undefined' || !('Notification' in window)) {
-    return { ok: false, message: 'This browser does not support web push.' };
-  }
-  const permission = Notification.permission === 'granted'
-    ? 'granted'
-    : await Notification.requestPermission();
-  if (permission !== 'granted') {
-    return { ok: false, message: 'Web push was not enabled in the browser.' };
-  }
-  const headers = await sessionHeaders(getAccessToken);
-  const res = await fetch('/api/user/notifications/push-subscribe', {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      permission,
-      endpoint: 'browser',
-      userAgent: navigator.userAgent,
-    }),
-  }).catch(() => null);
-  if (!res || res.status === 404 || res.status === 405) {
-    return { ok: true, message: 'Browser notifications are on. Push subscribe is not available on this deployment yet.' };
-  }
-  if (!res.ok) {
-    const data = (await res.json().catch(() => ({}))) as { message?: string };
-    return { ok: false, message: data.message ?? 'Could not register push notifications.' };
-  }
-  return { ok: true, message: 'Web push enabled for votes, dues, and payouts.' };
-}
-
 export function countryForProfilePatch(code: AccountCountryCode): SupportedProfileCountry | undefined {
   return isSupportedProfileCountry(code) ? code : undefined;
 }

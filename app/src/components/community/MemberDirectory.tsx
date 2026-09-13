@@ -93,8 +93,8 @@ export default function MemberDirectory({ communityId, currency, isOfficer = fal
   if (members.length === 0) {
     return (
       <EmptyState
-        title="No Members Listed Yet"
-        body="Members appear here once Baraza has their records. If people have joined, the list is still syncing."
+        title="Member List Not Available Yet"
+        body="Baraza does not share the group roster with the app yet. Members are still counted and can still pay and vote; the list appears here once the roster is exposed."
       />
     );
   }

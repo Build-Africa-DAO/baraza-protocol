@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import type { ElementType } from 'react';
 import GroupWorkspace from '@/components/app/GroupWorkspace';
-import { useDecisions } from '@/hooks/useBarazaData';
+import { useProposals } from '@/hooks/useProposals';
 import ActivityFeed from '@/components/community/ActivityFeed';
 import CommunityRoles from '@/components/community/CommunityRoles';
 import CommunitySuggestions from '@/components/community/CommunitySuggestions';
@@ -59,7 +59,7 @@ function MorePanel({
   active: MoreTab;
   onSelect: (tab: MoreTab) => void;
 }) {
-  const { all: decisions } = useDecisions(community.id);
+  const { all: decisions } = useProposals(community.id);
 
   return (
         <div className="space-y-5">

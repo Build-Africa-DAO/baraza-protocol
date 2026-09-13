@@ -1,4 +1,4 @@
-import { sessionHeaders } from '@/lib/sessionHeaders';
+import { apiFetch, type ApiError } from '@/lib/api';
 
 export function extractInviteCode(input: string): string | null {
   const trimmed = input.trim();
@@ -24,30 +24,42 @@ export async function acceptInviteCode(
   alreadyMember?: boolean;
   joined?: boolean;
   message?: string;
+  error?: ApiError;
 }> {
-  const headers = await sessionHeaders(getAccessToken);
-  try {
-    const res = await fetch('/api/communities/invites/accept', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ code }),
-    });
-    const data = (await res.json().catch(() => ({}))) as {
-      ok?: boolean;
-      communityId?: string;
-      alreadyMember?: boolean;
-      joined?: boolean;
-      message?: string;
-    };
-    return {
-      ok: res.ok && Boolean(data.communityId),
-      status: res.status,
-      communityId: data.communityId,
-      alreadyMember: data.alreadyMember,
-      joined: data.joined,
-      message: data.message,
-    };
-  } catch {
-    return { ok: false, status: 0, message: 'Could not reach the invite service.' };
+  const token = getAccessToken ? await getAccessToken().catch(() => null) : null;
+  const result = await apiFetch<{ ok?: boolean; communityId?: string; alreadyMember?: boolean; joined?: boolean; message?: string }>(
+    '/api/communities/invites/accept',
+    { method: 'POST', body: { code }, headers: token ? { Authorization: `Bearer ${token}` } : undefined },
+  );
+  if (!result.ok) {
+    return { ok: false, status: result.status, message: inviteErrorCopy(result.error), error: result.error };
   }
+  const data = result.data ?? {};
+  return {
+    ok: Boolean(data.communityId),
+    status: result.status,
+    communityId: data.communityId,
+    alreadyMember: data.alreadyMember,
+    joined: data.joined,
+    message: data.message,
+  };
+}
+
+/** Member-facing sentences for the invite route's documented failures. */
+export function inviteErrorCopy(error: ApiError): string {
+  switch (error.code) {
+    case 'not_found':
+      return 'That invite does not exist. Check the link or ask the member who sent it.';
+    case 'expired':
+      return 'That invite has expired. Ask an officer for a new link.';
+    case 'capacity_exhausted':
+      return 'That invite has been used up. Ask an officer for a new link.';
+    case 'forbidden':
+      return 'This group is not accepting members right now.';
+    default:
+      break;
+  }
+  if (error.kind === 'rate_limited') return 'Too many attempts. Wait a minute and try the link again.';
+  if (error.kind === 'auth') return 'Sign in to accept this invite.';
+  return error.message;
 }

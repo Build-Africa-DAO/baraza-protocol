@@ -4,10 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Field, Input } from '@/components/ui/field';
 import { InlineError } from '@/components/ui/inline-error';
 import { Sheet } from '@/components/ui/sheet';
-import { useAccount } from '@/contexts/AccountContext';
 import { useToast } from '@/hooks/use-toast';
-import { sessionHeaders } from '@/lib/sessionHeaders';
-import { tryWorkspaceMutate } from '@/lib/workspaceApi';
+import { apiFetch } from '@/lib/api';
 
 /**
  * §13.17 invite sheet — the one place an officer gets a link to share.
@@ -25,7 +23,6 @@ export interface InviteSheetProps {
 }
 
 export function InviteSheet({ open, onClose, communityId, communityName }: InviteSheetProps) {
-  const account = useAccount();
   const { toast } = useToast();
   const joinUrl = `${window.location.origin}/join/${communityId}`;
   const [days, setDays] = useState('14');
@@ -59,20 +56,24 @@ export function InviteSheet({ open, onClose, communityId, communityName }: Invit
     setBusy(true);
     setError(null);
     try {
-      const headers = await sessionHeaders(account.getAccessToken);
-      const remote = await tryWorkspaceMutate(`/api/communities/${communityId}/invites`, {
+      // The backend's own `inviteUrl` points at a host and path this app does
+      // not serve, so only the code is used and the link is built here.
+      const result = await apiFetch<{ code?: string }>(`/api/communities/${communityId}/invites`, {
         method: 'POST',
-        headers,
-        body: JSON.stringify({ expiresInDays: Number(days) || 14, maxUses: Number(maxUses) || 25 }),
+        body: { expiresInDays: Number(days) || 14, maxUses: Number(maxUses) || 25 },
       });
-      const code = typeof remote.data?.code === 'string' ? remote.data.code : null;
+      const code = result.ok && typeof result.data?.code === 'string' ? result.data.code : null;
       if (!code) {
-        setError('Baraza did not issue a limited invite. Limited links need the invite endpoint, which is not live yet. The plain join link above works.');
+        setError(
+          !result.ok && result.error.kind === 'forbidden'
+            ? 'Only founders, admins and secretaries can issue limited links. The plain join link above works.'
+            : !result.ok && (result.error.kind === 'not_found' || result.error.kind === 'validation' || result.error.kind === 'misconfigured')
+              ? 'Limited links are not available on this deployment yet. The plain join link above works.'
+              : `${!result.ok ? result.error.message : 'Baraza did not issue a limited invite.'} The plain join link above still works.`,
+        );
         return;
       }
       setLimitedUrl(`${joinUrl}?invite=${encodeURIComponent(code)}`);
-    } catch {
-      setError('We could not reach Baraza. The plain join link above still works.');
     } finally {
       setBusy(false);
     }

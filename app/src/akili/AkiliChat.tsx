@@ -1,3 +1,5 @@
+import { apiUrl } from '@/lib/api';
+import { getAccessToken } from '@/lib/auth/tokenProvider';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { MessageCircle, X, Send, Sparkles } from 'lucide-react';
@@ -293,11 +295,13 @@ async function streamAkiliResponse(
   // VITE_AKILI_API_URL points at the standalone Akili service (e.g., https://akili.barazaprotocol.com).
   // Unset = use the in-repo /api/agent/chat fallback. Set = direct cross-origin call.
   const akiliBase = (import.meta.env.VITE_AKILI_API_URL as string | undefined)?.replace(/\/$/, '');
-  const endpoint = akiliBase ? `${akiliBase}/api/chat` : '/api/agent/chat';
+  const endpoint = akiliBase ? `${akiliBase}/api/chat` : apiUrl('/api/agent/chat');
 
+  // The route requires a signed-in identity and rate-limits per identity.
+  const token = await getAccessToken();
   const res = await fetch(endpoint, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     body: JSON.stringify({
       message,
       communityId: communityId ?? undefined,
@@ -306,7 +310,21 @@ async function streamAkiliResponse(
     }),
   });
 
+  if (res.status === 401) throw new ChatStreamError('auth_failed', 'Sign in to ask Akili.');
+  if (res.status === 429) throw new ChatStreamError('rate_limited', 'Akili is busy with your earlier questions. Wait a minute and ask again.');
   if (!res.ok || !res.body) throw new ChatStreamError('unknown', 'unavailable');
+
+  // A non-stream JSON body means the model call failed before streaming began.
+  const contentType = res.headers.get('content-type') ?? '';
+  if (contentType.includes('application/json')) {
+    const body = (await res.json().catch(() => null)) as { category?: ChatStreamErrorCategory; message?: string; text?: string } | null;
+    if (body?.category) throw new ChatStreamError(body.category, body.message ?? 'unknown error');
+    if (body?.text) {
+      onChunk(body.text);
+      return;
+    }
+    throw new ChatStreamError('unknown', 'unavailable');
+  }
 
   const reader = res.body.getReader();
   const decoder = new TextDecoder();

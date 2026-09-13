@@ -5,10 +5,13 @@ import GroupWorkspace from '@/components/app/GroupWorkspace';
 import { ListRow } from '@/components/app/ListRow';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
+import { InlineError } from '@/components/ui/inline-error';
+import { SkeletonList } from '@/components/ui/skeletons';
 import { FilterChips } from '@/components/ui/filter-chips';
 import { StatusChip, type StatusKind } from '@/components/ui/status-chip';
 import { useAccount } from '@/contexts/AccountContext';
-import { useDecisions, useVoteStatus } from '@/hooks/useBarazaData';
+import { useVoteStatus } from '@/hooks/useBarazaData';
+import { useProposals } from '@/hooks/useProposals';
 import { formatMajor } from '@/lib/money';
 import { proposalBucket } from '@/lib/proposalStatus';
 import { isVotingOpen, participationPct, voteTimeLabel } from '@/lib/voteCopy';
@@ -66,7 +69,7 @@ function VotesPanel({
   isMember: boolean;
 }) {
   const account = useAccount();
-  const { all } = useDecisions(communityId);
+  const { all, isLoading, error } = useProposals(communityId);
   const [filter, setFilter] = useState<VoteFilter>(isMember ? 'needs-you' : 'open');
 
   const grouped = useMemo(() => {
@@ -100,7 +103,11 @@ function VotesPanel({
         )}
       </div>
 
-      {visible.length === 0 ? (
+      {error ? <InlineError message={error} /> : null}
+
+      {isLoading ? (
+        <SkeletonList count={3} />
+      ) : visible.length === 0 ? (
         <EmptyState
           icon={VoteIcon}
           title={filter === 'needs-you' ? 'No Votes Need You' : 'Nothing Here Yet'}

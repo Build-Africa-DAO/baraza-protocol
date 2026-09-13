@@ -96,6 +96,15 @@ function parseVerificationTier(raw: string | null | undefined): VerificationTier
 
 const LOCAL_STORAGE_KEY = 'baraza.communities.v1';
 
+/**
+ * Only columns that exist in `supabase/migrations`. `active_decisions`,
+ * `image`, `paybill_number` and `ussd_shortcode` were never created; asking
+ * PostgREST for them returns 400 and took Browse down against a real database.
+ * Optional columns added by later migrations are read when present.
+ */
+export const COMMUNITY_COLUMNS =
+  'id,name,type,description,membership_fee,activation_fee_minor,fee_type,carrier_pass_through,currency,member_count,fund_balance,created_at,chain,quorum_pct,approval_threshold_pct,voting_period_days,treasury_policy,created_by,sacco_license_status,is_payout_frozen,status,liquid_vault_balance_minor,encumbered_balance_minor';
+
 let supabase: SupabaseClient | null | undefined;
 
 /**
@@ -169,9 +178,9 @@ function communityFromRow(row: CommunityRow): Community {
     currency: row.currency ?? undefined,
     memberCount: row.member_count ?? row.memberCount ?? 0,
     fundBalance: row.fund_balance ?? row.fundBalance ?? 0,
-    activeDecisions: row.active_decisions ?? row.activeDecisions ?? 0,
+    activeDecisions: row.activeDecisions ?? 0,
     createdAt: row.created_at ?? row.createdAt ?? new Date().toISOString(),
-    image: row.image ?? initials(row.name),
+    image: initials(row.name),
     chain,
     quorumPct: row.quorum_pct ?? row.quorumPct ?? DEFAULT_GOVERNANCE.quorumPct,
     approvalThresholdPct:
@@ -179,8 +188,8 @@ function communityFromRow(row: CommunityRow): Community {
     votingPeriodDays:
       row.voting_period_days ?? row.votingPeriodDays ?? DEFAULT_GOVERNANCE.votingPeriodDays,
     treasuryPolicy: parseTreasuryPolicy(row.treasury_policy ?? row.treasuryPolicy ?? null),
-    paybillNumber: row.paybill_number ?? row.paybillNumber ?? undefined,
-    ussdShortcode: row.ussd_shortcode ?? row.ussdShortcode ?? undefined,
+    paybillNumber: row.paybillNumber ?? undefined,
+    ussdShortcode: row.ussdShortcode ?? undefined,
     createdBy: row.created_by ?? row.createdBy ?? undefined,
     verificationTier: parseVerificationTier(row.verification_tier ?? row.verificationTier),
     vouchThreshold: row.vouch_threshold ?? row.vouchThreshold ?? undefined,
@@ -232,7 +241,7 @@ export async function listCommunities(): Promise<Community[]> {
   const { data, error } = await client
     .from('communities')
     .select(
-      'id,name,type,description,membership_fee,activation_fee_minor,fee_type,carrier_pass_through,currency,member_count,fund_balance,active_decisions,created_at,image,chain,quorum_pct,approval_threshold_pct,voting_period_days,treasury_policy,paybill_number,ussd_shortcode,created_by',
+      COMMUNITY_COLUMNS,
     )
     .order('created_at', { ascending: false });
 
@@ -249,7 +258,7 @@ export async function getCommunity(id: string): Promise<Community | null> {
   const { data, error } = await client
     .from('communities')
     .select(
-      'id,name,type,description,membership_fee,activation_fee_minor,fee_type,carrier_pass_through,currency,member_count,fund_balance,active_decisions,created_at,image,chain,quorum_pct,approval_threshold_pct,voting_period_days,treasury_policy,paybill_number,ussd_shortcode,created_by',
+      COMMUNITY_COLUMNS,
     )
     .eq('id', id)
     .maybeSingle();

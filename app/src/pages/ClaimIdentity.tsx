@@ -19,6 +19,7 @@
  * placeholder copy is intentionally sober until the corpus is consulted.
  */
 
+import { apiFetch, errorField } from '@/lib/api';
 import { useState, type FormEvent } from 'react';
 import { Loader2, Phone, ShieldCheck, KeyRound, CheckCircle2 } from 'lucide-react';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -76,24 +77,18 @@ export default function ClaimIdentity() {
     }
     setBusy(true);
     try {
-      const res = await fetch('/api/identity/initiate-claim', {
+      const result = await apiFetch<{ ok: boolean; expiresAt: string }>('/api/identity/initiate-claim', {
         method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          ...(await buildWalletProofHeaders(walletContext, 'identity-claim')),
-        },
-        body: JSON.stringify({ phoneNumber: trimmed, walletAddress: wallet }),
+        headers: await buildWalletProofHeaders(walletContext, 'identity-claim'),
+        body: { phoneNumber: trimmed, walletAddress: wallet },
+        auth: 'omit',
       });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        setError(typeof body.message === 'string' ? body.message : 'Could not start the claim. Try again in a moment.');
+      if (!result.ok) {
+        setError(result.error.message);
         return;
       }
-      const data = (await res.json()) as { ok: boolean; expiresAt: string };
-      setExpiresAt(data.expiresAt);
+      setExpiresAt(result.data.expiresAt);
       setStep('code');
-    } catch {
-      setError('Network problem. Try again.');
     } finally {
       setBusy(false);
     }
@@ -109,34 +104,25 @@ export default function ClaimIdentity() {
     }
     setBusy(true);
     try {
-      const res = await fetch('/api/identity/verify-claim', {
+      const result = await apiFetch('/api/identity/verify-claim', {
         method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          ...(await buildWalletProofHeaders(walletContext, 'identity-claim')),
-        },
-        body: JSON.stringify({
-          code: trimmed,
-          phoneNumber: phone.trim(),
-          walletAddress: wallet,
-        }),
+        headers: await buildWalletProofHeaders(walletContext, 'identity-claim'),
+        body: { code: trimmed, phoneNumber: phone.trim(), walletAddress: wallet },
+        auth: 'omit',
       });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        const reason = typeof body.reason === 'string' ? body.reason : undefined;
+      if (!result.ok) {
+        const reason = errorField<string>(result.error, 'reason');
         const msg =
           reason === 'expired' ? 'Code expired. Start again with a new code.'
             : reason === 'too_many_attempts' ? 'Too many attempts. Start a new claim.'
             : reason === 'invalid_code' ? 'Code does not match. Check the SMS and retry.'
             : reason === 'wallet_mismatch' ? 'This claim was started from a different wallet.'
             : reason === 'already_consumed' ? 'This claim was already completed.'
-            : 'Could not verify. Try again.';
+            : result.error.message;
         setError(msg);
         return;
       }
       setStep('done');
-    } catch {
-      setError('Network problem. Try again.');
     } finally {
       setBusy(false);
     }

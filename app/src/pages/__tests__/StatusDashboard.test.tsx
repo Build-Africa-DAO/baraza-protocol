@@ -17,18 +17,16 @@ afterEach(() => {
 
 describe('StatusDashboard', () => {
   it('renders operational rails from GET /api/health/ready', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      json: async () => ({
-        status: 'ready',
-        timestamp: '2026-09-08T06:00:00.000Z',
-        cached: true,
-        components: {
-          database: { tier: 'hard', status: 'healthy', latency_ms: 8 },
-          stellar_horizon: { tier: 'soft', status: 'healthy', latency_ms: 40 },
-          redis: { tier: 'soft', status: 'healthy', latency_ms: 2 },
-        },
-      }),
-    }));
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json({
+      status: 'ready',
+      timestamp: '2026-09-08T06:00:00.000Z',
+      cached: true,
+      components: {
+        database: { tier: 'hard', status: 'healthy', latency_ms: 8 },
+        stellar_horizon: { tier: 'soft', status: 'healthy', latency_ms: 40 },
+        redis: { tier: 'soft', status: 'healthy', latency_ms: 2 },
+      },
+    })));
 
     render(
       <MemoryRouter>

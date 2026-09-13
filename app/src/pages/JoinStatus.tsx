@@ -1,3 +1,5 @@
+import { apiFetch } from "@/lib/api";
+import { nextPollDelay } from "@/lib/polling";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -36,7 +38,6 @@ function getDisplaySteps(): DisplayStep[] {
   ];
 }
 
-const POLL_INTERVAL_MS = 2_500;
 
 function statusIndex(s: PaymentOrderStatus): number {
   const idx = PAYMENT_HAPPY_PATH.indexOf(s);
@@ -89,6 +90,7 @@ export default function JoinStatus() {
 
     let cancelled = false;
     let timer: number | undefined;
+    const startedAt = Date.now();
 
     const poll = async () => {
       if (cancelled) return;
@@ -102,12 +104,12 @@ export default function JoinStatus() {
         setErrorMessage(null);
         setStatus(order.status);
         if (!isTerminalStatus(order.status)) {
-          timer = window.setTimeout(poll, POLL_INTERVAL_MS);
+          timer = window.setTimeout(poll, nextPollDelay(startedAt));
         }
       } catch (err) {
         if (cancelled) return;
         setErrorMessage(err instanceof Error ? err.message : "Could not fetch order");
-        timer = window.setTimeout(poll, POLL_INTERVAL_MS);
+        timer = window.setTimeout(poll, nextPollDelay(startedAt));
       }
     };
 
@@ -139,35 +141,31 @@ export default function JoinStatus() {
     membershipRecordedRef.current = true;
 
     void (async () => {
-      try {
-        const res = await fetch("/api/membership/activate", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            orderId,
-            communityId: id,
-            walletAddress: accountId,
-            phoneIdentifier: accountId ? null : phoneAddr,
-            activationSecret,
-          }),
-        });
-        if (cancelled) return;
-        if (!res.ok) {
-          membershipRecordedRef.current = false;
-          setActivationError(
-            "Your payment is confirmed but we could not activate the membership. Email hello@barazaprotocol.com with the reference above.",
-          );
-          return;
-        }
-        setActivationError(null);
-        recordActiveMembership(id, identity);
-      } catch {
-        if (cancelled) return;
+      const result = await apiFetch("/api/membership/activate", {
+        method: "POST",
+        body: {
+          orderId,
+          communityId: id,
+          walletAddress: accountId,
+          phoneIdentifier: accountId ? null : phoneAddr,
+          activationSecret,
+        },
+        auth: "omit",
+      });
+      if (cancelled) return;
+      if (!result.ok) {
         membershipRecordedRef.current = false;
         setActivationError(
-          "Your payment is confirmed but the activation service is unreachable. We will keep retrying — do not pay again.",
+          result.error.kind === "network"
+            ? "Your payment is confirmed but the activation service is unreachable. We will keep retrying. Do not pay again."
+            : result.error.kind === "conflict"
+              ? "Your payment is still being recorded. This page keeps checking. Do not pay again."
+              : "Your payment is confirmed but we could not activate the membership. Email hello@barazaprotocol.com with the reference above.",
         );
+        return;
       }
+      setActivationError(null);
+      recordActiveMembership(id, identity);
     })();
 
     return () => {

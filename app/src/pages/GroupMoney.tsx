@@ -13,13 +13,14 @@ import { SkeletonList } from '@/components/ui/skeletons';
 import { StatusChip } from '@/components/ui/status-chip';
 import { Stepper } from '@/components/ui/stepper';
 import { useAccount } from '@/contexts/AccountContext';
-import { useDecisions } from '@/hooks/useBarazaData';
+import { useProposals } from '@/hooks/useProposals';
 import { useToast } from '@/hooks/use-toast';
 import { formatAccountDate } from '@/lib/accountLocale';
 import { formatMajor, formatMoney, groupCurrency } from '@/lib/money';
-import { partsNeeded, requestPayoutQuote, sendPayout, TELCO_MAX_SINGLE_TX_MAJOR, type PayoutStep } from '@/lib/payouts';
+import { PAYOUT_STEPS, partsNeeded, payoutStatusLabel, payoutStepIndex, requestPayoutQuote, sendPayout, TELCO_MAX_SINGLE_TX_MAJOR, tranchePlan, type PayoutStatus } from '@/lib/payouts';
 import { toE164 } from '@/lib/phone';
 import { proposalBucket } from '@/lib/proposalStatus';
+import { apiFetch, errorField, submitGuard } from '@/lib/api';
 import { sessionHeaders } from '@/lib/sessionHeaders';
 import { fetchStatement, type StatementRow } from '@/lib/statement';
 import type { Community } from '@/lib/constants';
@@ -48,7 +49,7 @@ export default function GroupMoney() {
 
 function MoneyPanel({ community, isOfficer, frozen }: { community: Community; isOfficer: boolean; frozen: boolean }) {
   const [searchParams] = useSearchParams();
-  const { all } = useDecisions(community.id);
+  const { all } = useProposals(community.id);
   const waiting = all.filter((decision) => proposalBucket(decision) === 'passed');
   const currency = groupCurrency(community);
   const hasBalance = typeof community.fundBalance === 'number';
@@ -150,20 +151,22 @@ function Trail({ communityId, isOfficer }: { communityId: string; isOfficer: boo
 }
 
 function ExportStatement({ communityId }: { communityId: string }) {
-  const account = useAccount();
   const { toast } = useToast();
   const [busy, setBusy] = useState(false);
 
   async function run() {
     setBusy(true);
     try {
-      const headers = await sessionHeaders(account.getAccessToken);
-      const res = await fetch(`/api/communities/statement?communityId=${encodeURIComponent(communityId)}&format=csv`, { headers });
-      if (!res.ok) {
-        toast({ title: 'Export not available', description: 'Sign in as an officer to download the statement.', variant: 'destructive' });
+      const result = await apiFetch(`/api/communities/statement?communityId=${encodeURIComponent(communityId)}&format=csv`, { parse: 'none' });
+      if (!result.ok) {
+        toast({
+          title: 'Export not available',
+          description: result.error.kind === 'auth' || result.error.kind === 'forbidden' ? 'Sign in as an officer to download the statement.' : result.error.message,
+          variant: 'destructive',
+        });
         return;
       }
-      const blob = await res.blob();
+      const blob = await result.response.blob();
       const href = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = href;
@@ -208,25 +211,29 @@ function WaitingToSend({
     setBusy(true);
     setError(null);
     try {
-      const headers = await sessionHeaders(account.getAccessToken);
-      const res = await fetch('/api/governance/execute', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ proposalId: decision.id, executorWallet: account.accountId, communityId }),
-      });
-      const body = (await res.json().catch(() => ({}))) as { message?: string; error?: string; circuitBreaker?: boolean };
-      if (!res.ok) {
+      const result = await submitGuard.run(`execute:${decision.id}`, () =>
+        apiFetch('/api/governance/execute', {
+          method: 'POST',
+          body: { proposalId: decision.id, executorWallet: account.accountId, communityId },
+        }),
+      );
+      if (!result) return; // a second tap while the first is in flight
+      if (!result.ok) {
         setError(
-          body.circuitBreaker
+          errorField<boolean>(result.error, 'circuitBreaker')
             ? 'Sends are on hold while the treasury is reconciled. See Settings.'
-            : body.message ?? body.error ?? 'Baraza did not approve this send. Nothing was released.',
+            : result.error.code === 'regulatory_compliance_violation'
+              ? 'This SACCO must verify its licence before money can be sent. See Settings.'
+              : result.error.code === 'already_executed'
+                ? 'This send was already approved.'
+                : result.error.code === 'invalid_status'
+                  ? 'Only a passed vote can be sent.'
+                  : result.error.message,
         );
         return;
       }
       setConfirming(null);
       toast({ title: 'Send Approved', description: 'The money can now be sent to a phone.' });
-    } catch {
-      setError('We could not reach Baraza. Nothing was released.');
     } finally {
       setBusy(false);
     }
@@ -302,32 +309,76 @@ function WaitingToSend({
 
 // ── Officer: send ────────────────────────────────────────────────────────────
 
-const SEND_STEPS = [{ label: 'Queued' }, { label: 'Sent to Provider' }, { label: 'Received' }];
-
 function SendToPhone({ community, currency, frozen, startOpen }: { community: Community; currency: string; frozen: boolean; startOpen: boolean }) {
-  const account = useAccount();
   const [open, setOpen] = useState(startOpen);
   const [phone, setPhone] = useState('');
   const [amount, setAmount] = useState('');
   const [busy, setBusy] = useState(false);
   const [quoteMissing, setQuoteMissing] = useState(false);
-  const [step, setStep] = useState<PayoutStep | null>(null);
-  const [reference, setReference] = useState<string | null>(null);
-  const [receivedMinor, setReceivedMinor] = useState<number | null>(null);
+  const [status, setStatus] = useState<PayoutStatus | null>(null);
+  const [plan, setPlan] = useState<number[] | null>(null);
+  const [partsDone, setPartsDone] = useState(0);
+  const [references, setReferences] = useState<string[]>([]);
+  const [sentMinor, setSentMinor] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   const e164 = toE164(phone, 'KE');
   const amountMajor = Number(amount);
   const amountMinor = Number.isFinite(amountMajor) && amountMajor > 0 ? Math.round(amountMajor * 100) : 0;
   const parts = partsNeeded(amountMinor, currency);
-  const canSend = !frozen && !busy && e164 !== null && amountMinor > 0 && step === null;
+  const canSend = !frozen && !busy && e164 !== null && amountMinor > 0 && status === null;
 
   function reset() {
-    setStep(null);
-    setReference(null);
-    setReceivedMinor(null);
+    setStatus(null);
+    setPlan(null);
+    setPartsDone(0);
+    setReferences([]);
+    setSentMinor(0);
     setError(null);
     setQuoteMissing(false);
+  }
+
+  /** Send every part of a plan in order with deterministic ids, stopping at the first failure. */
+  async function sendPlan(nextPlan: number[], phoneE164: string) {
+    const batchId = `payout-${community.id}-${Date.now().toString(36)}`;
+    setPlan(nextPlan);
+    setPartsDone(0);
+    setStatus('OFFRAMP_INITIATED');
+    for (let index = 0; index < nextPlan.length; index += 1) {
+      const partMinor = nextPlan[index];
+      const quote = await requestPayoutQuote({ communityId: community.id, amountMinor: partMinor, currency, phone: phoneE164 });
+      if (!quote) {
+        setStatus(null);
+        setPlan(null);
+        setQuoteMissing(true);
+        return;
+      }
+      const result = await submitGuard.run(`payout:${batchId}:${index}`, () =>
+        sendPayout({
+          communityId: community.id,
+          proposalId: nextPlan.length > 1 ? `${batchId}-tranche-${index + 1}` : batchId,
+          phone: phoneE164,
+          quote,
+        }),
+      );
+      if (!result) return;
+      if (!result.ok) {
+        if (result.ceiling && nextPlan.length === 1) {
+          // The server's ceiling is the truth; re-plan with its numbers and let the officer confirm.
+          setStatus(null);
+          setPlan(tranchePlan(amountMinor, currency, result.ceiling.maxAllowedMinor));
+          setError(null);
+          return;
+        }
+        setStatus('FAILED');
+        setError(result.onHold ? 'Sends are on hold while the treasury is reconciled. See Settings.' : result.error ?? 'The provider did not accept this send.');
+        return;
+      }
+      setStatus(result.status);
+      setPartsDone(index + 1);
+      if (result.reference) setReferences((prev) => [...prev, result.reference as string]);
+      setSentMinor((prev) => prev + (result.fiatMinor ?? partMinor));
+    }
   }
 
   async function send() {
@@ -336,37 +387,21 @@ function SendToPhone({ community, currency, frozen, startOpen }: { community: Co
     setError(null);
     setQuoteMissing(false);
     try {
-      const quote = await requestPayoutQuote({ communityId: community.id, amountMinor, currency, phone: e164 });
-      if (!quote) {
-        // No endpoint quotes a send in the group's currency yet. Saying so is
-        // the honest state; inventing a rate on the client is not.
-        setQuoteMissing(true);
+      // Above the telco ceiling the officer sees the split first and confirms it.
+      const nextPlan = plan ?? tranchePlan(amountMinor, currency);
+      if (nextPlan.length > 1 && plan === null) {
+        setPlan(nextPlan);
         return;
       }
-      setStep('queued');
-      const headers = await sessionHeaders(account.getAccessToken);
-      setStep('provider');
-      const result = await sendPayout({
-        communityId: community.id,
-        proposalId: `payout-${community.id}-${Date.now()}`,
-        phone: e164,
-        quote,
-        headers,
-      });
-      if (!result.ok) {
-        setStep('failed');
-        setError(result.onHold ? 'Sends are on hold while the treasury is reconciled. See Settings.' : result.error ?? 'The provider did not complete this send.');
-        return;
-      }
-      setReference(result.reference ?? null);
-      setReceivedMinor(result.receivedMinor ?? null);
-      setStep('received');
+      await sendPlan(nextPlan, e164);
     } finally {
       setBusy(false);
     }
   }
 
-  const stepIndex = step === 'queued' ? 0 : step === 'provider' ? 1 : step === 'received' ? 3 : step === 'failed' ? 1 : 0;
+  const stepIndex = status ? payoutStepIndex(status) : 0;
+  const finished = status === 'PROVIDER_PENDING_VERIFICATION' && plan !== null && partsDone === plan.length;
+  const showingPlan = status === null && plan !== null && plan.length > 1;
 
   return (
     <>
@@ -387,25 +422,25 @@ function SendToPhone({ community, currency, frozen, startOpen }: { community: Co
         title="Send to Phone"
         description="Money leaves the group only for a vote that passed and was approved."
         footer={
-          step === 'received' || step === 'failed' ? (
+          finished || status === 'FAILED' || status === 'REVERSAL_DETECTED' ? (
             <Button type="button" onClick={() => { setOpen(false); reset(); }}>
               Done
             </Button>
           ) : (
             <>
-              <Button type="button" variant="outline" onClick={() => { setOpen(false); reset(); }} disabled={busy}>
-                Cancel
+              <Button type="button" variant="outline" onClick={() => { if (showingPlan) { setPlan(null); } else { setOpen(false); reset(); } }} disabled={busy}>
+                {showingPlan ? 'Back' : 'Cancel'}
               </Button>
               <Button type="button" onClick={() => void send()} disabled={!canSend}>
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
-                {parts > 1 ? 'Send in Parts' : 'Send Now'}
+                {showingPlan ? `Send ${plan.length} Parts` : parts > 1 ? 'Review the Split' : 'Send Now'}
               </Button>
             </>
           )
         }
       >
         <div className="space-y-4">
-          {step === null ? (
+          {status === null && !showingPlan ? (
             <>
               <Field
                 label="Recipient Phone"
@@ -433,21 +468,44 @@ function SendToPhone({ community, currency, frozen, startOpen }: { community: Co
                 />
               ) : null}
             </>
-          ) : (
+          ) : null}
+
+          {showingPlan ? (
+            <div className="space-y-3">
+              <p className="text-sm">
+                {formatMoney(amountMinor, currency)} is above the telco ceiling of {formatMajor(TELCO_MAX_SINGLE_TX_MAJOR, 'KES')} per transaction.
+                Baraza will send it to {e164} in {plan.length} parts, one after the other. Each part is recorded separately.
+              </p>
+              <ol className="divide-y divide-border rounded-2xl border border-border text-sm">
+                {plan.map((partMinor, index) => (
+                  <li key={index} className="flex items-center justify-between px-4 py-2.5">
+                    <span className="text-muted-foreground">Part {index + 1} of {plan.length}</span>
+                    <span className="tabular-nums font-semibold">{formatMoney(partMinor, currency)}</span>
+                  </li>
+                ))}
+              </ol>
+              {error ? <InlineError message={error} /> : null}
+            </div>
+          ) : null}
+
+          {status !== null ? (
             <>
-              <Stepper steps={SEND_STEPS} current={stepIndex} failed={step === 'failed'} orientation="vertical" />
-              {step === 'received' ? (
-                <div className="space-y-2 text-sm">
-                  <StatusChip kind="confirmed" label="Received" size="md" />
+              <Stepper steps={[...PAYOUT_STEPS]} current={stepIndex} failed={status === 'FAILED' || status === 'REVERSAL_DETECTED'} orientation="vertical" />
+              <div className="space-y-2 text-sm">
+                <StatusChip kind={status === 'FAILED' || status === 'REVERSAL_DETECTED' ? 'failed' : 'pending'} label={payoutStatusLabel(status)} size="md" />
+                {plan && plan.length > 1 ? (
+                  <p className="text-muted-foreground">{partsDone} of {plan.length} parts sent.</p>
+                ) : null}
+                {finished ? (
                   <p className="text-muted-foreground">
-                    {receivedMinor !== null ? `${formatMoney(receivedMinor, currency)} received.` : 'The provider confirmed receipt.'}
-                    {reference ? ` Reference ${reference}.` : ''}
+                    {formatMoney(sentMinor, currency)} is with the provider. Receipt on the phone is confirmed by the provider, not by this page; the group record updates when it lands.
+                    {references.length ? ` Reference${references.length > 1 ? 's' : ''} ${references.join(', ')}.` : ''}
                   </p>
-                </div>
-              ) : null}
+                ) : null}
+              </div>
               {error ? <InlineError message={error} /> : null}
             </>
-          )}
+          ) : null}
         </div>
       </Sheet>
     </>

@@ -38,7 +38,7 @@ describe('MemberDirectory', () => {
   it('shows an honest empty state when no members are listed', () => {
     members = [];
     render(<MemberDirectory communityId="1" />);
-    expect(screen.getByText('No Members Listed Yet')).toBeInTheDocument();
+    expect(screen.getByText('Member List Not Available Yet')).toBeInTheDocument();
   });
 
   it('gives members names and roles, but no dues standing, no aggregates and no CSV', () => {

@@ -1,3 +1,4 @@
+import { apiFetch, submitGuard } from '@/lib/api';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Coins, RefreshCw, Sparkles } from 'lucide-react';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -78,23 +79,16 @@ export default function RetroRounds() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(
+        const result = await apiFetch<RoundResponse>(
           `/api/communities/retro-rounds?communityId=${encodeURIComponent(communityId)}`,
-          { headers: { 'X-Admin-Wallet': walletAddress } },
+          { headers: { 'X-Admin-Wallet': walletAddress }, auth: 'omit' },
         );
-        if (res.status === 403) {
-          setError('Wallet not authorised.');
+        if (!result.ok) {
+          setError(result.error.kind === 'forbidden' ? 'Wallet not authorised.' : result.error.message);
           return;
         }
-        const json = (await res.json()) as RoundResponse;
-        if (!res.ok) {
-          setError(json.error ?? `Read failed (${res.status}).`);
-          return;
-        }
-        setActiveRound(json.active ?? null);
-        setStatusNote(json.status ?? null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
+        setActiveRound(result.data.active ?? null);
+        setStatusNote(result.data.status ?? null);
       } finally {
         setLoading(false);
       }
@@ -122,26 +116,26 @@ export default function RetroRounds() {
     setError(null);
     setSettleResult(null);
     try {
-      const res = await fetch('/api/communities/retro-settle', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Admin-Wallet': walletAddress,
-          ...(await buildWalletProofHeaders(wallet, 'retro-settle')),
-        },
-        body: JSON.stringify({ roundId: activeRound.id }),
-      });
-      const json = (await res.json()) as {
-        voteCount?: number;
-        recipientCount?: number;
-        totalBrzaAllocated?: number;
-        error?: string;
-        message?: string;
-      };
-      if (!res.ok) {
-        setError(json.message ?? json.error ?? `Settle failed (${res.status}).`);
+      const result = await submitGuard.run(`retro-settle:${activeRound.id}`, async () =>
+        apiFetch<{ voteCount?: number; recipientCount?: number; totalBrzaAllocated?: number }>('/api/communities/retro-settle', {
+          method: 'POST',
+          headers: { 'X-Admin-Wallet': walletAddress, ...(await buildWalletProofHeaders(wallet, 'retro-settle')) },
+          body: { roundId: activeRound.id },
+          auth: 'omit',
+        }),
+      );
+      if (!result) return;
+      if (!result.ok) {
+        setError(
+          result.error.code === 'voting_still_open'
+            ? 'Voting is still open. Settle after the voting window closes.'
+            : result.error.code === 'already_settled'
+              ? 'This round was already settled.'
+              : result.error.message,
+        );
         return;
       }
+      const json = result.data;
       setSettleResult(
         `Settled · ${json.voteCount} ballots → ${json.recipientCount} recipients · ${json.totalBrzaAllocated?.toLocaleString('en-KE')} BRZA distributed.`,
       );
@@ -158,23 +152,22 @@ export default function RetroRounds() {
     setOpening(true);
     setError(null);
     try {
-      const res = await fetch('/api/communities/retro-rounds', {
+      const result = await apiFetch<RoundResponse>('/api/communities/retro-rounds', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'X-Admin-Wallet': walletAddress,
           'X-Member-Wallet': walletAddress,
           ...(await buildWalletProofHeaders(wallet, 'retro-open')),
         },
-        body: JSON.stringify({ communityId: selectedCommunityId }),
+        body: { communityId: selectedCommunityId },
+        auth: 'omit',
       });
-      const json = (await res.json()) as RoundResponse;
-      if (!res.ok) {
-        setError(json.message ?? json.error ?? `Open failed (${res.status}).`);
+      if (!result.ok) {
+        setError(result.error.code === 'round_already_active' ? 'A round is already open for this group.' : result.error.message);
         return;
       }
-      if (json.round) {
-        setActiveRound(json.round);
+      if (result.data.round) {
+        setActiveRound(result.data.round);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');

@@ -6,10 +6,12 @@ import { AmountBlock } from '@/components/ui/amount-block';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { InlineError } from '@/components/ui/inline-error';
+import { SkeletonList } from '@/components/ui/skeletons';
 import { StatusChip, type StatusKind } from '@/components/ui/status-chip';
 import { useAccount } from '@/contexts/AccountContext';
 import { useToast } from '@/hooks/use-toast';
-import { useCastVote, useDecision, useVoteStatus } from '@/hooks/useBarazaData';
+import { useCastVote, useVoteStatus } from '@/hooks/useBarazaData';
+import { useProposal } from '@/hooks/useProposals';
 import { formatAccountDate } from '@/lib/accountLocale';
 import { proposalBucket } from '@/lib/proposalStatus';
 import { isVotingOpen, participationPct, rulesSentence, supportPct, voteTimeLabel } from '@/lib/voteCopy';
@@ -59,13 +61,17 @@ function VotePanel({
 }) {
   const account = useAccount();
   const { toast } = useToast();
-  const proposal = useDecision(decisionId);
+  const { decision: proposal, isLoading: proposalLoading, reload: reloadProposal } = useProposal(decisionId);
   const voterKey = account.accountId;
   const existingVote = useVoteStatus(decisionId, voterKey);
   const { vote: submitVote, isLoading: isPending } = useCastVote();
   const [ballot, setBallot] = useState<BallotStage>('idle');
   const [ballotError, setBallotError] = useState<string | null>(null);
   const [choice, setChoice] = useState<'for' | 'against' | null>(null);
+
+  if (proposalLoading) {
+    return <SkeletonList count={3} />;
+  }
 
   if (!proposal) {
     return (
@@ -112,6 +118,7 @@ function VotePanel({
       return;
     }
     setBallot(outcome.stage === 'confirmed' ? 'confirmed' : 'recorded');
+    reloadProposal();
     toast({
       title: outcome.stage === 'confirmed' ? 'Vote Confirmed' : 'Vote Recorded',
       description:

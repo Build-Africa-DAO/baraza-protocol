@@ -9,8 +9,8 @@ vi.mock('@/components/Layout', () => ({ default: ({ children }: { children: Reac
 vi.mock('@/contexts/AccountContext', () => ({
   useAccount: () => ({ authenticated: true, ready: true, configured: true, accountId: 'acct-1', login: vi.fn(), getAccessToken: async () => null }),
 }));
-vi.mock('@/hooks/useBarazaData', () => ({
-  useDecisions: () => ({ all: [{ id: 'd1', status: 'active', endsAt: new Date(Date.now() + 86400000 * 2).toISOString(), votesFor: 1, votesAgainst: 0, totalMembers: 10 }], active: [], past: [] }),
+vi.mock('@/hooks/useProposals', () => ({
+  useProposals: () => ({ all: [{ id: 'd1', status: 'active', endsAt: new Date(Date.now() + 86400000 * 2).toISOString(), votesFor: 1, votesAgainst: 0, totalMembers: 10 }], active: [], past: [] }),
 }));
 
 let memberships: unknown[] = [];

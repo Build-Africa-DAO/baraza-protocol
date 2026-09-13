@@ -77,8 +77,16 @@ describe('CreateCommunity wizard', () => {
   it('lets a group be free to join', () => {
     renderCreate('/create?type=welfare');
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
-    fireEvent.click(screen.getByRole('switch', { name: 'Free to join' }));
+    fireEvent.click(screen.getByRole('button', { name: /Free to Join/ }));
     expect(screen.queryByLabelText('What You Collect Each Month')).toBeNull();
     expect(screen.getByText('Free to join.')).toBeInTheDocument();
+  });
+
+  it('offers a one-time fee and relabels the amount', () => {
+    renderCreate('/create?type=welfare');
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    fireEvent.click(screen.getByRole('button', { name: /One-Time Fee/ }));
+    expect(screen.getByLabelText('One-Time Fee to Join')).toBeInTheDocument();
+    expect(screen.getByText(/pay once to join/)).toBeInTheDocument();
   });
 });

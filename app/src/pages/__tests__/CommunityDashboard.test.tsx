@@ -22,9 +22,9 @@ vi.mock('@/hooks/useMyMemberships', () => ({
   useMyMemberships: () => ({ active: [], memberships: [], source: 'none', isLoading: false }),
 }));
 
-vi.mock('@/hooks/useBarazaData', () => ({
-  useDecisions: () => ({ active: [], past: [], all: [] }),
-  useActivities: () => [],
+vi.mock('@/hooks/useProposals', () => ({
+  useProposals: () => ({ active: [], past: [], all: [] }),
+  useCommunityActivity: () => ({ events: [], isLoading: false, error: null }),
 }));
 
 vi.mock('@/hooks/useChain', () => ({

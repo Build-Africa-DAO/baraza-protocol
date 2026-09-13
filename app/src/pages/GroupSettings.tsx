@@ -14,7 +14,7 @@ import { useMembers } from '@/hooks/useBarazaData';
 import { useToast } from '@/hooks/use-toast';
 import { COMMUNITY_TYPES, DEFAULT_GOVERNANCE, type Community } from '@/lib/constants';
 import { formatMajor, groupCurrency } from '@/lib/money';
-import { sessionHeaders } from '@/lib/sessionHeaders';
+import { apiFetch } from '@/lib/api';
 import { rulesSentence } from '@/lib/voteCopy';
 import type { Member } from '@/lib/dataStore';
 
@@ -148,7 +148,6 @@ const OFFICER_ROLES = [
 type OfficerRole = (typeof OFFICER_ROLES)[number]['value'];
 
 function OfficersSection({ community }: { community: Community }) {
-  const account = useAccount();
   const { toast } = useToast();
   const members = useMembers(community.id);
   const officers = members.filter((m) => m.role === 'founder' || m.role === 'admin');
@@ -163,22 +162,22 @@ function OfficersSection({ community }: { community: Community }) {
     setBusy(targetWallet);
     setError(null);
     try {
-      const headers = await sessionHeaders(account.getAccessToken);
-      const res = await fetch('/api/communities/officers', {
+      const result = await apiFetch('/api/communities/officers', {
         method: 'POST',
-        headers,
-        body: JSON.stringify({ communityId: community.id, targetWallet, newRole, action }),
+        body: { communityId: community.id, targetWallet, newRole, action },
       });
-      const data = (await res.json().catch(() => ({}))) as { message?: string };
-      if (!res.ok) {
-        setError(data.message ?? 'Baraza did not change this role.');
+      if (!result.ok) {
+        setError(
+          result.error.code === 'conflict'
+            ? 'A group must keep at least one admin. Add another admin before removing this one.'
+            : result.error.code === 'governance_policy_violation'
+              ? 'This SACCO is set to proposal-only governance, so officer roles cannot be changed here.'
+              : result.error.message,
+        );
         return false;
       }
       toast({ title: action === 'ASSIGN' ? 'Officer Added' : 'Officer Removed', description: 'The roster updates once Baraza confirms.' });
       return true;
-    } catch {
-      setError('We could not reach Baraza. Nothing changed.');
-      return false;
     } finally {
       setBusy(null);
     }
@@ -192,7 +191,7 @@ function OfficersSection({ community }: { community: Community }) {
       isOfficer
     >
       {officers.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No officer list yet. It fills in once Baraza syncs the members.</p>
+        <p className="text-sm text-muted-foreground">The officer list is not available yet. Baraza does not share the roster with the app; you can still add an officer by their account id below.</p>
       ) : (
         <ul className="space-y-2">
           {officers.map((officer) => (
@@ -314,13 +313,9 @@ function LicenseSection({ community, canSubmit }: { community: Community; canSub
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`/api/compliance/status?communityId=${encodeURIComponent(community.id)}`)
-      .then(async (res) => {
-        if (!res.ok) return;
-        const data = (await res.json()) as ComplianceStatus;
-        if (!cancelled) setStatus(data);
-      })
-      .catch(() => undefined);
+    void apiFetch<ComplianceStatus>(`/api/compliance/status?communityId=${encodeURIComponent(community.id)}`, { auth: 'omit' }).then((result) => {
+      if (result.ok && !cancelled) setStatus(result.data);
+    });
     return () => {
       cancelled = true;
     };
@@ -337,22 +332,23 @@ function LicenseSection({ community, canSubmit }: { community: Community; canSub
     setBusy(true);
     setError(null);
     try {
-      const headers = await sessionHeaders(account.getAccessToken);
-      const res = await fetch('/api/compliance/sacco-license-submit', {
+      const result = await apiFetch('/api/compliance/sacco-license-submit', {
         method: 'POST',
-        headers,
-        body: JSON.stringify({
+        body: {
           communityId: community.id,
           licenseNumber: licenseNumber.trim(),
           certificateUrl: certificateUrl.trim(),
           documentType: 'cooperative_registration',
           expiresAt: expiresAt || undefined,
           wallet: account.accountId,
-        }),
+        },
       });
-      const body = (await res.json().catch(() => ({}))) as { message?: string; error?: string };
-      if (!res.ok) {
-        setError(body.message ?? body.error ?? 'Baraza did not accept this submission.');
+      if (!result.ok) {
+        setError(
+          result.error.kind === 'conflict'
+            ? 'A licence for this group is already under review or verified.'
+            : result.error.message,
+        );
         return;
       }
       toast({ title: 'Submitted for Review', description: 'Review by the regulator can take several days.' });
@@ -419,7 +415,6 @@ function LicenseSection({ community, canSubmit }: { community: Community; canSub
 // ── Statements ───────────────────────────────────────────────────────────────
 
 function StatementsSection({ communityId }: { communityId: string }) {
-  const account = useAccount();
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [busy, setBusy] = useState(false);
@@ -429,17 +424,15 @@ function StatementsSection({ communityId }: { communityId: string }) {
     setBusy(true);
     setError(null);
     try {
-      const headers = await sessionHeaders(account.getAccessToken);
       const params = new URLSearchParams({ communityId, format: 'csv' });
       if (startDate) params.set('startDate', startDate);
       if (endDate) params.set('endDate', endDate);
-      const res = await fetch(`/api/communities/statement?${params.toString()}`, { headers });
-      if (!res.ok) {
-        const data = (await res.json().catch(() => ({}))) as { message?: string };
-        setError(data.message ?? 'Sign in as an officer to download the statement.');
+      const result = await apiFetch(`/api/communities/statement?${params.toString()}`, { parse: 'none' });
+      if (!result.ok) {
+        setError(result.error.kind === 'auth' || result.error.kind === 'forbidden' ? 'Sign in as an officer to download the statement.' : result.error.message);
         return;
       }
-      const blob = await res.blob();
+      const blob = await result.response.blob();
       const href = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = href;
@@ -484,7 +477,6 @@ const DISPUTE_TYPES = [
 type DisputeType = (typeof DISPUTE_TYPES)[number]['value'];
 
 function DisputesSection({ communityId, currency }: { communityId: string; currency: string }) {
-  const account = useAccount();
   const { toast } = useToast();
   const [orderId, setOrderId] = useState('');
   const [type, setType] = useState<DisputeType>('PAYMENT_NOT_CREDITED');
@@ -501,15 +493,20 @@ function DisputesSection({ communityId, currency }: { communityId: string; curre
     setBusy(true);
     setError(null);
     try {
-      const headers = await sessionHeaders(account.getAccessToken);
-      const res = await fetch('/api/payment-orders/dispute', {
+      const result = await apiFetch('/api/payment-orders/dispute', {
         method: 'POST',
-        headers,
-        body: JSON.stringify({ orderId: orderId.trim(), communityId, disputeType: type, amountDisputedMinor: amountMinor, reason: reason.trim() }),
+        body: { orderId: orderId.trim(), communityId, disputeType: type, amountDisputedMinor: amountMinor, reason: reason.trim() },
       });
-      const data = (await res.json().catch(() => ({}))) as { message?: string };
-      if (!res.ok) {
-        setError(data.message ?? 'Baraza did not accept this dispute. Check the payment reference.');
+      if (!result.ok) {
+        setError(
+          result.error.code === 'statute_of_limitations_exceeded'
+            ? 'Payments can only be disputed within 14 days. This one is older, so email hello@barazaprotocol.com instead.'
+            : result.error.kind === 'conflict'
+              ? 'This payment already has an open dispute.'
+              : result.error.kind === 'not_found'
+                ? 'We could not find a payment with that reference in this group.'
+                : result.error.message,
+        );
         return;
       }
       toast({ title: 'Dispute Filed', description: 'An officer reviews it. You will hear back by SMS or email.' });

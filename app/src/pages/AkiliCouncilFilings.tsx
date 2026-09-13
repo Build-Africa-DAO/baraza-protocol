@@ -1,3 +1,4 @@
+import { apiFetch } from '@/lib/api';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefreshCw, FileText, Headphones, AlertTriangle } from 'lucide-react';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -94,26 +95,18 @@ export default function AkiliCouncilFilings() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch('/api/akili/filings', {
+        const result = await apiFetch<FilingsResponse>('/api/akili/filings', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Admin-Wallet': walletAddress,
-          },
-          body: JSON.stringify({ agent }),
+          headers: { 'X-Admin-Wallet': walletAddress },
+          body: { agent },
+          auth: 'omit',
         });
-        if (res.status === 403) {
-          setError('This wallet is not on the admin list.');
+        if (!result.ok) {
+          setError(result.error.kind === 'forbidden' ? 'This wallet is not on the admin list.' : result.error.message);
           setData(null);
           return;
         }
-        if (!res.ok) {
-          setError(`Read failed (${res.status}).`);
-          setData(null);
-          return;
-        }
-        const json = (await res.json()) as FilingsResponse;
-        setData(json);
+        setData(result.data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {

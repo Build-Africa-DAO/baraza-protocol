@@ -7,7 +7,8 @@ import { SettingsSection } from '@/components/app/SettingsSection';
 import { AmountBlock } from '@/components/ui/amount-block';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Field, Input, MoneyField, Select, Switch, Textarea } from '@/components/ui/field';
+import { Field, Input, MoneyField, Select, Textarea } from '@/components/ui/field';
+import { FilterChips } from '@/components/ui/filter-chips';
 import { InlineError } from '@/components/ui/inline-error';
 import { PageHeader } from '@/components/ui/page-header';
 import { Stepper } from '@/components/ui/stepper';
@@ -51,6 +52,20 @@ const LEGACY_TYPE_MAP: Record<string, Kind> = {
 const QUORUM_OPTIONS = [50, 51, 60, 66, 75];
 const THRESHOLD_OPTIONS = [51, 60, 66, 75];
 const DAY_OPTIONS = [3, 7, 14, 30];
+type FeeType = 'one_time' | 'recurring_monthly' | 'free';
+
+const FEE_TYPES: { value: FeeType; label: string }[] = [
+  { value: 'recurring_monthly', label: 'Monthly Dues' },
+  { value: 'one_time', label: 'One-Time Fee' },
+  { value: 'free', label: 'Free to Join' },
+];
+
+const FEE_TYPE_HELP: Record<FeeType, string> = {
+  recurring_monthly: 'Members pay this amount every month. Dues reminders and streaks follow it.',
+  one_time: 'Members pay once to join. Nothing is collected after that unless a vote decides otherwise.',
+  free: 'Members pay nothing to join or each month.',
+};
+
 const STEPS = [{ label: 'Kind of Group' }, { label: 'Name and Rules' }, { label: 'Open' }];
 const GATE = { title: 'Sign in to start a group', description: 'Create an account or log in before you set up a chama, SACCO or cooperative.' };
 
@@ -68,7 +83,8 @@ export default function CreateCommunity() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
-  const [free, setFree] = useState(false);
+  const [feeType, setFeeType] = useState<FeeType>('recurring_monthly');
+  const free = feeType === 'free';
   const [quorum, setQuorum] = useState(String(DEFAULT_GOVERNANCE.quorumPct));
   const [threshold, setThreshold] = useState(String(DEFAULT_GOVERNANCE.approvalThresholdPct));
   const [days, setDays] = useState(String(DEFAULT_GOVERNANCE.votingPeriodDays));
@@ -93,7 +109,7 @@ export default function CreateCommunity() {
         description: description.trim(),
         membershipFee: free ? 0 : amountNumber,
         activationFeeMinor: free ? 0 : Math.round(amountNumber * 100),
-        feeType: free ? 'free' : 'recurring_monthly',
+        feeType,
         carrierPassThrough: true,
         currency,
         quorumPct: Number(quorum),
@@ -196,15 +212,23 @@ export default function CreateCommunity() {
                 </section>
 
                 <section className="baraza-card space-y-5 p-5">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-sm font-semibold">Free to Join</p>
-                      <p className="text-xs text-muted-foreground">Members pay nothing to join or each month.</p>
-                    </div>
-                    <Switch checked={free} onCheckedChange={setFree} aria-label="Free to join" />
+                  <div>
+                    <h2 className="font-display text-base font-bold">What Members Pay</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">{FEE_TYPE_HELP[feeType]}</p>
                   </div>
+                  <FilterChips
+                    options={FEE_TYPES.map((item) => ({ key: item.value, label: item.label }))}
+                    value={feeType}
+                    onChange={setFeeType}
+                    aria-label="What members pay"
+                  />
                   {!free ? (
-                    <Field label="What You Collect Each Month" htmlFor="create-amount" help={`In ${currency}, the currency of your account country.`} error={amount && !amountOk ? 'Enter an amount above zero.' : undefined}>
+                    <Field
+                      label={feeType === 'one_time' ? 'One-Time Fee to Join' : 'What You Collect Each Month'}
+                      htmlFor="create-amount"
+                      help={`In ${currency}, the currency of your account country.`}
+                      error={amount && !amountOk ? 'Enter an amount above zero.' : undefined}
+                    >
                       <MoneyField id="create-amount" currency={currency} value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="500" aria-invalid={Boolean(amount && !amountOk)} />
                     </Field>
                   ) : null}
@@ -258,7 +282,7 @@ export default function CreateCommunity() {
               </div>
 
               <aside className="hidden lg:block">
-                <Summary kind={kind} name={name} free={free} amount={amountNumber} currency={currency} rules={rules} />
+                <Summary kind={kind} name={name} free={free} oneTime={feeType === 'one_time'} amount={amountNumber} currency={currency} rules={rules} />
               </aside>
             </div>
           ) : null}
@@ -266,7 +290,7 @@ export default function CreateCommunity() {
           {step === 2 ? (
             <div className="space-y-5">
               <div className="grid gap-5 lg:grid-cols-2">
-                <Summary kind={kind} name={name} free={free} amount={amountNumber} currency={currency} rules={rules} />
+                <Summary kind={kind} name={name} free={free} oneTime={feeType === 'one_time'} amount={amountNumber} currency={currency} rules={rules} />
                 <SettingsSection
                   title="Opening Fee"
                   rows={[{ label: 'To open this group', value: 'No launch fee in this environment', help: 'Baraza has not quoted an opening charge for this group, so nothing is charged to open it.' }]}
@@ -297,7 +321,7 @@ export default function CreateCommunity() {
   );
 }
 
-function Summary({ kind, name, free, amount, currency, rules }: { kind: Kind | null; name: string; free: boolean; amount: number; currency: string; rules: string }) {
+function Summary({ kind, name, free, oneTime = false, amount, currency, rules }: { kind: Kind | null; name: string; free: boolean; oneTime?: boolean; amount: number; currency: string; rules: string }) {
   const kindLabel = KINDS.find((k) => k.value === kind)?.label ?? 'Group';
   return (
     // Eugene (13 Sept 2026): the summary is the one card on this page that is
@@ -315,7 +339,7 @@ function Summary({ kind, name, free, amount, currency, rules }: { kind: Kind | n
       {free ? (
         <p className="text-sm">Free to join.</p>
       ) : (
-        <AmountBlock label="Each Month" amountMajor={Number.isFinite(amount) && amount > 0 ? amount : null} currency={currency} size="md" unavailableLabel="Amount not set yet" />
+        <AmountBlock label={oneTime ? 'To Join' : 'Each Month'} amountMajor={Number.isFinite(amount) && amount > 0 ? amount : null} currency={currency} size="md" unavailableLabel="Amount not set yet" />
       )}
       <p className="text-sm text-primary-foreground/80">{rules}</p>
     </section>

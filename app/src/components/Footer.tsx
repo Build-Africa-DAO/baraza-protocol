@@ -54,7 +54,7 @@ export default function Footer() {
   return (
     <footer
       id="site-footer"
-      className="audience-band w-full rounded-t-[2rem] bg-primary text-foreground lg:rounded-t-[2.75rem]"
+      className="audience-band w-full rounded-t-[2rem] bg-primary text-neutral-950 lg:rounded-t-[2.75rem]"
     >
       <div className="page-shell py-16">
         <div className="grid grid-cols-2 gap-12 md:grid-cols-[1.2fr_1.5fr_1fr_1fr]">
@@ -64,7 +64,7 @@ export default function Footer() {
                 size="md"
                 showIcon={false}
                 lockup="protocol"
-                className="mb-4 [&_span]:text-foreground"
+                className="mb-4 [&_span]:text-neutral-950"
               />
             </Link>
             <p className="max-w-xs text-sm leading-relaxed opacity-85">

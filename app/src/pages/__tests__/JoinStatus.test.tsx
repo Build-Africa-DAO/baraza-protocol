@@ -117,22 +117,18 @@ describe('JoinStatus never advances on its own', () => {
     vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
       if (url.includes('/api/membership/activate')) {
-        return { ok: false, status: 403, json: async () => ({ error: 'forbidden' }) };
+        return Response.json({ error: 'forbidden' }, { status: 403 });
       }
-      return {
-        ok: true,
-        status: 200,
-        json: async () => ({
-          order_id: 'ord_mpesa_bad',
-          community_id: '1',
-          status: 'INDEXER_CONFIRMED',
-          amount_expected: 51250,
-          amount_received: 51250,
-          currency: 'KES',
-          created_at: '2026-09-08T00:00:00.000Z',
-          updated_at: '2026-09-08T00:00:00.000Z',
-        }),
-      };
+      return Response.json({
+        order_id: 'ord_mpesa_bad',
+        community_id: '1',
+        status: 'INDEXER_CONFIRMED',
+        amount_expected: 51250,
+        amount_received: 51250,
+        currency: 'KES',
+        created_at: '2026-09-08T00:00:00.000Z',
+        updated_at: '2026-09-08T00:00:00.000Z',
+      });
     }));
 
     renderStatus('/join/1/status?orderId=ord_mpesa_bad');
@@ -147,10 +143,9 @@ describe('JoinStatus never advances on its own', () => {
 describe('JoinStatus membership activation', () => {
   it('treats INDEXER_CONFIRMED as an active membership', async () => {
     window.sessionStorage.setItem('baraza:payment-order-secret:ord_mpesa_live', 'sec_test');
-    vi.stubGlobal('fetch', vi.fn(async () => ({
-      ok: true,
-      status: 200,
-      json: async () => ({
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      if (String(input).includes('/api/membership/activate')) return Response.json({ ok: true, status: 'ACTIVE' });
+      return Response.json({
         order_id: 'ord_mpesa_live',
         community_id: '1',
         membership_tier_id: null,
@@ -161,8 +156,8 @@ describe('JoinStatus membership activation', () => {
         confirmed_at: '2026-09-08T00:00:00.000Z',
         created_at: '2026-09-08T00:00:00.000Z',
         updated_at: '2026-09-08T00:00:00.000Z',
-      }),
-    })));
+      });
+    }));
 
     renderStatus('/join/1/status?orderId=ord_mpesa_live');
 
