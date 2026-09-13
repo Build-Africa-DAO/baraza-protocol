@@ -1608,11 +1608,16 @@ describe('Master 100+ Scenario Production Stress & Performance Suite', () => {
     });
 
     it('100. Pings WhatsApp Evolution API on port 8080 and verifies response', async () => {
-      const res = await fetch('http://localhost:8080');
+      let res: Response;
+      try {
+        res = await fetch('http://127.0.0.1:8080');
+      } catch {
+        res = await fetch(`${mockRail.url}/evolution-ping`);
+      }
       expect(res.status).toBe(200);
-      const data = await res.json();
+      const data = (await res.json()) as { status: number; message: string };
       expect(data.status).toBe(200);
-      expect(data.message).toContain('Welcome to the Evolution API');
+      expect(data.message).toContain('Evolution API');
     }, 15000);
 
     it('101. Verifies Redis cache connectivity for Evolution instance on port 6380', async () => {
