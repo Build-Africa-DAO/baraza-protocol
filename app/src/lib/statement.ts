@@ -112,6 +112,7 @@ export async function fetchStatement(
   const entries = parseStatementNdjson(result.data ?? '');
   const rows = entries.map(rowFromEntry).sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
   const limit = options.limit ?? rows.length;
-  const hasMoreHeader = result.response.headers.get('x-has-more-records') === 'true' || result.response.headers.get('x-total-count') === '5000';
+  const header = (name: string) => (typeof result.response.headers?.get === 'function' ? result.response.headers.get(name) : null);
+  const hasMoreHeader = header('x-has-more-records') === 'true' || header('x-total-count') === '5000';
   return { ok: true, rows: rows.slice(0, limit), hasMore: rows.length > limit || hasMoreHeader };
 }

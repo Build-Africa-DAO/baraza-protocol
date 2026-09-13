@@ -145,9 +145,25 @@ function networkError(err: unknown): ApiError {
   };
 }
 
+/**
+ * Read the body without ever throwing. Real `Response` objects expose `text()`;
+ * partial stand-ins (tests, some polyfills) may expose only `json()`.
+ */
 async function readBody(response: Response, parse: ApiRequest['parse']): Promise<unknown> {
   if (parse === 'none') return null;
-  const text = await response.text().catch(() => '');
+  const partial = response as Partial<Pick<Response, 'text' | 'json'>>;
+  if (typeof partial.text !== 'function') {
+    if (typeof partial.json === 'function') {
+      try {
+        const json = (await partial.json()) as unknown;
+        return parse === 'text' ? JSON.stringify(json) : json;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
+  const text = await partial.text().catch(() => '');
   if (parse === 'text') return text;
   if (!text) return null;
   try {
@@ -155,6 +171,11 @@ async function readBody(response: Response, parse: ApiRequest['parse']): Promise
   } catch {
     return text;
   }
+}
+
+function readHeader(response: Response, name: string): string | null {
+  const headers = (response as Partial<Response>).headers;
+  return headers && typeof headers.get === 'function' ? headers.get(name) : null;
 }
 
 export async function apiFetch<T = unknown>(path: string, init: ApiRequest = {}): Promise<ApiResult<T>> {
@@ -187,8 +208,8 @@ export async function apiFetch<T = unknown>(path: string, init: ApiRequest = {})
   const inBandError =
     response.ok && body && typeof body === 'object' && typeof (body as { category?: unknown }).category === 'string';
 
-  if (!response.ok || inBandError) {
-    const error = normalizeApiError(inBandError ? 502 : response.status, body, response.statusText, response.headers.get('retry-after'));
+  if (!(response.ok ?? response.status < 400) || inBandError) {
+    const error = normalizeApiError(inBandError ? 502 : response.status, body, response.statusText ?? '', readHeader(response, 'retry-after'));
     if (inBandError) error.status = response.status;
     return { ok: false, status: response.status, error, data: body, response };
   }

@@ -62,7 +62,7 @@ afterEach(() => {
 
 describe('JoinDao', () => {
   it('shows the protocol fee breakdown and STK copy without sending payment while logged out', () => {
-    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, json: async () => ({}) })));
+    vi.stubGlobal('fetch', vi.fn(async () => Response.json({}, { status: 404 })));
     renderJoin();
 
     expect(screen.getByText('Activation fee')).toBeInTheDocument();
