@@ -1,6 +1,8 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { PrivyProvider, usePrivy } from '@privy-io/react-auth';
-import AuthModal, { type AuthIntent } from '@/components/auth/AuthModal';
+import AuthModal, { BarazaAuthModal, type AuthIntent } from '@/components/auth/AuthModal';
+import { getBarazaSessionToken, getBarazaUser, logout as barazaLogout, onBarazaAuthChange, restoreSession, type BarazaUser } from '@/lib/auth/baraza';
+import { getAuthProvider } from '@/lib/auth/provider';
 import { useTheme } from '@/hooks/useTheme';
 import {
   getAccountCountry,
@@ -11,6 +13,7 @@ import {
 } from '@/lib/accountLocale';
 import { currentLocationPath, isSafeReturnTo, isStayPath } from '@/lib/postAuth';
 import { getPrivyAppId, isPrivyPhoneAuthEnabled } from '@/lib/wallet/mpc';
+import { noteSessionState, registerAccessTokenProvider } from '@/lib/auth/tokenProvider';
 
 export interface AuthHandoff {
   entryPath: string;
@@ -42,17 +45,10 @@ interface AccountBridgeProps {
   children: React.ReactNode;
 }
 
-function AccountBridge({ country, setCountry, children }: AccountBridgeProps) {
-  const { ready, authenticated, user, logout, getAccessToken } = usePrivy();
+/** Remembers where sign-in started so `PostAuthRedirect` can return there. */
+function useAuthHandoff() {
   const [authIntent, setAuthIntent] = useState<AuthIntent | null>(null);
   const handoffRef = useRef<AuthHandoff>(EMPTY_HANDOFF);
-  const displayName =
-    user?.google?.name
-    ?? user?.email?.address
-    ?? user?.phone?.number
-    ?? user?.google?.email
-    ?? 'Baraza member';
-  const accountId = user?.wallet?.address ?? user?.id ?? null;
   const closeAuth = useCallback(() => setAuthIntent(null), []);
 
   const captureHandoff = useCallback((returnTo?: string) => {
@@ -70,6 +66,20 @@ function AccountBridge({ country, setCountry, children }: AccountBridgeProps) {
     return current;
   }, []);
 
+  return { authIntent, setAuthIntent, closeAuth, captureHandoff, consumeAuthHandoff };
+}
+
+function AccountBridge({ country, setCountry, children }: AccountBridgeProps) {
+  const { ready, authenticated, user, logout, getAccessToken } = usePrivy();
+  const { authIntent, setAuthIntent, closeAuth, captureHandoff, consumeAuthHandoff } = useAuthHandoff();
+  const displayName =
+    user?.google?.name
+    ?? user?.email?.address
+    ?? user?.phone?.number
+    ?? user?.google?.email
+    ?? 'Baraza member';
+  const accountId = user?.wallet?.address ?? user?.id ?? null;
+
   const readAccessToken = useCallback(async () => {
     if (!authenticated) return null;
     try {
@@ -81,7 +91,14 @@ function AccountBridge({ country, setCountry, children }: AccountBridgeProps) {
 
   useEffect(() => {
     if (authenticated) setAuthIntent(null);
+    noteSessionState(authenticated);
   }, [authenticated]);
+
+  // The API client asks this provider for the bearer token on every call.
+  useEffect(() => {
+    registerAccessTokenProvider(readAccessToken);
+    return () => registerAccessTokenProvider(null);
+  }, [readAccessToken]);
 
   const value = useMemo<AccountContextValue>(() => ({
     configured: true,
@@ -119,7 +136,78 @@ function AccountBridge({ country, setCountry, children }: AccountBridgeProps) {
   );
 }
 
+/**
+ * Account context on Baraza's own sign-in. Same contract as the Privy bridge:
+ * `accountId` is the profile id, the token is the `brz_sess_` bearer held in
+ * memory, and the modal is the same view with the Baraza actions.
+ */
+function BarazaAccountProvider({ country, setCountry, children }: AccountBridgeProps) {
+  const [ready, setReady] = useState(false);
+  const [user, setUser] = useState<BarazaUser | null>(() => getBarazaUser());
+  const { authIntent, setAuthIntent, closeAuth, captureHandoff, consumeAuthHandoff } = useAuthHandoff();
+
+  useEffect(() => {
+    let cancelled = false;
+    void restoreSession().finally(() => {
+      if (!cancelled) setReady(true);
+    });
+    const unsubscribe = onBarazaAuthChange(() => setUser(getBarazaUser()));
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, []);
+
+  const authenticated = Boolean(user);
+  useEffect(() => {
+    if (authenticated) setAuthIntent(null);
+    noteSessionState(authenticated);
+  }, [authenticated, setAuthIntent]);
+
+  const getAccessToken = useCallback(async () => getBarazaSessionToken(), []);
+  useEffect(() => {
+    registerAccessTokenProvider(getAccessToken);
+    return () => registerAccessTokenProvider(null);
+  }, [getAccessToken]);
+
+  const value = useMemo<AccountContextValue>(() => ({
+    configured: true,
+    ready,
+    authenticated,
+    accountId: user?.id ?? null,
+    displayName: user?.displayName ?? 'Baraza member',
+    country,
+    setCountry,
+    login: (returnTo?: string) => {
+      captureHandoff(returnTo);
+      setAuthIntent('signin');
+    },
+    createAccount: (returnTo?: string) => {
+      captureHandoff(returnTo);
+      setAuthIntent('signup');
+    },
+    consumeAuthHandoff,
+    getAccessToken,
+    logout: barazaLogout,
+  }), [authenticated, captureHandoff, consumeAuthHandoff, country, getAccessToken, ready, setAuthIntent, setCountry, user]);
+
+  return (
+    <AccountContext.Provider value={value}>
+      {children}
+      {authIntent && (
+        <BarazaAuthModal
+          intent={authIntent}
+          countryCode={country.code}
+          onIntentChange={setAuthIntent}
+          onClose={closeAuth}
+        />
+      )}
+    </AccountContext.Provider>
+  );
+}
+
 export function AccountProvider({ children }: { children: React.ReactNode }) {
+  const provider = getAuthProvider();
   const appId = getPrivyAppId();
   const { theme } = useTheme();
   const [countryCode, setCountryCode] = useState<AccountCountryCode>(() => readAccountCountry());
@@ -143,6 +231,14 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     getAccessToken: async () => null,
     logout: async () => undefined,
   }), [country, setCountry]);
+
+  if (provider === 'baraza') {
+    return (
+      <BarazaAccountProvider country={country} setCountry={setCountry}>
+        {children}
+      </BarazaAccountProvider>
+    );
+  }
 
   if (!appId) {
     return (

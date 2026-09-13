@@ -1,9 +1,12 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Loader2, Mail, Phone, X } from 'lucide-react';
 import { useLoginWithEmail, useLoginWithOAuth, useLoginWithSms } from '@privy-io/react-auth';
 import { BrandLogo } from '@/components/BrandLogo';
+import { GoogleIdentityButton } from '@/components/auth/GoogleIdentityButton';
 import { Button } from '@/components/ui/button';
 import { hasStoredAccountCountry } from '@/lib/accountLocale';
+import { requestCode, signInWithGoogle, verifyCode } from '@/lib/auth/baraza';
+import { getGoogleClientId } from '@/lib/auth/provider';
 import { isPrivyPhoneAuthEnabled } from '@/lib/wallet/mpc';
 import { isValidEmail } from '@/lib/phoneAuth';
 import { cn, toTitleCase } from '@/lib/utils';
@@ -11,6 +14,24 @@ import { digitsOnly, formatPrivyAuthError, isCompletePrivyOtp } from '@/lib/priv
 import type { AccountCountryCode } from '@/lib/accountLocale';
 
 export type AuthIntent = 'signin' | 'signup';
+export type AuthMethod = 'email' | 'phone';
+
+/**
+ * What the modal needs from a sign-in provider. The view below is the same
+ * for Privy and for Baraza's own codes; only these calls differ. Each call
+ * rejects with an `Error` whose message is already written for members.
+ */
+export interface AuthActions {
+  phoneEnabled: boolean;
+  sendCode: (input: { method: AuthMethod; destination: string; isSignUp: boolean }) => Promise<void>;
+  verifyCode: (input: { method: AuthMethod; destination: string; code: string; isSignUp: boolean }) => Promise<void>;
+  /** Our own "Continue with Google" button. */
+  continueWithGoogle?: (isSignUp: boolean) => Promise<void>;
+  googleLoading?: boolean;
+  /** A provider-rendered Google control (Google Identity Services) instead of our button. */
+  renderGoogle?: (input: { isSignUp: boolean; disabled: boolean; onError: (message: string) => void }) => ReactNode;
+  formatError: (err: unknown) => string;
+}
 
 const DIAL_CODES: { code: string; label: string; country: AccountCountryCode }[] = [
   { code: '+254', label: 'KE +254', country: 'KE' },
@@ -59,14 +80,12 @@ interface AuthModalProps {
   onClose: () => void;
 }
 
-export default function AuthModal({ intent, countryCode, onIntentChange, onClose }: AuthModalProps) {
+export function AuthModalView({ actions, intent, countryCode, onIntentChange, onClose }: AuthModalProps & { actions: AuthActions }) {
   const titleId = useId();
-  const phoneEnabled = isPrivyPhoneAuthEnabled();
-  const { sendCode: sendEmailCode, loginWithCode: loginWithEmailCode } = useLoginWithEmail();
-  const { sendCode: sendSmsCode, loginWithCode: loginWithSmsCode } = useLoginWithSms();
-  const { initOAuth, loading: googleLoading } = useLoginWithOAuth();
+  const phoneEnabled = actions.phoneEnabled;
+  const googleLoading = Boolean(actions.googleLoading);
 
-  const [method, setMethod] = useState<'email' | 'phone'>(phoneEnabled ? 'phone' : 'email');
+  const [method, setMethod] = useState<AuthMethod>(phoneEnabled ? 'phone' : 'email');
   const [step, setStep] = useState<'identifier' | 'code'>('identifier');
   const [email, setEmail] = useState('');
   // Kenya first unless the person chose a country themselves; an inferred
@@ -142,27 +161,24 @@ export default function AuthModal({ intent, countryCode, onIntentChange, onClose
 
     setBusy(true);
     try {
-      if (method === 'email') {
-        await sendEmailCode({ email: email.trim(), disableSignup: !isSignUp });
-      } else {
-        await sendSmsCode({ phoneNumber: e164, disableSignup: !isSignUp });
-      }
+      await actions.sendCode({ method, destination, isSignUp });
       setStep('code');
       setCode('');
     } catch (err) {
-      setError(formatPrivyAuthError(err));
+      setError(actions.formatError(err));
     } finally {
       setBusy(false);
     }
   }
 
   async function continueWithGoogle() {
+    if (!actions.continueWithGoogle) return;
     setError(null);
     setBusy(true);
     try {
-      await initOAuth({ provider: 'google', disableSignup: !isSignUp });
+      await actions.continueWithGoogle(isSignUp);
     } catch (err) {
-      setError(formatPrivyAuthError(err));
+      setError(actions.formatError(err));
     } finally {
       setBusy(false);
     }
@@ -181,13 +197,9 @@ export default function AuthModal({ intent, countryCode, onIntentChange, onClose
     setBusy(true);
     setError(null);
     try {
-      if (method === 'email') {
-        await loginWithEmailCode({ code: digits });
-      } else {
-        await loginWithSmsCode({ code: digits });
-      }
+      await actions.verifyCode({ method, destination, code: digits, isSignUp });
     } catch (err) {
-      setError(formatPrivyAuthError(err));
+      setError(actions.formatError(err));
     } finally {
       verifyingRef.current = false;
       setBusy(false);
@@ -225,8 +237,12 @@ export default function AuthModal({ intent, countryCode, onIntentChange, onClose
           </h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
             {isSignUp
-              ? 'Start a group or join one with your phone number or email.'
-              : 'Sign in with the phone number or email you used before.'}
+              ? phoneEnabled
+                ? 'Start a group or join one with your phone number or email.'
+                : 'Start a group or join one with your email.'
+              : phoneEnabled
+                ? 'Sign in with the phone number or email you used before.'
+                : 'Sign in with the email you used before.'}
           </p>
 
           {phoneEnabled && step === 'identifier' && (
@@ -375,30 +391,36 @@ export default function AuthModal({ intent, countryCode, onIntentChange, onClose
             </form>
           )}
 
-          <div className="mt-6">
-            <div className="mb-4 flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              <span className="h-px flex-1 bg-border" />
-              or
-              <span className="h-px flex-1 bg-border" />
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              fullWidth
-              disabled={busy || googleLoading}
-              onClick={() => void continueWithGoogle()}
-            >
-              {googleLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+          {actions.renderGoogle || actions.continueWithGoogle ? (
+            <div className="mt-6">
+              <div className="mb-4 flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                <span className="h-px flex-1 bg-border" />
+                or
+                <span className="h-px flex-1 bg-border" />
+              </div>
+              {actions.renderGoogle ? (
+                actions.renderGoogle({ isSignUp, disabled: busy, onError: (message) => setError(message) })
               ) : (
-                <GoogleMark className="h-4 w-4 shrink-0" />
+                <Button
+                  type="button"
+                  variant="outline"
+                  fullWidth
+                  disabled={busy || googleLoading}
+                  onClick={() => void continueWithGoogle()}
+                >
+                  {googleLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <GoogleMark className="h-4 w-4 shrink-0" />
+                  )}
+                  Continue with Google
+                </Button>
               )}
-              Continue with Google
-            </Button>
-          </div>
+            </div>
+          ) : null}
 
           <p className="mt-5 text-center text-xs text-muted-foreground">
-            Phone or email is enough. You do not need a crypto wallet.
+            {phoneEnabled ? 'Phone or email is enough.' : 'Your email is enough.'} You do not need a crypto wallet.
           </p>
 
           <p className="mt-6 text-center text-xs text-muted-foreground">
@@ -430,4 +452,83 @@ export default function AuthModal({ intent, countryCode, onIntentChange, onClose
       </div>
     </div>
   );
+}
+
+/** The modal on Privy: email and SMS codes plus Privy's Google OAuth. */
+export default function AuthModal(props: AuthModalProps) {
+  const phoneEnabled = isPrivyPhoneAuthEnabled();
+  const { sendCode: sendEmailCode, loginWithCode: loginWithEmailCode } = useLoginWithEmail();
+  const { sendCode: sendSmsCode, loginWithCode: loginWithSmsCode } = useLoginWithSms();
+  const { initOAuth, loading: googleLoading } = useLoginWithOAuth();
+
+  const actions = useMemo<AuthActions>(
+    () => ({
+      phoneEnabled,
+      sendCode: async ({ method, destination, isSignUp }) => {
+        if (method === 'email') await sendEmailCode({ email: destination, disableSignup: !isSignUp });
+        else await sendSmsCode({ phoneNumber: destination, disableSignup: !isSignUp });
+      },
+      verifyCode: async ({ method, code }) => {
+        if (method === 'email') await loginWithEmailCode({ code });
+        else await loginWithSmsCode({ code });
+      },
+      continueWithGoogle: async (isSignUp) => {
+        await initOAuth({ provider: 'google', disableSignup: !isSignUp });
+      },
+      googleLoading,
+      formatError: formatPrivyAuthError,
+    }),
+    [googleLoading, initOAuth, loginWithEmailCode, loginWithSmsCode, phoneEnabled, sendEmailCode, sendSmsCode],
+  );
+
+  return <AuthModalView {...props} actions={actions} />;
+}
+
+/**
+ * The modal on Baraza's own sign-in (`lib/auth/baraza.ts`). Email codes only
+ * until the backend adds an SMS channel; Google through Google Identity
+ * Services when `VITE_GOOGLE_CLIENT_ID` is set.
+ */
+export function BarazaAuthModal(props: AuthModalProps) {
+  const clientId = getGoogleClientId();
+  const purposeOf = (isSignUp: boolean): 'signup' | 'signin' => (isSignUp ? 'signup' : 'signin');
+
+  const onCredential = useCallback(
+    async (credential: string, isSignUp: boolean) => {
+      const step = await signInWithGoogle({ credential, isSignUp });
+      if (!step.ok) throw new Error(step.message);
+    },
+    [],
+  );
+
+  const actions = useMemo<AuthActions>(
+    () => ({
+      phoneEnabled: false,
+      sendCode: async ({ destination, isSignUp }) => {
+        const step = await requestCode({ email: destination, purpose: purposeOf(isSignUp) });
+        if (!step.ok) throw new Error(step.message);
+      },
+      verifyCode: async ({ destination, code, isSignUp }) => {
+        const step = await verifyCode({ email: destination, code, purpose: purposeOf(isSignUp) });
+        if (!step.ok) throw new Error(step.message);
+      },
+      renderGoogle: clientId
+        ? ({ isSignUp, disabled, onError }) => (
+            <GoogleIdentityButton
+              clientId={clientId}
+              isSignUp={isSignUp}
+              disabled={disabled}
+              onError={onError}
+              onCredential={(credential) => {
+                onCredential(credential, isSignUp).catch((err: unknown) => onError(err instanceof Error ? err.message : 'Google sign-in failed.'));
+              }}
+            />
+          )
+        : undefined,
+      formatError: (err) => (err instanceof Error && err.message ? err.message : 'Something went wrong. Try again.'),
+    }),
+    [clientId, onCredential],
+  );
+
+  return <AuthModalView {...props} actions={actions} />;
 }
