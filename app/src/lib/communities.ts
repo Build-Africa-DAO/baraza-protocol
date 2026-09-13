@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { DEFAULT_GOVERNANCE, type Community, type VerificationTier, MOCK_COMMUNITIES } from '@/lib/constants';
+import { isSyntheticDataEnabled } from '@/lib/devMode';
 import type { Chain } from '@/lib/chain';
 
 type TreasuryPolicy = 'multisig-ready' | 'proposal-only' | 'manual-review';
@@ -165,6 +166,7 @@ function communityFromRow(row: CommunityRow): Community {
     type: row.type,
     description: row.description,
     membershipFee: resolvedFee,
+    currency: row.currency ?? undefined,
     memberCount: row.member_count ?? row.memberCount ?? 0,
     fundBalance: row.fund_balance ?? row.fundBalance ?? 0,
     activeDecisions: row.active_decisions ?? row.activeDecisions ?? 0,
@@ -211,8 +213,13 @@ function sortByDate(communities: Community[]): Community[] {
   return [...communities].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
-// In dev/localStorage mode mock data seeds the UI; in Supabase mode real data stands alone.
+/**
+ * Mock communities seed the UI while working locally without Supabase. They
+ * carry invented balances and member counts, so a production build never sees
+ * them — an unconfigured backend must read as empty, not as four thriving groups.
+ */
 function mergeWithMocks(communities: Community[]): Community[] {
+  if (!isSyntheticDataEnabled()) return sortByDate(communities);
   const byId = new Map<string, Community>();
   [...MOCK_COMMUNITIES, ...communities].forEach((c) => byId.set(c.id, c));
   return sortByDate(Array.from(byId.values()));
@@ -249,6 +256,7 @@ export async function getCommunity(id: string): Promise<Community | null> {
 
   if (error) throw error;
   if (data) return communityFromRow(data);
+  if (!isSyntheticDataEnabled()) return null;
   return MOCK_COMMUNITIES.find((community) => community.id === id) ?? null;
 }
 
@@ -270,6 +278,7 @@ export async function createCommunityRecord(input: CommunityInsert): Promise<Com
     type: input.type,
     description: input.description.trim(),
     membershipFee: input.membershipFee,
+    currency: input.currency || 'KES',
     memberCount: 0,
     fundBalance: 0,
     activeDecisions: 0,

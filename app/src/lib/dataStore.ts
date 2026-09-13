@@ -7,6 +7,7 @@
  * the hook API stays the same.
  */
 
+import { isSyntheticDataEnabled } from '@/lib/devMode';
 import type { ProposalLifecycleStage } from '@/lib/constants';
 
 // ---------- Types ----------
@@ -409,6 +410,11 @@ class BarazaDataStore {
   private simulationTimers: ReturnType<typeof setInterval>[] = [];
 
   constructor() {
+    // Seed data and the live simulation are a local development aid. In a
+    // production build the store starts empty so screens render their real
+    // empty states instead of invented groups, members and balances.
+    if (!isSyntheticDataEnabled()) return;
+
     // Seed
     SEED_COMMUNITIES.forEach((c) => this.communities.set(c.id, { ...c }));
     SEED_DECISIONS.forEach((d) => this.decisions.set(d.id, { ...d }));

@@ -1,13 +1,28 @@
 import type { Community } from '@/lib/constants';
 import type { MembershipRecord, MembershipStatus } from '@/lib/memberships';
 
+/**
+ * Mirrors `app/api/user/types.ts`. `GET /api/user/memberships` already returns
+ * the role, dues and balance the member workspace needs — the client used to
+ * drop all of it on the floor and re-derive membership from localStorage.
+ */
+export type OfficerRole = 'founder' | 'admin' | 'treasurer' | 'member';
+export type ActivationStatus = 'pending' | 'active' | 'suspended' | 'revoked';
+export type DuesStatus = 'ACTIVE' | 'OVERDUE_DUES';
+
+export const OFFICER_ROLES: readonly OfficerRole[] = ['founder', 'admin', 'treasurer'];
+
+export function isOfficerRole(role: string | undefined | null): boolean {
+  return OFFICER_ROLES.includes(role as OfficerRole);
+}
+
 export interface UserMembershipSummary {
   communityId: string;
   name: string;
-  role: string;
-  activationStatus: string;
+  role: OfficerRole;
+  activationStatus: ActivationStatus;
   joinedAt: string;
-  duesStatus?: string;
+  duesStatus?: DuesStatus;
   outstandingDuesMinor?: number;
   votingPower?: number;
   vaultBalanceMinor?: number;
@@ -57,6 +72,7 @@ export function communityFromSummary(
     type: 'other',
     description: '',
     membershipFee: 0,
+    currency: summary.currency,
     memberCount: 0,
     fundBalance: 0,
     activeDecisions: 0,

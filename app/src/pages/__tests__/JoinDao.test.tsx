@@ -24,10 +24,6 @@ vi.mock('@/components/Layout', () => ({
   default: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 
-vi.mock('@/components/CommunityBanner', () => ({
-  default: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-}));
-
 vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({ toast: vi.fn() }),
 }));

@@ -10,12 +10,19 @@ import {
   communityFromSummary,
   fetchUserMemberships,
   membershipRecordFromSummary,
+  type UserMembershipSummary,
 } from '@/lib/userMemberships';
 import type { Community } from '@/lib/constants';
 
 export interface MembershipPair {
   record: MembershipRecord;
   community: Community;
+  /**
+   * The server's view of this membership: role, dues, vault balance. Present
+   * only when `source === 'api'` — a locally cached record carries no role, and
+   * must never be allowed to grant officer surfaces.
+   */
+  summary: UserMembershipSummary | null;
 }
 
 export function useMyMemberships() {
@@ -25,7 +32,7 @@ export function useMyMemberships() {
   const [records, setRecords] = useState<MembershipRecord[]>(() => (
     address ? listMembershipsForWallet(address) : []
   ));
-  const [summariesById, setSummariesById] = useState<Record<string, { name: string }>>({});
+  const [summariesById, setSummariesById] = useState<Record<string, UserMembershipSummary>>({});
   const [isLoading, setIsLoading] = useState(Boolean(account.authenticated || address));
   const [error, setError] = useState<string | null>(null);
   const [source, setSource] = useState<'api' | 'wallet' | 'none'>('none');
@@ -53,7 +60,7 @@ export function useMyMemberships() {
             const summaries = await fetchUserMemberships(token);
             if (cancelled) return;
             setRecords(summaries.map((summary) => membershipRecordFromSummary(summary, address || summary.communityId)));
-            setSummariesById(Object.fromEntries(summaries.map((summary) => [summary.communityId, { name: summary.name }])));
+            setSummariesById(Object.fromEntries(summaries.map((summary) => [summary.communityId, summary])));
             setSource('api');
             setIsLoading(false);
             return;
@@ -100,18 +107,11 @@ export function useMyMemberships() {
 
   const memberships = useMemo<MembershipPair[]>(() => (
     records
-      .map((record) => {
+      .map((record): MembershipPair | null => {
+        const summary = summariesById[record.communityId] ?? null;
         const community = communities.find((item) => item.id === record.communityId)
-          ?? (summariesById[record.communityId]
-            ? communityFromSummary({
-                communityId: record.communityId,
-                name: summariesById[record.communityId].name,
-                role: 'member',
-                activationStatus: record.status,
-                joinedAt: record.joinedAt,
-              })
-            : null);
-        return community ? { record, community } : null;
+          ?? (summary ? communityFromSummary(summary) : null);
+        return community ? { record, community, summary } : null;
       })
       .filter((entry): entry is MembershipPair => entry !== null)
   ), [communities, records, summariesById]);
@@ -126,6 +126,7 @@ export function useMyMemberships() {
     records,
     memberships,
     active,
+    summariesById,
     source,
     error,
     isLoading: Boolean(account.authenticated || address) && (isLoading || communitiesLoading),

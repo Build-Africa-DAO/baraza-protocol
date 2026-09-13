@@ -63,7 +63,7 @@ export function SaccoComplianceBadge({
   return (
     <span
       title={title || copy.detail}
-      className={cn('inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider', copy.className)}
+      className={cn('inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-wider', copy.className)}
     >
       <Icon className={cn('h-3 w-3', status === 'PENDING_REVIEW' && 'animate-pulse')} />
       {copy.label}

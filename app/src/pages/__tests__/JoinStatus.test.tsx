@@ -36,6 +36,12 @@ vi.mock('@/lib/seo', () => ({
   useSeo: vi.fn(),
 }));
 
+// Activation only runs for an identified person. A phone session stands in for
+// the phone-only members who are most of the product.
+vi.mock('@/lib/phoneAuth', () => ({
+  getPhoneAuthSession: () => ({ phone: '+254712345678', email: null }),
+}));
+
 function renderStatus(path: string) {
   return render(
     <MemoryRouter initialEntries={[path]}>
@@ -84,6 +90,57 @@ describe('JoinStatus payment rail copy', () => {
 
     expect(screen.getByText('Recording your membership')).toBeInTheDocument();
     expect(screen.queryByText(/Stellar|Solana|Base/i)).not.toBeInTheDocument();
+  });
+});
+
+describe('JoinStatus never advances on its own', () => {
+  it('holds a client-minted order at requested and says it cannot be checked', async () => {
+    vi.useFakeTimers();
+    try {
+      renderStatus('/join/1/status?orderId=ord_local_1725900000000_abc123');
+
+      // The old build walked a hardcoded happy path on a 1.8s timer and then
+      // wrote an "active" membership. Nothing may move without the server.
+      await vi.advanceTimersByTimeAsync(30_000);
+
+      expect(screen.getByText('We cannot confirm this payment')).toBeInTheDocument();
+      expect(screen.getByText(/This reference cannot be checked/)).toBeInTheDocument();
+      expect(screen.queryByText("You're an active member")).not.toBeInTheDocument();
+      expect(window.localStorage.getItem('baraza.memberships.v1')).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('does not activate a membership when the activation call fails', async () => {
+    window.sessionStorage.setItem('baraza:payment-order-secret:ord_mpesa_bad', 'sec_test');
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('/api/membership/activate')) {
+        return { ok: false, status: 403, json: async () => ({ error: 'forbidden' }) };
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          order_id: 'ord_mpesa_bad',
+          community_id: '1',
+          status: 'INDEXER_CONFIRMED',
+          amount_expected: 51250,
+          amount_received: 51250,
+          currency: 'KES',
+          created_at: '2026-09-08T00:00:00.000Z',
+          updated_at: '2026-09-08T00:00:00.000Z',
+        }),
+      };
+    }));
+
+    renderStatus('/join/1/status?orderId=ord_mpesa_bad');
+
+    await waitFor(() => {
+      expect(screen.getByText(/could not activate the membership/)).toBeInTheDocument();
+    });
+    expect(window.localStorage.getItem('baraza.memberships.v1')).toBeNull();
   });
 });
 

@@ -1,5 +1,6 @@
 import { Sparkles } from 'lucide-react';
-import { useAkiliChat } from '@/akili/useAkiliChat';
+import { useContext } from 'react';
+import { AkiliChatContext } from '@/akili/akili-chat-context';
 import { cn } from '@/lib/utils';
 
 interface AskAkiliProps {
@@ -35,13 +36,17 @@ export function AskAkili({
   variant = 'pill',
   className,
 }: AskAkiliProps) {
-  const { open } = useAkiliChat();
+  // Pages render inside AkiliChatProvider in the app; tests and isolated
+  // renders may not, and a helper chip must never take a page down.
+  const chat = useContext(AkiliChatContext);
+  if (!chat) return null;
+  const { open } = chat;
 
   const base = 'inline-flex items-center gap-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60';
 
   const styles: Record<NonNullable<AskAkiliProps['variant']>, string> = {
     pill: 'btn-wipe h-9 px-4 text-xs',
-    chip: 'btn-wipe-outline h-8 px-3 text-[11px]',
+    chip: 'btn-wipe-outline h-8 px-3 text-xs',
     inline:
       'text-xs font-semibold text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary',
   };

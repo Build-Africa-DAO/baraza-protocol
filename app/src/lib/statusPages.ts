@@ -33,7 +33,7 @@ export const STATUS_COPY: Record<StatusKind, StatusCopy> = {
       "The page you're looking for may have moved or never existed. Head back to explore communities or launch your own.",
     seoTitle: 'Page Not Found',
     primary: { label: 'Go Home', to: '/', icon: 'home' },
-    secondary: { label: 'Browse Communities', to: '/communities', icon: 'compass' },
+    secondary: { label: 'Browse Groups', to: '/groups', icon: 'compass' },
   },
   community: {
     code: '404',
@@ -41,7 +41,7 @@ export const STATUS_COPY: Record<StatusKind, StatusCopy> = {
     description:
       'This group may have been removed, the invite may be incomplete, or it is not available yet.',
     seoTitle: 'Community Not Found',
-    primary: { label: 'Browse Communities', to: '/communities', icon: 'compass' },
+    primary: { label: 'Browse Groups', to: '/groups', icon: 'compass' },
     secondary: { label: 'Go Home', to: '/', icon: 'home' },
   },
   bounty: {
@@ -50,14 +50,14 @@ export const STATUS_COPY: Record<StatusKind, StatusCopy> = {
     description: 'This bounty may have been removed or the link may be incomplete.',
     seoTitle: 'Bounty Not Found',
     primary: { label: 'Browse Bounties', to: '/bounties', icon: 'trophy' },
-    secondary: { label: 'Browse Communities', to: '/communities', icon: 'compass' },
+    secondary: { label: 'Browse Groups', to: '/groups', icon: 'compass' },
   },
   proposal: {
     code: '404',
     title: "This Proposal Isn't on Baraza.",
     description: "This proposal doesn't exist or has been removed.",
     seoTitle: 'Proposal Not Found',
-    primary: { label: 'Browse Communities', to: '/communities', icon: 'compass' },
+    primary: { label: 'Browse Groups', to: '/groups', icon: 'compass' },
     secondary: { label: 'Go Home', to: '/', icon: 'home' },
   },
   unauthorized: {
@@ -65,7 +65,7 @@ export const STATUS_COPY: Record<StatusKind, StatusCopy> = {
     title: 'Sign in to Continue.',
     description: 'Log in to your Baraza account to open this page.',
     seoTitle: 'Sign In Required',
-    primary: { label: 'Sign In', to: '/profile', icon: 'login' },
+    primary: { label: 'Sign In', to: '/account', icon: 'login' },
     secondary: { label: 'Go Home', to: '/', icon: 'home' },
   },
   forbidden: {
@@ -75,7 +75,7 @@ export const STATUS_COPY: Record<StatusKind, StatusCopy> = {
       "Your account doesn't have permission to open this page. If you should, ask a Baraza operator.",
     seoTitle: 'Access Restricted',
     primary: { label: 'Go Home', to: '/', icon: 'home' },
-    secondary: { label: 'Browse Communities', to: '/communities', icon: 'compass' },
+    secondary: { label: 'Browse Groups', to: '/groups', icon: 'compass' },
   },
   server: {
     code: '500',

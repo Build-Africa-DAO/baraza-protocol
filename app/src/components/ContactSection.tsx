@@ -131,6 +131,8 @@ export default function ContactSection() {
               className="absolute inset-0 h-full w-full object-cover"
               width={1024}
               height={1024}
+              loading="lazy"
+              decoding="async"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8">

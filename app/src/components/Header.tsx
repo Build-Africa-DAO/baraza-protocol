@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
 import { useAccount } from "@/contexts/AccountContext";
+import { isAdminWallet } from "@/lib/access";
 
 import { LANDING_NAV, LANDING_SECTION_IDS, isLandingNavActive } from "@/lib/landingNav";
 import { useScrollSpy } from "@/hooks/useScrollSpy";
@@ -27,7 +28,7 @@ function isAppRoute(pathname: string) {
     pathname.startsWith("/join") ||
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/dao") ||
-    pathname.startsWith("/profile") ||
+    pathname.startsWith("/account") ||
     pathname.startsWith("/status")
   );
 }
@@ -92,7 +93,7 @@ function ProfileMenu({
           <div className="border-t border-border pt-1">
             <Link
               role="menuitem"
-              to="/profile"
+              to="/account"
               onClick={() => setOpen(false)}
               className="flex items-center gap-2 px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-surface"
             >
@@ -101,16 +102,16 @@ function ProfileMenu({
             </Link>
             <Link
               role="menuitem"
-              to="/create/purpose"
+              to="/create"
               onClick={() => setOpen(false)}
               className="flex items-center gap-2 px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-surface"
             >
               <PlusCircle className="h-4 w-4 text-primary" />
-              Launch a Group
+              Start a Group
             </Link>
             {showFund && (
               <div className="border-t border-border px-3 py-3">
-                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Fund
                 </p>
                 <ChainSelector variant="mobile" side="left" />
@@ -141,7 +142,11 @@ export default function Header() {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
   const account = useAccount();
-  const showChain = account.authenticated || isAppRoute(location.pathname);
+  // §13.3: settlement rail is not a member choice. The picker stays available in
+  // development and for allowlisted operator wallets, and is invisible otherwise.
+  const showChain =
+    (account.authenticated || isAppRoute(location.pathname)) &&
+    (import.meta.env.DEV || isAdminWallet(account.accountId));
   const scrollId = useScrollSpy(LANDING_SECTION_IDS, location.pathname === "/");
 
   const handleSignIn = () => {
@@ -149,7 +154,7 @@ export default function Header() {
       account.login();
       return;
     }
-    navigate("/profile");
+    navigate("/account");
   };
 
   const handleSignUp = () => {
@@ -157,7 +162,7 @@ export default function Header() {
       account.createAccount();
       return;
     }
-    navigate("/profile");
+    navigate("/account");
   };
 
   useEffect(() => {
@@ -267,17 +272,17 @@ export default function Header() {
             {account.authenticated ? (
               <>
                 <p className="truncate px-3 pb-1 text-xs text-muted-foreground">{account.displayName}</p>
-                <Link to="/profile" className="inline-flex min-h-11 items-center gap-2 rounded-md px-3 text-sm font-semibold">
+                <Link to="/account" className="inline-flex min-h-11 items-center gap-2 rounded-md px-3 text-sm font-semibold">
                   <CircleUserRound className="h-4 w-4 text-primary" />
                   Account
                 </Link>
-                <Link to="/create/purpose" className="inline-flex min-h-11 items-center gap-2 rounded-md px-3 text-sm font-semibold">
+                <Link to="/create" className="inline-flex min-h-11 items-center gap-2 rounded-md px-3 text-sm font-semibold">
                   <PlusCircle className="h-4 w-4 text-primary" />
-                  Launch a Group
+                  Start a Group
                 </Link>
                 {showChain && (
                   <div className="px-3 py-2">
-                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Fund
                     </p>
                     <ChainSelector variant="mobile" />

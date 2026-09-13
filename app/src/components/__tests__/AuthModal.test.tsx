@@ -41,7 +41,7 @@ async function openEmailCodeStep() {
 }
 
 describe('AuthModal', () => {
-  it('keeps the form inside a height-limited dialog and hides the marketing image on small screens', () => {
+  it('keeps the form inside a height-limited dialog with no marketing image', () => {
     render(
       <AuthModal
         intent="signin"
@@ -55,10 +55,9 @@ describe('AuthModal', () => {
     expect(dialog.className).toMatch(/max-h-\[100dvh\]/);
     expect(dialog.className).toMatch(/overflow-y-auto/);
 
-    const imagePane = dialog.querySelector('img[src="/audience/group.jpg"]')?.parentElement;
-    expect(imagePane?.className).toMatch(/hidden/);
-    expect(imagePane?.className).toMatch(/md:block/);
+    expect(dialog.querySelector('img')).toBeNull();
     expect(screen.getByLabelText('Phone number')).toBeInTheDocument();
+    expect(screen.getByText(/You do not need a crypto wallet/)).toBeInTheDocument();
   });
 
   it('closes on Escape', async () => {

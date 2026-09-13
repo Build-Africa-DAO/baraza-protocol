@@ -31,10 +31,10 @@ const STATUS_CONFIG: Record<BountyStatus, {
   icon: React.ElementType;
 }> = {
   open:        { label: 'Open',        columnLabel: 'To Do',       emptyText: 'No open tasks yet',                icon: CircleDot,    badgeClass: 'border-confirmed/40 bg-confirmed/10 text-confirmed' },
-  in_progress: { label: 'In progress', columnLabel: 'In Progress', emptyText: 'Work in progress appears here',    icon: Zap,          badgeClass: 'border-primary/40 bg-primary/10 text-primary' },
-  in_review:   { label: 'Under review', columnLabel: 'Under Review', emptyText: 'Submissions awaiting review',      icon: Clock,        badgeClass: 'border-accent/40 bg-accent/10 text-accent' },
+  in_progress: { label: 'In progress', columnLabel: 'In Progress', emptyText: 'Work in progress appears here',    icon: Zap,          badgeClass: 'border-foreground/50 text-foreground' },
+  in_review:   { label: 'Under review', columnLabel: 'Under Review', emptyText: 'Submissions awaiting review',      icon: Clock,        badgeClass: 'border-border bg-surface text-muted-foreground' },
   awarded:     { label: 'Approved',    columnLabel: 'Approved',    emptyText: 'Approved bounties land here',      icon: CheckCircle2, badgeClass: 'border-confirmed/50 bg-confirmed/15 text-confirmed' },
-  paid:        { label: 'Approved',    columnLabel: 'Approved',    emptyText: 'Approved bounties land here',      icon: CheckCircle2, badgeClass: 'border-confirmed/50 bg-confirmed/15 text-confirmed' },
+  paid:        { label: 'Paid',        columnLabel: 'Paid',    emptyText: 'Approved bounties land here',      icon: CheckCircle2, badgeClass: 'border-confirmed/50 bg-confirmed/15 text-confirmed' },
 };
 
 const KANBAN_COLUMNS: BountyStatus[] = ['open', 'in_progress', 'in_review', 'paid'];
@@ -101,13 +101,13 @@ function CompactCard({
       )}
     >
       <div className="mb-2 flex flex-wrap items-center gap-1.5">
-        <span className={cn('inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', cfg.badgeClass)}>
+        <span className={cn('inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-bold uppercase tracking-wider', cfg.badgeClass)}>
           <StatusIcon className="h-2.5 w-2.5" />
           {cfg.label}
         </span>
-        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{bounty.category}</span>
+        <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">{bounty.category}</span>
         {bounty.roleGated && (
-          <span className="inline-flex items-center gap-1 rounded-full border border-border/60 px-2 py-0.5 text-[10px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1 rounded-full border border-border/60 px-2 py-0.5 text-xs text-muted-foreground">
             <Lock className="h-2.5 w-2.5" /> Members only
           </span>
         )}
@@ -119,15 +119,15 @@ function CompactCard({
       </Link>
 
       {bounty.assignee && (
-        <p className="mt-1 text-[11px] text-muted-foreground">Assigned to {bounty.assignee}</p>
+        <p className="mt-1 text-xs text-muted-foreground">Assigned to {bounty.assignee}</p>
       )}
 
       <div className="mt-2.5 flex items-center justify-between gap-2">
-        <span className="inline-flex items-center gap-1 rounded-full border border-border/60 px-2 py-1 text-[11px] text-muted-foreground">
+        <span className="inline-flex items-center gap-1 rounded-full border border-border/60 px-2 py-1 text-xs text-muted-foreground">
           <CalendarDays className="h-3 w-3" />
           {daysLeft(bounty.deadline)}
         </span>
-        <span className="font-bold text-sm text-accent">{formatRailAmountFromKes(bounty.rewardKes, chainMeta)}</span>
+        <span className="font-bold text-sm text-foreground">{formatRailAmountFromKes(bounty.rewardKes, chainMeta)}</span>
       </div>
 
       <div className="mt-2.5 flex gap-2">
@@ -140,7 +140,7 @@ function CompactCard({
               interested ? 'btn-wipe' : 'btn-wipe-outline',
             )}
           >
-            {interested ? 'Interested' : "I'm in"}
+            {interested ? 'Interested' : "Interested"}
           </button>
         )}
 
@@ -162,7 +162,7 @@ function CompactCard({
           <button
             type="button"
             onClick={() => onAdvanceStatus(bounty.id, 'in_review')}
-            className="btn-wipe-outline flex-1 gap-1 px-2 py-1.5 text-[11px]"
+            className="btn-wipe-outline flex-1 gap-1 px-2 py-1.5 text-xs"
           >
             <CheckCircle2 className="h-3 w-3 shrink-0" /> Reopen
           </button>
@@ -204,7 +204,7 @@ function ReviewActions({
       {open && (
         <div className="grid gap-2 rounded-xl border border-border/60 bg-surface/40 p-3">
           {submissions.length === 0 ? (
-            <p className="text-center text-[11px] text-muted-foreground">No submissions recorded yet.</p>
+            <p className="text-center text-xs text-muted-foreground">No submissions recorded yet.</p>
           ) : (
             submissions.map((sub) => (
               <SubmissionRow
@@ -247,11 +247,11 @@ function SubmissionRow({
             href={sub.workUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-[11px] text-primary underline-offset-2 hover:underline"
+            className="inline-flex items-center gap-1 text-xs text-primary underline-offset-2 hover:underline"
           >
             View work <ExternalLink className="h-2.5 w-2.5" />
           </a>
-          {sub.note && <p className="mt-1 text-[11px] text-muted-foreground">{sub.note}</p>}
+          {sub.note && <p className="mt-1 text-xs text-muted-foreground">{sub.note}</p>}
         </div>
 
         {(!sub.status || sub.status === 'pending') ? (
@@ -259,21 +259,21 @@ function SubmissionRow({
             <button
               type="button"
               onClick={onApprove}
-              className="btn-wipe gap-1 px-2 py-1 text-[11px]"
+              className="btn-wipe gap-1 px-2 py-1 text-xs"
             >
               <ThumbsUp className="h-3 w-3" /> Approve
             </button>
             <button
               type="button"
               onClick={onRevise}
-              className="btn-wipe-outline gap-1 px-2 py-1 text-[11px]"
+              className="btn-wipe-outline gap-1 px-2 py-1 text-xs"
             >
               <ThumbsDown className="h-3 w-3" /> Revise
             </button>
           </div>
         ) : (
           <span className={cn(
-            'shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider',
+            'shrink-0 rounded-full border px-2 py-0.5 text-xs font-bold uppercase tracking-wider',
             sub.status === 'approved'
               ? 'border-confirmed/40 bg-confirmed/10 text-confirmed'
               : 'border-border/60 bg-surface/60 text-muted-foreground',
@@ -339,12 +339,12 @@ function FullCard({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="mb-2 flex flex-wrap items-center gap-2">
-            <span className={cn('inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', cfg.badgeClass)}>
+            <span className={cn('inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-bold uppercase tracking-wider', cfg.badgeClass)}>
               <StatusIcon className="h-2.5 w-2.5" /> {cfg.label}
             </span>
-            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{bounty.category}</span>
+            <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">{bounty.category}</span>
             {bounty.roleGated && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-border/60 px-2 py-0.5 text-[10px] text-muted-foreground">
+              <span className="inline-flex items-center gap-1 rounded-full border border-border/60 px-2 py-0.5 text-xs text-muted-foreground">
                 <Lock className="h-2.5 w-2.5" /> Members only
               </span>
             )}
@@ -353,20 +353,20 @@ function FullCard({
           <p className="mt-1.5 text-xs leading-5 text-muted-foreground">{bounty.summary}</p>
         </div>
         <div className="shrink-0 text-right">
-          <p className="font-display text-base font-bold text-accent">{formatRailAmountFromKes(bounty.rewardKes, chainMeta)}</p>
-          <p className="mt-0.5 text-[10px] text-muted-foreground">
+          <p className="font-display text-base font-bold text-foreground">{formatRailAmountFromKes(bounty.rewardKes, chainMeta)}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
             {bounty.submissions} {bounty.submissions === 1 ? 'applicant' : 'applicants'}
           </p>
         </div>
       </div>
 
       {bounty.assignee && (
-        <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-surface px-2.5 py-1 text-[11px] text-foreground/80">
+        <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-surface px-2.5 py-1 text-xs text-foreground/80">
           <UserPlus className="h-3 w-3 text-primary" /> {bounty.assignee}
         </div>
       )}
 
-      <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
+      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
         <span className="inline-flex items-center gap-1 rounded-full border border-border/60 px-2 py-1 text-muted-foreground">
           <CalendarDays className="h-3 w-3" /> {daysLeft(bounty.deadline)}
         </span>
@@ -387,7 +387,7 @@ function FullCard({
                 interested ? 'btn-wipe' : 'btn-wipe-outline',
               )}
             >
-              {interested ? 'Interested' : "I'm in"}
+              {interested ? 'Interested' : "Interested"}
             </button>
             <button
               type="button"
@@ -421,7 +421,7 @@ function FullCard({
 
         {(bounty.status === 'paid' || bounty.status === 'awarded') && (
           <>
-            <span className="flex items-center gap-1.5 rounded-lg border border-confirmed/30 bg-confirmed/5 px-3 py-2 text-[11px] font-semibold text-confirmed">
+            <span className="flex items-center gap-1.5 rounded-lg border border-confirmed/30 bg-confirmed/5 px-3 py-2 text-xs font-semibold text-confirmed">
               <CheckCircle2 className="h-3 w-3" /> Approved
             </span>
             <button
@@ -463,7 +463,7 @@ function FullCard({
         </div>
       )}
 
-      {msg && <p className="mt-2 text-[11px] text-muted-foreground">{msg}</p>}
+      {msg && <p className="mt-2 text-xs text-muted-foreground">{msg}</p>}
     </article>
   );
 }
@@ -503,7 +503,7 @@ function KanbanColumn({
       <div className="flex items-center gap-2 rounded-lg border border-border/50 bg-surface/60 px-3 py-2">
         <ColIcon className="h-3.5 w-3.5 text-muted-foreground" />
         <span className="text-xs font-bold text-foreground">{cfg.columnLabel}</span>
-        <span className="ml-auto rounded-full bg-surface px-2 py-0.5 text-[10px] font-bold text-muted-foreground">{bounties.length}</span>
+        <span className="ml-auto rounded-full bg-surface px-2 py-0.5 text-xs font-bold text-muted-foreground">{bounties.length}</span>
       </div>
 
       <div className="flex flex-col gap-2">
@@ -512,7 +512,7 @@ function KanbanColumn({
             <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full border border-border/50 bg-surface/60">
               <ColIcon className="h-5 w-5 text-muted-foreground/50" />
             </div>
-            <p className="text-[11px] text-muted-foreground/60">{cfg.emptyText}</p>
+            <p className="text-xs text-muted-foreground/60">{cfg.emptyText}</p>
           </div>
         ) : bounties.map((bounty) => (
           <CompactCard
@@ -539,7 +539,7 @@ type ViewMode = 'list' | 'board';
 export default function BountyBoard({ communityId, communityName = 'this community', compact = false }: BountyBoardProps) {
   const { chainMeta } = useChain();
   const [bounties, setBounties] = useState(() => getBountiesForCommunity(communityId));
-  const [view, setView] = useState<ViewMode>('board');
+  const [view, setView] = useState<ViewMode>('list');
   const [interested, setInterested] = useState<Set<string>>(readInterest);
   const [draggedBountyId, setDraggedBountyId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<BountyStatus | null>(null);
@@ -615,7 +615,7 @@ export default function BountyBoard({ communityId, communityName = 'this communi
       {/* Header */}
       <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-widest">
+          <div className="mb-2 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-widest">
             <Megaphone className="h-3.5 w-3.5 text-primary" />
             Bounty board
           </div>
@@ -627,11 +627,11 @@ export default function BountyBoard({ communityId, communityName = 'this communi
           <div className="grid grid-cols-2 gap-2 text-right">
             <div className="rounded-lg border p-3">
               <p className="font-display text-xl font-bold">{openCount}</p>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Open</p>
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">Open</p>
             </div>
             <div className="rounded-lg border p-3">
-              <p className="font-display text-xl font-bold text-accent">{formatRailAmountFromKes(rewardPool, chainMeta)}</p>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Rewards</p>
+              <p className="font-display text-xl font-bold text-foreground">{formatRailAmountFromKes(rewardPool, chainMeta)}</p>
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">Rewards</p>
             </div>
           </div>
 

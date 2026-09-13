@@ -52,7 +52,7 @@ function KindIcon({ kind }: { kind: FilingRecord['kind'] }) {
 function FilingCard({ record }: { record: FilingRecord }) {
   return (
     <article className="rounded-xl border border-border bg-card p-4 space-y-2">
-      <header className="flex items-center justify-between gap-3 text-[11px] uppercase tracking-wide text-muted-foreground">
+      <header className="flex items-center justify-between gap-3 text-xs uppercase tracking-wide text-muted-foreground">
         <span className="inline-flex items-center gap-1.5 font-mono">
           <KindIcon kind={record.kind} />
           {record.kind}
@@ -61,7 +61,7 @@ function FilingCard({ record }: { record: FilingRecord }) {
       </header>
       <h3 className="text-sm font-semibold text-foreground">{record.topic}</h3>
       {record.supersedes ? (
-        <p className="text-[11px] text-amber-600 font-mono">
+        <p className="text-xs text-muted-foreground font-mono">
           supersedes {record.supersedes}
         </p>
       ) : null}
@@ -154,10 +154,10 @@ export default function AkiliCouncilFilings() {
     <Layout>
       <section className="mx-auto max-w-4xl px-4 py-8 space-y-6">
         <header className="space-y-2">
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-mono">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground font-mono">
             Admin · Akili Council
           </p>
-          <h1 className="text-2xl font-semibold">Council filings</h1>
+          <h1 className="text-2xl font-semibold">Council Filings</h1>
           <p className="text-sm text-muted-foreground max-w-2xl">
             Raw filings, listening notes, and corrections from the council agents. Admin-gated; not
             surfaced to community members. Source-of-truth is the council data directory; production
@@ -180,7 +180,7 @@ export default function AkiliCouncilFilings() {
                 }`}
               >
                 {agent.label}
-                <span className="ml-1.5 text-[10px] opacity-70">{agent.role}</span>
+                <span className="ml-1.5 text-xs opacity-70">{agent.role}</span>
               </button>
             );
           })}
@@ -202,7 +202,7 @@ export default function AkiliCouncilFilings() {
         ) : null}
 
         {data && !data.synced ? (
-          <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-xs text-amber-700">
+          <div className="rounded-xl border border-border bg-surface p-4 text-sm text-foreground">
             {data.status ?? 'No filings found.'}
           </div>
         ) : null}

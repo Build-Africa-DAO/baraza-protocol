@@ -29,6 +29,8 @@ export default function LogoMarquee() {
             <img
               src={logo.src}
               alt={logo.wordmark ? logo.name : ""}
+              loading="lazy"
+              decoding="async"
               className={logo.invertOnDark ? "h-8 w-auto dark:invert" : "h-8 w-auto"}
             />
             {!logo.wordmark && (

@@ -27,6 +27,8 @@ function PhoneMockup() {
                 alt="Two members checking a vote on a phone"
                 width={720}
                 height={900}
+                loading="lazy"
+                decoding="async"
                 className="aspect-[9/17] w-full object-cover object-[center_20%]"
               />
             </div>
@@ -65,7 +67,7 @@ export default function CTASection() {
               <Reveal delay={REVEAL_STAGGER * 3}>
                 <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
                   <Button asChild size="lg">
-                    <Link to="/create/purpose">
+                    <Link to="/create">
                       Start a Group
                       <ArrowRight className="h-4 w-4" />
                     </Link>

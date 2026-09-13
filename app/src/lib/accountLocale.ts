@@ -1,21 +1,20 @@
 export const ACCOUNT_COUNTRIES = [
-  { code: 'KE', name: 'Kenya', currency: 'KES', locale: 'en-KE', timeZone: 'Africa/Nairobi', usdPerUnit: 0.0077 },
-  { code: 'RW', name: 'Rwanda', currency: 'RWF', locale: 'en-RW', timeZone: 'Africa/Kigali', usdPerUnit: 0.00069 },
-  { code: 'TZ', name: 'Tanzania', currency: 'TZS', locale: 'sw-TZ', timeZone: 'Africa/Dar_es_Salaam', usdPerUnit: 0.00039 },
-  { code: 'UG', name: 'Uganda', currency: 'UGX', locale: 'en-UG', timeZone: 'Africa/Kampala', usdPerUnit: 0.00027 },
-  { code: 'ET', name: 'Ethiopia', currency: 'ETB', locale: 'en-ET', timeZone: 'Africa/Addis_Ababa', usdPerUnit: 0.0091 },
-  { code: 'NG', name: 'Nigeria', currency: 'NGN', locale: 'en-NG', timeZone: 'Africa/Lagos', usdPerUnit: 0.00063 },
-  { code: 'GH', name: 'Ghana', currency: 'GHS', locale: 'en-GH', timeZone: 'Africa/Accra', usdPerUnit: 0.067 },
-  { code: 'ZA', name: 'South Africa', currency: 'ZAR', locale: 'en-ZA', timeZone: 'Africa/Johannesburg', usdPerUnit: 0.054 },
-  { code: 'US', name: 'United States', currency: 'USD', locale: 'en-US', timeZone: 'America/New_York', usdPerUnit: 1 },
-  { code: 'GB', name: 'United Kingdom', currency: 'GBP', locale: 'en-GB', timeZone: 'Europe/London', usdPerUnit: 1.27 },
+  { code: 'KE', name: 'Kenya', currency: 'KES', locale: 'en-KE', timeZone: 'Africa/Nairobi' },
+  { code: 'RW', name: 'Rwanda', currency: 'RWF', locale: 'en-RW', timeZone: 'Africa/Kigali' },
+  { code: 'TZ', name: 'Tanzania', currency: 'TZS', locale: 'sw-TZ', timeZone: 'Africa/Dar_es_Salaam' },
+  { code: 'UG', name: 'Uganda', currency: 'UGX', locale: 'en-UG', timeZone: 'Africa/Kampala' },
+  { code: 'ET', name: 'Ethiopia', currency: 'ETB', locale: 'en-ET', timeZone: 'Africa/Addis_Ababa' },
+  { code: 'NG', name: 'Nigeria', currency: 'NGN', locale: 'en-NG', timeZone: 'Africa/Lagos' },
+  { code: 'GH', name: 'Ghana', currency: 'GHS', locale: 'en-GH', timeZone: 'Africa/Accra' },
+  { code: 'ZA', name: 'South Africa', currency: 'ZAR', locale: 'en-ZA', timeZone: 'Africa/Johannesburg' },
+  { code: 'US', name: 'United States', currency: 'USD', locale: 'en-US', timeZone: 'America/New_York' },
+  { code: 'GB', name: 'United Kingdom', currency: 'GBP', locale: 'en-GB', timeZone: 'Europe/London' },
 ] as const;
 
 export type AccountCountryCode = (typeof ACCOUNT_COUNTRIES)[number]['code'];
 export type AccountCountry = (typeof ACCOUNT_COUNTRIES)[number];
 
 const STORAGE_KEY = 'baraza.accountCountry.v1';
-const KES_USD_REFERENCE = 0.0077;
 
 export function isAccountCountryCode(value: string | null): value is AccountCountryCode {
   return ACCOUNT_COUNTRIES.some((country) => country.code === value);
@@ -45,6 +44,12 @@ export function inferAccountCountry(): AccountCountryCode {
   return timeZoneCountries[timeZone] ?? 'KE';
 }
 
+/** True only when the person picked a country; inference does not count. */
+export function hasStoredAccountCountry(): boolean {
+  if (typeof window === 'undefined') return false;
+  return isAccountCountryCode(window.localStorage.getItem(STORAGE_KEY));
+}
+
 export function readAccountCountry(): AccountCountryCode {
   if (typeof window === 'undefined') return 'KE';
   const stored = window.localStorage.getItem(STORAGE_KEY);
@@ -58,22 +63,6 @@ export function writeAccountCountry(country: AccountCountryCode): void {
 
 export function getAccountCountry(country: AccountCountryCode = readAccountCountry()): AccountCountry {
   return ACCOUNT_COUNTRIES.find((option) => option.code === country) ?? ACCOUNT_COUNTRIES[0];
-}
-
-export function convertKesToAccountCurrency(amountKes: number, country: AccountCountryCode = readAccountCountry()): number {
-  const accountCountry = getAccountCountry(country);
-  return (amountKes * KES_USD_REFERENCE) / accountCountry.usdPerUnit;
-}
-
-export function formatAccountCurrency(amountKes: number, country: AccountCountryCode = readAccountCountry()): string {
-  const accountCountry = getAccountCountry(country);
-  const amount = convertKesToAccountCurrency(amountKes, country);
-  if (country === 'KE') return `KSh ${Math.round(amount).toLocaleString('en-KE')}`;
-  return new Intl.NumberFormat(accountCountry.locale, {
-    style: 'currency',
-    currency: accountCountry.currency,
-    maximumFractionDigits: accountCountry.currency === 'USD' || accountCountry.currency === 'GBP' ? 2 : 0,
-  }).format(amount);
 }
 
 export function formatAccountDate(

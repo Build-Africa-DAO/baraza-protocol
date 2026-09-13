@@ -4,6 +4,8 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import Layout from '@/components/Layout';
 import { StatusScreen } from '@/components/StatusPage';
+import { Button } from '@/components/ui/button';
+import { Sheet } from '@/components/ui/sheet';
 import { useSeo } from '@/lib/seo';
 import { isAdminWallet } from '@/lib/access';
 import { useCommunities } from '@/hooks/useCommunities';
@@ -59,6 +61,7 @@ export default function RetroRounds() {
   const [loading, setLoading] = useState(false);
   const [opening, setOpening] = useState(false);
   const [settling, setSettling] = useState(false);
+  const [confirmSettle, setConfirmSettle] = useState(false);
   const [settleResult, setSettleResult] = useState<string | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [error, setError] = useState<string | null>(null);
@@ -205,7 +208,7 @@ export default function RetroRounds() {
     <Layout>
       <section className="mx-auto max-w-4xl px-4 py-8 space-y-6">
         <header className="space-y-2">
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-mono">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground font-mono">
             Admin · BRZA distribution
           </p>
           <h1 className="text-2xl font-semibold inline-flex items-center gap-2">
@@ -214,10 +217,8 @@ export default function RetroRounds() {
           </h1>
           <p className="text-sm text-muted-foreground max-w-2xl">
             Weekly retroactive BRZA distributions, per community. Members vote on which peers
-            contributed most over the period; pool is sized from the community's share of the
-            monthly emission cap. See{' '}
-            <code className="text-xs bg-surface px-1 rounded">app/src/lib/brza/retroRounds.ts</code>{' '}
-            for the math.
+            contributed most over the period; the pool is sized from the community's share of the
+            monthly emission cap.
           </p>
         </header>
 
@@ -271,19 +272,19 @@ export default function RetroRounds() {
             <div className="space-y-4">
               <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                 <div>
-                  <dt className="text-[11px] uppercase tracking-wider text-muted-foreground font-mono">
+                  <dt className="text-xs uppercase tracking-wider text-muted-foreground font-mono">
                     Status
                   </dt>
                   <dd className="font-medium capitalize">{activeRound.status}</dd>
                 </div>
                 <div>
-                  <dt className="text-[11px] uppercase tracking-wider text-muted-foreground font-mono">
+                  <dt className="text-xs uppercase tracking-wider text-muted-foreground font-mono">
                     Pool
                   </dt>
                   <dd className="font-medium">{formatBrza(activeRound.pool_brza)}</dd>
                 </div>
                 <div>
-                  <dt className="text-[11px] uppercase tracking-wider text-muted-foreground font-mono">
+                  <dt className="text-xs uppercase tracking-wider text-muted-foreground font-mono">
                     Period
                   </dt>
                   <dd className="font-medium">
@@ -291,7 +292,7 @@ export default function RetroRounds() {
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-[11px] uppercase tracking-wider text-muted-foreground font-mono">
+                  <dt className="text-xs uppercase tracking-wider text-muted-foreground font-mono">
                     Voting closes
                   </dt>
                   <dd className="font-medium">{formatDate(activeRound.voting_closes_at)}</dd>
@@ -301,17 +302,39 @@ export default function RetroRounds() {
               {new Date(activeRound.voting_closes_at).getTime() <= nowMs ? (
                 <div className="border-t border-border pt-3 space-y-2">
                   <p className="text-xs text-muted-foreground">
-                    Voting has closed. Run settlement to compute allocations and write them to{' '}
-                    <code className="bg-surface px-1 rounded">retro_allocations</code>.
+                    Voting has closed. Settling computes each member's share and records it. It cannot be undone.
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => void settleRound()}
-                    disabled={settling}
-                    className="btn-wipe px-4 py-2 text-sm disabled:opacity-50"
+                  <Button type="button" onClick={() => setConfirmSettle(true)} disabled={settling}>
+                    {settling ? 'Settling…' : 'Settle Round'}
+                  </Button>
+                  <Sheet
+                    open={confirmSettle}
+                    onClose={() => setConfirmSettle(false)}
+                    title="Settle This Round?"
+                    description="This distributes the whole pool according to the ballots. There is no undo."
+                    footer={
+                      <>
+                        <Button type="button" variant="outline" onClick={() => setConfirmSettle(false)} disabled={settling}>
+                          Cancel
+                        </Button>
+                        <Button
+                          type="button"
+                          disabled={settling}
+                          onClick={() => {
+                            setConfirmSettle(false);
+                            void settleRound();
+                          }}
+                        >
+                          Settle Round
+                        </Button>
+                      </>
+                    }
                   >
-                    {settling ? 'Settling…' : 'Settle round'}
-                  </button>
+                    <dl className="space-y-2 text-sm">
+                      <div className="flex justify-between gap-4"><dt className="text-muted-foreground">Pool</dt><dd className="font-semibold tabular-nums">{activeRound.pool_brza.toLocaleString()} BRZA</dd></div>
+                      <div className="flex justify-between gap-4"><dt className="text-muted-foreground">Period</dt><dd>{formatDate(activeRound.period_start)} – {formatDate(activeRound.period_end)}</dd></div>
+                    </dl>
+                  </Sheet>
                   {settleResult ? (
                     <div className="rounded-lg border border-confirmed/40 bg-confirmed/10 p-3 text-xs text-confirmed">
                       {settleResult}
@@ -338,7 +361,7 @@ export default function RetroRounds() {
               >
                 {opening ? 'Opening…' : 'Open a weekly round'}
               </button>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Defaults: period = past 7 days, voting closes 48 hours after period end. Pool is sized
                 from the community's share of the protocol-wide monthly emission cap.
               </p>

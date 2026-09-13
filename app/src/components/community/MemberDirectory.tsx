@@ -1,448 +1,176 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Search, ChevronDown, ChevronUp, Users, Shield, ShieldCheck,
-  Calendar, PiggyBank, Vote, FileText, TrendingUp, Clock,
-  ArrowUpDown, X, Download
-} from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Search } from 'lucide-react';
+import { InitialsTile, ListRow } from '@/components/app/ListRow';
+import { EmptyState } from '@/components/ui/empty-state';
+import { FilterChips } from '@/components/ui/filter-chips';
+import { Input } from '@/components/ui/field';
+import { StatusChip } from '@/components/ui/status-chip';
 import { useMembers } from '@/hooks/useBarazaData';
-import { formatRailAmountFromKes, formatRailDate } from '@/lib/utils';
-import type { Member, Contribution } from '@/lib/dataStore';
-import { useChain } from '@/hooks/useChain';
-import { DuesStreakChip } from '@/components/DuesStreakChip';
+import { formatAccountDate } from '@/lib/accountLocale';
 import { fetchDuesStreakBatch, type StreakResult } from '@/lib/duesStreak';
+import { formatMajor } from '@/lib/money';
+import type { Member } from '@/lib/dataStore';
 
-function timeAgo(ts: number): string {
-  const seconds = Math.floor((Date.now() - ts) / 1000);
-  if (seconds < 60) return 'just now';
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d ago`;
-  const months = Math.floor(days / 30);
-  return `${months}mo ago`;
-}
+/**
+ * §13.17 People — who belongs to this group.
+ *
+ * Rows, four filters, tap to expand the last contributions. Officers see dues
+ * standing (Active / Overdue) and the Overdue filter; members see names and
+ * roles. No aggregate tiles, no CSV here (statements live in Settings), no
+ * placeholder streak chips: a streak shows only when the server has one.
+ */
+type PeopleFilter = 'all' | 'active' | 'pending' | 'overdue';
 
-const roleConfig: Record<string, { label: string; icon: React.ElementType; color: string; bg: string }> = {
-  founder: { label: 'Founder', icon: ShieldCheck, color: 'text-accent', bg: 'bg-accent/15' },
-  admin: { label: 'Admin', icon: Shield, color: 'text-primary', bg: 'bg-primary/15' },
-  member: { label: 'Member', icon: Users, color: 'text-muted-foreground', bg: 'bg-muted' },
-};
-
-const contribTypeConfig: Record<string, { label: string; color: string }> = {
-  membership: { label: 'Membership', color: 'text-accent' },
-  monthly: { label: 'Monthly', color: 'text-primary' },
-  extra: { label: 'Extra', color: 'text-secondary' },
-};
-
-type SortField = 'name' | 'joined' | 'contributed' | 'activity';
+const OVERDUE_AFTER_MS = 40 * 24 * 60 * 60 * 1000;
 
 interface MemberDirectoryProps {
   communityId: string;
-  /** Authoritative member count from the community record (may exceed the
-   * number of locally-seeded member profiles). Shown as "Total Members". */
-  totalCount?: number;
+  currency?: string;
+  isOfficer?: boolean;
 }
 
-// ---------- Contribution row ----------
+function initialsOf(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0] ?? '')
+    .join('')
+    .toUpperCase() || 'M';
+}
 
-const ContributionRow: React.FC<{ contribution: Contribution }> = ({ contribution }) => {
-  const { chainMeta } = useChain();
-  const config = contribTypeConfig[contribution.type] || contribTypeConfig.monthly;
-  return (
-    <div className="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-surface/30 transition-colors">
-      <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-        <PiggyBank className="w-3.5 h-3.5 text-primary" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-foreground">{formatRailAmountFromKes(contribution.amount, chainMeta)}</span>
-          <span className={`text-[10px] font-medium ${config.color} px-1.5 py-0.5 rounded-full bg-surface`}>
-            {config.label}
-          </span>
-        </div>
-        <p className="text-[10px] text-muted-foreground mt-0.5">{contribution.note}</p>
-      </div>
-      <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-        {formatRailDate(contribution.timestamp, chainMeta, { day: 'numeric', month: 'short', year: 'numeric' })}
-      </span>
-    </div>
-  );
-};
+function roleLabel(role: Member['role']): string | null {
+  if (role === 'founder') return 'Founder';
+  if (role === 'admin') return 'Officer';
+  return null;
+}
 
-// ---------- Member card (expanded) ----------
-
-const MemberCard: React.FC<{ member: Member; isExpanded: boolean; onToggle: () => void; streakMonths?: number }> = ({
-  member,
-  isExpanded,
-  onToggle,
-  streakMonths,
-}) => {
-  const { chainMeta } = useChain();
-  const role = roleConfig[member.role] || roleConfig.member;
-  const RoleIcon = role.icon;
-  const [showAllContribs, setShowAllContribs] = useState(false);
-
-  const visibleContribs = showAllContribs ? member.contributions : member.contributions.slice(0, 5);
-
-  return (
-    <motion.div
-      layout
-      className="baraza-card overflow-hidden"
-    >
-      {/* Summary row */}
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center gap-3 p-4 text-left hover:bg-surface/30 transition-colors"
-      >
-        {/* Avatar */}
-        <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0">
-          <span className="font-display text-sm font-bold text-primary">
-            {member.name.split(' ').map((w) => w[0]).join('').slice(0, 2)}
-          </span>
-        </div>
-
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-sm font-semibold text-foreground truncate">{member.name}</span>
-            <span className={`inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full ${role.bg} ${role.color}`}>
-              <RoleIcon className="w-2.5 h-2.5" />
-              {role.label}
-            </span>
-            <DuesStreakChip streakMonths={streakMonths} />
-          </div>
-          <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
-            <span className="inline-flex items-center gap-1">
-              <Calendar className="w-2.5 h-2.5" />
-              Joined {timeAgo(member.joinedAt)}
-            </span>
-            <span className="inline-flex items-center gap-1 font-medium text-accent">
-              <PiggyBank className="w-2.5 h-2.5" />
-              {formatRailAmountFromKes(member.totalContributed, chainMeta)}
-            </span>
-          </div>
-        </div>
-
-        {/* Stats + chevron */}
-        <div className="hidden sm:flex items-center gap-4 flex-shrink-0">
-          <div className="text-center">
-            <p className="text-xs font-semibold text-foreground tabular-nums">{member.votesCount}</p>
-            <p className="text-[9px] text-muted-foreground">Votes</p>
-          </div>
-          <div className="text-center">
-            <p className="text-xs font-semibold text-foreground tabular-nums">{member.contributionCount}</p>
-            <p className="text-[9px] text-muted-foreground">Payments</p>
-          </div>
-        </div>
-
-        <div className="flex-shrink-0 ml-1">
-          {isExpanded ? (
-            <ChevronUp className="w-4 h-4 text-muted-foreground" />
-          ) : (
-            <ChevronDown className="w-4 h-4 text-muted-foreground" />
-          )}
-        </div>
-      </button>
-
-      {/* Expanded detail */}
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="overflow-hidden"
-          >
-            <div className="px-4 pb-4 border-t border-border/50">
-              {/* Stats row */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 mb-5">
-                <div className="bg-surface rounded-lg p-3 text-center">
-                  <PiggyBank className="w-4 h-4 text-accent mx-auto mb-1" />
-                  <p className="text-sm font-bold text-foreground tabular-nums">{formatRailAmountFromKes(member.totalContributed, chainMeta)}</p>
-                  <p className="text-[9px] text-muted-foreground">Total Contributed</p>
-                </div>
-                <div className="bg-surface rounded-lg p-3 text-center">
-                  <TrendingUp className="w-4 h-4 text-primary mx-auto mb-1" />
-                  <p className="text-sm font-bold text-foreground tabular-nums">{member.contributionCount}</p>
-                  <p className="text-[9px] text-muted-foreground">Payments Made</p>
-                </div>
-                <div className="bg-surface rounded-lg p-3 text-center">
-                  <Vote className="w-4 h-4 text-secondary mx-auto mb-1" />
-                  <p className="text-sm font-bold text-foreground tabular-nums">{member.votesCount}</p>
-                  <p className="text-[9px] text-muted-foreground">Votes Cast</p>
-                </div>
-                <div className="bg-surface rounded-lg p-3 text-center">
-                  <FileText className="w-4 h-4 text-muted-foreground mx-auto mb-1" />
-                  <p className="text-sm font-bold text-foreground tabular-nums">{member.proposalsCount}</p>
-                  <p className="text-[9px] text-muted-foreground">Proposals Made</p>
-                </div>
-              </div>
-
-              {/* Last active */}
-              <div className="flex items-center gap-2 mb-4 text-[10px] text-muted-foreground">
-                <Clock className="w-3 h-3" />
-                Last contribution: {timeAgo(member.lastContributionAt)}
-              </div>
-
-              {/* Contribution history */}
-              <div>
-                <h4 className="font-display text-xs font-semibold text-foreground mb-2">Contribution History</h4>
-                <div className="space-y-0.5">
-                  {visibleContribs.map((c) => (
-                    <ContributionRow key={c.id} contribution={c} />
-                  ))}
-                </div>
-                {member.contributions.length > 5 && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowAllContribs(!showAllContribs);
-                    }}
-                    className="mt-2 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
-                  >
-                    {showAllContribs
-                      ? 'Show less'
-                      : `Show all ${member.contributions.length} contributions`}
-                  </button>
-                )}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
-};
-
-// ---------- Main directory ----------
-
-const MemberDirectory: React.FC<MemberDirectoryProps> = ({ communityId, totalCount }) => {
-  const { chainMeta } = useChain();
+export default function MemberDirectory({ communityId, currency, isOfficer = false }: MemberDirectoryProps) {
   const members = useMembers(communityId);
   const [search, setSearch] = useState('');
-  const [sortField, setSortField] = useState<SortField>('contributed');
-  const [sortAsc, setSortAsc] = useState(false);
+  const [filter, setFilter] = useState<PeopleFilter>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [roleFilter, setRoleFilter] = useState<'all' | 'founder' | 'admin' | 'member' | 'officer' | 'active' | 'overdue_dues'>('all');
+  const [now] = useState(() => Date.now());
+  const [streaks, setStreaks] = useState<Record<string, StreakResult>>({});
 
-  // Batched dues-streak fetch — one round trip for all visible members.
-  // Witnessed standing — chama culture surfaces, not just self-view.
-  const [streaksByWallet, setStreaksByWallet] = useState<Record<string, StreakResult>>({});
   useEffect(() => {
-    const wallets = members.map((m) => m.walletKey).filter((w): w is string => !!w);
-    if (wallets.length === 0) { setStreaksByWallet({}); return; }
+    const wallets = members.map((m) => m.walletKey).filter((w): w is string => Boolean(w));
+    if (wallets.length === 0) return;
     let cancelled = false;
     fetchDuesStreakBatch(wallets)
-      .then((result) => { if (!cancelled) setStreaksByWallet(result); })
+      .then((result) => {
+        if (!cancelled) setStreaks(result);
+      })
       .catch(() => undefined);
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [members]);
 
+  const isOverdue = (member: Member) => member.status === 'active' && now - member.lastContributionAt > OVERDUE_AFTER_MS;
+
   const filtered = useMemo(() => {
-    const result = members.filter((m) => {
-      const matchesSearch = m.name.toLowerCase().includes(search.toLowerCase());
-      const overdue = Date.now() - m.lastContributionAt > 40 * 86400000;
-      const matchesRole =
-        roleFilter === 'all'
-        || (roleFilter === 'officer' && (m.role === 'founder' || m.role === 'admin'))
-        || (roleFilter === 'active' && m.status === 'active' && !overdue)
-        || (roleFilter === 'overdue_dues' && overdue)
-        || m.role === roleFilter;
-      return matchesSearch && matchesRole;
-    });
+    const term = search.trim().toLowerCase();
+    return members
+      .filter((m) => (term ? m.name.toLowerCase().includes(term) : true))
+      .filter((m) => {
+        if (filter === 'all') return true;
+        if (filter === 'pending') return m.status !== 'active';
+        if (filter === 'overdue') return isOverdue(m);
+        return m.status === 'active' && !isOverdue(m);
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [members, search, filter, now]);
 
-    result.sort((a, b) => {
-      let cmp = 0;
-      switch (sortField) {
-        case 'name':
-          cmp = a.name.localeCompare(b.name);
-          break;
-        case 'joined':
-          cmp = a.joinedAt - b.joinedAt;
-          break;
-        case 'contributed':
-          cmp = a.totalContributed - b.totalContributed;
-          break;
-        case 'activity':
-          cmp = a.lastContributionAt - b.lastContributionAt;
-          break;
-      }
-      return sortAsc ? cmp : -cmp;
-    });
+  const options = [
+    { key: 'all' as const, label: 'All', count: members.length },
+    { key: 'active' as const, label: 'Active' },
+    { key: 'pending' as const, label: 'Pending' },
+    ...(isOfficer ? [{ key: 'overdue' as const, label: 'Overdue', count: members.filter(isOverdue).length }] : []),
+  ];
 
-    return result;
-  }, [members, search, sortField, sortAsc, roleFilter]);
-
-  const handleExportCsv = () => {
-    const rows = [
-      ['name', 'role', 'status', 'wallet', 'total_contributed', 'joined_at'],
-      ...filtered.map((m) => [
-        m.name,
-        m.role,
-        m.status,
-        m.walletKey,
-        String(m.totalContributed),
-        new Date(m.joinedAt).toISOString(),
-      ]),
-    ];
-    const csv = rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
-    const href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-    const a = document.createElement('a');
-    a.href = href;
-    a.download = `baraza-roster-${communityId}.csv`;
-    a.click();
-    URL.revokeObjectURL(href);
-  };
-
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortAsc(!sortAsc);
-    } else {
-      setSortField(field);
-      setSortAsc(false);
-    }
-  };
-
-  // Aggregate stats
-  const totalContributed = members.reduce((sum, m) => sum + m.totalContributed, 0);
-  const avgContribution = members.length > 0 ? Math.round(totalContributed / members.length) : 0;
-  const founders = members.filter((m) => m.role === 'founder').length;
-  const admins = members.filter((m) => m.role === 'admin').length;
+  if (members.length === 0) {
+    return (
+      <EmptyState
+        title="No Members Listed Yet"
+        body="Members appear here once Baraza has their records. If people have joined, the list is still syncing."
+      />
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Summary stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="baraza-card p-3 text-center">
-          <Users className="w-4 h-4 text-primary mx-auto mb-1" />
-          <p className="font-display text-lg font-bold text-foreground tabular-nums">{totalCount ?? members.length}</p>
-          <p className="text-[9px] text-muted-foreground">Total Members</p>
-        </div>
-        <div className="baraza-card p-3 text-center">
-          <PiggyBank className="w-4 h-4 text-accent mx-auto mb-1" />
-          <p className="font-display text-lg font-bold text-foreground tabular-nums">{formatRailAmountFromKes(totalContributed, chainMeta)}</p>
-          <p className="text-[9px] text-muted-foreground">Total Contributed</p>
-        </div>
-        <div className="baraza-card p-3 text-center">
-          <TrendingUp className="w-4 h-4 text-secondary mx-auto mb-1" />
-          <p className="font-display text-lg font-bold text-foreground tabular-nums">{formatRailAmountFromKes(avgContribution, chainMeta)}</p>
-          <p className="text-[9px] text-muted-foreground">Avg per Member</p>
-        </div>
-        <div className="baraza-card p-3 text-center">
-          <ShieldCheck className="w-4 h-4 text-accent mx-auto mb-1" />
-          <p className="font-display text-lg font-bold text-foreground tabular-nums">{founders + admins}</p>
-          <p className="text-[9px] text-muted-foreground">Leaders</p>
-        </div>
+    <div className="space-y-4">
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+        <Input
+          type="search"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Search by name"
+          aria-label="Search members"
+          className="pl-9"
+        />
       </div>
 
-      {/* Search + filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search members..."
-            className="w-full bg-surface rounded-xl pl-10 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary/50 border border-border transition-all"
-          />
-          {search && (
-            <button
-              onClick={() => setSearch('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
+      <FilterChips options={options} value={filter} onChange={setFilter} aria-label="Member filters" />
 
-        {/* Role filter chips */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {(['all', 'active', 'overdue_dues', 'officer', 'founder', 'admin', 'member'] as const).map((role) => (
-            <button
-              key={role}
-              onClick={() => setRoleFilter(role)}
-              className={`px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all border ${
-                roleFilter === role
-                  ? 'bg-primary/15 text-primary border-primary/30'
-                  : 'bg-surface text-muted-foreground border-border hover:border-primary/20'
-              }`}
-            >
-              {role === 'all' ? 'All' : role === 'overdue_dues' ? 'Overdue dues' : role === 'officer' ? 'Officers' : role.charAt(0).toUpperCase() + role.slice(1)}
-            </button>
-          ))}
-          <button type="button" onClick={handleExportCsv} className="btn-wipe-outline ml-auto gap-1 px-3 py-1.5 text-[11px]">
-            <Download className="h-3 w-3" />
-            CSV
-          </button>
-        </div>
-      </div>
-
-      {/* Sort controls */}
-      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-        <ArrowUpDown className="w-3 h-3" />
-        <span>Sort by:</span>
-        {([
-          { field: 'contributed' as SortField, label: 'Contribution' },
-          { field: 'joined' as SortField, label: 'Join Date' },
-          { field: 'name' as SortField, label: 'Name' },
-          { field: 'activity' as SortField, label: 'Last Active' },
-        ]).map((opt) => (
-          <button
-            key={opt.field}
-            onClick={() => handleSort(opt.field)}
-            className={`px-2 py-1 rounded-md transition-all ${
-              sortField === opt.field
-                ? 'bg-primary/15 text-primary font-semibold'
-                : 'hover:bg-surface text-muted-foreground'
-            }`}
-          >
-            {opt.label}
-            {sortField === opt.field && (sortAsc ? ' ↑' : ' ↓')}
-          </button>
-        ))}
-      </div>
-
-      {/* Member list */}
-      {filtered.length > 0 ? (
-        <div className="space-y-2">
-          {filtered.map((member, idx) => (
-            <motion.div
-              key={member.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: Math.min(idx * 0.03, 0.3) }}
-            >
-              <MemberCard
-                member={member}
-                isExpanded={expandedId === member.id}
-                onToggle={() => setExpandedId(expandedId === member.id ? null : member.id)}
-                streakMonths={streaksByWallet[member.walletKey]?.consecutiveMonthsPaid}
-              />
-            </motion.div>
-          ))}
-        </div>
+      {filtered.length === 0 ? (
+        <EmptyState title="No One Matches" body="Try a different name or clear the filter." secondary={{ label: 'Clear Search', onClick: () => { setSearch(''); setFilter('all'); } }} />
       ) : (
-        <div className="baraza-card p-8 text-center">
-          <Users className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground">
-            {search ? 'No members matching your search.' : 'No members yet.'}
-          </p>
-        </div>
-      )}
-
-      {/* Count label */}
-      {filtered.length > 0 && (
-        <p className="text-[10px] text-muted-foreground text-center">
-          Showing {filtered.length} of {members.length} members
-        </p>
+        <ul className="space-y-2">
+          {filtered.map((member) => {
+            const role = roleLabel(member.role);
+            const streak = streaks[member.walletKey]?.consecutiveMonthsPaid ?? 0;
+            const expanded = expandedId === member.id;
+            return (
+              <li key={member.id} className="space-y-2">
+                <ListRow
+                  title={member.name}
+                  meta={`Joined ${formatAccountDate(member.joinedAt, undefined, { month: 'short', year: 'numeric' })}`}
+                  leading={<InitialsTile initials={initialsOf(member.name)} />}
+                  onClick={() => setExpandedId(expanded ? null : member.id)}
+                  aria-label={`${member.name}, ${expanded ? 'hide' : 'show'} contributions`}
+                  trailing={
+                    <>
+                      {role ? <StatusChip kind="info" icon={null} label={role} /> : null}
+                      {streak > 0 ? <StatusChip kind="confirmed" label={`${streak} ${streak === 1 ? 'Month' : 'Months'} On Time`} /> : null}
+                      {isOfficer && member.status === 'active' ? (
+                        isOverdue(member) ? <StatusChip kind="hold" label="Overdue" /> : <StatusChip kind="confirmed" label="Active" />
+                      ) : null}
+                      {member.status !== 'active' ? <StatusChip kind="pending" label="Pending" /> : null}
+                    </>
+                  }
+                />
+                {expanded ? <Contributions member={member} currency={currency} /> : null}
+              </li>
+            );
+          })}
+        </ul>
       )}
     </div>
   );
-};
+}
 
-export default MemberDirectory;
+function Contributions({ member, currency }: { member: Member; currency?: string }) {
+  const recent = [...member.contributions].sort((a, b) => b.timestamp - a.timestamp).slice(0, 5);
+  return (
+    <div className="ml-4 border-l border-border pl-4" role="region" aria-label={`Contributions from ${member.name}`}>
+      {recent.length === 0 ? (
+        <p className="py-2 text-sm text-muted-foreground">No contributions recorded yet.</p>
+      ) : (
+        <ul className="divide-y divide-border">
+          {recent.map((contribution) => (
+            <li key={contribution.id} className="flex items-center justify-between gap-3 py-2 text-sm">
+              <div className="min-w-0">
+                <p className="truncate">{contribution.note || (contribution.type === 'membership' ? 'Activation' : contribution.type === 'monthly' ? 'Monthly dues' : 'Extra contribution')}</p>
+                <p className="text-xs text-muted-foreground">{formatAccountDate(contribution.timestamp, undefined, { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+              </div>
+              <span className="shrink-0 font-display text-sm font-bold tabular-nums">{formatMajor(contribution.amount, currency)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}

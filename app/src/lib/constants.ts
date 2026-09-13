@@ -4,6 +4,8 @@ export interface Community {
   type: string;
   description: string;
   membershipFee: number;
+  /** ISO 4217 code the group's money is shown in. KES when absent. */
+  currency?: string;
   memberCount: number;
   fundBalance: number;
   activeDecisions: number;

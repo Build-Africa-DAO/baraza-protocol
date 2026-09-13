@@ -32,13 +32,13 @@ export default function HeroSection() {
                 size="lg"
                 className="[--btn-cover:hsl(var(--foreground))] [--btn-fill:hsl(var(--primary))] [--btn-ink:hsl(var(--foreground))] [--btn-ink-hover:hsl(var(--background))]"
               >
-                <Link to="/create/purpose">
+                <Link to="/create">
                   Start a Group
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg">
-                <Link to="/communities">Browse Groups</Link>
+                <Link to="/groups">Browse Groups</Link>
               </Button>
             </div>
           </Reveal>

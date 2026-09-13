@@ -25,7 +25,6 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import Layout from '@/components/Layout';
 import { StatusScreen } from '@/components/StatusPage';
-import CommunityBanner from '@/components/CommunityBanner';
 import { useSeo } from '@/lib/seo';
 import { truncateAddress } from '@/lib/utils';
 import { buildWalletProofHeaders } from '@/lib/walletProof';
@@ -147,7 +146,7 @@ export default function ClaimIdentity() {
     <Layout>
       <section className="py-10 md:py-14">
         <div className="container mx-auto px-4">
-          <CommunityBanner className="mb-6 p-5 md:p-6">
+          <div className="baraza-card mb-6 p-5 md:p-6">
             <div className="flex items-center gap-5">
               <div className="grid h-16 w-16 place-items-center rounded-lg border">
                 <Phone className="h-7 w-7" />
@@ -162,7 +161,7 @@ export default function ClaimIdentity() {
                 </p>
               </div>
             </div>
-          </CommunityBanner>
+          </div>
 
           <div className="mx-auto max-w-md">
             {step === 'phone' && (
@@ -195,7 +194,7 @@ export default function ClaimIdentity() {
                 <button
                   type="submit"
                   disabled={busy || !phone.trim()}
-                  className="btn-primary w-full justify-center gap-2 py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+                  className="btn-wipe w-full justify-center gap-2 py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
                   Send code
@@ -249,7 +248,7 @@ export default function ClaimIdentity() {
                 <button
                   type="submit"
                   disabled={busy || code.length !== 6}
-                  className="btn-primary w-full justify-center gap-2 py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+                  className="btn-wipe w-full justify-center gap-2 py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
                   Verify and link
@@ -277,8 +276,8 @@ export default function ClaimIdentity() {
                   from either side will appear in one place.
                 </p>
                 <a
-                  href="/profile"
-                  className="btn-ghost mt-4 inline-flex items-center gap-2 px-3 py-2 text-xs"
+                  href="/account"
+                  className="btn-wipe-outline mt-4 inline-flex items-center gap-2 px-3 py-2 text-xs"
                 >
                   Back to profile
                 </a>

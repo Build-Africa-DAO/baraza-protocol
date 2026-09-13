@@ -2,6 +2,8 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { Loader2, Mail, Phone, X } from 'lucide-react';
 import { useLoginWithEmail, useLoginWithOAuth, useLoginWithSms } from '@privy-io/react-auth';
 import { BrandLogo } from '@/components/BrandLogo';
+import { Button } from '@/components/ui/button';
+import { hasStoredAccountCountry } from '@/lib/accountLocale';
 import { isPrivyPhoneAuthEnabled } from '@/lib/wallet/mpc';
 import { isValidEmail } from '@/lib/phoneAuth';
 import { cn, toTitleCase } from '@/lib/utils';
@@ -67,7 +69,9 @@ export default function AuthModal({ intent, countryCode, onIntentChange, onClose
   const [method, setMethod] = useState<'email' | 'phone'>(phoneEnabled ? 'phone' : 'email');
   const [step, setStep] = useState<'identifier' | 'code'>('identifier');
   const [email, setEmail] = useState('');
-  const [dial, setDial] = useState(dialForCountry(countryCode));
+  // Kenya first unless the person chose a country themselves; an inferred
+  // locale must not put a chama member on US +1.
+  const [dial, setDial] = useState(dialForCountry(hasStoredAccountCountry() ? countryCode : 'KE'));
   const [localNumber, setLocalNumber] = useState('');
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
@@ -203,27 +207,9 @@ export default function AuthModal({ intent, countryCode, onIntentChange, onClose
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative grid w-full max-h-[100dvh] max-w-[72rem] overflow-y-auto rounded-t-2xl border border-border bg-background text-foreground shadow-[var(--shadow-deep)] sm:max-h-[min(42rem,calc(100dvh-3rem))] sm:rounded-2xl md:grid-cols-2"
+        className="relative flex w-full max-h-[100dvh] max-w-md flex-col overflow-y-auto rounded-t-2xl border border-border bg-background text-foreground shadow-[var(--shadow-deep)] sm:max-h-[min(42rem,calc(100dvh-3rem))] sm:rounded-2xl"
       >
-        <div className="relative hidden overflow-hidden md:block md:min-h-full">
-          <img
-            src="/audience/group.jpg"
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover object-center"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-black/20" />
-          <div className="relative flex h-full flex-col justify-end p-12 text-white">
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">Baraza</p>
-            <p className="mt-2 max-w-md font-display text-3xl font-black leading-tight sm:text-4xl">
-              Run the chama where every member can see the money.
-            </p>
-            <p className="mt-3 max-w-md text-sm leading-6 text-white/80 sm:text-base">
-              Phone or email is enough to join a group.
-            </p>
-          </div>
-        </div>
-
-        <div className="relative flex flex-col justify-center px-5 py-8 sm:px-10 md:px-14 md:py-16">
+        <div className="relative flex flex-col px-5 pb-[max(env(safe-area-inset-bottom),1.25rem)] pt-6 sm:px-8 sm:py-8">
           <button
             type="button"
             onClick={onClose}
@@ -234,8 +220,8 @@ export default function AuthModal({ intent, countryCode, onIntentChange, onClose
           </button>
 
           <BrandLogo size="sm" lockup="protocol" showIcon={false} />
-          <h2 id={titleId} className="mt-5 font-display text-3xl font-black tracking-tight">
-            {isSignUp ? toTitleCase('Create your account') : toTitleCase('Welcome back')}
+          <h2 id={titleId} className="mt-5 font-display text-2xl font-black tracking-tight">
+            {isSignUp ? toTitleCase('Create your account') : toTitleCase('Sign in')}
           </h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
             {isSignUp
@@ -277,7 +263,7 @@ export default function AuthModal({ intent, countryCode, onIntentChange, onClose
             >
               {method === 'email' ? (
                 <label className="block">
-                  <span className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                  <span className="mb-2 block text-sm font-semibold text-foreground">
                     Email
                   </span>
                   <input
@@ -292,7 +278,7 @@ export default function AuthModal({ intent, countryCode, onIntentChange, onClose
                 </label>
               ) : (
                 <div>
-                  <span className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                  <span className="mb-2 block text-sm font-semibold text-foreground">
                     Phone number
                   </span>
                   <div className="flex overflow-hidden rounded-xl border border-border focus-within:border-foreground focus-within:ring-2 focus-within:ring-ring">
@@ -325,10 +311,10 @@ export default function AuthModal({ intent, countryCode, onIntentChange, onClose
 
               {error && <p className="text-xs text-destructive">{error}</p>}
 
-              <button type="submit" disabled={busy} className="btn-wipe h-11 w-full gap-2 text-sm">
+              <Button type="submit" disabled={busy} fullWidth>
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 {busy ? 'Sending code…' : 'Send code'}
-              </button>
+              </Button>
             </form>
           ) : (
             <form onSubmit={(event) => void handleVerify(event)} className="mt-6 space-y-4">
@@ -337,7 +323,7 @@ export default function AuthModal({ intent, countryCode, onIntentChange, onClose
                 <span className="font-semibold text-foreground">{maskDestination(destination, method)}</span>
               </p>
               <label className="block">
-                <span className="mb-2 block text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                <span className="mb-2 block text-sm font-semibold text-foreground">
                   Verification code
                 </span>
                 <input
@@ -364,10 +350,10 @@ export default function AuthModal({ intent, countryCode, onIntentChange, onClose
 
               {error && <p className="text-xs text-destructive">{error}</p>}
 
-              <button type="submit" disabled={busy || !isCompletePrivyOtp(code)} className="btn-wipe h-11 w-full gap-2 text-sm">
+              <Button type="submit" disabled={busy || !isCompletePrivyOtp(code)} fullWidth>
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 {busy ? 'Checking…' : isSignUp ? 'Create account' : 'Sign in'}
-              </button>
+              </Button>
 
               <div className="flex items-center justify-between text-xs">
                 <button
@@ -390,16 +376,17 @@ export default function AuthModal({ intent, countryCode, onIntentChange, onClose
           )}
 
           <div className="mt-6">
-            <div className="mb-4 flex items-center gap-3 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+            <div className="mb-4 flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
               <span className="h-px flex-1 bg-border" />
               or
               <span className="h-px flex-1 bg-border" />
             </div>
-            <button
+            <Button
               type="button"
+              variant="outline"
+              fullWidth
               disabled={busy || googleLoading}
               onClick={() => void continueWithGoogle()}
-              className="btn-wipe-outline h-11 w-full gap-2.5 text-sm"
             >
               {googleLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -407,8 +394,12 @@ export default function AuthModal({ intent, countryCode, onIntentChange, onClose
                 <GoogleMark className="h-4 w-4 shrink-0" />
               )}
               Continue with Google
-            </button>
+            </Button>
           </div>
+
+          <p className="mt-5 text-center text-xs text-muted-foreground">
+            Phone or email is enough. You do not need a crypto wallet.
+          </p>
 
           <p className="mt-6 text-center text-xs text-muted-foreground">
             {isSignUp ? (

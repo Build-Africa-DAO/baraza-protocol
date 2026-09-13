@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { StatusScreen } from '@/components/StatusPage';
-import CommunityBanner from '@/components/CommunityBanner';
 import {
   getBounty,
   getBountyAsync,
@@ -26,8 +25,6 @@ import {
 import { useCommunities } from '@/hooks/useCommunities';
 import { cn, formatRailAmountFromKes, formatRailDate } from '@/lib/utils';
 import { useSeo } from '@/lib/seo';
-import AkiliSecurityReview from '@/akili/AkiliSecurityReview';
-import { reviewBounty } from '@/lib/securityReview';
 import { useChain } from '@/hooks/useChain';
 
 const statusLabel: Record<BountyStatus, string> = {
@@ -35,14 +32,14 @@ const statusLabel: Record<BountyStatus, string> = {
   in_progress: 'In progress',
   in_review: 'Under review',
   awarded: 'Approved',
-  paid: 'Approved',
+  paid: 'Paid',
 };
 
 const statusClass: Record<BountyStatus, string> = {
   open: 'border-confirmed/40 bg-confirmed/10 text-confirmed',
-  in_progress: 'border-primary/40 bg-primary/10 text-primary',
-  in_review: 'border-accent/40 bg-accent/10 text-accent',
-  awarded: 'border-secondary/40 bg-secondary/10 text-secondary',
+  in_progress: 'border-foreground/50 text-foreground',
+  in_review: 'border-border bg-surface text-muted-foreground',
+  awarded: 'border-foreground text-foreground',
   paid: 'border-confirmed/50 bg-confirmed/15 text-confirmed',
 };
 
@@ -130,7 +127,6 @@ export default function BountyDetail() {
 
   if (!isLoading && !bounty) return <BountyNotFound />;
   const canSendWorkUpdate = bounty?.status === 'open' || bounty?.status === 'in_progress';
-  const securityReview = bounty ? reviewBounty(bounty) : null;
 
   return (
     <Layout>
@@ -141,27 +137,24 @@ export default function BountyDetail() {
             Back to bounty board
           </Link>
 
-          <CommunityBanner
-            className="mb-6 min-h-[18rem] p-6 md:p-8"
-            imageUrl="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1400&q=80"
-          >
+          <div className="baraza-card mb-6 p-6 md:p-8">
             {bounty ? (
               <div className="max-w-3xl">
                 <div className="mb-3 flex flex-wrap items-center gap-2">
-                  <span className={cn('rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', statusClass[bounty.status])}>
+                  <span className={cn('rounded-full border px-2 py-0.5 text-xs font-bold uppercase tracking-wider', statusClass[bounty.status])}>
                     {statusLabel[bounty.status]}
                   </span>
-                  <span className="font-mono text-[10px] uppercase tracking-widest">{bounty.category}</span>
+                  <span className="font-mono text-xs uppercase tracking-widest">{bounty.category}</span>
                 </div>
                 <h1 className="font-display text-3xl font-bold md:text-5xl">{bounty.title}</h1>
                 <p className="mt-4 max-w-2xl text-sm leading-6">{bounty.summary}</p>
                 <div className="mt-6 flex flex-wrap gap-3">
-                  <Link to={`/dashboard/${bounty.communityId}`} className="btn-ghost inline-flex items-center gap-2 text-sm">
+                  <Link to={`/dashboard/${bounty.communityId}`} className="btn-wipe-outline inline-flex items-center gap-2 text-sm">
                     Open group
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                   {canSendWorkUpdate ? (
-                    <a href="#work-update" className="btn-warm inline-flex items-center gap-2 text-sm">
+                    <a href="#work-update" className="btn-wipe inline-flex items-center gap-2 text-sm">
                       Send work update
                       <Send className="h-4 w-4" />
                     </a>
@@ -178,7 +171,7 @@ export default function BountyDetail() {
                 Loading bounty details...
               </div>
             )}
-          </CommunityBanner>
+          </div>
 
           {bounty && (
             <div className="grid gap-6 lg:grid-cols-[0.62fr_0.38fr]">
@@ -186,12 +179,12 @@ export default function BountyDetail() {
                 <section className="baraza-card p-5">
                   <div className="mb-4 flex items-center justify-between gap-3">
                     <h2 className="font-display text-lg font-semibold">Bounty brief</h2>
-                    <span className="font-display text-xl font-bold text-accent">{formatRailAmountFromKes(bounty.rewardKes, chainMeta)}</span>
+                    <span className="font-display text-xl font-bold text-foreground">{formatRailAmountFromKes(bounty.rewardKes, chainMeta)}</span>
                   </div>
                   <p className="text-sm leading-6 text-muted-foreground">{bounty.summary}</p>
                   <div className="mt-5 flex flex-wrap gap-2">
                     {bounty.skills.map((skill) => (
-                      <span key={skill} className="rounded-full border px-2 py-1 text-[11px] text-muted-foreground">
+                      <span key={skill} className="rounded-full border px-2 py-1 text-xs text-muted-foreground">
                         {skill}
                       </span>
                     ))}
@@ -228,7 +221,7 @@ export default function BountyDetail() {
                       type="button"
                       onClick={() => void handleSubmitWork()}
                       disabled={isSending}
-                      className="btn-primary mt-4 inline-flex items-center gap-2 px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                      className="btn-wipe mt-4 inline-flex items-center gap-2 px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                       Record work update
@@ -249,7 +242,7 @@ export default function BountyDetail() {
                 <section className="baraza-card p-5">
                   <div className="mb-4 flex items-center justify-between gap-3">
                     <h2 className="font-display text-lg font-semibold">Work updates</h2>
-                    <span className="rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider">
+                    <span className="rounded-full border px-2 py-0.5 text-xs font-semibold uppercase tracking-wider">
                       {submissions.length} records
                     </span>
                   </div>
@@ -291,7 +284,6 @@ export default function BountyDetail() {
               </main>
 
               <aside className="space-y-6">
-                {securityReview && <AkiliSecurityReview review={securityReview} />}
 
                 <section className="baraza-card p-5">
                   <h2 className="font-display text-lg font-semibold">Bounty details</h2>
@@ -326,7 +318,7 @@ export default function BountyDetail() {
                     {community?.name ?? bounty.postedBy}
                   </p>
                   {community && (
-                    <Link to={`/dashboard/${community.id}`} className="btn-ghost mt-4 inline-flex items-center gap-2 text-sm">
+                    <Link to={`/dashboard/${community.id}`} className="btn-wipe-outline mt-4 inline-flex items-center gap-2 text-sm">
                       Open group dashboard
                       <ArrowRight className="h-4 w-4" />
                     </Link>

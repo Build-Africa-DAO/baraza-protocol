@@ -98,7 +98,7 @@ function CountStat({
 function PhotoCard({ src, alt }: { src: string; alt: string }) {
   return (
     <figure className="aspect-square w-full overflow-hidden rounded-2xl bg-background p-1.5">
-      <img src={src} alt={alt} className="h-full w-full rounded-xl object-cover" />
+      <img src={src} alt={alt} loading="lazy" decoding="async" className="h-full w-full rounded-xl object-cover" />
     </figure>
   );
 }
@@ -176,13 +176,13 @@ export default function AIPlatformSection() {
               <Reveal delay={REVEAL_STAGGER * 4}>
                 <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <Button asChild size="lg">
-                  <Link to="/communities">
+                  <Link to="/groups">
                     Browse Groups
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg">
-                  <Link to="/create/purpose">Start a Group</Link>
+                  <Link to="/create">Start a Group</Link>
                 </Button>
                 </div>
               </Reveal>

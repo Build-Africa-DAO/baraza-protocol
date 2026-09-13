@@ -155,7 +155,7 @@ function PlanBody({ plan }: { plan: (typeof plans)[number] }) {
       </p>
 
       <Button asChild size="lg" variant={plan.featured ? "default" : "outline"} className="mt-5 w-full">
-        <Link to="/create/purpose">{plan.cta}</Link>
+        <Link to="/create">{plan.cta}</Link>
       </Button>
 
       <ul className="mt-6 flex flex-col gap-2.5">

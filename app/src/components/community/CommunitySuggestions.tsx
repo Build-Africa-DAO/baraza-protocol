@@ -60,41 +60,6 @@ function updateVotes(id: string, voterTag: string): Suggestion[] {
 
 const CATEGORIES = ['Feature', 'Event', 'Governance', 'Tooling', 'Community', 'Other'];
 
-const SEED_SUGGESTIONS: Suggestion[] = [
-  {
-    id: 'sug-seed-1',
-    communityId: '__seed__',
-    title: 'Monthly member spotlight',
-    description: 'Highlight one active contributor each month in the newsletter and community feed.',
-    author: 'Amara T.',
-    category: 'Community',
-    votes: 14,
-    voters: [],
-    createdAt: '2026-05-10T09:00:00Z',
-  },
-  {
-    id: 'sug-seed-2',
-    communityId: '__seed__',
-    title: 'Mobile M-Pesa top-up shortcode',
-    description: 'Add a USSD shortcode or Paybill number so members can contribute from feature phones.',
-    author: 'David K.',
-    category: 'Feature',
-    votes: 22,
-    voters: [],
-    createdAt: '2026-05-08T14:30:00Z',
-  },
-  {
-    id: 'sug-seed-3',
-    communityId: '__seed__',
-    title: 'Quarterly in-person meetup',
-    description: 'Organise a physical gathering every quarter for bonding, skills sharing, and governance review.',
-    author: 'Wanjiru M.',
-    category: 'Event',
-    votes: 9,
-    voters: [],
-    createdAt: '2026-05-15T11:00:00Z',
-  },
-];
 
 interface Props {
   communityId: string;
@@ -102,15 +67,10 @@ interface Props {
 
 export default function CommunitySuggestions({ communityId }: Props) {
   const { chainMeta } = useChain();
-  const [suggestions, setSuggestions] = useState<Suggestion[]>(() => {
-    const local = readSuggestions(communityId);
-    // Merge seed suggestions (tagged with __seed__ but re-tagged to this community for display)
-    const seeds = SEED_SUGGESTIONS.map((s) => ({ ...s, communityId }));
-    const localIds = new Set(local.map((s) => s.id));
-    return [...local, ...seeds.filter((s) => !localIds.has(s.id))].sort(
-      (a, b) => b.votes - a.votes,
-    );
-  });
+  // Only what this device has saved or the API returns. No sample people.
+  const [suggestions, setSuggestions] = useState<Suggestion[]>(() =>
+    readSuggestions(communityId).sort((a, b) => b.votes - a.votes),
+  );
 
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: '', description: '', author: '', category: 'Feature' });
@@ -188,7 +148,7 @@ export default function CommunitySuggestions({ communityId }: Props) {
           <button
             type="button"
             onClick={() => { setShowForm((v) => !v); setError(null); }}
-            className="btn-primary flex-shrink-0 flex items-center gap-1.5 px-3 py-2 text-xs"
+            className="btn-wipe flex-shrink-0 flex items-center gap-1.5 px-3 py-2 text-xs"
           >
             <PlusCircle className="h-3.5 w-3.5" />
             New suggestion
@@ -199,7 +159,7 @@ export default function CommunitySuggestions({ communityId }: Props) {
           <div className="mt-4 grid gap-3 rounded-xl border border-border/60 bg-surface/40 p-4">
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Title *</label>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Title *</label>
                 <input
                   value={form.title}
                   onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
@@ -208,7 +168,7 @@ export default function CommunitySuggestions({ communityId }: Props) {
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Your name *</label>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Your name *</label>
                 <input
                   value={form.author}
                   onChange={(e) => setForm((f) => ({ ...f, author: e.target.value }))}
@@ -218,7 +178,7 @@ export default function CommunitySuggestions({ communityId }: Props) {
               </div>
             </div>
             <div>
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Category</label>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Category</label>
               <div className="flex flex-wrap gap-2">
                 {CATEGORIES.map((cat) => (
                   <button
@@ -228,7 +188,7 @@ export default function CommunitySuggestions({ communityId }: Props) {
                     className={cn(
                       'rounded-full border px-2.5 py-1 text-xs font-semibold transition-all',
                       form.category === cat
-                        ? 'border-primary bg-primary/10 text-primary'
+                        ? 'border-foreground bg-foreground text-background'
                         : 'border-border/60 text-muted-foreground hover:border-primary/40',
                     )}
                   >
@@ -238,7 +198,7 @@ export default function CommunitySuggestions({ communityId }: Props) {
               </div>
             </div>
             <div>
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Description</label>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Description</label>
               <textarea
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
@@ -300,13 +260,13 @@ export default function CommunitySuggestions({ communityId }: Props) {
                 {/* Content */}
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <span className="inline-flex items-center gap-1 rounded-full border border-border/50 px-2 py-0.5 text-[10px] text-muted-foreground">
+                    <span className="inline-flex items-center gap-1 rounded-full border border-border/50 px-2 py-0.5 text-xs text-muted-foreground">
                       <Tag className="h-2.5 w-2.5" />
                       {s.category}
                     </span>
-                    <span className="text-[11px] text-muted-foreground">{s.author}</span>
-                    <span className="text-[11px] text-muted-foreground/60">·</span>
-                    <span className="text-[11px] text-muted-foreground/60">
+                    <span className="text-xs text-muted-foreground">{s.author}</span>
+                    <span className="text-xs text-muted-foreground/60">·</span>
+                    <span className="text-xs text-muted-foreground/60">
                       {formatRailDate(s.createdAt, chainMeta, { month: 'short', day: 'numeric' })}
                     </span>
                   </div>

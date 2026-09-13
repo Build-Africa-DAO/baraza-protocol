@@ -286,6 +286,21 @@ export function useCreateDecision() {
   return { create, isLoading, error };
 }
 
+/**
+ * The result of submitting a vote.
+ *
+ * `confirmed` — the server accepted the ballot (and the chain leg, when there
+ *   was one, did not throw).
+ * `recorded`  — the server accepted the ballot but the on-chain anchor failed.
+ *   The vote counts; the chain record is behind.
+ * `failed`    — nothing was recorded anywhere. The UI must roll back.
+ */
+export type VoteOutcome = {
+  ok: boolean;
+  stage: 'confirmed' | 'recorded' | 'failed';
+  reason?: string;
+};
+
 export function useCastVote() {
   const client = useBarazaChain();
   const stellarWallet = useStellarWallet();
@@ -295,12 +310,14 @@ export function useCastVote() {
   const vote = useCallback(async (
     decisionId: string,
     walletKey: string,
-    voteType: 'for' | 'against' | 'abstain',
+    voteType: 'for' | 'against',
     /** On-chain member account for the voter (Phase 2: from membership program) */
     voterMemberKey?: string,
-  ) => {
+  ): Promise<VoteOutcome> => {
     setIsLoading(true);
     try {
+      let chainFailed = false;
+
       // Attempt on-chain vote when both member key and cached proposal key are available
       if (client && voterMemberKey) {
         const decisionMapping = getDecisionChainMapping(decisionId);
@@ -313,15 +330,14 @@ export function useCastVote() {
               support,
             );
           } catch (chainErr) {
-            console.warn('[baraza] castVote on-chain failed (local fallback):', chainErr);
+            console.warn('[baraza] castVote on-chain failed:', chainErr);
+            chainFailed = true;
           }
         }
       } else if (stellarWallet.address && stellarWallet.signTransaction) {
         const decisionMapping = getDecisionChainMapping(decisionId);
-        // The deployed governance contract's vote() is binary (support: bool) —
-        // it has no abstain option. Abstain votes are recorded locally only;
-        // for/against are anchored on-chain.
-        if (decisionMapping?.chain === 'stellar' && voteType !== 'abstain') {
+        // The deployed governance contract's vote() is binary (support: bool).
+        if (decisionMapping?.chain === 'stellar') {
           try {
             const stellarClient = new BarazaStellarClient({
               publicKey: stellarWallet.address,
@@ -329,30 +345,57 @@ export function useCastVote() {
             });
             await stellarClient.castVote(String(decisionMapping.proposalId), voteType === 'for');
           } catch (chainErr) {
-            console.warn('[baraza] castVote on-chain (stellar) failed (local fallback):', chainErr);
+            console.warn('[baraza] castVote on-chain (stellar) failed:', chainErr);
+            chainFailed = true;
           }
         }
       }
+
+      // The server is the authority on whether this ballot exists. A network
+      // error or a 409/422/500 is a failure, not a reason to write locally.
       try {
         const headers = await sessionHeaders(account.getAccessToken);
-        await fetch('/api/governance/vote', {
+        const res = await fetch('/api/governance/vote', {
           method: 'POST',
           headers,
           body: JSON.stringify({
             proposalId: decisionId,
             voter: walletKey,
-            option: voteType === 'for' ? 'yes' : voteType === 'against' ? 'no' : 'abstain',
+            option: voteType === 'for' ? 'yes' : 'no',
           }),
         });
+        if (!res.ok) {
+          const body = (await res.json().catch(() => ({}))) as { error?: string; message?: string };
+          return { ok: false, stage: 'failed', reason: voteErrorCopy(res.status, body.error, body.message) };
+        }
       } catch {
-        // Local tally still records if the vote API is unreachable.
+        return {
+          ok: false,
+          stage: 'failed',
+          reason: 'We could not reach Baraza. Your vote was not recorded — check your connection and try again.',
+        };
       }
-      const ok = await dataStore.castVote(decisionId, walletKey, voteType);
-      return ok;
+
+      await dataStore.castVote(decisionId, walletKey, voteType);
+      return chainFailed
+        ? {
+            ok: true,
+            stage: 'recorded',
+            reason: 'Your vote is recorded on Baraza. Writing it to the group record is still pending.',
+          }
+        : { ok: true, stage: 'confirmed' };
     } finally {
       setIsLoading(false);
     }
   }, [account.getAccessToken, client, stellarWallet.address, stellarWallet.signTransaction]);
 
   return { vote, isLoading };
+}
+
+function voteErrorCopy(status: number, code?: string, message?: string): string {
+  if (code === 'already_voted' || status === 409) return 'You have already voted on this decision.';
+  if (code === 'voting_ended') return 'Voting on this decision has closed.';
+  if (code === 'proposal_not_active') return 'This decision is not open for voting.';
+  if (status === 401 || status === 403) return 'Sign in again to vote — your session has expired.';
+  return message ?? 'Your vote was not recorded. Please try again.';
 }

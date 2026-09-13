@@ -10,8 +10,8 @@ const columns = [
     title: toTitleCase("Product"),
     linkColumns: 2,
     links: [
-      { label: toTitleCase("Browse Groups"), to: "/communities" },
-      { label: toTitleCase("Start a Group"), to: "/create/purpose" },
+      { label: toTitleCase("Browse Groups"), to: "/groups" },
+      { label: toTitleCase("Start a Group"), to: "/create" },
       { label: toTitleCase("How It Works"), to: "/#how-it-works" },
       { label: toTitleCase("Features"), to: "/#features" },
       { label: toTitleCase("Pricing"), to: "/#pricing" },
@@ -31,10 +31,10 @@ const columns = [
   {
     title: toTitleCase("Company"),
     links: [
-      { label: toTitleCase("Evaluate a Group"), to: "/evaluate" },
+      { label: toTitleCase("Help"), to: "/help" },
       { label: toTitleCase("System status"), to: "/status" },
       { label: "GitHub", href: "https://github.com/Build-Africa-DAO/baraza-protocol" },
-      { label: toTitleCase("Sign In"), to: "/profile" },
+      { label: toTitleCase("Sign In"), to: "/account" },
     ],
   },
 ] as const;

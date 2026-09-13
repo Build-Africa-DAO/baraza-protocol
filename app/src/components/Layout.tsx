@@ -5,6 +5,9 @@ import MobileBottomNav from '@/components/MobileBottomNav';
 import BackendStatus from '@/components/BackendStatus';
 import OfflineBanner from '@/components/OfflineBanner';
 import AppShell from '@/components/app/AppShell';
+import VisitorShell from '@/components/app/VisitorShell';
+import OperatorShell from '@/components/app/OperatorShell';
+import { useLocation } from 'react-router-dom';
 import WalletGate from '@/components/auth/WalletGate';
 import { useAccount } from '@/contexts/AccountContext';
 
@@ -38,8 +41,23 @@ function PublicShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * Marketing chrome (landing header, newsletter footer, public bottom nav) is
+ * for the landing page only. Every other URL is the product: signed in it
+ * gets `AppShell`, signed out it gets `VisitorShell`.
+ */
+function isMarketingPath(pathname: string): boolean {
+  return pathname === '/';
+}
+
+/** Operator tools get their own chrome whether or not a member session exists. */
+function isOperatorPath(pathname: string): boolean {
+  return /^\/(admin|retro|onboard)(\/|$)/.test(pathname);
+}
+
 const Layout: React.FC<LayoutProps> = ({ children, gate }) => {
   const account = useAccount();
+  const location = useLocation();
   const gated = Boolean(gate);
   const gateCopy = typeof gate === 'object' ? gate : undefined;
   const body = gated ? (
@@ -48,8 +66,16 @@ const Layout: React.FC<LayoutProps> = ({ children, gate }) => {
     </WalletGate>
   ) : children;
 
+  if (isOperatorPath(location.pathname)) {
+    return <OperatorShell>{body}</OperatorShell>;
+  }
+
   if (account.authenticated) {
     return <AppShell>{body}</AppShell>;
+  }
+
+  if (!isMarketingPath(location.pathname)) {
+    return <VisitorShell>{body}</VisitorShell>;
   }
 
   return <PublicShell>{body}</PublicShell>;

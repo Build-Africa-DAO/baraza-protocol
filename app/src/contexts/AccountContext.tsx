@@ -184,6 +184,15 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * Same as `useAccount` but tolerates rendering outside `AccountProvider`.
+ * Only for surfaces that must survive a broken tree, like the error boundary
+ * and the status screens it renders.
+ */
+export function useOptionalAccount(): AccountContextValue | null {
+  return useContext(AccountContext);
+}
+
 export function useAccount(): AccountContextValue {
   const value = useContext(AccountContext);
   if (!value) throw new Error('useAccount must be used inside AccountProvider');

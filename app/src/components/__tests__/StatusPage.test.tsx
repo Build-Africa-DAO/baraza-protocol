@@ -32,7 +32,7 @@ describe('StatusPage', () => {
   it('keeps 404 button labels in title case', () => {
     renderPage(<StatusPage kind="not-found" />);
     expect(screen.getByRole('link', { name: 'Go Home' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Browse Communities' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Browse Groups' })).toBeInTheDocument();
   });
 });
 

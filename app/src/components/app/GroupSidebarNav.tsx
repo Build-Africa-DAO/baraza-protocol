@@ -1,4 +1,4 @@
-import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import type { ElementType } from 'react';
 import {
   Activity,
@@ -6,14 +6,13 @@ import {
   CreditCard,
   Crown,
   Images,
-  Landmark,
   Layers,
   LayoutDashboard,
   Lightbulb,
   MapIcon,
+  MoreHorizontal,
   PlusCircle,
   ReceiptText,
-  Send,
   Settings,
   Trophy,
   Users,
@@ -34,11 +33,16 @@ interface TabDef {
   nav: 'primary' | 'more';
 }
 
+/**
+ * Retained so legacy `?tab=` URLs keep resolving to a known key. The sidebar no
+ * longer renders from this list — §13.3 gives members four rows and officers two
+ * more, and everything else lives under More.
+ */
 export const DASHBOARD_TABS: TabDef[] = [
   { key: 'overview', label: 'Overview', icon: LayoutDashboard, nav: 'primary' },
   { key: 'governance', label: 'Decisions', icon: Vote, nav: 'primary' },
   { key: 'members', label: 'Members', icon: Users, nav: 'primary' },
-  { key: 'activity', label: 'Activity', icon: Activity, nav: 'primary' },
+  { key: 'activity', label: 'Activity', icon: Activity, nav: 'more' },
   { key: 'roles', label: 'Roles', icon: Crown, nav: 'more' },
   { key: 'suggestions', label: 'Suggestions', icon: Lightbulb, nav: 'more' },
   { key: 'leaderboard', label: 'Leaderboards', icon: Trophy, nav: 'more' },
@@ -75,11 +79,12 @@ function NavLinkRow({
     <Link
       to={to}
       onClick={onNavigate}
+      aria-current={isActive ? 'page' : undefined}
       className={cn(
-        'flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm font-semibold transition-colors',
+        'flex min-h-11 w-full items-center gap-2.5 rounded-full px-3 py-2 text-sm font-semibold transition-colors',
         isActive
-          ? 'bg-primary/10 text-primary'
-          : 'text-muted-foreground hover:bg-surface hover:text-foreground',
+          ? 'text-primary'
+          : 'text-muted-foreground hover:bg-chrome-foreground/[0.06] hover:text-chrome-foreground',
       )}
     >
       <Icon className="h-4 w-4 shrink-0" />
@@ -88,82 +93,78 @@ function NavLinkRow({
   );
 }
 
+/**
+ * §13.3 group navigation: four member rows, then an Officer block for the two
+ * screens that move money. Bounties, Gallery, Roadmap, Board, Leaderboards,
+ * Suggestions and Roles are reachable through More, not the primary bar.
+ */
 export function GroupSidebarNav({
   communityId,
   isMember,
+  isOfficer = false,
   onNavigate,
 }: {
   communityId: string;
   isMember: boolean;
+  isOfficer?: boolean;
   onNavigate?: () => void;
 }) {
   const location = useLocation();
-  const [searchParams] = useSearchParams();
-  const active = getDashboardTab(searchParams, location.pathname);
-  const onFunds = location.pathname.endsWith('/treasury');
-  const onPayouts = location.pathname.endsWith('/disbursements');
-  const onCompliance = location.pathname.endsWith('/compliance');
-  const primary = DASHBOARD_TABS.filter((tab) => tab.nav === 'primary');
-  const more = DASHBOARD_TABS.filter((tab) => tab.nav === 'more');
+  const path = location.pathname;
+  const base = `/dashboard/${communityId}`;
+  const isHome = path === base || path === `${base}/` || /^\/dao\/[^/]+\/?$/.test(path);
+
+  const rows: { to: string; icon: ElementType; label: string; active: boolean }[] = [
+    { to: base, icon: LayoutDashboard, label: 'Home', active: isHome },
+    { to: `${base}/pay`, icon: CreditCard, label: 'Pay', active: path.startsWith(`${base}/pay`) },
+    { to: `${base}/votes`, icon: Vote, label: 'Votes', active: path.startsWith(`${base}/votes`) },
+    { to: `${base}/people`, icon: Users, label: 'People', active: path.startsWith(`${base}/people`) },
+  ];
+
+  const officerRows: { to: string; icon: ElementType; label: string; active: boolean }[] = [
+    { to: `${base}/money`, icon: ReceiptText, label: 'Money', active: path.startsWith(`${base}/money`) },
+    { to: `${base}/settings`, icon: Settings, label: 'Settings', active: path.startsWith(`${base}/settings`) },
+  ];
 
   return (
     <nav className="flex flex-col gap-0.5" aria-label="Group sections">
-      {primary.map((tab) => (
-        <NavLinkRow
-          key={tab.key}
-          to={tab.key === 'overview' ? `/dashboard/${communityId}` : `/dashboard/${communityId}?tab=${tab.key}`}
-          icon={tab.icon}
-          label={tab.label}
-          isActive={!onFunds && !onPayouts && !onCompliance && active === tab.key}
-          onNavigate={onNavigate}
-        />
+      {rows.map((row) => (
+        <NavLinkRow key={row.to} {...row} isActive={row.active} onNavigate={onNavigate} />
       ))}
 
-      <NavLinkRow
-        to={`/dashboard/${communityId}/treasury`}
-        icon={ReceiptText}
-        label="Funds"
-        isActive={onFunds}
-        onNavigate={onNavigate}
-      />
-      <NavLinkRow
-        to={`/dashboard/${communityId}/disbursements`}
-        icon={Send}
-        label="Payouts"
-        isActive={onPayouts}
-        onNavigate={onNavigate}
-      />
-      <NavLinkRow
-        to={`/dashboard/${communityId}/compliance`}
-        icon={Landmark}
-        label="Compliance"
-        isActive={onCompliance}
-        onNavigate={onNavigate}
-      />
+      {isOfficer && (
+        <>
+          <p className="mb-1 mt-3 px-3 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            Officer
+          </p>
+          {officerRows.map((row) => (
+            <NavLinkRow key={row.to} {...row} isActive={row.active} onNavigate={onNavigate} />
+          ))}
+        </>
+      )}
 
-      <p className="mb-1 mt-3 px-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-        More
-      </p>
-      {more.map((tab) => (
+      <div className="mt-3 border-t border-border/60 pt-3">
         <NavLinkRow
-          key={tab.key}
-          to={`/dashboard/${communityId}?tab=${tab.key}`}
-          icon={tab.icon}
-          label={tab.label}
-          isActive={!onFunds && !onPayouts && !onCompliance && active === tab.key}
+          to={`${base}/more`}
+          icon={MoreHorizontal}
+          label="More"
+          isActive={path.startsWith(`${base}/more`)}
           onNavigate={onNavigate}
         />
-      ))}
+      </div>
 
+      {/* Group Home renders its own next-action card, so the nav CTA would be a
+          second identical primary on that screen (§13.2). Show it elsewhere. */}
+      {!isHome && (
       <div className="mt-3 border-t border-border/60 pt-3">
         {isMember ? (
           <Link
-            to={`/dashboard/${communityId}/decisions/create`}
+            to={`${base}/votes/new`}
             onClick={onNavigate}
             className="btn-wipe w-full gap-2 px-3 py-2 text-xs"
           >
             <PlusCircle className="h-3.5 w-3.5" />
-            New proposal
+            Propose a Spend
           </Link>
         ) : (
           <Link
@@ -172,10 +173,11 @@ export function GroupSidebarNav({
             className="btn-wipe-outline w-full gap-2 px-3 py-2 text-xs"
           >
             <CreditCard className="h-3.5 w-3.5" />
-            Join group
+            Join This Group
           </Link>
         )}
       </div>
+      )}
     </nav>
   );
 }
