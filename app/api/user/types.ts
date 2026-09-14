@@ -30,6 +30,8 @@ export interface UserProfileDTO {
   hasVerifiedPhone: boolean;
   phoneVerifiedAt?: string | null;
   notifications: UserNotificationPreferences;
+  email?: string | null;
+  role?: string;
   createdAt: string;
   updatedAt: string;
 }

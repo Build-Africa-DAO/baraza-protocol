@@ -105,35 +105,45 @@ export default async function handler(req: Request): Promise<Response> {
 
   // 4. Resolve or Create User Profile
   let userProfileId: string;
-  let userRecord: { id: string; email: string; full_name?: string; role?: string };
+  let userRecord: { id: string; email: string; displayName?: string; role?: string };
 
   const { data: existingProfile } = await supabase
     .from('user_profiles')
-    .select('id, email, full_name, role')
-    .eq('email', email)
+    .select('id, email, display_name, role')
+    .ilike('email', email)
     .maybeSingle();
 
   if (existingProfile) {
     userProfileId = existingProfile.id;
-    userRecord = existingProfile;
+    userRecord = {
+      id: existingProfile.id,
+      email: existingProfile.email,
+      displayName: existingProfile.display_name,
+      role: existingProfile.role,
+    };
   } else {
     // Create new profile for signup
     const { data: newProfile, error: createErr } = await supabase
       .from('user_profiles')
       .insert({
         email,
-        full_name: body.fullName || email.split('@')[0],
+        display_name: body.fullName || email.split('@')[0],
         role: 'member',
         is_active: true,
       })
-      .select('id, email, full_name, role')
+      .select('id, email, display_name, role')
       .single();
 
     if (createErr || !newProfile) {
       return jsonResponse({ error: 'profile_creation_failed', message: createErr?.message }, { status: 500 });
     }
     userProfileId = newProfile.id;
-    userRecord = newProfile;
+    userRecord = {
+      id: newProfile.id,
+      email: newProfile.email,
+      displayName: newProfile.display_name,
+      role: newProfile.role,
+    };
   }
 
   // 5. Enforce Invariant I-AUTH-2: Bounded Concurrent Sessions (Max 5 active sessions)
@@ -158,6 +168,7 @@ export default async function handler(req: Request): Promise<Response> {
   return new Response(
     JSON.stringify({
       ok: true,
+      token: rawSessionToken,
       sessionToken: rawSessionToken,
       user: userRecord,
       message: 'Authentication successful.',
