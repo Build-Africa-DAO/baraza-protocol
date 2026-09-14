@@ -1,3 +1,4 @@
+import { apiFetch, errorField } from '@/lib/api';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Coins, RefreshCw, Send, Sparkles, Check, AlertTriangle } from 'lucide-react';
@@ -75,15 +76,15 @@ export default function RetroVote() {
     try {
       const headers: Record<string, string> = {};
       if (voterWallet) headers['X-Voter-Wallet'] = voterWallet;
-      const res = await fetch(
+      const result = await apiFetch<GetResponse>(
         `/api/communities/retro-ballot?communityId=${encodeURIComponent(communityId)}`,
-        { headers },
+        { headers, auth: 'omit' },
       );
-      const json = (await res.json()) as GetResponse;
-      if (!res.ok) {
-        setError(json.error ?? `Read failed (${res.status}).`);
+      if (!result.ok) {
+        setError(result.error.message);
         return;
       }
+      const json = result.data;
       setRound(json.round);
       setRecipients(json.recipients);
       setStatusNote(json.status ?? null);
@@ -153,21 +154,25 @@ export default function RetroVote() {
     setSubmitting(true);
     setError(null);
     try {
-      const res = await fetch('/api/communities/retro-ballot', {
+      const result = await apiFetch<{ ballot?: unknown }>('/api/communities/retro-ballot', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Voter-Wallet': voterWallet,
-          ...(await buildWalletProofHeaders(wallet, 'retro-vote')),
-        },
-        body: JSON.stringify({
-          communityId,
-          allocations: weights,
-        }),
+        headers: { 'X-Voter-Wallet': voterWallet, ...(await buildWalletProofHeaders(wallet, 'retro-vote')) },
+        body: { communityId, allocations: weights },
+        auth: 'omit',
       });
-      const json = (await res.json()) as { error?: string; message?: string };
-      if (!res.ok) {
-        setError(json.message ?? json.error ?? `Submit failed (${res.status}).`);
+      if (!result.ok) {
+        const messages = errorField<string[]>(result.error, 'messages');
+        setError(
+          result.error.code === 'invalid_ballot' && messages?.length
+            ? messages.join(' ')
+            : result.error.code === 'voting_closed'
+              ? 'Voting for this round has closed.'
+              : result.error.code === 'no_active_round'
+                ? 'There is no open round for this group.'
+                : result.error.code === 'not_active_member'
+                  ? 'Only active members of this group can vote in its round.'
+                  : result.error.message,
+        );
         return;
       }
       setSubmitted(true);

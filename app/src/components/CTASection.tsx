@@ -1,45 +1,85 @@
+import { useRef } from "react";
 import { Link } from "react-router-dom";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Reveal, REVEAL_STAGGER } from "@/components/landing/motion";
 import { toTitleCase } from "@/lib/utils";
+
+function PhoneMockup() {
+  const ref = useRef<HTMLDivElement>(null);
+  const reduce = useReducedMotion();
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"],
+  });
+  const y = useTransform(scrollYProgress, [0, 1], ["8%", "-10%"]);
+
+  return (
+    <div ref={ref} className="relative min-h-[20rem] overflow-hidden sm:min-h-[24rem] lg:min-h-[28rem]">
+      <div className="absolute left-1/2 top-[18%] w-[20rem] -translate-x-1/2 sm:w-[22rem] lg:top-[16%] lg:w-[88%] lg:max-w-[26rem]">
+        <motion.div style={reduce ? undefined : { y }}>
+          <div className="rounded-[2.6rem] bg-foreground p-[0.65rem] shadow-[0_24px_50px_hsl(0_0%_0%/0.28)]">
+            <div className="relative overflow-hidden rounded-[2rem] bg-background">
+              <span className="absolute left-1/2 top-2.5 z-10 h-[1.25rem] w-[6.25rem] -translate-x-1/2 rounded-full bg-foreground" />
+              <img
+                src="/gallery/gallery-vote.jpg"
+                alt="Two members checking a vote on a phone"
+                width={720}
+                height={900}
+                loading="lazy"
+                decoding="async"
+                className="aspect-[9/17] w-full object-cover object-[center_20%]"
+              />
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
 
 export default function CTASection() {
   return (
-    <section className="audience-band relative z-10 w-full bg-primary text-foreground">
+    <section id="closing-cta" className="relative z-10 w-full py-12 lg:py-[3.75rem]">
       <div className="page-shell">
-        <div className="grid items-end gap-10 pb-12 pt-6 sm:pb-16 sm:pt-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-14 lg:pb-20 lg:pt-8">
-          <figure className="relative z-10 mx-auto -mt-20 mb-6 w-[min(100%,36rem)] origin-bottom rotate-[5deg] bg-white p-3 shadow-[0_18px_40px_hsl(0_0%_0%/0.22)] sm:-mt-28 sm:mb-8 sm:w-[min(100%,40rem)] sm:p-4 lg:order-2 lg:mb-0 lg:-mt-40 lg:w-[min(100%,42rem)] lg:justify-self-end">
-            <img
-              src="/cta/group.jpg"
-              alt="Illustrated chama collecting dues and inspecting a shared record together"
-              width={1024}
-              height={768}
-              className="aspect-[4/3] w-full object-cover"
-            />
-          </figure>
-
-          <div className="pb-2 text-center lg:order-1 lg:pb-6 lg:text-left">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] opacity-80">
-              Start the group
-            </p>
-            <h2 className="mt-4 font-display text-3xl font-black leading-tight md:text-5xl">
-              {toTitleCase("Put the Next Contribution Where Every Member Can See It.")}
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-sm leading-7 opacity-85 sm:text-base lg:mx-0">
-              Launch a chama, SACCO, or cooperative in minutes. Members join with a phone number and
-              pay into a record they can inspect.
-            </p>
-            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
-              <Button asChild size="lg">
-                <Link to="/create/purpose">
-                  Launch a Group
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg">
-                <Link to="/communities">Browse Groups</Link>
-              </Button>
+        <div className="audience-band relative overflow-hidden rounded-[2rem] bg-primary text-foreground lg:rounded-[2.75rem]">
+          <div className="grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+            <div className="flex flex-col justify-center px-6 py-10 sm:px-10 sm:py-12 lg:px-14 lg:py-16">
+              <Reveal>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] opacity-80">
+                  Your group
+                </p>
+              </Reveal>
+              <Reveal delay={REVEAL_STAGGER}>
+                <h2 className="mt-4 max-w-2xl font-display text-3xl font-black leading-tight md:text-5xl">
+                  {toTitleCase("Move the Books Off WhatsApp")}
+                </h2>
+              </Reveal>
+              <Reveal delay={REVEAL_STAGGER * 2}>
+                <p className="mt-4 max-w-2xl text-sm leading-7 opacity-85 sm:text-base sm:leading-8">
+                  Name the group, set the dues, and send a link. Members pay with M-Pesa
+                  and open the same record on their phone. If someone asks where last month
+                  went, you open the group page instead of digging through a chat. Money
+                  leaves after a vote, and the receipt stays where everyone can see it.
+                </p>
+              </Reveal>
+              <Reveal delay={REVEAL_STAGGER * 3}>
+                <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+                  <Button asChild size="lg">
+                    <Link to="/create">
+                      Start a Group
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" size="lg">
+                    <Link to="/#faq">Read the FAQ</Link>
+                  </Button>
+                </div>
+              </Reveal>
             </div>
+
+            <PhoneMockup />
           </div>
         </div>
       </div>

@@ -19,13 +19,13 @@
  * placeholder copy is intentionally sober until the corpus is consulted.
  */
 
+import { apiFetch, errorField } from '@/lib/api';
 import { useState, type FormEvent } from 'react';
 import { Loader2, Phone, ShieldCheck, KeyRound, CheckCircle2 } from 'lucide-react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import Layout from '@/components/Layout';
 import { StatusScreen } from '@/components/StatusPage';
-import CommunityBanner from '@/components/CommunityBanner';
 import { useSeo } from '@/lib/seo';
 import { truncateAddress } from '@/lib/utils';
 import { buildWalletProofHeaders } from '@/lib/walletProof';
@@ -77,24 +77,18 @@ export default function ClaimIdentity() {
     }
     setBusy(true);
     try {
-      const res = await fetch('/api/identity/initiate-claim', {
+      const result = await apiFetch<{ ok: boolean; expiresAt: string }>('/api/identity/initiate-claim', {
         method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          ...(await buildWalletProofHeaders(walletContext, 'identity-claim')),
-        },
-        body: JSON.stringify({ phoneNumber: trimmed, walletAddress: wallet }),
+        headers: await buildWalletProofHeaders(walletContext, 'identity-claim'),
+        body: { phoneNumber: trimmed, walletAddress: wallet },
+        auth: 'omit',
       });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        setError(typeof body.message === 'string' ? body.message : 'Could not start the claim. Try again in a moment.');
+      if (!result.ok) {
+        setError(result.error.message);
         return;
       }
-      const data = (await res.json()) as { ok: boolean; expiresAt: string };
-      setExpiresAt(data.expiresAt);
+      setExpiresAt(result.data.expiresAt);
       setStep('code');
-    } catch {
-      setError('Network problem. Try again.');
     } finally {
       setBusy(false);
     }
@@ -110,34 +104,25 @@ export default function ClaimIdentity() {
     }
     setBusy(true);
     try {
-      const res = await fetch('/api/identity/verify-claim', {
+      const result = await apiFetch('/api/identity/verify-claim', {
         method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          ...(await buildWalletProofHeaders(walletContext, 'identity-claim')),
-        },
-        body: JSON.stringify({
-          code: trimmed,
-          phoneNumber: phone.trim(),
-          walletAddress: wallet,
-        }),
+        headers: await buildWalletProofHeaders(walletContext, 'identity-claim'),
+        body: { code: trimmed, phoneNumber: phone.trim(), walletAddress: wallet },
+        auth: 'omit',
       });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        const reason = typeof body.reason === 'string' ? body.reason : undefined;
+      if (!result.ok) {
+        const reason = errorField<string>(result.error, 'reason');
         const msg =
           reason === 'expired' ? 'Code expired. Start again with a new code.'
             : reason === 'too_many_attempts' ? 'Too many attempts. Start a new claim.'
             : reason === 'invalid_code' ? 'Code does not match. Check the SMS and retry.'
             : reason === 'wallet_mismatch' ? 'This claim was started from a different wallet.'
             : reason === 'already_consumed' ? 'This claim was already completed.'
-            : 'Could not verify. Try again.';
+            : result.error.message;
         setError(msg);
         return;
       }
       setStep('done');
-    } catch {
-      setError('Network problem. Try again.');
     } finally {
       setBusy(false);
     }
@@ -147,7 +132,7 @@ export default function ClaimIdentity() {
     <Layout>
       <section className="py-10 md:py-14">
         <div className="container mx-auto px-4">
-          <CommunityBanner className="mb-6 p-5 md:p-6">
+          <div className="baraza-card mb-6 p-5 md:p-6">
             <div className="flex items-center gap-5">
               <div className="grid h-16 w-16 place-items-center rounded-lg border">
                 <Phone className="h-7 w-7" />
@@ -162,7 +147,7 @@ export default function ClaimIdentity() {
                 </p>
               </div>
             </div>
-          </CommunityBanner>
+          </div>
 
           <div className="mx-auto max-w-md">
             {step === 'phone' && (
@@ -195,7 +180,7 @@ export default function ClaimIdentity() {
                 <button
                   type="submit"
                   disabled={busy || !phone.trim()}
-                  className="btn-primary w-full justify-center gap-2 py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+                  className="btn-wipe w-full justify-center gap-2 py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
                   Send code
@@ -249,7 +234,7 @@ export default function ClaimIdentity() {
                 <button
                   type="submit"
                   disabled={busy || code.length !== 6}
-                  className="btn-primary w-full justify-center gap-2 py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+                  className="btn-wipe w-full justify-center gap-2 py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
                   Verify and link
@@ -277,8 +262,8 @@ export default function ClaimIdentity() {
                   from either side will appear in one place.
                 </p>
                 <a
-                  href="/profile"
-                  className="btn-ghost mt-4 inline-flex items-center gap-2 px-3 py-2 text-xs"
+                  href="/account"
+                  className="btn-wipe-outline mt-4 inline-flex items-center gap-2 px-3 py-2 text-xs"
                 >
                   Back to profile
                 </a>

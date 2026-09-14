@@ -88,10 +88,8 @@ describe('fetchUserMemberships', () => {
   });
 
   it('returns the membership list from a successful account API response', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: async () => ({
+    const fetchMock = vi.fn().mockResolvedValue(
+      Response.json({
         ok: true,
         memberships: [{
           communityId: 'chama-1',
@@ -101,22 +99,20 @@ describe('fetchUserMemberships', () => {
           joinedAt: '2026-01-02T00:00:00.000Z',
         }],
       }),
-    }));
+    );
+    vi.stubGlobal('fetch', fetchMock);
 
     const memberships = await fetchUserMemberships('token-1');
     expect(memberships).toHaveLength(1);
     expect(memberships[0]?.communityId).toBe('chama-1');
-    expect(fetch).toHaveBeenCalledWith('/api/user/memberships', {
-      headers: { Authorization: 'Bearer token-1' },
-    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/user/memberships',
+      expect.objectContaining({ method: 'GET', headers: expect.objectContaining({ Authorization: 'Bearer token-1' }) }),
+    );
   });
 
   it('throws when the session is not authorized', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: false,
-      status: 401,
-      json: async () => ({ error: 'unauthorized' }),
-    }));
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json({ error: 'unauthorized' }, { status: 401 })));
 
     await expect(fetchUserMemberships('bad')).rejects.toThrow('unauthorized');
   });

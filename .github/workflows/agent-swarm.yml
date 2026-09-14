@@ -28,9 +28,7 @@ jobs:
           fetch-depth: 0
 
       - name: Get PR diff
-        run: gh pr diff ${{ github.event.pull_request.number }} > /tmp/pr.diff
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: git diff origin/${{ github.base_ref }}...HEAD > /tmp/pr.diff
 
       - uses: actions/setup-node@v4
         with:

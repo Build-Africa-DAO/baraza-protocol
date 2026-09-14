@@ -8,7 +8,7 @@ Rebuild after edits:
 node emails/render.mjs
 ```
 
-Preview: [http://localhost:5173/emails/](http://localhost:5173/emails/)
+Preview: run the renderer, then open `emails/preview/index.html` in a browser. The gallery is not part of the built app.
 
 ## Look
 

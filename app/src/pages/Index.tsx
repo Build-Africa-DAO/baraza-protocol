@@ -6,6 +6,8 @@ import FeaturesSection from "@/components/FeaturesSection";
 import AIPlatformSection from "@/components/AIPlatformSection";
 import FlowWalkthrough from "@/components/FlowWalkthrough";
 import FaqSection from "@/components/FaqSection";
+import PricingSection from "@/components/PricingSection";
+import ContactSection from "@/components/ContactSection";
 import CTASection from "@/components/CTASection";
 import { useAccount } from "@/contexts/AccountContext";
 import { useSeo } from "@/lib/seo";
@@ -14,7 +16,7 @@ export default function Index() {
   useSeo({
     title: "Group money for chamas, SACCOs, and cooperatives",
     description:
-      "Baraza helps savings groups collect dues, vote on spending, and release funds with a shared record. Join with a phone number — no seed phrases.",
+      "Baraza is for savings groups that already collect dues and decide together. Members sign in with a phone number and pay on M-Pesa.",
     path: "/",
   });
 
@@ -38,9 +40,11 @@ export default function Index() {
     <Layout>
       <HeroSection />
       <FeaturesSection />
-      <AIPlatformSection />
       <FlowWalkthrough />
+      <AIPlatformSection />
+      <PricingSection />
       <FaqSection />
+      <ContactSection />
       <CTASection />
     </Layout>
   );

@@ -1,3 +1,4 @@
+import { apiFetch } from '@/lib/api';
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Coins, RefreshCw, Trophy } from 'lucide-react';
@@ -61,14 +62,15 @@ export default function RetroResults() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(
+      const result = await apiFetch<ResultsResponse>(
         `/api/communities/retro-allocations?communityId=${encodeURIComponent(communityId)}`,
+        { auth: 'omit' },
       );
-      const json = (await res.json()) as ResultsResponse;
-      if (!res.ok) {
-        setError(`Read failed (${res.status}).`);
+      if (!result.ok) {
+        setError(result.error.message);
         return;
       }
+      const json = result.data;
       setRound(json.round);
       setAllocations(json.allocations);
       setStatusNote(json.status ?? null);

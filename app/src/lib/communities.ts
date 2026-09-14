@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { DEFAULT_GOVERNANCE, type Community, MOCK_COMMUNITIES } from '@/lib/constants';
+import { DEFAULT_GOVERNANCE, type Community, type VerificationTier, MOCK_COMMUNITIES } from '@/lib/constants';
+import { isSyntheticDataEnabled } from '@/lib/devMode';
 import type { Chain } from '@/lib/chain';
 
 type TreasuryPolicy = 'multisig-ready' | 'proposal-only' | 'manual-review';
@@ -21,6 +22,9 @@ export type CommunityInsert = {
   paybillNumber?: string;
   ussdShortcode?: string;
   createdBy?: string;
+  verificationTier?: VerificationTier;
+  vouchThreshold?: number;
+  saccoRegistrationNumber?: string;
   walletProofHeaders?: Record<string, string>;
 };
 
@@ -62,6 +66,18 @@ export type CommunityRow = {
   ussdShortcode?: string | null;
   created_by?: string | null;
   createdBy?: string | null;
+  verification_tier?: string | null;
+  verificationTier?: string | null;
+  vouch_threshold?: number | null;
+  vouchThreshold?: number | null;
+  sacco_registration_number?: string | null;
+  saccoRegistrationNumber?: string | null;
+  sacco_license_status?: string | null;
+  saccoLicenseStatus?: string | null;
+  is_payout_frozen?: boolean | null;
+  isPayoutFrozen?: boolean | null;
+  status?: string | null;
+  communityStatus?: string | null;
 };
 
 const VALID_TREASURY_POLICIES: TreasuryPolicy[] = ['multisig-ready', 'proposal-only', 'manual-review'];
@@ -72,7 +88,22 @@ function parseTreasuryPolicy(raw: string | null | undefined): TreasuryPolicy {
     : DEFAULT_GOVERNANCE.treasuryPolicy;
 }
 
+const VERIFICATION_TIERS: VerificationTier[] = ['activation', 'vouching', 'phone', 'proof_of_personhood'];
+
+function parseVerificationTier(raw: string | null | undefined): VerificationTier {
+  return VERIFICATION_TIERS.includes(raw as VerificationTier) ? (raw as VerificationTier) : 'activation';
+}
+
 const LOCAL_STORAGE_KEY = 'baraza.communities.v1';
+
+/**
+ * Only columns that exist in `supabase/migrations`. `active_decisions`,
+ * `image`, `paybill_number` and `ussd_shortcode` were never created; asking
+ * PostgREST for them returns 400 and took Browse down against a real database.
+ * Optional columns added by later migrations are read when present.
+ */
+export const COMMUNITY_COLUMNS =
+  'id,name,type,description,membership_fee,activation_fee_minor,fee_type,carrier_pass_through,currency,member_count,fund_balance,created_at,chain,quorum_pct,approval_threshold_pct,voting_period_days,treasury_policy,created_by,sacco_license_status,is_payout_frozen,status,liquid_vault_balance_minor,encumbered_balance_minor';
 
 let supabase: SupabaseClient | null | undefined;
 
@@ -144,11 +175,12 @@ function communityFromRow(row: CommunityRow): Community {
     type: row.type,
     description: row.description,
     membershipFee: resolvedFee,
+    currency: row.currency ?? undefined,
     memberCount: row.member_count ?? row.memberCount ?? 0,
     fundBalance: row.fund_balance ?? row.fundBalance ?? 0,
-    activeDecisions: row.active_decisions ?? row.activeDecisions ?? 0,
+    activeDecisions: row.activeDecisions ?? 0,
     createdAt: row.created_at ?? row.createdAt ?? new Date().toISOString(),
-    image: row.image ?? initials(row.name),
+    image: initials(row.name),
     chain,
     quorumPct: row.quorum_pct ?? row.quorumPct ?? DEFAULT_GOVERNANCE.quorumPct,
     approvalThresholdPct:
@@ -156,9 +188,15 @@ function communityFromRow(row: CommunityRow): Community {
     votingPeriodDays:
       row.voting_period_days ?? row.votingPeriodDays ?? DEFAULT_GOVERNANCE.votingPeriodDays,
     treasuryPolicy: parseTreasuryPolicy(row.treasury_policy ?? row.treasuryPolicy ?? null),
-    paybillNumber: row.paybill_number ?? row.paybillNumber ?? undefined,
-    ussdShortcode: row.ussd_shortcode ?? row.ussdShortcode ?? undefined,
+    paybillNumber: row.paybillNumber ?? undefined,
+    ussdShortcode: row.ussdShortcode ?? undefined,
     createdBy: row.created_by ?? row.createdBy ?? undefined,
+    verificationTier: parseVerificationTier(row.verification_tier ?? row.verificationTier),
+    vouchThreshold: row.vouch_threshold ?? row.vouchThreshold ?? undefined,
+    saccoRegistrationNumber: row.sacco_registration_number ?? row.saccoRegistrationNumber ?? undefined,
+    saccoLicenseStatus: row.sacco_license_status ?? row.saccoLicenseStatus ?? undefined,
+    isPayoutFrozen: row.is_payout_frozen ?? row.isPayoutFrozen ?? false,
+    communityStatus: row.status === 'paused' || row.communityStatus === 'paused' ? 'paused' : 'active',
   };
 }
 
@@ -184,8 +222,13 @@ function sortByDate(communities: Community[]): Community[] {
   return [...communities].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
-// In dev/localStorage mode mock data seeds the UI; in Supabase mode real data stands alone.
+/**
+ * Mock communities seed the UI while working locally without Supabase. They
+ * carry invented balances and member counts, so a production build never sees
+ * them — an unconfigured backend must read as empty, not as four thriving groups.
+ */
 function mergeWithMocks(communities: Community[]): Community[] {
+  if (!isSyntheticDataEnabled()) return sortByDate(communities);
   const byId = new Map<string, Community>();
   [...MOCK_COMMUNITIES, ...communities].forEach((c) => byId.set(c.id, c));
   return sortByDate(Array.from(byId.values()));
@@ -198,7 +241,7 @@ export async function listCommunities(): Promise<Community[]> {
   const { data, error } = await client
     .from('communities')
     .select(
-      'id,name,type,description,membership_fee,activation_fee_minor,fee_type,carrier_pass_through,currency,member_count,fund_balance,active_decisions,created_at,image,chain,quorum_pct,approval_threshold_pct,voting_period_days,treasury_policy,paybill_number,ussd_shortcode,created_by',
+      COMMUNITY_COLUMNS,
     )
     .order('created_at', { ascending: false });
 
@@ -215,13 +258,14 @@ export async function getCommunity(id: string): Promise<Community | null> {
   const { data, error } = await client
     .from('communities')
     .select(
-      'id,name,type,description,membership_fee,activation_fee_minor,fee_type,carrier_pass_through,currency,member_count,fund_balance,active_decisions,created_at,image,chain,quorum_pct,approval_threshold_pct,voting_period_days,treasury_policy,paybill_number,ussd_shortcode,created_by',
+      COMMUNITY_COLUMNS,
     )
     .eq('id', id)
     .maybeSingle();
 
   if (error) throw error;
   if (data) return communityFromRow(data);
+  if (!isSyntheticDataEnabled()) return null;
   return MOCK_COMMUNITIES.find((community) => community.id === id) ?? null;
 }
 
@@ -243,6 +287,7 @@ export async function createCommunityRecord(input: CommunityInsert): Promise<Com
     type: input.type,
     description: input.description.trim(),
     membershipFee: input.membershipFee,
+    currency: input.currency || 'KES',
     memberCount: 0,
     fundBalance: 0,
     activeDecisions: 0,
@@ -256,6 +301,9 @@ export async function createCommunityRecord(input: CommunityInsert): Promise<Com
     paybillNumber: input.paybillNumber || undefined,
     ussdShortcode: input.ussdShortcode || undefined,
     createdBy: input.createdBy || undefined,
+    verificationTier: input.verificationTier ?? 'activation',
+    vouchThreshold: input.vouchThreshold,
+    saccoRegistrationNumber: input.saccoRegistrationNumber || undefined,
   };
 
   try {

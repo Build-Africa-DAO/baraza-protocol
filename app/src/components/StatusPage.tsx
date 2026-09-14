@@ -20,6 +20,7 @@ import {
   type StatusKind,
 } from '@/lib/statusPages';
 import { useSeo } from '@/lib/seo';
+import { useOptionalAccount } from '@/contexts/AccountContext';
 import { toTitleCase } from '@/lib/utils';
 
 const ICONS: Record<StatusActionIcon, LucideIcon> = {
@@ -36,11 +37,9 @@ const KIND_ICON: Record<StatusKind, LucideIcon> = {
   'not-found': Compass,
   community: Compass,
   bounty: Trophy,
-  proposal: ShieldOff,
   unauthorized: LogIn,
   forbidden: ShieldOff,
   server: RefreshCw,
-  offline: RefreshCw,
 };
 
 export interface StatusAction extends StatusActionSpec {
@@ -58,7 +57,7 @@ export interface StatusPageProps {
 }
 
 function resolveAction(
-  spec: StatusActionSpec | undefined,
+  spec: StatusAction | undefined,
   override: StatusAction | null | undefined,
   retry?: () => void,
 ): StatusAction | null {
@@ -69,7 +68,7 @@ function resolveAction(
     label,
     to: override?.to ?? spec?.to,
     icon: override?.icon ?? spec?.icon,
-    onClick: override?.onClick ?? (label === 'Try Again' ? retry : undefined),
+    onClick: override?.onClick ?? spec?.onClick ?? (label === 'Try Again' ? retry : undefined),
   };
   if (!action.to && !action.onClick) return null;
   return action;
@@ -108,13 +107,20 @@ export default function StatusPage({
   secondary,
   onRetry,
 }: StatusPageProps) {
+  const account = useOptionalAccount();
   const copy = STATUS_COPY[kind];
   const heading = toTitleCase(title ?? copy.title);
   const lead = description ?? copy.description;
-  const primaryAction = resolveAction(copy.primary, primary, onRetry);
+  // A 401 opens the sign-in sheet in place (§13.4) instead of sending the
+  // person to another page and back.
+  const primarySpec =
+    kind === 'unauthorized' && account?.configured
+      ? { label: copy.primary.label, icon: copy.primary.icon, onClick: () => account.login() }
+      : copy.primary;
+  const primaryAction = resolveAction(primarySpec, primary, onRetry);
   const secondaryAction = resolveAction(copy.secondary, secondary, onRetry);
   const KindIcon = KIND_ICON[kind];
-  const alert = kind === 'server' || kind === 'offline';
+  const alert = kind === 'server';
 
   useSeo({
     title: copy.seoTitle,
@@ -143,7 +149,7 @@ export default function StatusPage({
       </div>
 
       <div className="relative z-10 mx-auto max-w-xl px-4 text-center">
-        <div className="rise mx-auto mb-6 grid h-12 w-12 place-items-center rounded-2xl border border-border bg-card/80 text-primary shadow-[var(--shadow-card)]">
+        <div className="rise mx-auto mb-6 grid h-12 w-12 place-items-center rounded-xl border border-border bg-card text-foreground shadow-[var(--shadow-card)]">
           <KindIcon className="h-5 w-5" />
         </div>
         <p className="rise rise-1 font-mono text-xs font-semibold uppercase tracking-[0.28em] text-primary">

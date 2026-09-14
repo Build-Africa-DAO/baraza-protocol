@@ -15,16 +15,24 @@ const buttonVariants = cva(
         link: "bg-transparent font-semibold tracking-normal text-primary underline-offset-4 hover:underline",
         icon: "btn-icon",
       },
+      /* 44px is the floor for anything a thumb has to hit (§13.2). `sm` is for
+         desktop-only secondary actions and toast actions; never the one
+         primary on a phone screen. */
       size: {
-        default: "h-10 px-5 text-sm",
-        sm: "h-9 px-4 text-xs",
-        lg: "h-11 px-8 text-sm",
-        icon: "h-10 w-10",
+        default: "h-11 px-5 text-sm",
+        sm: "h-9 min-h-0 px-4 text-xs",
+        lg: "h-12 px-8 text-sm",
+        icon: "h-11 w-11 min-h-0 p-0",
+      },
+      fullWidth: {
+        true: "w-full",
+        false: "",
       },
     },
     defaultVariants: {
       variant: "default",
       size: "default",
+      fullWidth: false,
     },
   },
 );
@@ -36,8 +44,8 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, children, ...props }, ref) => {
-    const classes = cn(buttonVariants({ variant, size }), className);
+  ({ className, variant, size, fullWidth, asChild = false, children, ...props }, ref) => {
+    const classes = cn(buttonVariants({ variant, size, fullWidth }), className);
 
     if (asChild && React.isValidElement(children)) {
       const child = children as React.ReactElement<{ className?: string; children?: React.ReactNode }>;

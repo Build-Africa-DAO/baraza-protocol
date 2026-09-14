@@ -57,24 +57,24 @@ describe('handleUssdInput balance menu (BRZA)', () => {
 });
 
 describe('handleUssdInput vote menu', () => {
-  it('shows for/against/abstain choices on a selected proposal', () => {
+  it('shows a binary support/object choice on a selected proposal', () => {
     const result = input('2*1');
     expect(result.action).toBe('CON');
-    expect(result.text).toContain('1. For');
-    expect(result.text).toContain('2. Against');
-    expect(result.text).toContain('3. Abstain');
+    expect(result.text).toContain('1. Support');
+    expect(result.text).toContain('2. Object');
+    expect(result.text).not.toContain('Abstain');
   });
 
-  it('accepts abstain at the confirmation step', () => {
-    const result = input('2*1*3');
+  it('confirms an object vote at the confirmation step', () => {
+    const result = input('2*1*2');
     expect(result.action).toBe('CON');
-    expect(result.text).toContain('Confirm vote ABSTAIN?');
+    expect(result.text).toContain('Confirm vote OBJECT?');
   });
 
-  it('rejects an unknown vote choice', () => {
-    const result = input('2*1*4');
-    expect(result.action).toBe('END');
-    expect(result.text).toContain('Invalid vote choice');
+  it('rejects an unknown vote choice, including the retired abstain slot', () => {
+    expect(input('2*1*3').action).toBe('END');
+    expect(input('2*1*3').text).toContain('Invalid vote choice');
+    expect(input('2*1*4').text).toContain('Invalid vote choice');
   });
 
   it('tells the user USSD voting is not broadcasting yet on confirm', () => {

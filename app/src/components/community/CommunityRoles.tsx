@@ -67,14 +67,8 @@ interface Props {
   adminName?: string;
 }
 
-export default function CommunityRoles({ memberCount, adminName: _adminName }: Props) {
-  // Derive counts: 1 admin, 0 moderators (seed), rest are members
-  const counts: Record<string, number> = {
-    admin: 1,
-    moderator: 0,
-    member: Math.max(0, memberCount - 1),
-    guest: 0,
-  };
+// Counts per role are not available from the API, so none are shown (audit §4.11).
+export default function CommunityRoles(_props: Props) {
 
   return (
     <div className="space-y-4">
@@ -87,7 +81,6 @@ export default function CommunityRoles({ memberCount, adminName: _adminName }: P
         <div className="grid gap-4 sm:grid-cols-2">
           {ROLE_DEFS.map((role) => {
             const Icon = role.icon;
-            const count = counts[role.id];
             return (
               <div
                 key={role.id}
@@ -101,13 +94,10 @@ export default function CommunityRoles({ memberCount, adminName: _adminName }: P
                     <Icon className="h-3 w-3" />
                     {role.name}
                   </span>
-                  <span className="text-[11px] text-muted-foreground">
-                    {count} {count === 1 ? 'member' : 'members'}
-                  </span>
                 </div>
                 <ul className="space-y-1.5">
                   {role.permissions.map((p) => (
-                    <li key={p} className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                    <li key={p} className="flex items-center gap-2 text-xs text-muted-foreground">
                       <span className="h-1 w-1 rounded-full bg-border flex-shrink-0" />
                       {p}
                     </li>
@@ -131,12 +121,12 @@ export default function CommunityRoles({ memberCount, adminName: _adminName }: P
             ['Work submission', 'Member +', 'border-confirmed/30 text-confirmed'],
           ].map(([feature, level, cls]) => (
             <div key={feature} className={cn('rounded-lg border p-3', cls)}>
-              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">{feature}</p>
+              <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">{feature}</p>
               <p className="mt-1 font-semibold">{level}</p>
             </div>
           ))}
         </div>
-        <p className="mt-4 text-[11px] text-muted-foreground">
+        <p className="mt-4 text-xs text-muted-foreground">
           Role assignment uses membership credentials. Custom roles and weighted voting are planned for a later release.
         </p>
       </div>

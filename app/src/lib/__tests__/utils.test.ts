@@ -15,10 +15,10 @@ import { writeAccountCountry } from '@/lib/accountLocale';
 beforeEach(() => writeAccountCountry('KE'));
 
 describe('formatKSh', () => {
-  it('formats zero', () => expect(formatKSh(0)).toBe('KSh 0'));
-  it('formats thousands', () => expect(formatKSh(234500)).toBe('KSh 234,500'));
-  it('formats millions', () => expect(formatKSh(1248500)).toBe('KSh 1,248,500'));
-  it('formats small fee', () => expect(formatKSh(500)).toBe('KSh 500'));
+  it('formats zero', () => expect(formatKSh(0)).toBe('KES 0'));
+  it('formats thousands', () => expect(formatKSh(234500)).toBe('KES 234,500'));
+  it('formats millions', () => expect(formatKSh(1248500)).toBe('KES 1,248,500'));
+  it('formats small fee', () => expect(formatKSh(500)).toBe('KES 500'));
 });
 
 describe('formatUSD', () => {
@@ -28,16 +28,16 @@ describe('formatUSD', () => {
 
 describe('rail formatting', () => {
   it('formats source amounts in the account currency regardless of payment route', () => {
-    expect(formatRailAmountFromKes(2600, 'solana')).toBe('KSh 2,600');
-    expect(formatRailAmountFromKes(2600, 'mpesa')).toBe('KSh 2,600');
-    expect(formatRailAmountFromKes(1600, 'stellar')).toBe('KSh 1,600');
-    expect(formatRailAmountFromKes(450000, 'base')).toBe('KSh 450,000');
+    expect(formatRailAmountFromKes(2600, 'solana')).toBe('KES 2,600');
+    expect(formatRailAmountFromKes(2600, 'mpesa')).toBe('KES 2,600');
+    expect(formatRailAmountFromKes(1600, 'stellar')).toBe('KES 1,600');
+    expect(formatRailAmountFromKes(450000, 'base')).toBe('KES 450,000');
   });
 
   it('does not expose route-native amounts', () => {
-    expect(formatRailAmountWithKes(6500, 'solana')).toBe('KSh 6,500');
-    expect(formatRailAmountWithKes(6500, 'mpesa')).toBe('KSh 6,500');
-    expect(formatRailAmountWithKes(6500, 'base')).toBe('KSh 6,500');
+    expect(formatRailAmountWithKes(6500, 'solana')).toBe('KES 6,500');
+    expect(formatRailAmountWithKes(6500, 'mpesa')).toBe('KES 6,500');
+    expect(formatRailAmountWithKes(6500, 'base')).toBe('KES 6,500');
   });
 
   it('formats dates in the account country timezone', () => {

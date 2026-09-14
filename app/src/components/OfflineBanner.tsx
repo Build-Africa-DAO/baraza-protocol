@@ -15,15 +15,15 @@ export default function OfflineBanner() {
   return (
     <div
       role="status"
-      className="border-b border-primary/25 bg-primary/10 px-4 py-2 text-center text-sm"
+      className="bg-foreground px-4 py-2 text-center text-sm text-background"
     >
       <span className="inline-flex items-center justify-center gap-2 font-semibold">
         <WifiOff className="h-4 w-4 shrink-0" aria-hidden />
         {toTitleCase("You're Offline")}
       </span>
-      <span className="text-muted-foreground">
+      <span className="opacity-80">
         {' '}
-        Baraza will catch up when the connection returns.
+        You can read. You cannot pay or vote until the connection returns.
         {queued}
       </span>
     </div>

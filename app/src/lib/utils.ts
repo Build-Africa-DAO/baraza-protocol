@@ -2,7 +2,8 @@ import { Children, type ReactNode } from 'react';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { type Chain, type ChainMeta } from '@/lib/chain';
-import { formatAccountCurrency, formatAccountDate, readAccountCountry } from '@/lib/accountLocale';
+import { formatAccountDate, readAccountCountry } from '@/lib/accountLocale';
+import { formatMajor } from '@/lib/money';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -80,8 +81,13 @@ export function titleCaseLabelChildren(children: ReactNode): ReactNode {
   });
 }
 
-export function formatKSh(amount: number): string {
-  return formatAccountCurrency(amount);
+/**
+ * Format a major-unit amount in the group's currency (default KES). The name is
+ * historical; nothing here converts. Prefer `formatMajor` / `formatMoney` from
+ * `@/lib/money` in new code.
+ */
+export function formatKSh(amount: number, currency: string | null | undefined = 'KES'): string {
+  return formatMajor(amount, currency);
 }
 
 export function formatUSD(amount: number): string {
@@ -92,14 +98,22 @@ export function formatUSD(amount: number): string {
   });
 }
 
-export function formatRailAmountFromKes(amountKes: number, chainOrMeta: Chain | ChainMeta): string {
+export function formatRailAmountFromKes(
+  amountKes: number,
+  chainOrMeta: Chain | ChainMeta,
+  currency: string | null | undefined = 'KES',
+): string {
   void chainOrMeta;
-  return formatKSh(amountKes);
+  return formatMajor(amountKes, currency);
 }
 
-export function formatRailAmountWithKes(amountKes: number, chainOrMeta: Chain | ChainMeta): string {
+export function formatRailAmountWithKes(
+  amountKes: number,
+  chainOrMeta: Chain | ChainMeta,
+  currency: string | null | undefined = 'KES',
+): string {
   void chainOrMeta;
-  return formatKSh(amountKes);
+  return formatMajor(amountKes, currency);
 }
 
 export function formatRailDate(

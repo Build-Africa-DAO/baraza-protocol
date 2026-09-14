@@ -12,13 +12,12 @@ import {
   Sparkles,
   Network,
   Users,
-  Vote,
 } from "lucide-react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import Layout from "@/components/Layout";
 import { StatusScreen } from "@/components/StatusPage";
-import { cn, formatKSh, formatRailAmountFromKes, truncateAddress } from "@/lib/utils";
+import { cn, formatRailAmountFromKes, truncateAddress } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useSeo } from "@/lib/seo";
 import { getAdminWallets, isAdminWallet } from "@/lib/access";
@@ -37,17 +36,6 @@ const ADMIN_WALLETS = getAdminWallets();
 const ADMIN_NFT_THRESHOLD = Number(import.meta.env.VITE_ADMIN_NFT_THRESHOLD ?? 0);
 const ADMIN_NFT_COUNT = Number(import.meta.env.VITE_ADMIN_NFT_COUNT ?? 0);
 
-const paymentOrders: Array<[string, string, number, string, string, string]> = [
-  ["ORD-8942A", "Kibera Youth Collective", 15_000, "PAYMENT_PENDING", "2026-05-13 08:02 UTC", "Reconcile proof"],
-  ["ORD-8941B", "Mama Mboga Association", 5_000, "PAYMENT_CONFIRMED", "2026-05-13 07:45 UTC", "-"],
-  ["ORD-8939X", "Mwanzo Housing Sacco", 100_000, "MANUAL_REVIEW", "2026-05-13 06:20 UTC", "Approve refund"],
-];
-
-const mintJobs = [
-  ["MNT-1029", "Membership credential", "MINT_QUEUED", "-"],
-  ["MNT-1028", "Bounty approval record", "MINT_FAILED_RETRYABLE", "Retry mint"],
-  ["MNT-1027", "Vote receipt", "MINT_CONFIRMED", "-"],
-];
 
 const riskClass: Record<SecurityReviewLevel, string> = {
   pass: "border-confirmed/40 bg-confirmed/10 text-confirmed",
@@ -63,13 +51,6 @@ const statusClass: Record<BountyStatus, string> = {
   paid: "border-confirmed/50 bg-confirmed/15 text-confirmed",
 };
 
-function StatusChip({ value }: { value: string }) {
-  return (
-    <span className="rounded-full border px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wide">
-      {value}
-    </span>
-  );
-}
 
 function MetricCard({
   icon: Icon,
@@ -85,7 +66,7 @@ function MetricCard({
   return (
     <div className="baraza-card p-5">
       <div className="mb-4 flex items-center justify-between">
-        <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{label}</p>
+        <p className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">{label}</p>
         <Icon className="h-4 w-4 text-primary" />
       </div>
       <p className="font-display text-2xl font-bold">{value}</p>
@@ -107,7 +88,6 @@ export default function AdminReconciliation() {
   const { toast } = useToast();
   const { chainMeta } = useChain();
   const { communities, isLoading } = useCommunities();
-  const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | BountyStatus>("all");
   const [liveGraph, setLiveGraph] = useState<KnowledgeGraph | null>(null);
   const [graphError, setGraphError] = useState<string | null>(null);
@@ -149,9 +129,6 @@ export default function AdminReconciliation() {
     return () => { cancelled = true; };
   }, []);
 
-  const filteredOrders = paymentOrders.filter(([id, group, amount, status]) =>
-    `${id} ${group} ${amount} ${status}`.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
 
   const filteredBounties = bounties
     .filter((bounty) => statusFilter === "all" || bounty.status === statusFilter)
@@ -186,12 +163,12 @@ export default function AdminReconciliation() {
               <p className="font-mono text-xs">Signed in as {truncateAddress(publicKey.toBase58())}</p>
             ) : null}
             {!allowlistConfigured ? (
-              <p className="text-[11px]">
+              <p className="text-xs">
                 Operators: set <code className="font-mono">VITE_ADMIN_WALLETS</code> to enable this dashboard.
               </p>
             ) : null}
             {allowlistConfigured && nftGateConfigured && !nftGatePassed ? (
-              <p className="text-[11px]">
+              <p className="text-xs">
                 Admin NFT gate requires {ADMIN_NFT_THRESHOLD} credential{ADMIN_NFT_THRESHOLD === 1 ? "" : "s"}.
                 Current configured count: {ADMIN_NFT_COUNT}.
               </p>
@@ -209,16 +186,16 @@ export default function AdminReconciliation() {
           <header className="mb-8 flex flex-col justify-between gap-4 border-b pb-6 md:flex-row md:items-end">
             <div>
               <p className="font-mono text-xs font-bold uppercase tracking-widest text-primary">Admin dashboard</p>
-              <h1 className="mt-2 font-display text-3xl font-bold">Baraza operator console</h1>
+              <h1 className="mt-2 font-display text-3xl font-bold">Operator Console</h1>
               <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-                Review group health, bounty workflow, payment reconciliation, mint jobs, and Akili security flags from one place.
+                Review group health, bounty workflow and setup checks from one place.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
-              <button type="button" onClick={() => notifyNotWired("Export CSV")} className="btn-ghost gap-2 text-sm">
+              <button type="button" onClick={() => notifyNotWired("Export CSV")} className="btn-wipe-outline gap-2 text-sm">
                 <Download className="h-4 w-4" /> Export CSV
               </button>
-              <button type="button" onClick={() => notifyNotWired("Sync state")} className="btn-ghost gap-2 text-sm">
+              <button type="button" onClick={() => notifyNotWired("Sync state")} className="btn-wipe-outline gap-2 text-sm">
                 <RefreshCw className="h-4 w-4" /> Sync state
               </button>
             </div>
@@ -247,7 +224,7 @@ export default function AdminReconciliation() {
                   <h2 className="font-display text-xl font-semibold">Community review queue</h2>
                   <p className="mt-1 text-sm text-muted-foreground">Akili security checks for treasury, dues, quorum, and governance rules.</p>
                 </div>
-                <Link to="/communities" className="btn-ghost inline-flex items-center gap-2 text-sm">
+                <Link to="/groups" className="btn-wipe-outline inline-flex items-center gap-2 text-sm">
                   Explore
                   <ArrowRight className="h-4 w-4" />
                 </Link>
@@ -264,8 +241,8 @@ export default function AdminReconciliation() {
                           {community.memberCount} members · {formatRailAmountFromKes(community.fundBalance, chainMeta)} treasury · {community.type}
                         </p>
                       </div>
-                      <span className={cn("w-fit rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider", riskClass[review.level])}>
-                        {review.score} · {review.level === "pass" ? "cleared" : review.level === "watch" ? "review" : "risk"}
+                      <span className={cn("w-fit rounded-full border px-2.5 py-1 text-xs font-bold uppercase tracking-wider", riskClass[review.level])}>
+                        {review.score} · {review.level === "pass" ? "no flags" : review.level === "watch" ? "review" : "risk"}
                       </span>
                     </div>
                     {review.level !== "pass" && (
@@ -279,7 +256,7 @@ export default function AdminReconciliation() {
             <section className="baraza-card p-5">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
-                  <h2 className="font-display text-xl font-semibold">Security flags</h2>
+                  <h2 className="font-display text-xl font-semibold">Setup Checks</h2>
                   <p className="mt-1 text-sm text-muted-foreground">Items Akili recommends reviewing before members act.</p>
                 </div>
                 <Sparkles className="h-5 w-5 text-primary" />
@@ -288,7 +265,7 @@ export default function AdminReconciliation() {
                 <div className="rounded-lg border border-dashed p-8 text-center">
                   <CheckCircle2 className="mx-auto mb-3 h-8 w-8 text-confirmed" />
                   <p className="font-display text-sm font-semibold">No community security flags</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Akili has cleared the current community rules.</p>
+                  <p className="mt-1 text-xs text-muted-foreground">No setup checks are flagged for the current community rules.</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -338,7 +315,7 @@ export default function AdminReconciliation() {
                         </Link>
                         <p className="mt-1 text-xs text-muted-foreground">{bounty.postedBy} · {formatRailAmountFromKes(bounty.rewardKes, chainMeta)}</p>
                       </div>
-                      <span className={cn("w-fit rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider", statusClass[bounty.status])}>
+                      <span className={cn("w-fit rounded-full border px-2.5 py-1 text-xs font-bold uppercase tracking-wider", statusClass[bounty.status])}>
                         {bounty.status === "paid" || bounty.status === "awarded" ? "Approved" : bounty.status.replace("_", " ")}
                       </span>
                     </div>
@@ -347,95 +324,20 @@ export default function AdminReconciliation() {
               </div>
             </section>
 
-            <section className="baraza-card overflow-x-auto p-5">
-              <div className="mb-4 flex flex-col justify-between gap-3 md:flex-row md:items-center">
-                <div>
-                  <h2 className="font-display text-xl font-semibold">Payment reconciliation</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">Orders needing proof checks, refunds, and membership activation follow-up.</p>
-                </div>
-                <input
-                  type="search"
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.target.value)}
-                  className="rounded-lg border bg-card px-3 py-2 text-sm outline-none"
-                  placeholder="Search order, group, status"
-                />
-              </div>
-              <table className="w-full min-w-[760px] text-left text-sm">
-                <thead className="border-b font-mono text-xs uppercase tracking-widest text-muted-foreground">
-                  <tr>
-                    <th className="pb-3 font-normal">Order</th>
-                    <th className="pb-3 font-normal">Group</th>
-                    <th className="pb-3 font-normal">Amount</th>
-                    <th className="pb-3 font-normal">Status</th>
-                    <th className="pb-3 text-right font-normal">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredOrders.map(([id, group, amount, status, _time, action]) => (
-                    <tr key={id} className="border-b last:border-b-0">
-                      <td className="py-4 font-mono">{id}</td>
-                      <td className="py-4">{group}</td>
-                      <td className="py-4">{formatKSh(amount)}</td>
-                      <td className="py-4"><StatusChip value={status} /></td>
-                      <td className="py-4 text-right">
-                        {action === "-" ? (
-                          <span className="text-muted-foreground">Cleared</span>
-                        ) : (
-                          <button type="button" onClick={() => notifyNotWired(action)} className="font-semibold text-primary hover:underline">
-                            {action}
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <section className="baraza-card p-5">
+              <h2 className="font-display text-xl font-semibold">Payment reconciliation</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Orders needing proof checks, refunds or activation follow-up will list here once the reconciliation
+                API is exposed. Nothing is shown until then; the earlier sample rows were not real orders.
+              </p>
             </section>
           </div>
 
-          <section className="baraza-card mt-6 overflow-x-auto p-5">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <div>
-                <h2 className="font-display text-xl font-semibold">Mint and record jobs</h2>
-                <p className="mt-1 text-sm text-muted-foreground">Membership credentials, vote receipts, bounty approvals, and treasury records.</p>
-              </div>
-              <Vote className="h-5 w-5 text-primary" />
-            </div>
-            <table className="w-full min-w-[680px] text-left text-sm">
-              <thead className="border-b font-mono text-xs uppercase tracking-widest text-muted-foreground">
-                <tr>
-                  <th className="pb-3 font-normal">Job</th>
-                  <th className="pb-3 font-normal">Record</th>
-                  <th className="pb-3 font-normal">Status</th>
-                  <th className="pb-3 text-right font-normal">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {mintJobs.map(([id, record, status, action]) => (
-                  <tr key={id} className="border-b last:border-b-0">
-                    <td className="py-4 font-mono">{id}</td>
-                    <td className="py-4">{record}</td>
-                    <td className="py-4"><StatusChip value={status} /></td>
-                    <td className="py-4 text-right">
-                      {action === "-" ? (
-                        <span className="text-muted-foreground">No action</span>
-                      ) : (
-                        <button type="button" onClick={() => notifyNotWired(action)} className="font-semibold text-primary hover:underline">
-                          {action}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
 
           <section className="baraza-card mt-6 p-5">
             <div className="mb-4 flex flex-col justify-between gap-3 md:flex-row md:items-start">
               <div>
-                <div className="mb-2 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-widest">
+                <div className="mb-2 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-widest">
                   <Network className="h-3.5 w-3.5 text-primary" />
                   Knowledge graph
                 </div>
@@ -452,41 +354,41 @@ export default function AdminReconciliation() {
               <div className="grid grid-cols-2 gap-2 text-right">
                 <div className="rounded-lg border p-3">
                   <p className="font-display text-xl font-bold">{graphSummary.riskCount}</p>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Risks</p>
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground">Risks</p>
                 </div>
                 <div className="rounded-lg border p-3">
                   <p className="font-display text-xl font-bold">{graphSummary.watchCount}</p>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Watch</p>
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground">Watch</p>
                 </div>
               </div>
             </div>
             <div className="grid gap-4 lg:grid-cols-3">
               <div className="rounded-lg border p-4">
-                <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Data source</p>
+                <p className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">Data source</p>
                 <p className="mt-2 text-sm font-semibold capitalize">{graphSummary.source}</p>
               </div>
               <div className="rounded-lg border p-4">
-                <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Members tracked</p>
+                <p className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">Members tracked</p>
                 <p className="mt-2 text-sm font-semibold">{graphSummary.membershipCount}</p>
               </div>
               <div className="rounded-lg border p-4">
-                <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Payment orders</p>
+                <p className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">Payment orders</p>
                 <p className="mt-2 text-sm font-semibold">{graphSummary.paymentOrderCount}</p>
               </div>
               <div className="rounded-lg border p-4">
-                <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Testnet ready</p>
+                <p className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">Testnet ready</p>
                 <p className="mt-2 text-sm font-semibold">
                   {graphSummary.testnetReadyChains.length ? `${graphSummary.testnetReadyChains.length} routes ready` : "No routes marked ready"}
                 </p>
               </div>
               <div className="rounded-lg border p-4">
-                <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Coming soon</p>
+                <p className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">Coming soon</p>
                 <p className="mt-2 text-sm font-semibold">
                   {graphSummary.comingSoonChains.length ? `${graphSummary.comingSoonChains.length} routes planned` : "No planned routes"}
                 </p>
               </div>
               <div className="rounded-lg border p-4">
-                <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Next task</p>
+                <p className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">Next task</p>
                 <p className="mt-2 text-sm font-semibold">{graphSummary.topTasks[0]?.label ?? "No readiness task"}</p>
               </div>
             </div>
@@ -495,7 +397,7 @@ export default function AdminReconciliation() {
                 <article key={task.id} className="rounded-lg border p-4">
                   <div className="flex items-start justify-between gap-3">
                     <p className="text-sm font-bold">{task.label}</p>
-                    <span className="rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    <span className="rounded-full border px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">
                       {task.status}
                     </span>
                   </div>

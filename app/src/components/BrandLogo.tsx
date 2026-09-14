@@ -24,7 +24,11 @@ export function BrandLogo({
   const { icon, font, protocol } = sizes[size];
 
   return (
-    <div className={cn("flex items-center gap-2 leading-none", className)}>
+    <div
+      role="img"
+      aria-label={lockup === "protocol" || iconOnly ? "Baraza Protocol" : "baraza"}
+      className={cn("flex items-center gap-2 leading-none", className)}
+    >
       {showIcon && (
         <img
           src="/baraza-logo-v2.svg"
@@ -35,13 +39,13 @@ export function BrandLogo({
         />
       )}
       {!iconOnly && lockup === "protocol" && (
-        <span className={cn("whitespace-nowrap font-display font-black tracking-tight", protocol)}>
+        <span aria-hidden="true" className={cn("whitespace-nowrap font-display font-black tracking-tight", protocol)}>
           <span className="text-primary">Baraza</span>{" "}
           <span className="text-foreground">Protocol</span>
         </span>
       )}
       {!iconOnly && lockup === "baraza" && (
-        <span className={cn("font-display font-black", font)}>
+        <span aria-hidden="true" className={cn("font-display font-black", font)}>
           <span className="text-foreground">bara</span>
           <span className="text-primary">za</span>
         </span>

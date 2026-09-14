@@ -13,7 +13,7 @@ export default function LogoMarquee() {
   return (
     <div className="mt-14">
       <p className="mb-6 text-center text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-        Rails groups already use
+            Works with
       </p>
       <Marquee
         pauseOnHover
@@ -29,6 +29,8 @@ export default function LogoMarquee() {
             <img
               src={logo.src}
               alt={logo.wordmark ? logo.name : ""}
+              loading="lazy"
+              decoding="async"
               className={logo.invertOnDark ? "h-8 w-auto dark:invert" : "h-8 w-auto"}
             />
             {!logo.wordmark && (

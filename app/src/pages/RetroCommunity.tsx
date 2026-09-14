@@ -1,3 +1,4 @@
+import { apiFetch } from '@/lib/api';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Coins, RefreshCw, Sparkles, Vote, Trophy } from 'lucide-react';
@@ -6,6 +7,7 @@ import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import Layout from '@/components/Layout';
 import { useSeo } from '@/lib/seo';
 import { useCommunities } from '@/hooks/useCommunities';
+import { buildWalletProofHeaders } from '@/lib/walletProof';
 
 interface ActiveRound {
   id: string;
@@ -52,7 +54,8 @@ export default function RetroCommunity() {
     description: 'Weekly retroactive BRZA distribution for this community.',
   });
 
-  const { publicKey, connected } = useWallet();
+  const wallet = useWallet();
+  const { publicKey, connected } = wallet;
   const { setVisible } = useWalletModal();
   const memberWallet = useMemo(() => publicKey?.toBase58() ?? null, [publicKey]);
 
@@ -73,16 +76,16 @@ export default function RetroCommunity() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(
+      const result = await apiFetch<RoundResponse>(
         `/api/communities/retro-rounds?communityId=${encodeURIComponent(communityId)}`,
+        { auth: 'omit' },
       );
-      const json = (await res.json()) as RoundResponse;
-      if (!res.ok) {
-        setError(json.error ?? `Read failed (${res.status}).`);
+      if (!result.ok) {
+        setError(result.error.message);
         return;
       }
-      setActiveRound(json.active ?? null);
-      setStatusNote(json.status ?? null);
+      setActiveRound(result.data.active ?? null);
+      setStatusNote(result.data.status ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
@@ -99,26 +102,24 @@ export default function RetroCommunity() {
     setOpening(true);
     setError(null);
     try {
-      const res = await fetch('/api/communities/retro-rounds', {
+      // The route requires a wallet proof with purpose `retro-open`; send it.
+      const result = await apiFetch<RoundResponse>('/api/communities/retro-rounds', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Member-Wallet': memberWallet,
-        },
-        body: JSON.stringify({ communityId }),
+        headers: { 'X-Member-Wallet': memberWallet, ...(await buildWalletProofHeaders(wallet, 'retro-open')) },
+        body: { communityId },
+        auth: 'omit',
       });
-      const json = (await res.json()) as RoundResponse;
-      if (!res.ok) {
-        setError(json.message ?? json.error ?? `Open failed (${res.status}).`);
+      if (!result.ok) {
+        setError(result.error.code === 'round_already_active' ? 'A round is already open for this group.' : result.error.message);
         return;
       }
-      if (json.round) setActiveRound(json.round);
+      if (result.data.round) setActiveRound(result.data.round);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setOpening(false);
     }
-  }, [memberWallet, communityId]);
+  }, [memberWallet, communityId, wallet]);
 
   return (
     <Layout>

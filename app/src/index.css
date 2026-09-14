@@ -26,8 +26,10 @@
     --muted: 0 0% 96%;
     --muted-foreground: 0 0% 38%;
 
-    /* Accent: same orange */
-    --accent: 25 95% 53%;
+    /* Accent is retired as a colour (decision §9 / PR 0.1). It aliases the
+       foreground so legacy `bg-accent/10 text-accent` chips render as the
+       neutral "pending" treatment until each call site moves to StatusChip. */
+    --accent: 0 0% 4%;
     --accent-foreground: 0 0% 100%;
 
     /* Destructive */
@@ -38,40 +40,41 @@
     --input: 0 0% 96%;
     --ring: 25 95% 53%;
 
-    --radius: 0.25rem;
+    /* One corner for everything (Eugene, 13 Sept 2026): buttons are 44px pills,
+       whose visible corner is 22px. Cards, inputs, chips, sheets, the shell frame
+       and every Tailwind radius step use that same 22px, so anything 44px or
+       shorter becomes a pill like a button and anything taller curves the same. */
+    --radius-sm: 1.375rem;
+    --radius-md: 1.375rem;
+    --radius-lg: 1.375rem;
+    --radius: var(--radius-md);
+    --radius-chrome: 1.375rem;
 
-    /* Extended semantic tokens */
-    --warm: 25 95% 53%;
-    --warm-foreground: 0 0% 100%;
-    --orange: 25 95% 53%;
-
-    /* DAO / governance: keep distinct */
-    --dao: 22 90% 35%;
-    --dao-foreground: 0 0% 98%;
-
-    /* Network: dark orange tint */
-    --network: 30 80% 40%;
-    --network-foreground: 0 0% 98%;
-
-    /* Confirmed / trusted: deep amber-green */
-    --confirmed: 38 75% 38%;
+    /* Status tokens. Status is always word + icon; colour only supports it.
+       Orange (primary) is never a status. */
+    --confirmed: 152 40% 32%;
     --confirmed-foreground: 0 0% 98%;
+    --pending: 0 0% 4%;
+    --pending-foreground: 0 0% 100%;
+    --hold: 0 0% 38%;
+    --hold-foreground: 0 0% 100%;
+    --stale: 0 0% 38%;
+    --stale-foreground: 0 0% 100%;
 
     --surface: 0 0% 98%;
     --surface-hover: 0 0% 94%;
 
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(25 95% 48%) 0%, hsl(25 95% 53%) 52%, hsl(18 90% 48%) 100%);
-    --gradient-warm: linear-gradient(135deg, hsl(25 95% 53%) 0%, hsl(18 90% 48%) 100%);
-    --gradient-dao: linear-gradient(135deg, hsl(25 95% 48%) 0%, hsl(25 95% 53%) 100%);
-    --gradient-surface: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(0 0% 100%) 100%);
-    --gradient-hero: hsl(0 0% 100%);
+    /* Chrome: the floating sidebar, top bar and bottom nav. White in light,
+       true black in dark, so the frame is always the darkest or lightest
+       thing on screen and the content panel sits a step inside it. */
+    --chrome: 0 0% 100%;
+    --chrome-foreground: 0 0% 4%;
+    /* The page behind the floating frame. A shade off the frame in light, and
+       barely off black in dark so it sits back instead of shouting. */
+    --canvas: 0 0% 97%;
 
-    /* Shadows */
-    --shadow-card:  0 16px 42px -28px hsl(0 0% 0% / 0.18);
-    --shadow-glow:  0 0 34px hsl(25 95% 53% / 0.18);
-    --shadow-warm:  0 8px 28px hsl(25 95% 53% / 0.18);
-    --shadow-dao:   0 0 34px hsl(25 95% 53% / 0.12);
+    /* Shadows: one resting card shadow and one for sheets. No glows. */
+    --shadow-card:  0 14px 32px hsl(0 0% 0% / 0.06);
     --shadow-deep:  0 28px 80px -30px hsl(0 0% 0% / 0.22);
   }
 
@@ -94,8 +97,8 @@
     --muted: 0 0% 9%;
     --muted-foreground: 0 0% 64%;
 
-    --accent: 25 95% 53%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 0 0% 98%;
+    --accent-foreground: 0 0% 0%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 96%;
@@ -104,32 +107,23 @@
     --input: 0 0% 9%;
     --ring: 25 95% 53%;
 
-    --warm: 25 95% 53%;
-    --warm-foreground: 0 0% 100%;
-    --orange: 25 95% 53%;
-
-    --dao: 25 95% 53%;
-    --dao-foreground: 0 0% 100%;
-
-    --network: 25 95% 53%;
-    --network-foreground: 0 0% 0%;
-
-    --confirmed: 45 100% 76%;
-    --confirmed-foreground: 0 0% 0%;
+    --confirmed: 152 35% 62%;
+    --confirmed-foreground: 0 0% 4%;
+    --pending: 0 0% 98%;
+    --pending-foreground: 0 0% 0%;
+    --hold: 0 0% 64%;
+    --hold-foreground: 0 0% 0%;
+    --stale: 0 0% 64%;
+    --stale-foreground: 0 0% 0%;
 
     --surface: 0 0% 8%;
     --surface-hover: 0 0% 12%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(25 95% 45%) 0%, hsl(25 95% 53%) 55%, hsl(20 90% 45%) 100%);
-    --gradient-warm: linear-gradient(135deg, hsl(25 95% 53%) 0%, hsl(20 90% 45%) 100%);
-    --gradient-dao: linear-gradient(135deg, hsl(25 95% 48%) 0%, hsl(25 95% 53%) 100%);
-    --gradient-surface: linear-gradient(180deg, hsl(0 0% 6%) 0%, hsl(0 0% 0%) 100%);
-    --gradient-hero: hsl(0 0% 0%);
+    --chrome: 0 0% 0%;
+    --chrome-foreground: 0 0% 98%;
+    --canvas: 0 0% 3%;
 
-    --shadow-card:  0 4px 24px -4px hsl(0 0% 0% / 0.80);
-    --shadow-glow:  0 0 40px hsl(25 95% 53% / 0.22);
-    --shadow-warm:  0 4px 24px hsl(25 95% 53% / 0.22);
-    --shadow-dao:   0 0 40px hsl(25 95% 53% / 0.16);
+    --shadow-card:  0 14px 32px hsl(0 0% 0% / 0.35);
     --shadow-deep:  0 20px 60px -10px hsl(0 0% 0% / 0.92);
   }
 }
@@ -202,10 +196,7 @@
   /* Buttons — pill + skew wipe (Uiverse-style), theme-aware */
   .btn-wipe,
   .btn-wipe-outline,
-  .btn-wipe-destructive,
-  .btn-primary,
-  .btn-warm,
-  .btn-ghost {
+  .btn-wipe-destructive {
     --btn-cover: hsl(var(--primary));
     --btn-fill: hsl(var(--foreground));
     --btn-ink: hsl(var(--background));
@@ -225,14 +216,17 @@
     text-decoration: none;
     color: var(--btn-ink);
     background: var(--btn-fill);
+    /* Defaults so a bare `.btn-wipe` is a real button: 44px tap target,
+       14px label. Tailwind utilities on the element still win. */
+    min-height: 2.75rem;
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+    gap: 0.5rem;
     transition: color 0.4s, background-color 0.4s, border-color 0.4s, transform 0.2s cubic-bezier(0.3, 1, 0.8, 1);
   }
   .btn-wipe::before,
   .btn-wipe-outline::before,
-  .btn-wipe-destructive::before,
-  .btn-primary::before,
-  .btn-warm::before,
-  .btn-ghost::before {
+  .btn-wipe-destructive::before {
     content: "";
     position: absolute;
     top: 0;
@@ -250,13 +244,7 @@
   .btn-wipe-outline:hover::before,
   .btn-wipe-outline:focus-visible::before,
   .btn-wipe-destructive:hover::before,
-  .btn-wipe-destructive:focus-visible::before,
-  .btn-primary:hover::before,
-  .btn-primary:focus-visible::before,
-  .btn-warm:hover::before,
-  .btn-warm:focus-visible::before,
-  .btn-ghost:hover::before,
-  .btn-ghost:focus-visible::before {
+  .btn-wipe-destructive:focus-visible::before {
     transform: skew(30deg) translate3d(0, 0, 0);
   }
   .btn-wipe:hover,
@@ -264,23 +252,14 @@
   .btn-wipe-outline:hover,
   .btn-wipe-outline:focus-visible,
   .btn-wipe-destructive:hover,
-  .btn-wipe-destructive:focus-visible,
-  .btn-primary:hover,
-  .btn-primary:focus-visible,
-  .btn-warm:hover,
-  .btn-warm:focus-visible,
-  .btn-ghost:hover,
-  .btn-ghost:focus-visible {
+  .btn-wipe-destructive:focus-visible {
     color: var(--btn-ink-hover);
     background: var(--btn-cover);
     border-color: var(--btn-cover);
   }
   .btn-wipe > *,
   .btn-wipe-outline > *,
-  .btn-wipe-destructive > *,
-  .btn-primary > *,
-  .btn-warm > *,
-  .btn-ghost > * {
+  .btn-wipe-destructive > * {
     position: relative;
     z-index: 1;
   }
@@ -289,35 +268,20 @@
   .btn-wipe-outline:hover > *,
   .btn-wipe-outline:focus-visible > *,
   .btn-wipe-destructive:hover > *,
-  .btn-wipe-destructive:focus-visible > *,
-  .btn-primary:hover > *,
-  .btn-primary:focus-visible > *,
-  .btn-warm:hover > *,
-  .btn-warm:focus-visible > *,
-  .btn-ghost:hover > *,
-  .btn-ghost:focus-visible > * {
+  .btn-wipe-destructive:focus-visible > * {
     color: inherit;
   }
   .btn-wipe:active,
   .btn-wipe-outline:active,
-  .btn-wipe-destructive:active,
-  .btn-primary:active,
-  .btn-warm:active,
-  .btn-ghost:active {
+  .btn-wipe-destructive:active {
     transform: scale(0.97);
   }
   .btn-wipe:disabled,
   .btn-wipe-outline:disabled,
   .btn-wipe-destructive:disabled,
-  .btn-primary:disabled,
-  .btn-warm:disabled,
-  .btn-ghost:disabled,
   .btn-wipe:disabled:hover,
   .btn-wipe-outline:disabled:hover,
-  .btn-wipe-destructive:disabled:hover,
-  .btn-primary:disabled:hover,
-  .btn-warm:disabled:hover,
-  .btn-ghost:disabled:hover {
+  .btn-wipe-destructive:disabled:hover {
     cursor: not-allowed;
     opacity: 0.45;
     transform: none;
@@ -327,25 +291,11 @@
   .btn-wipe:disabled::before,
   .btn-wipe-outline:disabled::before,
   .btn-wipe-destructive:disabled::before,
-  .btn-primary:disabled::before,
-  .btn-warm:disabled::before,
-  .btn-ghost:disabled::before,
   .btn-wipe:disabled:hover::before,
   .btn-wipe-outline:disabled:hover::before,
-  .btn-wipe-destructive:disabled:hover::before,
-  .btn-primary:disabled:hover::before,
-  .btn-warm:disabled:hover::before,
-  .btn-ghost:disabled:hover::before {
+  .btn-wipe-destructive:disabled:hover::before {
     transform: skew(30deg) translate3d(-110%, 0, 0);
   }
-
-  .btn-primary,
-  .btn-warm {
-    font-size: 0.875rem;
-    padding: 0.75rem 1.5rem;
-  }
-
-  .btn-ghost,
   .btn-wipe-outline {
     --btn-cover: hsl(var(--primary));
     --btn-fill: transparent;
@@ -385,18 +335,12 @@
     .btn-wipe,
     .btn-wipe-outline,
     .btn-wipe-destructive,
-    .btn-primary,
-    .btn-warm,
-    .btn-ghost,
     .btn-icon {
       transition: none;
     }
     .btn-wipe::before,
     .btn-wipe-outline::before,
-    .btn-wipe-destructive::before,
-    .btn-primary::before,
-    .btn-warm::before,
-    .btn-ghost::before {
+    .btn-wipe-destructive::before   {
       transition: none;
     }
   }
@@ -407,66 +351,10 @@
     border: 1px solid hsl(var(--border));
     border-radius: var(--radius);
     box-shadow: var(--shadow-card);
-    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    transition: border-color 0.2s ease;
   }
   .baraza-card:hover {
-    border-color: hsl(var(--primary) / 0.40);
-    box-shadow: var(--shadow-glow);
-  }
-
-  .glass-surface {
-    background: hsl(var(--card) / 0.65);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid hsl(var(--border) / 0.5);
-    border-radius: var(--radius);
-  }
-
-  .premium-glass {
-    background: hsl(var(--card) / 0.72);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border: 1px solid hsl(var(--primary) / 0.16);
-    box-shadow: 0 24px 80px hsl(var(--background) / 0.72);
-  }
-
-  .ambient-globe-layer {
-    background-image:
-      radial-gradient(circle at 74% 34%, hsl(var(--primary) / 0.2), transparent 25rem),
-      radial-gradient(circle at 82% 58%, hsl(var(--confirmed) / 0.12), transparent 20rem),
-      radial-gradient(circle at 50% 12%, hsl(var(--dao) / 0.10), transparent 22rem);
-  }
-
-  /* Text Gradients */
-  .text-gradient-primary {
-    background: var(--gradient-primary);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  .text-gradient-warm {
-    background: var(--gradient-warm);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  /* Glow helpers */
-  .glow-primary { box-shadow: var(--shadow-glow); }
-  .glow-warm    { box-shadow: var(--shadow-warm); }
-
-  /* Progress */
-  .baraza-progress {
-    height: 6px;
-    border-radius: 9999px;
-    background: hsl(var(--muted));
-    overflow: hidden;
-  }
-  .baraza-progress-fill {
-    height: 100%;
-    border-radius: 9999px;
-    background: var(--gradient-primary);
-    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+    border-color: hsl(var(--foreground) / 0.35);
   }
 
   /* Wallet adapter overrides — match homepage pill + orange hover */
@@ -493,7 +381,7 @@
   .wallet-adapter-modal-wrapper {
     background: hsl(var(--card)) !important;
     border: 1px solid hsl(var(--border)) !important;
-    border-radius: 1rem !important;
+    border-radius: var(--radius-lg) !important;
     font-family: Geist, system-ui, sans-serif !important;
   }
   .wallet-adapter-modal-title {
@@ -543,10 +431,6 @@
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50%       { transform: translateY(-10px); }
-}
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px hsl(var(--primary) / 0.22); }
-  50%       { box-shadow: 0 0 50px hsl(var(--primary) / 0.50); }
 }
 @keyframes shimmer {
   0%   { background-position: -200% 0; }

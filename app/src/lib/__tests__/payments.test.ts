@@ -24,9 +24,12 @@ describe('payment order activation credentials', () => {
 
     await fetchPaymentOrder('ord_test', 'activation-secret');
 
-    expect(fetchMock).toHaveBeenCalledWith('/api/payment-orders/status?orderId=ord_test', {
-      headers: { 'x-activation-secret': 'activation-secret' },
-    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/payment-orders/status?orderId=ord_test',
+      expect.objectContaining({ headers: expect.objectContaining({ 'x-activation-secret': 'activation-secret' }) }),
+    );
+    // The order status route is gated by the secret alone; no bearer token rides along.
+    expect((fetchMock.mock.calls[0][1] as RequestInit).headers).not.toHaveProperty('Authorization');
     expect(fetchMock.mock.calls[0][0]).not.toContain('activation-secret');
   });
 });

@@ -17,13 +17,10 @@ import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
 import { useAccount } from "@/contexts/AccountContext";
+import { isAdminWallet } from "@/lib/access";
 
-const navLinks = [
-  { label: "Groups", to: "/communities" },
-  { label: "How It Works", to: "/#how-it-works", hash: "how-it-works" },
-  { label: "Features", to: "/#features", hash: "features" },
-  { label: "FAQ", to: "/#faq", hash: "faq" },
-] as const;
+import { LANDING_NAV, LANDING_SECTION_IDS, isLandingNavActive } from "@/lib/landingNav";
+import { useScrollSpy } from "@/hooks/useScrollSpy";
 
 function isAppRoute(pathname: string) {
   return (
@@ -31,13 +28,18 @@ function isAppRoute(pathname: string) {
     pathname.startsWith("/join") ||
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/dao") ||
-    pathname.startsWith("/profile")
+    pathname.startsWith("/account") ||
+    pathname.startsWith("/status")
   );
 }
 
-function isLinkActive(pathname: string, hash: string, link: (typeof navLinks)[number]) {
-  if ("hash" in link && link.hash) return pathname === "/" && hash === `#${link.hash}`;
-  return pathname === link.to || pathname.startsWith(`${link.to}/`);
+function isLinkActive(
+  pathname: string,
+  hash: string,
+  scrollId: string | null,
+  link: (typeof LANDING_NAV)[number],
+) {
+  return isLandingNavActive(pathname, hash, scrollId, link.hash);
 }
 
 function ProfileMenu({
@@ -91,7 +93,7 @@ function ProfileMenu({
           <div className="border-t border-border pt-1">
             <Link
               role="menuitem"
-              to="/profile"
+              to="/account"
               onClick={() => setOpen(false)}
               className="flex items-center gap-2 px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-surface"
             >
@@ -100,16 +102,16 @@ function ProfileMenu({
             </Link>
             <Link
               role="menuitem"
-              to="/create/purpose"
+              to="/create"
               onClick={() => setOpen(false)}
               className="flex items-center gap-2 px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-surface"
             >
               <PlusCircle className="h-4 w-4 text-primary" />
-              Launch a Group
+              Start a Group
             </Link>
             {showFund && (
               <div className="border-t border-border px-3 py-3">
-                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Fund
                 </p>
                 <ChainSelector variant="mobile" side="left" />
@@ -140,14 +142,19 @@ export default function Header() {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
   const account = useAccount();
-  const showChain = account.authenticated || isAppRoute(location.pathname);
+  // §13.3: settlement rail is not a member choice. The picker stays available in
+  // development and for allowlisted operator wallets, and is invisible otherwise.
+  const showChain =
+    (account.authenticated || isAppRoute(location.pathname)) &&
+    (import.meta.env.DEV || isAdminWallet(account.accountId));
+  const scrollId = useScrollSpy(LANDING_SECTION_IDS, location.pathname === "/");
 
   const handleSignIn = () => {
     if (account.configured) {
       account.login();
       return;
     }
-    navigate("/profile");
+    navigate("/account");
   };
 
   const handleSignUp = () => {
@@ -155,7 +162,7 @@ export default function Header() {
       account.createAccount();
       return;
     }
-    navigate("/profile");
+    navigate("/account");
   };
 
   useEffect(() => {
@@ -169,9 +176,9 @@ export default function Header() {
           <BrandLogo size="sm" showIcon={false} lockup="protocol" />
         </Link>
 
-        <nav className="hidden items-center gap-7 xl:flex" aria-label="Main navigation">
-          {navLinks.map((link) => {
-            const active = isLinkActive(location.pathname, location.hash, link);
+        <nav className="hidden items-center gap-5 xl:flex" aria-label="Main navigation">
+          {LANDING_NAV.map((link) => {
+            const active = isLinkActive(location.pathname, location.hash, scrollId, link);
             return (
               <Link
                 key={link.label}
@@ -214,7 +221,12 @@ export default function Header() {
               <Button type="button" variant="outline" onClick={handleSignIn} disabled={!account.ready}>
                 Sign In
               </Button>
-              <Button type="button" onClick={handleSignUp} disabled={!account.ready}>
+              <Button
+                type="button"
+                onClick={handleSignUp}
+                disabled={!account.ready}
+                className="[--btn-cover:hsl(var(--foreground))] [--btn-fill:hsl(var(--primary))] [--btn-ink:hsl(var(--foreground))] [--btn-ink-hover:hsl(var(--background))]"
+              >
                 Sign Up
               </Button>
             </div>
@@ -237,28 +249,40 @@ export default function Header() {
       {mobileOpen && (
         <div className="border-t border-border bg-background xl:hidden">
           <nav className="page-shell flex flex-col gap-1 py-4" aria-label="Site menu">
-            {navLinks.map((link) => (
-              <Link key={link.label} to={link.to} className="rounded-md px-3 py-2.5 text-sm font-semibold">
-                {link.label}
-              </Link>
-            ))}
+            {LANDING_NAV.map((link) => {
+              const active = isLinkActive(location.pathname, location.hash, scrollId, link);
+              return (
+                <Link
+                  key={link.label}
+                  to={link.to}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "relative rounded-md px-3 py-2.5 text-sm font-semibold",
+                    active ? "text-foreground" : "text-muted-foreground",
+                  )}
+                >
+                  {link.label}
+                  {active && <span className="absolute inset-x-3 bottom-1 h-0.5 rounded-full bg-primary" />}
+                </Link>
+              );
+            })}
 
             <div className="my-2 border-t border-border" />
 
             {account.authenticated ? (
               <>
                 <p className="truncate px-3 pb-1 text-xs text-muted-foreground">{account.displayName}</p>
-                <Link to="/profile" className="inline-flex min-h-11 items-center gap-2 rounded-md px-3 text-sm font-semibold">
+                <Link to="/account" className="inline-flex min-h-11 items-center gap-2 rounded-md px-3 text-sm font-semibold">
                   <CircleUserRound className="h-4 w-4 text-primary" />
                   Account
                 </Link>
-                <Link to="/create/purpose" className="inline-flex min-h-11 items-center gap-2 rounded-md px-3 text-sm font-semibold">
+                <Link to="/create" className="inline-flex min-h-11 items-center gap-2 rounded-md px-3 text-sm font-semibold">
                   <PlusCircle className="h-4 w-4 text-primary" />
-                  Launch a Group
+                  Start a Group
                 </Link>
                 {showChain && (
                   <div className="px-3 py-2">
-                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       Fund
                     </p>
                     <ChainSelector variant="mobile" />
@@ -279,7 +303,12 @@ export default function Header() {
                   <LogIn className="h-4 w-4" />
                   Sign In
                 </Button>
-                <Button type="button" onClick={handleSignUp} disabled={!account.ready}>
+                <Button
+                  type="button"
+                  onClick={handleSignUp}
+                  disabled={!account.ready}
+                  className="[--btn-cover:hsl(var(--foreground))] [--btn-fill:hsl(var(--primary))] [--btn-ink:hsl(var(--foreground))] [--btn-ink-hover:hsl(var(--background))]"
+                >
                   <UserPlus className="h-4 w-4" />
                   Sign Up
                 </Button>

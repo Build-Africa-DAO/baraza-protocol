@@ -1,5 +1,7 @@
+import { apiUrl } from '@/lib/api';
+import { getAccessToken } from '@/lib/auth/tokenProvider';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { MessageCircle, X, Send, Sparkles } from 'lucide-react';
 import { useAkiliChat } from '@/akili/useAkiliChat';
 import { useChain } from '@/hooks/useChain';
@@ -14,21 +16,14 @@ interface Message {
   time: string;
   /** When the message came from a named specialist instead of the relay. */
   agent?: CouncilAgentName;
+  /** True when the stream failed and a saved keyword answer was shown instead. */
+  saved?: boolean;
 }
 
-// Council specialists the member can consult one-shot. The relay (null) is
-// the default conversational voice; a specialist is a focused single-turn
-// read from that domain.
+// The relay (null) is the default voice; a specialist is a one-shot read
+// from that domain. Selection is not exposed to members.
 type AgentSelection = CouncilAgentName | null;
 
-const COUNCIL_CHIPS: Array<{ key: AgentSelection; label: string; role: string }> = [
-  { key: null, label: 'Akili', role: 'relay' },
-  { key: 'nia', label: 'Nia', role: 'people' },
-  { key: 'kofi', label: 'Kofi', role: 'governance' },
-  { key: 'zara', label: 'Zara', role: 'economy' },
-  { key: 'amara', label: 'Amara', role: 'content' },
-  { key: 'seku', label: 'Seku', role: 'research' },
-];
 
 const timestamp = (chainMeta: ChainMeta) =>
   new Date().toLocaleTimeString(chainMeta.currency.locale, {
@@ -57,13 +52,15 @@ type RouteContext =
 
 function classifyRoute(pathname: string): RouteContext {
   if (pathname === '/' || pathname === '/home') return 'landing';
-  if (pathname.startsWith('/profile')) return 'profile';
+  if (pathname.startsWith('/help') || pathname.startsWith('/status') || pathname.startsWith('/claim')) return 'onboarding';
+  if (pathname.startsWith('/retro')) return 'community';
+  if (pathname.startsWith('/account')) return 'profile';
   if (pathname.startsWith('/create')) return 'create';
   if (/^\/join\/[^/]+\/status/.test(pathname)) return 'join-status';
   if (pathname.startsWith('/join/')) return 'join';
-  if (/^\/(dashboard|dao)\/[^/]+\/(decisions|proposals)\/[^/]+/.test(pathname)) return 'proposal';
+  if (/^\/(dashboard|dao)\/[^/]+\/(decisions|proposals|votes)\/[^/]+/.test(pathname)) return 'proposal';
   if (/^\/(dashboard|dao)\/[^/]+/.test(pathname)) return 'community';
-  if (pathname.startsWith('/communities')) return 'communities';
+  if (pathname.startsWith('/groups')) return 'communities';
   if (pathname.startsWith('/bounties')) return 'bounties';
   if (pathname.startsWith('/evaluate')) return 'evaluate';
   if (pathname.startsWith('/admin')) return 'admin';
@@ -85,7 +82,7 @@ const GREETING_BY_ROUTE: Record<RouteContext, string> = {
   'join-status':
     "Habari! I'm Akili. Watching a payment confirm? Ask me what each step does, or what to do if confirmation takes longer than expected.",
   proposal:
-    "Habari! I'm Akili. Want me to summarise this proposal, explain the security review, or help you decide between Support, Object, and Abstain?",
+    "Habari! I'm Akili. Want me to summarise this proposal, explain the security review, or help you decide between Support and Object?",
   community:
     "Habari! I'm Akili. Ask me anything about this community — group funds, members, active votes, or how to draft your own proposal.",
   communities:
@@ -145,7 +142,7 @@ const QUICK_REPLIES_BY_ROUTE: Record<RouteContext, string[]> = {
     'Summarise this proposal',
     'What does the security review flag?',
     'How is quorum calculated here?',
-    'Should I Support, Object, or Abstain?',
+    'Should I Support or Object?',
   ],
   community: [
     'How do I propose spending group funds?',
@@ -298,11 +295,13 @@ async function streamAkiliResponse(
   // VITE_AKILI_API_URL points at the standalone Akili service (e.g., https://akili.barazaprotocol.com).
   // Unset = use the in-repo /api/agent/chat fallback. Set = direct cross-origin call.
   const akiliBase = (import.meta.env.VITE_AKILI_API_URL as string | undefined)?.replace(/\/$/, '');
-  const endpoint = akiliBase ? `${akiliBase}/api/chat` : '/api/agent/chat';
+  const endpoint = akiliBase ? `${akiliBase}/api/chat` : apiUrl('/api/agent/chat');
 
+  // The route requires a signed-in identity and rate-limits per identity.
+  const token = await getAccessToken();
   const res = await fetch(endpoint, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     body: JSON.stringify({
       message,
       communityId: communityId ?? undefined,
@@ -311,7 +310,21 @@ async function streamAkiliResponse(
     }),
   });
 
+  if (res.status === 401) throw new ChatStreamError('auth_failed', 'Sign in to ask Akili.');
+  if (res.status === 429) throw new ChatStreamError('rate_limited', 'Akili is busy with your earlier questions. Wait a minute and ask again.');
   if (!res.ok || !res.body) throw new ChatStreamError('unknown', 'unavailable');
+
+  // A non-stream JSON body means the model call failed before streaming began.
+  const contentType = res.headers.get('content-type') ?? '';
+  if (contentType.includes('application/json')) {
+    const body = (await res.json().catch(() => null)) as { category?: ChatStreamErrorCategory; message?: string; text?: string } | null;
+    if (body?.category) throw new ChatStreamError(body.category, body.message ?? 'unknown error');
+    if (body?.text) {
+      onChunk(body.text);
+      return;
+    }
+    throw new ChatStreamError('unknown', 'unavailable');
+  }
 
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
@@ -362,6 +375,7 @@ const TypingDots: React.FC = () => (
 
 const AkiliChat: React.FC = () => {
   const { isOpen, open, close, pendingMessage, clearPending } = useAkiliChat();
+  const reduceMotion = useReducedMotion() ?? false;
   const { chainMeta } = useChain();
   const location = useLocation();
   const routeContext = classifyRoute(location.pathname);
@@ -374,8 +388,10 @@ const AkiliChat: React.FC = () => {
   // Selected council agent. null = relay (Akili). When a specialist is
   // selected, the next send is a one-shot to that agent. Selection persists
   // across sends so a member can converse within one domain.
-  const [selectedAgent, setSelectedAgent] = useState<AgentSelection>(null);
-  const activeChip = COUNCIL_CHIPS.find((c) => c.key === selectedAgent) ?? COUNCIL_CHIPS[0];
+  // The member panel no longer exposes the council roster (§3.7 of the audit):
+  // Akili explains the current screen, it is not a menu of products. The API
+  // still accepts an agent, so the state stays for the operator shell later.
+  const [selectedAgent] = useState<AgentSelection>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const focusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -475,7 +491,7 @@ const AkiliChat: React.FC = () => {
         ? (err as ChatStreamError).message
         : getStaticResponse(text);
       setMessages((prev) =>
-        prev.map((m) => (m.id === akiliId ? { ...m, text: replacement } : m))
+        prev.map((m) => (m.id === akiliId ? { ...m, text: replacement, saved: !isClassified } : m))
       );
     }
   }, [chainMeta, communityId, isTyping, messages, selectedAgent]);
@@ -506,58 +522,45 @@ const AkiliChat: React.FC = () => {
 
   return (
     <>
-      {/* Trigger button */}
-      <AnimatePresence>
-        {!isOpen && (
-          <motion.button
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            onClick={() => open()}
-            aria-label="Open Akili chat"
-            className="fixed bottom-5 right-5 z-50 hidden w-14 h-14 rounded-full md:flex items-center justify-center shadow-lg animate-pulse-glow transition-transform hover:scale-110 active:scale-95"
-            style={{ background: 'var(--gradient-warm)' }}
-          >
-            <MessageCircle className="w-6 h-6 text-warm-foreground" />
-          </motion.button>
-        )}
-      </AnimatePresence>
+      {/* Trigger: a plain button, no entrance animation, so it is always there
+          when the panel is closed. */}
+      {!isOpen && (
+        <button
+          type="button"
+          onClick={() => open()}
+          aria-label="Open Akili chat"
+          className="fixed right-4 z-[45] flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[var(--shadow-deep)] transition-transform hover:scale-105 active:scale-95 bottom-[calc(6rem+env(safe-area-inset-bottom))] md:bottom-6 md:right-6"
+        >
+          <MessageCircle className="h-5 w-5" />
+        </button>
+      )}
 
       {/* Chat panel */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 24, scale: 0.95 }}
+            initial={reduceMotion ? false : { opacity: 0, y: 24, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 24, scale: 0.95 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="fixed inset-x-2 bottom-20 z-50 flex h-[72vh] flex-col overflow-hidden rounded-2xl border border-border shadow-2xl md:inset-x-auto md:bottom-5 md:right-5 md:h-[500px] md:max-h-[calc(100vh-5rem)] md:w-[340px]"
-            style={{ background: 'hsl(var(--card))' }}
+            exit={reduceMotion ? undefined : { opacity: 0, y: 24, scale: 0.95 }}
+            transition={{ duration: reduceMotion ? 0 : 0.2, ease: 'easeOut' }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Ask Akili"
+            className="fixed inset-x-0 bottom-0 z-50 flex h-[80vh] flex-col overflow-hidden rounded-t-2xl border border-border bg-card shadow-[var(--shadow-deep)] md:inset-x-auto md:bottom-5 md:right-5 md:h-[520px] md:max-h-[calc(100vh-5rem)] md:w-[360px] md:rounded-2xl"
           >
-            {/* Header */}
-            <div
-              className="flex items-center justify-between px-4 py-3 border-b border-white/10 flex-shrink-0"
-              style={{ background: 'var(--gradient-primary)' }}
-            >
+            {/* Header: a helper for this screen, not a product of its own. */}
+            <div className="flex flex-shrink-0 items-center justify-between border-b border-border px-4 py-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-primary-foreground" />
+                <div className="grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground">
+                  <Sparkles className="h-4 w-4" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-primary-foreground leading-none">
-                    {activeChip.label}
-                  </h4>
-                  <p className="text-[10px] text-primary-foreground/70 mt-0.5 capitalize">
-                    {activeChip.key ? `Council · ${activeChip.role}` : 'Your Baraza guide'}
-                  </p>
+                  <h4 className="text-sm font-bold leading-none text-foreground">Ask Akili</h4>
+                  <p className="mt-0.5 text-xs text-muted-foreground">Explains this screen. It never approves anything.</p>
                 </div>
               </div>
-              <button
-                onClick={close}
-                aria-label="Close chat"
-                className="w-8 h-8 rounded-full bg-primary-foreground/12 flex items-center justify-center text-primary-foreground ring-1 ring-primary-foreground/20 hover:bg-primary-foreground/22 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground"
-              >
-                <X className="w-4 h-4" strokeWidth={2.6} />
+              <button onClick={close} aria-label="Close chat" className="btn-icon h-11 w-11 -mr-2">
+                <X className="h-5 w-5" />
               </button>
             </div>
 
@@ -566,25 +569,23 @@ const AkiliChat: React.FC = () => {
               {messages.map((msg) => (
                 <motion.div
                   key={msg.id}
-                  initial={{ opacity: 0, y: 8 }}
+                  initial={reduceMotion ? false : { opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.18 }}
+                  transition={{ duration: reduceMotion ? 0 : 0.18 }}
                   className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
                 >
                   <div
-                    className={`max-w-[86%] px-3.5 py-2.5 rounded-2xl text-xs leading-relaxed ${
+                    className={`max-w-[88%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed ${
                       msg.role === 'user'
-                        ? 'rounded-br-sm text-white'
-                        : 'bg-surface rounded-bl-sm text-foreground'
+                        ? 'rounded-br-[6px] bg-foreground text-background'
+                        : 'rounded-bl-[6px] bg-surface text-foreground'
                     }`}
-                    style={msg.role === 'user' ? { background: 'var(--gradient-primary)' } : undefined}
                   >
                     {msg.text}
                   </div>
-                  <span className="text-[9px] text-muted-foreground mt-1 px-1">
-                    {msg.role === 'akili' && msg.agent
-                      ? `${msg.agent.charAt(0).toUpperCase()}${msg.agent.slice(1)} · ${msg.time}`
-                      : msg.time}
+                  <span className="mt-1 px-1 text-xs text-muted-foreground">
+                    {msg.saved ? 'Saved answer · ' : ''}
+                    {msg.time}
                   </span>
                 </motion.div>
               ))}
@@ -595,7 +596,7 @@ const AkiliChat: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   className="flex items-start"
                 >
-                  <div className="bg-surface rounded-2xl rounded-bl-sm">
+                  <div className="bg-surface rounded-2xl rounded-bl-[6px]">
                     <TypingDots />
                   </div>
                 </motion.div>
@@ -608,16 +609,17 @@ const AkiliChat: React.FC = () => {
             <AnimatePresence>
               {showQuickReplies && (
                 <motion.div
-                  initial={{ opacity: 0, height: 0 }}
+                  initial={reduceMotion ? false : { opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
+                  exit={reduceMotion ? undefined : { opacity: 0, height: 0 }}
+                  transition={{ duration: reduceMotion ? 0 : 0.2 }}
                   className="px-4 pb-2 flex flex-wrap gap-1.5 flex-shrink-0"
                 >
                   {QUICK_REPLIES.map((reply) => (
                     <button
                       key={reply}
                       onClick={() => sendMessage(reply)}
-                      className="btn-wipe-outline px-3 py-1.5 text-[10px]"
+                      className="btn-wipe-outline min-h-9 px-3 py-1.5 text-xs"
                     >
                       {reply}
                     </button>
@@ -625,29 +627,6 @@ const AkiliChat: React.FC = () => {
                 </motion.div>
               )}
             </AnimatePresence>
-
-            {/* Council selector */}
-            <div className="px-3 pt-2 pb-1 flex gap-1 overflow-x-auto flex-shrink-0 scrollbar-none">
-              {COUNCIL_CHIPS.map((chip) => {
-                const isActive = chip.key === selectedAgent;
-                return (
-                  <button
-                    key={chip.label}
-                    type="button"
-                    onClick={() => setSelectedAgent(chip.key)}
-                    aria-pressed={isActive}
-                    title={chip.key ? `Consult ${chip.label} (${chip.role})` : 'Akili relay (default)'}
-                    className={`px-2.5 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-colors ${
-                      isActive
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-surface text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    {chip.label}
-                  </button>
-                );
-              })}
-            </div>
 
             {/* Input */}
             <form
@@ -660,13 +639,13 @@ const AkiliChat: React.FC = () => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask Akili anything…"
-                className="flex-1 bg-surface rounded-xl px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-primary/50 transition-all"
+                className="h-11 flex-1 rounded-md border border-border bg-background px-3.5 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-foreground focus:ring-2 focus:ring-ring"
               />
               <button
                 type="submit"
                 disabled={!input.trim() || isTyping}
                 aria-label="Send message"
-                className="btn-wipe h-9 w-9 disabled:cursor-not-allowed"
+                className="btn-wipe h-11 w-11 min-h-0 p-0 disabled:cursor-not-allowed"
               >
                 <Send className="w-4 h-4" />
               </button>

@@ -1,14 +1,13 @@
+import { apiFetch } from "@/lib/api";
+import { nextPollDelay } from "@/lib/polling";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import {
-  AlertTriangle,
-  Check,
-  Clock3,
-  ExternalLink,
-  Loader2,
-  ShieldCheck,
-} from "lucide-react";
 import Layout from "@/components/Layout";
+import { Button } from "@/components/ui/button";
+import { InlineError } from "@/components/ui/inline-error";
+import { StatusChip } from "@/components/ui/status-chip";
+import { Stepper } from "@/components/ui/stepper";
+import { SUPPORT_EMAIL } from "@/lib/support";
 import { useCommunity } from "@/hooks/useCommunities";
 import { isSupabaseConfigured } from "@/lib/communities";
 import { useSeo } from "@/lib/seo";
@@ -32,26 +31,13 @@ interface DisplayStep {
 
 function getDisplaySteps(): DisplayStep[] {
   return [
-    { code: "mint-queued", label: "Preparing your membership credential", minStatus: "MINT_QUEUED" },
+    { code: "mint-queued", label: "Preparing your membership", minStatus: "MINT_QUEUED" },
     { code: "mint-submitted", label: "Recording your membership", minStatus: "MINT_SUBMITTED" },
     { code: "indexer-confirmed", label: "Membership verified", minStatus: "INDEXER_CONFIRMED" },
     { code: "reconciled", label: "Active member", minStatus: "RECONCILED" },
   ];
 }
 
-const POLL_INTERVAL_MS = 2_500;
-const MOCK_ADVANCE_INTERVAL_MS = 1_800;
-
-// Local fallback when there's no Supabase order - the simulator's mock chain
-// of statuses we step through to give the demo a sense of motion.
-const MOCK_SEQUENCE: PaymentOrderStatus[] = [
-  "PAYMENT_CONFIRMED",
-  "MINT_QUEUED",
-  "MINT_SUBMITTED",
-  "MINT_CONFIRMED",
-  "INDEXER_CONFIRMED",
-  "RECONCILED",
-];
 
 function statusIndex(s: PaymentOrderStatus): number {
   const idx = PAYMENT_HAPPY_PATH.indexOf(s);
@@ -86,42 +72,25 @@ export default function JoinStatus() {
   // ord_wallet_ ids predate the local prefix and never had a server-side order.
   const isLocalOrder = orderId.startsWith("ord_local_") || orderId.startsWith("ord_wallet_") || !orderId;
   const hasSupabase = isSupabaseConfigured();
+  const shouldPollServer = Boolean(orderId && !isLocalOrder && (activationSecret || hasSupabase));
 
-  const [status, setStatus] = useState<PaymentOrderStatus>(
-    isLocalOrder ? "PAYMENT_CONFIRMED" : "PAYMENT_REQUESTED",
-  );
+  // Nothing here can be verified: no order id, a client-minted id, or no way to
+  // reach the order. The stepper must not move. Previously this branch walked a
+  // hardcoded happy path on a timer and wrote an "active" membership at the end.
+  const isUnverifiable = !shouldPollServer;
+
+  const [status, setStatus] = useState<PaymentOrderStatus>("PAYMENT_REQUESTED");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [activationError, setActivationError] = useState<string | null>(null);
   const membershipRecordedRef = useRef(false);
-
-  // ─── Local/mock progression: when there's no Supabase order, step through
-  //     the happy-path sequence on a timer so the demo feels alive.
-  useEffect(() => {
-    if (!isLocalOrder && hasSupabase) return;
-
-    let cancelled = false;
-    let idx = 0;
-    const advance = () => {
-      if (cancelled) return;
-      idx++;
-      if (idx >= MOCK_SEQUENCE.length) return;
-      setStatus(MOCK_SEQUENCE[idx]);
-      if (idx < MOCK_SEQUENCE.length - 1) {
-        window.setTimeout(advance, MOCK_ADVANCE_INTERVAL_MS);
-      }
-    };
-    const timer = window.setTimeout(advance, MOCK_ADVANCE_INTERVAL_MS);
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timer);
-    };
-  }, [isLocalOrder, hasSupabase]);
 
   // ─── Supabase polling: refetch the order until it reaches a terminal state.
   useEffect(() => {
-    if (isLocalOrder || !hasSupabase) return;
+    if (!shouldPollServer) return;
 
     let cancelled = false;
     let timer: number | undefined;
+    const startedAt = Date.now();
 
     const poll = async () => {
       if (cancelled) return;
@@ -135,12 +104,12 @@ export default function JoinStatus() {
         setErrorMessage(null);
         setStatus(order.status);
         if (!isTerminalStatus(order.status)) {
-          timer = window.setTimeout(poll, POLL_INTERVAL_MS);
+          timer = window.setTimeout(poll, nextPollDelay(startedAt));
         }
       } catch (err) {
         if (cancelled) return;
         setErrorMessage(err instanceof Error ? err.message : "Could not fetch order");
-        timer = window.setTimeout(poll, POLL_INTERVAL_MS);
+        timer = window.setTimeout(poll, nextPollDelay(startedAt));
       }
     };
 
@@ -149,13 +118,14 @@ export default function JoinStatus() {
       cancelled = true;
       if (timer !== undefined) window.clearTimeout(timer);
     };
-  }, [isLocalOrder, hasSupabase, orderId, activationSecret]);
+  }, [shouldPollServer, orderId, activationSecret]);
 
-  // ─── On RECONCILED (or INDEXER_CONFIRMED), record the membership locally and
-  //     persist via /api/membership/activate. Works for both wallet-connected
-  //     users (publicKey) and phone-only users (getPhoneAuthSession).
+  // ─── On a server-confirmed RECONCILED / INDEXER_CONFIRMED, activate the
+  //     membership through the API and only cache it locally once the server has
+  //     accepted. The local write is a cache, never the source of truth.
   useEffect(() => {
     if (membershipRecordedRef.current) return;
+    if (!shouldPollServer) return;
     if (status !== "RECONCILED" && status !== "INDEXER_CONFIRMED") return;
     if (!id) return;
 
@@ -165,26 +135,43 @@ export default function JoinStatus() {
       : null;
     const identity = accountId ?? phoneAddr;
     if (!identity) return;
+    if (!orderId || !activationSecret) return;
 
-    recordActiveMembership(id, identity);
+    let cancelled = false;
     membershipRecordedRef.current = true;
 
-    if (!orderId || orderId.startsWith("ord_local_") || !activationSecret) return;
+    void (async () => {
+      const result = await apiFetch("/api/membership/activate", {
+        method: "POST",
+        body: {
+          orderId,
+          communityId: id,
+          walletAddress: accountId,
+          phoneIdentifier: accountId ? null : phoneAddr,
+          activationSecret,
+        },
+        auth: "omit",
+      });
+      if (cancelled) return;
+      if (!result.ok) {
+        membershipRecordedRef.current = false;
+        setActivationError(
+          result.error.kind === "network"
+            ? "Your payment is confirmed but the activation service is unreachable. We will keep retrying. Do not pay again."
+            : result.error.kind === "conflict"
+              ? "Your payment is still being recorded. This page keeps checking. Do not pay again."
+              : "Your payment is confirmed but we could not activate the membership. Email hello@barazaprotocol.com with the reference above.",
+        );
+        return;
+      }
+      setActivationError(null);
+      recordActiveMembership(id, identity);
+    })();
 
-    fetch("/api/membership/activate", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        orderId,
-        communityId: id,
-        walletAddress: accountId,
-        phoneIdentifier: accountId ? null : phoneAddr,
-        activationSecret,
-      }),
-    }).catch(() => {
-      // Server endpoint unreachable; localStorage write is the source of truth.
-    });
-  }, [status, account.accountId, id, orderId, activationSecret]);
+    return () => {
+      cancelled = true;
+    };
+  }, [shouldPollServer, status, account.accountId, id, orderId, activationSecret]);
 
   const stepStates = useMemo(
     () => {
@@ -194,7 +181,7 @@ export default function JoinStatus() {
             { code: "payment-confirmed", label: "Transfer verified", minStatus: "PAYMENT_CONFIRMED" },
           ]
         : [
-            { code: "payment-requested", label: "Check your phone for the M-Pesa prompt", minStatus: "PAYMENT_REQUESTED" },
+            { code: "payment-requested", label: "Check your phone for the M-Pesa STK PIN prompt", minStatus: "PAYMENT_REQUESTED" },
             { code: "payment-confirmed", label: "Payment received - activating membership", minStatus: "PAYMENT_CONFIRMED" },
           ];
 
@@ -207,109 +194,96 @@ export default function JoinStatus() {
   );
 
   const isFailed = isFailureStatus(status);
-  const isComplete = status === "RECONCILED";
+  const isComplete = shouldPollServer && (status === "RECONCILED" || status === "INDEXER_CONFIRMED");
   const referenceParts = orderId.split("_");
   const displayReference = orderId ? referenceParts[referenceParts.length - 1] : "(none)";
 
+  const headline = isUnverifiable
+    ? "We cannot confirm this payment"
+    : isFailed
+      ? "Membership activation failed"
+      : isComplete
+        ? "You're an active member"
+        : "Activating your membership";
+
+  const JOIN_STEPS = [{ label: "See Group" }, { label: "Pay" }, { label: "Confirming" }, { label: "You're In" }];
+  const topStep = isComplete ? 4 : 2;
+  const detailSteps = stepStates.map((step) => ({ label: step.label }));
+  const detailCurrent = isFailed || isUnverifiable
+    ? Math.max(0, stepStates.findIndex((step) => step.state === "current"))
+    : isComplete
+      ? stepStates.length
+      : Math.max(0, stepStates.findIndex((step) => step.state === "current"));
+
   return (
     <Layout>
-      <section className="py-10 md:py-14">
-        <div className="container mx-auto px-4">
-          <div className="mx-auto max-w-4xl">
-            <div className="mb-6">
-              <p className="font-mono text-xs uppercase tracking-widest">Join Status</p>
-              <h1 className="mt-2 font-display text-3xl font-bold">
-                {isFailed
-                  ? "Membership activation failed"
-                  : isComplete
-                    ? "You're an active member"
-                    : "Activating your membership"}
-              </h1>
-              <p className="mt-2 text-sm">
-                Payment reference <span className="font-mono">{displayReference}</span> for{" "}
-                {community?.name ?? "Chama"} is moving from{" "}
-                {isStellarRail ? "transfer verification" : "M-Pesa confirmation"} to active membership.
-              </p>
+      <section className="py-8 md:py-12">
+        <div className="container mx-auto max-w-2xl space-y-6 px-4">
+          <Stepper steps={JOIN_STEPS} current={topStep} failed={isFailed} />
+
+          <header>
+            <div className="flex flex-wrap items-center gap-2">
+              <StatusChip
+                kind={isUnverifiable || isFailed ? "failed" : isComplete ? "confirmed" : "pending"}
+                label={isUnverifiable ? "Cannot Be Checked" : isFailed ? "Failed" : isComplete ? "You're In" : "Confirming"}
+              />
             </div>
+            <h1 className="mt-3 font-display text-2xl font-black tracking-tight md:text-3xl">{headline}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Payment reference <span className="font-mono">{displayReference}</span> for{" "}
+              {community?.name ?? "this group"} moves from{" "}
+              {isStellarRail ? "transfer verification" : "M-Pesa confirmation"} to active membership.
+            </p>
+          </header>
 
-            {errorMessage && (
-              <div className="mb-6 flex items-start gap-3 rounded-lg border p-4 text-sm">
-                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
-                <p>{errorMessage}</p>
+          {isUnverifiable ? (
+            <InlineError
+              title="This reference cannot be checked."
+              message={`We have no confirmed payment record for it, so the steps below will not move. If money left your account, email ${SUPPORT_EMAIL} with the reference above. Do not pay again.`}
+            />
+          ) : null}
+          {activationError ? <InlineError message={activationError} /> : null}
+          {errorMessage ? <InlineError message={errorMessage} /> : null}
+
+          <section className="baraza-card p-5" aria-label="Payment and membership steps">
+            <Stepper steps={detailSteps} current={detailCurrent} failed={isFailed} orientation="vertical" />
+          </section>
+
+          <section className="baraza-card p-5">
+            <dl className="divide-y divide-border text-sm">
+              <div className="flex items-center justify-between py-2">
+                <dt className="text-muted-foreground">Payment</dt>
+                <dd>
+                  {statusIndex(status) >= statusIndex("PAYMENT_CONFIRMED") ? (
+                    <StatusChip kind="confirmed" label="Confirmed" />
+                  ) : (
+                    <StatusChip kind="pending" label="Pending" />
+                  )}
+                </dd>
               </div>
-            )}
-
-            <div className="grid gap-6 lg:grid-cols-[0.62fr_0.38fr]">
-              <div className="baraza-card p-5 md:p-6">
-                <div className="space-y-5">
-                  {stepStates.map((step) => (
-                    <div key={step.code} className="flex gap-4 rounded-lg border p-4">
-                      <div
-                        className="grid h-9 w-9 shrink-0 place-items-center rounded-full"
-                      >
-                        {step.state === "done"
-                          ? <Check className="h-5 w-5" />
-                          : step.state === "current"
-                            ? <Loader2 className="h-5 w-5 animate-spin" />
-                            : <Clock3 className="h-5 w-5" />}
-                      </div>
-                      <p className="self-center text-sm font-medium">{step.label}</p>
-                    </div>
-                  ))}
-                </div>
+              <div className="flex items-center justify-between py-2">
+                <dt className="text-muted-foreground">Membership</dt>
+                <dd>{isComplete ? <StatusChip kind="confirmed" label="Active" /> : <StatusChip kind="pending" label="Pending" />}</dd>
               </div>
+            </dl>
+            <p className="mt-3 text-xs text-muted-foreground">
+              A confirmed payment and an active membership are two steps. Your membership activates once the payment is confirmed on the group record.
+            </p>
+          </section>
 
-              <aside className="space-y-5">
-                <div className="baraza-card p-5">
-                  <h2 className="font-display text-lg font-semibold">Status</h2>
-                  <div className="mt-4 space-y-3 text-sm">
-                    <div className="flex justify-between gap-3 border-b pb-3">
-                      <span>Payment</span>
-                      <span>
-                        {statusIndex(status) >= statusIndex("PAYMENT_CONFIRMED") ? "Confirmed" : "Pending"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between gap-3 border-b pb-3">
-                      <span>Credential</span>
-                      <span>
-                        {statusIndex(status) >= statusIndex("MINT_CONFIRMED")
-                          ? "Minted"
-                          : statusIndex(status) >= statusIndex("MINT_QUEUED")
-                            ? "Preparing"
-                            : "Pending"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between gap-3">
-                      <span>Membership</span>
-                      <span>
-                        {isComplete ? "Active" : "Pending"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+          {!account.authenticated && isComplete ? (
+            <p className="text-sm text-muted-foreground">Sign in to attach this membership to your Baraza account.</p>
+          ) : null}
 
-                <div className="rounded-lg border p-5">
-                  <ShieldCheck className="mb-3 h-5 w-5" />
-                  <p className="text-sm leading-6">
-                    Your membership activates only after payment proof and approval are complete.
-                  </p>
-                </div>
-
-                {!account.authenticated && isComplete && (
-                  <div className="rounded-lg border p-5">
-                    <p className="text-sm leading-6">
-                      Log in to attach this membership to your Baraza account.
-                    </p>
-                  </div>
-                )}
-
-                <Link to={`/dashboard/${id ?? "1"}`} className="btn-primary w-full justify-center gap-2 py-3 text-sm">
-                  Open group dashboard
-                  <ExternalLink className="h-4 w-4" />
-                </Link>
-              </aside>
-            </div>
-          </div>
+          {isComplete ? (
+            <Button asChild fullWidth>
+              <Link to={id ? `/dashboard/${id}` : "/home"}>Open Group</Link>
+            </Button>
+          ) : (
+            <Button asChild variant="outline" fullWidth>
+              <Link to={id ? `/dashboard/${id}` : "/home"}>View Group</Link>
+            </Button>
+          )}
         </div>
       </section>
     </Layout>

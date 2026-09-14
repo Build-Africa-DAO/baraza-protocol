@@ -1,165 +1,165 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Compass, PlusCircle, ShieldCheck } from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import Layout from '@/components/Layout';
+import { GroupRow } from '@/components/app/GroupRow';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Field, Input } from '@/components/ui/field';
+import { InlineError } from '@/components/ui/inline-error';
+import { PageHeader } from '@/components/ui/page-header';
+import { Sheet } from '@/components/ui/sheet';
+import { SkeletonList } from '@/components/ui/skeletons';
 import { useAccount } from '@/contexts/AccountContext';
 import { useMyMemberships } from '@/hooks/useMyMemberships';
-import { formatAccountDate } from '@/lib/accountLocale';
+import { acceptInviteCode, extractInviteCode } from '@/lib/inviteAccept';
 import { parseJoinTarget } from '@/lib/postAuth';
 import { useSeo } from '@/lib/seo';
-import { formatKSh } from '@/lib/utils';
 
+/**
+ * §13.9 My Groups — the signed-in hub. Rows with my standing and what needs
+ * me, one way in with an invite, one way to start a group. People with one
+ * active group never see this page; PostAuthRedirect sends them to it.
+ */
 export default function Home() {
   useSeo({
     title: 'Your groups',
-    description: 'Open a group you belong to, join with an invite, or launch a new chama on Baraza.',
+    description: 'Open a group you belong to, join with an invite, or start a new one on Baraza.',
     path: '/home',
     noIndex: true,
   });
-
-  const account = useAccount();
-  const navigate = useNavigate();
   const { memberships, isLoading, error } = useMyMemberships();
-  const [invite, setInvite] = useState('');
-  const [inviteError, setInviteError] = useState<string | null>(null);
-
-  const handleJoin = (event: FormEvent) => {
-    event.preventDefault();
-    const target = parseJoinTarget(invite);
-    if (!target) {
-      setInviteError('Paste an invite link or group id.');
-      return;
-    }
-    setInviteError(null);
-    navigate(`/join/${target}`);
+  // `/home?join=1` (the sidebar's sub-page) opens the invite sheet; closing it
+  // drops the param so Back does not reopen it.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const inviteOpen = searchParams.get('join') === '1';
+  const setInviteOpen = (open: boolean) => {
+    const params = new URLSearchParams(searchParams);
+    if (open) params.set('join', '1');
+    else params.delete('join');
+    setSearchParams(params, { replace: !open });
   };
+  const hasGroups = memberships.length > 0;
 
   return (
-    <Layout gate={{ title: 'Sign in to see your groups', description: 'Log in to open the groups you belong to, join with an invite, or launch a new one.' }}>
-      <section className="py-10 md:py-14">
-        <div className="container mx-auto px-4">
-          <div className="mb-8 max-w-2xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Your workspace</p>
-            <h1 className="mt-2 font-display text-3xl font-bold md:text-4xl">
-              {memberships.length > 0 ? 'Your groups' : 'Start with a group'}
-            </h1>
-            <p className="mt-3 text-sm leading-6 text-muted-foreground">
-              {memberships.length > 0
-                ? 'Open a group to see dues, votes, and payouts.'
-                : 'Join with an invite from a member, or launch a chama, SACCO, or cooperative.'}
-            </p>
-          </div>
+    <Layout gate={{ title: 'Sign in to see your groups', description: 'Log in to open the groups you belong to, join with an invite, or start a new one.' }}>
+      <section className="py-8 md:py-12">
+        <div className="mx-auto w-full max-w-5xl space-y-6 px-4 md:px-6">
+          <PageHeader
+            title={hasGroups ? 'Your Groups' : 'Start With a Group'}
+            subtitle={hasGroups ? 'Open a group to see dues, votes and money.' : 'Join with an invite from a member, or start a chama, SACCO or cooperative.'}
+            action={
+              hasGroups ? (
+                <Button variant="outline" onClick={() => setInviteOpen(true)}>
+                  Join With an Invite
+                </Button>
+              ) : undefined
+            }
+          />
 
-          {error && (
-            <p className="mb-6 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-              {error}
-            </p>
-          )}
+          {error ? <InlineError message={error} /> : null}
 
           {isLoading ? (
-            <div className="grid gap-3 md:grid-cols-2">
-              {Array.from({ length: 2 }).map((_, index) => (
-                <div key={index} className="baraza-card h-28 animate-pulse bg-muted/60" />
-              ))}
-            </div>
-          ) : memberships.length > 0 ? (
-            <div className="grid gap-3 md:grid-cols-2">
-              {memberships.map(({ record, community }) => (
-                <Link
-                  key={community.id}
-                  to={`/dashboard/${community.id}`}
-                  className="baraza-card group flex items-center gap-4 p-4 transition-colors hover:border-primary/45"
-                >
-                  <div className="grid h-12 w-12 shrink-0 place-items-center rounded-md border font-display text-base font-bold">
-                    {community.image}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="truncate font-display text-sm font-bold">{community.name}</p>
-                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase">
-                        <ShieldCheck className="h-3 w-3" />
-                        {record.status}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Joined {formatAccountDate(record.joinedAt, account.country.code)}
-                      {community.membershipFee > 0 ? ` · ${formatKSh(community.membershipFee)}/mo` : ''}
-                    </p>
-                  </div>
-                  <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-foreground" />
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <div className="grid gap-6 lg:grid-cols-2">
-              <form onSubmit={handleJoin} className="baraza-card p-6">
-                <h2 className="font-display text-lg font-bold">Join with an invite</h2>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Paste the link a member sent you, or enter the group id.
-                </p>
-                <label htmlFor="invite-link" className="mt-5 mb-2 block text-xs font-semibold">
-                  Invite link or group id
-                </label>
-                <input
-                  id="invite-link"
-                  value={invite}
-                  onChange={(event) => {
-                    setInvite(event.target.value);
-                    setInviteError(null);
-                  }}
-                  placeholder="https://barazaprotocol.com/join/…"
-                  className="w-full rounded-md border bg-background px-3 py-3 text-sm outline-none focus:border-primary"
-                />
-                {inviteError && <p className="mt-2 text-xs text-destructive">{inviteError}</p>}
-                <Button type="submit" className="mt-4 w-full sm:w-auto">
-                  Continue to join
+            <SkeletonList count={2} />
+          ) : hasGroups ? (
+            <>
+              <ul className="space-y-2">
+                {memberships.map((pair) => (
+                  <li key={pair.community.id}>
+                    <GroupRow pair={pair} />
+                  </li>
+                ))}
+              </ul>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button variant="outline" onClick={() => setInviteOpen(true)} className="sm:hidden">
+                  Join With an Invite
                 </Button>
-              </form>
-
-              <div className="baraza-card flex flex-col justify-between p-6">
-                <div>
-                  <h2 className="font-display text-lg font-bold">Launch a group</h2>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    Start a chama in minutes. Members join with a phone number and pay into a shared record.
-                  </p>
-                </div>
-                <div className="mt-6 flex flex-col gap-2 sm:flex-row">
-                  <Button asChild>
-                    <Link to="/create/purpose">
-                      <PlusCircle className="h-4 w-4" />
-                      Launch a group
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline">
-                    <Link to="/communities">
-                      <Compass className="h-4 w-4" />
-                      Browse groups
-                    </Link>
-                  </Button>
-                </div>
+                <Button asChild variant="outline">
+                  <Link to="/create">Start a Group</Link>
+                </Button>
               </div>
+            </>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2">
+              <InviteForm />
+              <EmptyState
+                title="Start a Group"
+                body="Set up a chama in minutes. Members join with a phone number and pay into a shared record."
+                primary={{ label: 'Start a Group', to: '/create' }}
+                secondary={{ label: 'Browse Groups', to: '/groups' }}
+              />
             </div>
           )}
 
-          {memberships.length > 0 && (
-            <div className="mt-8 flex flex-col gap-2 sm:flex-row">
-              <Button asChild>
-                <Link to="/create/purpose">
-                  <PlusCircle className="h-4 w-4" />
-                  Launch a group
-                </Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link to="/communities">
-                  <Compass className="h-4 w-4" />
-                  Browse
-                </Link>
-              </Button>
-            </div>
-          )}
+          <Sheet open={inviteOpen} onClose={() => setInviteOpen(false)} title="Join With an Invite" description="Paste the link a member sent you, or the group id.">
+            <InviteForm bare />
+          </Sheet>
         </div>
       </section>
     </Layout>
   );
+}
+
+function InviteForm({ bare = false }: { bare?: boolean }) {
+  const account = useAccount();
+  const navigate = useNavigate();
+  const [invite, setInvite] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    setError(null);
+    const code = extractInviteCode(invite);
+    if (code) {
+      if (!account.authenticated) {
+        account.login();
+        return;
+      }
+      setBusy(true);
+      const accepted = await acceptInviteCode(code, account.getAccessToken);
+      setBusy(false);
+      if (accepted.ok && accepted.communityId) {
+        navigate(accepted.alreadyMember ? `/dashboard/${accepted.communityId}` : `/join/${accepted.communityId}`);
+        return;
+      }
+      if (accepted.status === 401) {
+        account.login();
+        return;
+      }
+    }
+    const target = parseJoinTarget(invite);
+    if (!target) {
+      setError('Paste an invite link, an invite code, or a group id.');
+      return;
+    }
+    const query = code && code !== target ? `?invite=${encodeURIComponent(code)}` : '';
+    navigate(`/join/${target}${query}`);
+  }
+
+  const body = (
+    <form onSubmit={(event) => void submit(event)} className="space-y-4" noValidate>
+      {!bare ? (
+        <div>
+          <h2 className="font-display text-base font-bold">Join With an Invite</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Paste the link a member sent you, or the group id.</p>
+        </div>
+      ) : null}
+      <Field label="Invite Link or Group Id" htmlFor={bare ? 'invite-link-sheet' : 'invite-link'} error={error ?? undefined}>
+        <Input
+          id={bare ? 'invite-link-sheet' : 'invite-link'}
+          value={invite}
+          onChange={(event) => {
+            setInvite(event.target.value);
+            setError(null);
+          }}
+          placeholder="https://barazaprotocol.com/join/…"
+          aria-invalid={Boolean(error)}
+        />
+      </Field>
+      <Button type="submit" disabled={busy || invite.trim() === ''} fullWidth={bare} className={bare ? undefined : 'w-full sm:w-auto'}>
+        {busy ? 'Checking Invite' : 'Continue to Join'}
+      </Button>
+    </form>
+  );
+  return bare ? body : <div className="baraza-card p-5">{body}</div>;
 }

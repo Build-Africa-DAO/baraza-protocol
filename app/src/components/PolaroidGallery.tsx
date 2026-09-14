@@ -1,11 +1,12 @@
 import type { CSSProperties } from "react";
+import { ParallaxPhoto, Reveal, REVEAL_STAGGER } from "@/components/landing/motion";
 
 const frames = [
-  { src: "/gallery/gallery-dues.jpg", alt: "Members gathered around a laptop", rotate: "-7deg", lift: "0.45rem" },
-  { src: "/gallery/gallery-plan.jpg", alt: "A group planning together on a glass wall", rotate: "5deg", lift: "-0.7rem" },
-  { src: "/gallery/gallery-ledger.jpg", alt: "Treasurer reviewing a shared ledger on a screen", rotate: "-3deg", lift: "0.1rem" },
-  { src: "/gallery/gallery-vote.jpg", alt: "Two members checking a vote on a phone", rotate: "6deg", lift: "-0.4rem" },
-  { src: "/gallery/gallery-group.jpg", alt: "Members laughing together at a desk", rotate: "-4.5deg", lift: "0.55rem" },
+  { src: "/gallery/gallery-dues.jpg", alt: "Members gathered around a laptop", rotate: "-7deg", lift: "0.45rem", strength: 0.08 },
+  { src: "/gallery/gallery-plan.jpg", alt: "A group planning together on a glass wall", rotate: "5deg", lift: "-0.7rem", strength: 0.1 },
+  { src: "/gallery/gallery-ledger.jpg", alt: "Treasurer reviewing a shared ledger on a screen", rotate: "-3deg", lift: "0.1rem", strength: 0.12 },
+  { src: "/gallery/gallery-vote.jpg", alt: "Two members checking a vote on a phone", rotate: "6deg", lift: "-0.4rem", strength: 0.1 },
+  { src: "/gallery/gallery-group.jpg", alt: "Members laughing together at a desk", rotate: "-4.5deg", lift: "0.55rem", strength: 0.09 },
 ];
 
 export default function PolaroidGallery() {
@@ -21,23 +22,27 @@ export default function PolaroidGallery() {
               marginLeft: index === 0 ? 0 : "-1.75rem",
             }}
           >
-            <figure
-              className="origin-center bg-white p-[0.5rem] shadow-[0_14px_32px_hsl(0_0%_0%/0.18)] transition-transform duration-300 ease-out hover:z-20 hover:scale-[1.05] dark:shadow-[0_18px_40px_hsl(0_0%_0%/0.6)] sm:p-[0.6rem] [transform:rotate(var(--r))_translateY(var(--y))] hover:[transform:rotate(0deg)_translateY(-0.55rem)_scale(1.05)]"
-              style={
-                {
-                  "--r": frame.rotate,
-                  "--y": frame.lift,
-                } as CSSProperties
-              }
-            >
-              <img
-                src={frame.src}
-                alt={frame.alt}
-                width={360}
-                height={360}
-                className="aspect-square w-full object-cover"
-              />
-            </figure>
+            <Reveal delay={REVEAL_STAGGER * (4 + index)}>
+              <figure
+                className="origin-center bg-white p-[0.5rem] shadow-[0_14px_32px_hsl(0_0%_0%/0.18)] transition-transform duration-300 ease-out hover:z-20 hover:scale-[1.05] dark:shadow-[0_18px_40px_hsl(0_0%_0%/0.6)] sm:p-[0.6rem] [transform:rotate(var(--r))_translateY(var(--y))] hover:[transform:rotate(0deg)_translateY(-0.55rem)_scale(1.05)]"
+                style={
+                  {
+                    "--r": frame.rotate,
+                    "--y": frame.lift,
+                  } as CSSProperties
+                }
+              >
+                <ParallaxPhoto
+                  src={frame.src}
+                  alt={frame.alt}
+                  width={360}
+                  height={360}
+                  strength={frame.strength}
+                  className="aspect-square"
+                  imgClassName="aspect-square"
+                />
+              </figure>
+            </Reveal>
           </li>
         ))}
       </ul>

@@ -1,13 +1,29 @@
+import { apiFetch } from '@/lib/api';
 import type { Community } from '@/lib/constants';
 import type { MembershipRecord, MembershipStatus } from '@/lib/memberships';
+
+/**
+ * Mirrors `app/api/user/types.ts`. `GET /api/user/memberships` already returns
+ * the role, dues and balance the member workspace needs — the client used to
+ * drop all of it on the floor and re-derive membership from localStorage.
+ */
+export type OfficerRole = 'founder' | 'admin' | 'treasurer' | 'member';
+export type ActivationStatus = 'pending' | 'active' | 'suspended' | 'revoked';
+export type DuesStatus = 'ACTIVE' | 'OVERDUE_DUES';
+
+export const OFFICER_ROLES: readonly OfficerRole[] = ['founder', 'admin', 'treasurer'];
+
+export function isOfficerRole(role: string | undefined | null): boolean {
+  return OFFICER_ROLES.includes(role as OfficerRole);
+}
 
 export interface UserMembershipSummary {
   communityId: string;
   name: string;
-  role: string;
-  activationStatus: string;
+  role: OfficerRole;
+  activationStatus: ActivationStatus;
   joinedAt: string;
-  duesStatus?: string;
+  duesStatus?: DuesStatus;
   outstandingDuesMinor?: number;
   votingPower?: number;
   vaultBalanceMinor?: number;
@@ -57,6 +73,7 @@ export function communityFromSummary(
     type: 'other',
     description: '',
     membershipFee: 0,
+    currency: summary.currency,
     memberCount: 0,
     fundBalance: 0,
     activeDecisions: 0,
@@ -65,19 +82,19 @@ export function communityFromSummary(
   };
 }
 
-export async function fetchUserMemberships(token: string): Promise<UserMembershipSummary[]> {
-  const response = await fetch('/api/user/memberships', {
-    headers: { Authorization: `Bearer ${token}` },
+/**
+ * `token` is optional: when omitted the registered sign-in provider supplies it.
+ * Throws `unauthorized` on 401/403 and `memberships_unavailable` otherwise so
+ * `useMyMemberships` can fall back to the cached membership list.
+ */
+export async function fetchUserMemberships(token?: string): Promise<UserMembershipSummary[]> {
+  const result = await apiFetch<UserMembershipsResponse>('/api/user/memberships', {
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
-
-  if (response.status === 401 || response.status === 403) {
-    throw new Error('unauthorized');
+  if (!result.ok) {
+    throw new Error(result.error.kind === 'auth' || result.error.kind === 'forbidden' ? 'unauthorized' : 'memberships_unavailable');
   }
-  if (!response.ok) {
-    throw new Error('memberships_unavailable');
-  }
-
-  const body = await response.json() as UserMembershipsResponse;
+  const body = result.data;
   if (!body?.ok || !Array.isArray(body.memberships)) {
     throw new Error('memberships_unavailable');
   }

@@ -7,8 +7,8 @@
  *   emails/html/*.html          Handlebars placeholders for SendGrid
  *   emails/text/*.txt           Plain-text parts
  *   emails/catalog.json         Subjects + variables for backend
- *   public/emails/preview/*.html  Filled samples
- *   public/emails/index.html      Gallery
+ *   emails/preview/*.html          Filled samples (not served by the app)
+ *   emails/preview/index.html      Gallery: open the file in a browser
  */
 
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -16,7 +16,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = dirname(fileURLToPath(import.meta.url));
-const publicDir = join(root, '../public/emails');
+const previewDir = join(root, 'preview');
 
 const C = {
   black: '#0A0A0A',
@@ -595,7 +595,7 @@ function previewIndex(items) {
 function writeAll() {
   mkdirSync(join(root, 'html'), { recursive: true });
   mkdirSync(join(root, 'text'), { recursive: true });
-  mkdirSync(join(publicDir, 'preview'), { recursive: true });
+  mkdirSync(join(previewDir, 'preview'), { recursive: true });
 
   const catalog = templates.map((t) => {
     const html = layout({
@@ -607,12 +607,12 @@ function writeAll() {
     writeFileSync(join(root, 'html', `${t.id}.html`), html);
     writeFileSync(join(root, 'text', `${t.id}.txt`), `${t.subject}\n\n${t.text.trim()}\n`);
     writeFileSync(
-      join(publicDir, 'preview', `${t.id}.html`),
+      join(previewDir, 'preview', `${t.id}.html`),
       fill(layout({
         preheader: t.preheader,
         inner: t.inner,
         footerNote: t.footerNote,
-        logoSrc: '/logo.png',
+        logoSrc: '../../public/logo.png',
       }), SAMPLE),
     );
     return {
@@ -642,7 +642,7 @@ function writeAll() {
     ) + '\n',
   );
 
-  writeFileSync(join(publicDir, 'index.html'), previewIndex(templates));
+  writeFileSync(join(previewDir, 'index.html'), previewIndex(templates));
   console.log(`Wrote ${templates.length} email templates.`);
 }
 

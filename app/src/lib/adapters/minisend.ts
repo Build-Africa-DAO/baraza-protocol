@@ -5,6 +5,8 @@
  * Invokes the secure Edge API proxy (/api/payments/minisend) with cryptographic wallet proof.
  */
 
+import { apiFetch, errorField } from '@/lib/api';
+
 export interface MinisendOffRampParams {
   communityId?: string;
   proposalId?: string;
@@ -14,6 +16,7 @@ export interface MinisendOffRampParams {
   chain: 'stellar' | 'base' | 'polygon' | 'celo';
   currency?: 'KES' | 'UGX' | 'GHS' | 'NGN';
   memo?: string;
+  headers?: Record<string, string>;
 }
 
 export interface MinisendOffRampResult {
@@ -22,6 +25,11 @@ export interface MinisendOffRampResult {
   reference: string;
   kesAmount: number;
   error?: string;
+  circuitBreaker?: boolean;
+  /** Present on a 422 when the amount exceeds the telco per-transaction ceiling. */
+  recommendedTranches?: number;
+  maxAllowedMinor?: number;
+  status?: number;
 }
 
 /**
@@ -30,36 +38,34 @@ export interface MinisendOffRampResult {
 export async function usdcToMobileMoney(params: MinisendOffRampParams): Promise<MinisendOffRampResult> {
   try {
     const proxySecret = typeof window === 'undefined' ? process.env.PAYMENT_ADAPTER_PROXY_SECRET : undefined;
-    const headers: Record<string, string> = {
-      'content-type': 'application/json',
-    };
+    const { headers: extraHeaders, ...body } = params;
+    const headers: Record<string, string> = { ...extraHeaders };
+    if (proxySecret) headers.authorization = `Bearer ${proxySecret}`;
 
-    if (proxySecret) {
-      headers['authorization'] = `Bearer ${proxySecret}`;
-    }
-
-    const response = await fetch('/api/payments/minisend', {
+    const result = await apiFetch<{ orderId?: string; reference?: string; kesAmount?: number }>('/api/payments/minisend', {
       method: 'POST',
       headers,
-      body: JSON.stringify(params),
+      body: { ...body, currency: body.currency?.toUpperCase() as MinisendOffRampParams['currency'] },
     });
 
-    const data = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
+    if (!result.ok) {
       return {
         ok: false,
         reference: '',
         kesAmount: 0,
-        error: (data as { message?: string })?.message || 'Minisend off-ramp request failed.',
+        status: result.status,
+        error: result.error.message,
+        circuitBreaker: Boolean(errorField<boolean>(result.error, 'circuitBreaker')),
+        recommendedTranches: errorField<number>(result.error, 'recommendedTranches'),
+        maxAllowedMinor: errorField<number>(result.error, 'maxAllowedMinor'),
       };
     }
 
     return {
       ok: true,
-      orderId: (data as { orderId?: string })?.orderId,
-      reference: (data as { reference: string })?.reference || '',
-      kesAmount: Number((data as { kesAmount?: number })?.kesAmount || 0),
+      orderId: result.data?.orderId,
+      reference: result.data?.reference || '',
+      kesAmount: Number(result.data?.kesAmount || 0),
     };
   } catch (err) {
     return {

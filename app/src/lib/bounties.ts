@@ -1,4 +1,5 @@
 import { getSupabaseClient } from '@/lib/communities';
+import { isSyntheticDataEnabled } from '@/lib/devMode';
 import { getChainAdapter } from '@/lib/adapters';
 import type { BountyAccess, RewardToken } from '@/types';
 
@@ -403,7 +404,9 @@ export function listBounties(): Bounty[] {
   const local = readLocalBounties();
   // Local entries shadow seeds with the same id (status overrides, reassignments, etc.)
   const localIds = new Set(local.map((b) => b.id));
-  const merged = [...SEED_BOUNTIES.filter((b) => !localIds.has(b.id)), ...local];
+  // Seeded bounties are for local UI work only; a real group never sees them.
+  const seeds = isSyntheticDataEnabled() ? SEED_BOUNTIES : [];
+  const merged = [...seeds.filter((b) => !localIds.has(b.id)), ...local];
   return sortBounties(merged.map((bounty) => ({
     ...bounty,
     submissions: bounty.submissions + submissions.filter((s) => s.bountyId === bounty.id).length,
