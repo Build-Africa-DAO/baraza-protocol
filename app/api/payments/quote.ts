@@ -80,8 +80,8 @@ export default async function handler(req: Request): Promise<Response> {
   }
 
   // 3. Extract inputs from GET or POST
-  let communityId = '';
-  let amountKes = 0;
+  let communityId: string;
+  let amountKes: number;
 
   if (req.method === 'GET') {
     const url = new URL(req.url);
