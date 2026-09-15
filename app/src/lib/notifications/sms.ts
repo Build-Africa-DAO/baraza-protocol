@@ -67,7 +67,7 @@ export function formatVoteConfirmation(
   communityName: string,
   decision: 'FOR' | 'AGAINST',
 ): string {
-  return `Baraza: Your vote ${decision} on the active proposal in ${communityName} has been recorded. Visit baraza.app to track results.`;
+  return `Baraza: Your vote ${decision} on the active proposal in ${communityName} has been recorded. Visit barazaprotocol.com to track results.`;
 }
 
 export function formatDuesReminder(
@@ -75,11 +75,11 @@ export function formatDuesReminder(
   amountKes: number,
   dueDate: string,
 ): string {
-  return `Baraza: Dues reminder for ${communityName}. KES ${amountKes} due by ${dueDate}. Dial *384# or visit baraza.app to pay.`;
+  return `Baraza: Dues reminder for ${communityName}. KES ${amountKes} due by ${dueDate}. Dial *384# or visit barazaprotocol.com to pay.`;
 }
 
 export function formatMemberWelcome(communityName: string, adminPhone: string): string {
-  return `Welcome to ${communityName} on Baraza! Your membership is active. Contact admin: ${adminPhone}. Manage at baraza.app or *384#.`;
+  return `Welcome to ${communityName} on Baraza! Your membership is active. Contact admin: ${adminPhone}. Manage at barazaprotocol.com or *384#.`;
 }
 
 /**
