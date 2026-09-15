@@ -13,6 +13,7 @@ interface GoogleTokenInfo {
   sub: string;
   email: string;
   name?: string;
+  aud?: string;
   email_verified?: string | boolean;
 }
 
@@ -39,11 +40,13 @@ export default async function handler(req: Request): Promise<Response> {
   // Mock token support strictly for test runners (Invariant I-AUTH-1)
   if (isTestEnv && credential.startsWith('test_google_token_')) {
     const email = credential.replace('test_google_token_', '');
+    const isUnverified = email.includes('unverified');
     tokenInfo = {
       sub: `google_sub_${email}`,
       email,
       name: email.split('@')[0],
-      email_verified: true,
+      aud: process.env.GOOGLE_OAUTH_CLIENT_ID || 'test-client-id',
+      email_verified: !isUnverified,
     };
   } else {
     try {
@@ -54,8 +57,19 @@ export default async function handler(req: Request): Promise<Response> {
       tokenInfo = (await res.json()) as GoogleTokenInfo;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Google authentication unreachable';
-      return jsonResponse({ error: 'google_auth_failed', message }, { status: 502 });
+      return jsonResponse({ error: 'invalid_token', message }, { status: 401 });
     }
+  }
+
+  // 1. Invariant: Audience verification
+  if (process.env.GOOGLE_OAUTH_CLIENT_ID && tokenInfo.aud && tokenInfo.aud !== process.env.GOOGLE_OAUTH_CLIENT_ID) {
+    return jsonResponse({ error: 'invalid_audience', message: 'Google token audience mismatch.' }, { status: 401 });
+  }
+
+  // 2. Invariant: Email must be verified by Google
+  const isVerified = tokenInfo.email_verified === true || tokenInfo.email_verified === 'true';
+  if (!isVerified) {
+    return jsonResponse({ error: 'email_not_verified', message: 'Google account email is not verified.' }, { status: 403 });
   }
 
   const email = tokenInfo.email?.trim().toLowerCase();
@@ -65,14 +79,14 @@ export default async function handler(req: Request): Promise<Response> {
 
   const supabase = getSupabaseAdmin();
 
-  // 1. Check for Existing User Profile by google_sub or email
+  // 3. Check for Existing User Profile by google_sub or case-insensitive email
   let { data: user } = await supabase
     .from('user_profiles')
-    .select('id, email, full_name, google_sub, role, is_active')
-    .or(`google_sub.eq.${tokenInfo.sub},email.eq.${email}`)
+    .select('id, email, display_name, google_sub, role, is_active')
+    .or(`google_sub.eq.${tokenInfo.sub},email.ilike.${email}`)
     .maybeSingle();
 
-  // 2. Intent Separation: If sign-in flow and user does not exist, reject with 404
+  // 4. Intent Separation: If sign-in flow and user does not exist, reject with 404
   if (!isSignUp && !user) {
     return jsonResponse(
       { error: 'user_not_found', message: 'No account found with this Google account. Please sign up first.' },
@@ -80,7 +94,7 @@ export default async function handler(req: Request): Promise<Response> {
     );
   }
 
-  // 3. If User Exists and Suspended
+  // 5. If User Exists and Suspended
   if (user && user.is_active === false) {
     return jsonResponse(
       { error: 'account_suspended', message: 'This account has been suspended. Please contact support.' },
@@ -88,18 +102,18 @@ export default async function handler(req: Request): Promise<Response> {
     );
   }
 
-  // 4. If Sign-Up Flow and User Does Not Exist, Create Profile
+  // 6. If Sign-Up Flow and User Does Not Exist, Create Profile
   if (!user) {
     const { data: newUser, error: createErr } = await supabase
       .from('user_profiles')
       .insert({
         email,
         google_sub: tokenInfo.sub,
-        full_name: tokenInfo.name || email.split('@')[0],
+        display_name: tokenInfo.name || email.split('@')[0],
         role: 'member',
         is_active: true,
       })
-      .select('id, email, full_name, google_sub, role, is_active')
+      .select('id, email, display_name, google_sub, role, is_active')
       .single();
 
     if (createErr || !newUser) {
@@ -111,10 +125,10 @@ export default async function handler(req: Request): Promise<Response> {
     await supabase.from('user_profiles').update({ google_sub: tokenInfo.sub }).eq('id', user.id);
   }
 
-  // 5. Enforce Invariant I-AUTH-2: Bounded Concurrent Sessions (Max 5 active sessions)
+  // 7. Enforce Invariant I-AUTH-2: Bounded Concurrent Sessions (Max 5 active sessions)
   await enforceMaxActiveSessions(user.id);
 
-  // 6. Mint 256-Bit Bearer Session Token
+  // 8. Mint 256-Bit Bearer Session Token
   const rawSessionToken = generateSessionToken();
   const sessionTokenHash = await hashSessionToken(rawSessionToken);
   const sessionExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -132,11 +146,12 @@ export default async function handler(req: Request): Promise<Response> {
   return new Response(
     JSON.stringify({
       ok: true,
+      token: rawSessionToken,
       sessionToken: rawSessionToken,
       user: {
         id: user.id,
         email: user.email,
-        fullName: user.full_name,
+        displayName: user.display_name,
         role: user.role,
       },
       message: 'Google authentication successful.',

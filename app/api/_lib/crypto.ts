@@ -30,12 +30,14 @@ export interface WebhookSignatureVerificationResult {
 
 /**
  * Verifies inbound webhook signatures enforcing Invariant I-SEC-1 (Fail-Closed).
- * Supports both HMAC-SHA256 digest comparison against raw body and direct constant-time token comparison.
+ * Supports HMAC-SHA256 digest comparison against raw body (Mode 1), and optional
+ * direct constant-time token comparison (Mode 2) only if explicitly enabled via options.
  */
 export function verifyWebhookSignature(
   body: string,
   signature: string | null | undefined,
-  secret: string | undefined
+  secret: string | undefined,
+  options: { allowDirectSecret?: boolean } = {}
 ): WebhookSignatureVerificationResult {
   if (!secret || secret.trim() === '') {
     return { valid: false, reason: 'MISSING_SECRET' };
@@ -53,8 +55,8 @@ export function verifyWebhookSignature(
     return { valid: true };
   }
 
-  // Mode 2: Direct shared secret token comparison (e.g. apikey header)
-  if (constantTimeCompare(cleanSig, cleanSecret)) {
+  // Mode 2: Direct shared secret token comparison (e.g. apikey header) — strictly gated
+  if (options.allowDirectSecret && constantTimeCompare(cleanSig, cleanSecret)) {
     return { valid: true };
   }
 

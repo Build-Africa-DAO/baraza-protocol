@@ -24,13 +24,28 @@ export default async function handler(req: Request): Promise<Response> {
   }
 
   const identity = await resolveCallerIdentity(req, 'user-memberships');
-  if (!identity || (!identity.walletAddress && !identity.privyDid)) {
-    return jsonResponse({ error: 'unauthorized', message: 'Authentication required via Web3 wallet proof or Privy session.' }, { status: 401 });
+  if (!identity || (!identity.walletAddress && !identity.privyDid && !identity.userProfileId)) {
+    return jsonResponse({ error: 'unauthorized', message: 'Authentication required via Web3 wallet proof, Privy session, or user session.' }, { status: 401 });
   }
 
   const supabase = getSupabaseAdmin();
-  const wallet = identity.walletAddress || null;
-  const authUserId = identity.privyDid || null;
+  let wallet = identity.walletAddress || null;
+  let authUserId = identity.privyDid || null;
+
+  if (!wallet && !authUserId && identity.userProfileId) {
+    const { data: prof } = await supabase
+      .from('user_profiles')
+      .select('wallet_address, privy_did')
+      .eq('id', identity.userProfileId)
+      .maybeSingle();
+
+    if (prof) {
+      wallet = prof.wallet_address || null;
+      authUserId = prof.privy_did || identity.userProfileId;
+    } else {
+      authUserId = identity.userProfileId;
+    }
+  }
 
   // Step 1: Query members records for the caller
   let membersQuery = supabase.from('members').select('community_id, role, activation_status, created_at, wallet_address');

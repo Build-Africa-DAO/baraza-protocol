@@ -26,7 +26,7 @@ export default async function handler(req: Request): Promise<Response> {
   const signature = req.headers.get('x-artizen-signature') || req.headers.get('x-signature');
 
   // Invariant I-SEC-1: Fail-Closed HMAC & Constant-Time Verification
-  const authCheck = verifyWebhookSignature(rawBody, signature, webhookSecret);
+  const authCheck = verifyWebhookSignature(rawBody, signature, webhookSecret, { allowDirectSecret: true });
   if (!authCheck.valid) {
     if (authCheck.reason === 'MISSING_SECRET') {
       return jsonResponse(

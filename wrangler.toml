@@ -18,3 +18,8 @@ queue = "baraza-webhook-ingress-queue"
 [[hyperdrive]]
 binding = "HYPERDRIVE"
 id = "baraza-supabase-hyperdrive-id"
+
+# Edge Cron Triggers for Continuous Reconciliation
+[triggers]
+crons = ["*/5 * * * *", "*/10 * * * *"]
+
