@@ -9,6 +9,7 @@
  */
 
 import { getWalletProof, verifyWalletProof } from '../_lib/wallet-proof.js';
+import { resolveCallerIdentity } from '../_lib/auth-session.js';
 import { getSupabaseAdmin } from '../_lib/supabase.js';
 
 export const config = { runtime: 'nodejs' };
@@ -82,9 +83,13 @@ async function handler(req: Request): Promise<Response> {
   if (!communityId?.trim()) return bad('communityId is required', 400, req);
   if (!adminAddress?.trim()) return bad('adminAddress is required', 400, req);
 
-  // Verify wallet proof from the founder/officer
-  if (!verifyWalletProof(getWalletProof(req, adminAddress), adminAddress, 'treasury-init')) {
-    return json({ error: 'unauthorized', message: 'Valid wallet signature required' }, { status: 401 }, req);
+  // Verify wallet proof from the founder/officer or authenticated session
+  const caller = await resolveCallerIdentity(req, 'treasury-init', adminAddress);
+  const proof = getWalletProof(req, adminAddress);
+  const isProofValid = proof ? verifyWalletProof(proof, adminAddress, 'treasury-init') : false;
+
+  if (!isProofValid && !caller) {
+    return json({ error: 'unauthorized', message: 'Valid wallet signature or session required' }, { status: 401 }, req);
   }
 
   const signers = Array.isArray(body.signers) && body.signers.length > 0 ? body.signers : [adminAddress];
