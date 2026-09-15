@@ -19,22 +19,24 @@ export default async function handler(req: Request): Promise<Response> {
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, PATCH, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-wallet-address, x-wallet-signature, x-wallet-message, x-test-wallet-address, x-test-privy-did',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-wallet-address, x-wallet-signature, x-wallet-message, x-test-wallet-address, x-test-privy-did, x-test-user-profile-id',
       },
     });
   }
 
-  // Dual Auth Ingress
+  // Unified Auth Ingress (Wallet Proof, Privy Bearer, or Baraza Session)
   const identity = await resolveCallerIdentity(req, 'user-profile');
-  if (!identity || (!identity.walletAddress && !identity.privyDid)) {
-    return jsonResponse({ error: 'unauthorized', message: 'Authentication required via Web3 wallet proof or Privy session.' }, { status: 401 });
+  if (!identity || (!identity.walletAddress && !identity.privyDid && !identity.userProfileId)) {
+    return jsonResponse({ error: 'unauthorized', message: 'Authentication required via Web3 wallet proof, Privy session, or user session.' }, { status: 401 });
   }
 
   const supabase = getSupabaseAdmin();
 
   // Find existing profile
   let query = supabase.from('user_profiles').select('*');
-  if (identity.walletAddress) {
+  if (identity.userProfileId) {
+    query = query.eq('id', identity.userProfileId);
+  } else if (identity.walletAddress) {
     query = query.eq('wallet_address', identity.walletAddress);
   } else {
     query = query.eq('privy_did', identity.privyDid);
@@ -197,6 +199,29 @@ export default async function handler(req: Request): Promise<Response> {
       return jsonResponse({ error: 'database_error', message: delErr.message }, { status: 500 });
     }
 
+    // ODPC Push Subscription Purge (Package 1, Theorem 7)
+    // user_profiles are soft-anonymized (not hard-deleted), so ON DELETE CASCADE
+    // does not fire. Explicitly purge all push subscriptions for this user to
+    // comply with Kenya Data Protection Act 2019 §40 Right to Erasure.
+    await supabase
+      .from('user_push_subscriptions')
+      .delete()
+      .eq('user_profile_id', existing.id);
+
+    // Also purge by wallet_address and privy_did for defense-in-depth
+    if (identity.walletAddress) {
+      await supabase
+        .from('user_push_subscriptions')
+        .delete()
+        .eq('wallet_address', identity.walletAddress);
+    }
+    if (identity.privyDid) {
+      await supabase
+        .from('user_push_subscriptions')
+        .delete()
+        .eq('privy_did', identity.privyDid);
+    }
+
     return jsonResponse({
       ok: true,
       anonymized: true,
@@ -229,6 +254,8 @@ function formatProfileResponse(row: Record<string, unknown>): UserProfileRespons
       hasVerifiedPhone: Boolean(row.phone_hash && !row.phone_hash_revoked && row.phone_verified_at),
       phoneVerifiedAt: (row.phone_verified_at as string) || undefined,
       notifications: prefs,
+      email: (row.email as string) || undefined,
+      role: (row.role as string) || 'member',
       createdAt: row.created_at as string,
       updatedAt: row.updated_at as string,
     },

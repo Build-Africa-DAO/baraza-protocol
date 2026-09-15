@@ -90,3 +90,7 @@ core.*
 
 # Render & Script Outputs
 scripts/higgsfield/output/
+
+# Claude Code / Ruflo local tool state (never committed)
+.claude/
+**/.claude-flow/

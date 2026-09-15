@@ -1,0 +1,67 @@
+import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+import { cn, titleCaseLabelChildren } from "@/lib/utils";
+
+const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap font-bold tracking-wide disabled:pointer-events-none disabled:opacity-45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+  {
+    variants: {
+      variant: {
+        default: "btn-wipe",
+        secondary: "btn-wipe",
+        outline: "btn-wipe btn-wipe-outline",
+        ghost: "btn-wipe btn-wipe-outline",
+        destructive: "btn-wipe btn-wipe-destructive",
+        link: "bg-transparent font-semibold tracking-normal text-primary underline-offset-4 hover:underline",
+        icon: "btn-icon",
+      },
+      /* 44px is the floor for anything a thumb has to hit (§13.2). `sm` is for
+         desktop-only secondary actions and toast actions; never the one
+         primary on a phone screen. */
+      size: {
+        default: "h-11 px-5 text-sm",
+        sm: "h-9 min-h-0 px-4 text-xs",
+        lg: "h-12 px-8 text-sm",
+        icon: "h-11 w-11 min-h-0 p-0",
+      },
+      fullWidth: {
+        true: "w-full",
+        false: "",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+      fullWidth: false,
+    },
+  },
+);
+
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean;
+}
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, fullWidth, asChild = false, children, ...props }, ref) => {
+    const classes = cn(buttonVariants({ variant, size, fullWidth }), className);
+
+    if (asChild && React.isValidElement(children)) {
+      const child = children as React.ReactElement<{ className?: string; children?: React.ReactNode }>;
+      return React.cloneElement(child, {
+        className: cn(classes, child.props.className),
+        children: titleCaseLabelChildren(child.props.children),
+      });
+    }
+
+    return (
+      <button className={classes} ref={ref} {...props}>
+        {titleCaseLabelChildren(children)}
+      </button>
+    );
+  },
+);
+Button.displayName = "Button";
+
+export { Button, buttonVariants };

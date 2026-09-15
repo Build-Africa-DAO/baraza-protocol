@@ -1,8 +1,10 @@
+import { apiFetch } from '@/lib/api';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ShieldOff, RefreshCw, FileText, Headphones, AlertTriangle } from 'lucide-react';
+import { RefreshCw, FileText, Headphones, AlertTriangle } from 'lucide-react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import Layout from '@/components/Layout';
+import { StatusScreen } from '@/components/StatusPage';
 import { useSeo } from '@/lib/seo';
 import { isAdminWallet } from '@/lib/access';
 import type { CouncilAgentName } from '@/akili/council';
@@ -51,7 +53,7 @@ function KindIcon({ kind }: { kind: FilingRecord['kind'] }) {
 function FilingCard({ record }: { record: FilingRecord }) {
   return (
     <article className="rounded-xl border border-border bg-card p-4 space-y-2">
-      <header className="flex items-center justify-between gap-3 text-[11px] uppercase tracking-wide text-muted-foreground">
+      <header className="flex items-center justify-between gap-3 text-xs uppercase tracking-wide text-muted-foreground">
         <span className="inline-flex items-center gap-1.5 font-mono">
           <KindIcon kind={record.kind} />
           {record.kind}
@@ -60,7 +62,7 @@ function FilingCard({ record }: { record: FilingRecord }) {
       </header>
       <h3 className="text-sm font-semibold text-foreground">{record.topic}</h3>
       {record.supersedes ? (
-        <p className="text-[11px] text-amber-600 font-mono">
+        <p className="text-xs text-muted-foreground font-mono">
           supersedes {record.supersedes}
         </p>
       ) : null}
@@ -93,26 +95,18 @@ export default function AkiliCouncilFilings() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch('/api/akili/filings', {
+        const result = await apiFetch<FilingsResponse>('/api/akili/filings', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Admin-Wallet': walletAddress,
-          },
-          body: JSON.stringify({ agent }),
+          headers: { 'X-Admin-Wallet': walletAddress },
+          body: { agent },
+          auth: 'omit',
         });
-        if (res.status === 403) {
-          setError('This wallet is not on the admin list.');
+        if (!result.ok) {
+          setError(result.error.kind === 'forbidden' ? 'This wallet is not on the admin list.' : result.error.message);
           setData(null);
           return;
         }
-        if (!res.ok) {
-          setError(`Read failed (${res.status}).`);
-          setData(null);
-          return;
-        }
-        const json = (await res.json()) as FilingsResponse;
-        setData(json);
+        setData(result.data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
@@ -130,36 +124,22 @@ export default function AkiliCouncilFilings() {
 
   if (!connected) {
     return (
-      <Layout>
-        <section className="mx-auto max-w-3xl px-4 py-16 text-center space-y-4">
-          <ShieldOff className="mx-auto h-10 w-10 text-muted-foreground" />
-          <h1 className="text-2xl font-semibold">Connect an admin wallet</h1>
-          <p className="text-sm text-muted-foreground">
-            Council filings are admin-gated. Connect a wallet on the admin list to continue.
-          </p>
-          <button
-            type="button"
-            onClick={() => setVisible(true)}
-            className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground"
-          >
-            Connect wallet
-          </button>
-        </section>
-      </Layout>
+      <StatusScreen
+        kind="unauthorized"
+        title="Connect an Admin Wallet"
+        description="Council filings are admin-gated. Connect a wallet on the admin list to continue."
+        primary={{ label: 'Connect Wallet', onClick: () => setVisible(true), icon: 'login' }}
+      />
     );
   }
 
   if (!isAdmin) {
     return (
-      <Layout>
-        <section className="mx-auto max-w-3xl px-4 py-16 text-center space-y-4">
-          <ShieldOff className="mx-auto h-10 w-10 text-destructive" />
-          <h1 className="text-2xl font-semibold">Not authorised</h1>
-          <p className="text-sm text-muted-foreground">
-            This wallet is not on the admin list. Reach out to the founder if you should have access.
-          </p>
-        </section>
-      </Layout>
+      <StatusScreen
+        kind="forbidden"
+        title="Not Authorised"
+        description="This wallet is not on the admin list. Reach out to the founder if you should have access."
+      />
     );
   }
 
@@ -167,10 +147,10 @@ export default function AkiliCouncilFilings() {
     <Layout>
       <section className="mx-auto max-w-4xl px-4 py-8 space-y-6">
         <header className="space-y-2">
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-mono">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground font-mono">
             Admin · Akili Council
           </p>
-          <h1 className="text-2xl font-semibold">Council filings</h1>
+          <h1 className="text-2xl font-semibold">Council Filings</h1>
           <p className="text-sm text-muted-foreground max-w-2xl">
             Raw filings, listening notes, and corrections from the council agents. Admin-gated; not
             surfaced to community members. Source-of-truth is the council data directory; production
@@ -193,7 +173,7 @@ export default function AkiliCouncilFilings() {
                 }`}
               >
                 {agent.label}
-                <span className="ml-1.5 text-[10px] opacity-70">{agent.role}</span>
+                <span className="ml-1.5 text-xs opacity-70">{agent.role}</span>
               </button>
             );
           })}
@@ -202,7 +182,7 @@ export default function AkiliCouncilFilings() {
             onClick={() => void load(selectedAgent)}
             disabled={loading}
             aria-label="Refresh"
-            className="ml-auto rounded-full border border-border bg-surface px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground disabled:opacity-50"
+            className="btn-wipe-outline ml-auto px-3 py-1.5 text-xs"
           >
             <RefreshCw className={`inline h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
           </button>
@@ -215,7 +195,7 @@ export default function AkiliCouncilFilings() {
         ) : null}
 
         {data && !data.synced ? (
-          <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-xs text-amber-700">
+          <div className="rounded-xl border border-border bg-surface p-4 text-sm text-foreground">
             {data.status ?? 'No filings found.'}
           </div>
         ) : null}

@@ -37,9 +37,9 @@ function buildLeaderboard(communityId: string): ContributorStat[] {
 }
 
 const MEDAL_STYLES = [
-  'border-[#FFD700]/60 bg-[#FFD700]/10 text-[#FFD700]',
-  'border-[#C0C0C0]/60 bg-[#C0C0C0]/10 text-[#C0C0C0]',
-  'border-[#CD7F32]/60 bg-[#CD7F32]/10 text-[#CD7F32]',
+  'border-foreground bg-foreground text-background',
+  'border-foreground/60 text-foreground',
+  'border-border text-foreground',
 ];
 
 interface Props {
@@ -61,7 +61,7 @@ export default function CommunityLeaderboard({ communityId }: Props) {
           <div className="mb-5 flex items-center gap-2">
             <Trophy className="h-4 w-4 text-secondary" />
             <h3 className="font-display text-base font-semibold">Top contributors</h3>
-            <span className="ml-auto text-[10px] uppercase tracking-widest text-muted-foreground">
+            <span className="ml-auto text-xs uppercase tracking-widest text-muted-foreground">
               By reputation
             </span>
           </div>
@@ -80,7 +80,7 @@ export default function CommunityLeaderboard({ communityId }: Props) {
         </div>
 
         <div className="baraza-card p-4">
-          <p className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider mb-3">
+          <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-3">
             How reputation is scored
           </p>
           <div className="grid gap-2 sm:grid-cols-3 text-xs">
@@ -92,7 +92,7 @@ export default function CommunityLeaderboard({ communityId }: Props) {
               <div key={action} className="rounded-lg border border-border/50 p-3">
                 <p className="font-semibold text-foreground">{action}</p>
                 <p className="text-primary font-bold mt-0.5">{score}</p>
-                <p className="text-muted-foreground mt-0.5 text-[10px]">{note}</p>
+                <p className="text-muted-foreground mt-0.5 text-xs">{note}</p>
               </div>
             ))}
           </div>
@@ -108,7 +108,7 @@ export default function CommunityLeaderboard({ communityId }: Props) {
         <div className="mb-5 flex items-center gap-2">
           <Trophy className="h-4 w-4 text-secondary" />
           <h3 className="font-display text-base font-semibold">Top contributors</h3>
-          <span className="ml-auto text-[10px] uppercase tracking-widest text-muted-foreground">By reputation</span>
+          <span className="ml-auto text-xs uppercase tracking-widest text-muted-foreground">By reputation</span>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
@@ -121,13 +121,13 @@ export default function CommunityLeaderboard({ communityId }: Props) {
               )}
             >
               {i === 0 && (
-                <Star className="absolute right-3 top-3 h-3.5 w-3.5 text-[#FFD700] fill-[#FFD700]" />
+                <Star className="absolute right-3 top-3 h-3.5 w-3.5" aria-hidden />
               )}
               <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full border-2 border-current text-sm font-bold">
                 {i + 1}
               </div>
               <p className="font-display text-sm font-bold text-foreground">{c.name}</p>
-              <p className="mt-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+              <p className="mt-0.5 text-xs uppercase tracking-wider text-muted-foreground">
                 {c.bountiesCompleted} {c.bountiesCompleted === 1 ? 'bounty' : 'bounties'}
               </p>
               <div className="mt-2 flex items-center justify-center gap-1">
@@ -144,7 +144,7 @@ export default function CommunityLeaderboard({ communityId }: Props) {
         <div className="baraza-card overflow-hidden p-0">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b text-[10px] uppercase tracking-widest text-muted-foreground">
+              <tr className="border-b text-xs uppercase tracking-widest text-muted-foreground">
                 <th className="px-4 py-3 text-left">#</th>
                 <th className="px-4 py-3 text-left">Contributor</th>
                 <th className="px-4 py-3 text-right">Bounties</th>
@@ -159,7 +159,7 @@ export default function CommunityLeaderboard({ communityId }: Props) {
                   <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{c.bountiesCompleted}</td>
                   <td className="px-4 py-3 text-right">
                     <span className="inline-flex items-center gap-1 font-bold tabular-nums">
-                      <Zap className="h-3 w-3 text-accent" />
+                      <Zap className="h-3 w-3 text-foreground" />
                       {c.reputation}
                     </span>
                   </td>
@@ -172,7 +172,7 @@ export default function CommunityLeaderboard({ communityId }: Props) {
 
       {/* Scoring legend */}
       <div className="baraza-card p-4">
-        <p className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider mb-3">
+        <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-3">
           How reputation is scored
         </p>
         <div className="grid gap-2 sm:grid-cols-3 text-xs">
@@ -184,7 +184,7 @@ export default function CommunityLeaderboard({ communityId }: Props) {
             <div key={action} className="rounded-lg border border-border/50 p-3">
               <p className="font-semibold text-foreground">{action}</p>
               <p className="text-primary font-bold mt-0.5">{score}</p>
-              <p className="text-muted-foreground mt-0.5 text-[10px]">{note}</p>
+              <p className="text-muted-foreground mt-0.5 text-xs">{note}</p>
             </div>
           ))}
         </div>

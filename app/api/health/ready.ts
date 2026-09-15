@@ -5,13 +5,18 @@ import type { ReadinessResponse, ComponentHealth } from './types';
 let cachedReadiness: { payload: ReadinessResponse; cachedAt: number } | null = null;
 const TTL_MS = 5000;
 
+export function resetReadinessCache(): void {
+  cachedReadiness = null;
+}
+
 export default async function handler(req: Request): Promise<Response> {
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     return new Response('Method not allowed', { status: 405 });
   }
 
   const now = Date.now();
-  if (cachedReadiness && now - cachedReadiness.cachedAt < TTL_MS) {
+  const noCache = req.headers.get('cache-control')?.includes('no-cache');
+  if (!noCache && cachedReadiness && now - cachedReadiness.cachedAt < TTL_MS) {
     const isReady = cachedReadiness.payload.status !== 'not_ready';
     return new Response(JSON.stringify({ ...cachedReadiness.payload, cached: true }), {
       status: isReady ? 200 : 503,
@@ -69,6 +74,20 @@ export default async function handler(req: Request): Promise<Response> {
     ? 'ready'
     : 'degraded';
 
+  const minisendHealth: ComponentHealth = {
+    tier: 'soft',
+    status: process.env.MINISEND_API_KEY ? 'healthy' : 'degraded',
+    latency_ms: 1,
+    message: process.env.MINISEND_API_KEY ? undefined : 'Minisend API key not configured',
+  };
+
+  const kotaniHealth: ComponentHealth = {
+    tier: 'soft',
+    status: process.env.KOTANI_API_KEY ? 'healthy' : 'degraded',
+    latency_ms: 1,
+    message: process.env.KOTANI_API_KEY ? undefined : 'Kotani API key not configured',
+  };
+
   const payload: ReadinessResponse = {
     status: overallStatus,
     timestamp: new Date().toISOString(),
@@ -77,6 +96,8 @@ export default async function handler(req: Request): Promise<Response> {
       database: dbHealth,
       stellar_horizon: horizonHealth,
       redis: redisHealth,
+      minisend: minisendHealth,
+      kotani: kotaniHealth,
     },
   };
 

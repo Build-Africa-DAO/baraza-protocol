@@ -126,7 +126,7 @@ export default async function handler(req: Request): Promise<Response> {
     try {
       // 1. Fetch active member count to snapshot the denominator (RT-01 Fix)
       const memberCountRes = await fetch(
-        `${supabaseUrl}/rest/v1/memberships?community_id=eq.${encodeURIComponent(communityId)}&status=eq.active&select=member_id`,
+        `${supabaseUrl}/rest/v1/memberships?community_id=eq.${encodeURIComponent(communityId)}&status=in.(ACTIVE,active)&select=member_id`,
         {
           headers: {
             apikey: serviceKey,
@@ -139,7 +139,16 @@ export default async function handler(req: Request): Promise<Response> {
         const countHeader = memberCountRes.headers.get('content-range');
         if (countHeader) {
           const total = parseInt(countHeader.split('/')[1] || '1', 10);
-          if (total > 0) snapshotMemberCount = total;
+          if (!isNaN(total) && total > 0) snapshotMemberCount = total;
+        } else {
+          try {
+            const rows = await memberCountRes.json();
+            if (Array.isArray(rows) && rows.length > 0) {
+              snapshotMemberCount = rows.length;
+            }
+          } catch {
+            // retain default
+          }
         }
       }
 

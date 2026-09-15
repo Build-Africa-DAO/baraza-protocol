@@ -3,14 +3,22 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import BackendStatus from '@/components/BackendStatus';
+import OfflineBanner from '@/components/OfflineBanner';
+import AppShell from '@/components/app/AppShell';
+import VisitorShell from '@/components/app/VisitorShell';
+import OperatorShell from '@/components/app/OperatorShell';
+import { useLocation } from 'react-router-dom';
+import WalletGate from '@/components/auth/WalletGate';
+import { useAccount } from '@/contexts/AccountContext';
 
 interface LayoutProps {
   children: React.ReactNode;
+  gate?: boolean | { title?: string; description?: string };
 }
 
-const Layout: React.FC<LayoutProps> = ({ children }) => {
+function PublicShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-clip flex flex-col bg-background">
+    <div className="flex min-h-screen w-full max-w-full flex-col bg-background">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-primary-foreground"
@@ -18,9 +26,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         Skip to main content
       </a>
       <Header />
+      <OfflineBanner />
       <main
         id="main-content"
-        className="flex-1 pt-14 pb-24 md:pb-0"
+        className="flex-1 pb-24 pt-16 md:pb-0"
         tabIndex={-1}
       >
         {children}
@@ -30,6 +39,46 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <BackendStatus />
     </div>
   );
+}
+
+/**
+ * Marketing chrome (landing header, newsletter footer, public bottom nav) is
+ * for the landing page only. Every other URL is the product: signed in it
+ * gets `AppShell`, signed out it gets `VisitorShell`.
+ */
+function isMarketingPath(pathname: string): boolean {
+  return pathname === '/';
+}
+
+/** Operator tools get their own chrome whether or not a member session exists. */
+function isOperatorPath(pathname: string): boolean {
+  return /^\/(admin|retro|onboard)(\/|$)/.test(pathname);
+}
+
+const Layout: React.FC<LayoutProps> = ({ children, gate }) => {
+  const account = useAccount();
+  const location = useLocation();
+  const gated = Boolean(gate);
+  const gateCopy = typeof gate === 'object' ? gate : undefined;
+  const body = gated ? (
+    <WalletGate title={gateCopy?.title} description={gateCopy?.description}>
+      {children}
+    </WalletGate>
+  ) : children;
+
+  if (isOperatorPath(location.pathname)) {
+    return <OperatorShell>{body}</OperatorShell>;
+  }
+
+  if (account.authenticated) {
+    return <AppShell>{body}</AppShell>;
+  }
+
+  if (!isMarketingPath(location.pathname)) {
+    return <VisitorShell>{body}</VisitorShell>;
+  }
+
+  return <PublicShell>{body}</PublicShell>;
 };
 
 export default Layout;

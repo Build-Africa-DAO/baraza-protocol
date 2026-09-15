@@ -1,512 +1,390 @@
-import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import {
-  AlertTriangle,
-  ArrowLeft,
-  Check,
-  CreditCard,
-  Loader2,
-  Phone,
-  Stars,
-  Wallet,
-  CheckCircle2,
-} from "lucide-react";
-import { storePaymentOrderActivationSecret } from "@/lib/payments";
-import { calculateDynamicFee } from "@/lib/payments/feeEngine";
-import Layout from "@/components/Layout";
-import { useCommunity } from "@/hooks/useCommunities";
-import { useToast } from "@/hooks/use-toast";
-import { formatKSh } from "@/lib/utils";
-import { normaliseKenyanPhone } from "@/lib/phone";
-import CommunityBanner from "@/components/CommunityBanner";
-import { useSeo } from "@/lib/seo";
-import { PRODUCT_ENVIRONMENT } from "@/lib/network";
-import { useAccount } from "@/contexts/AccountContext";
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, ChevronDown, Loader2 } from 'lucide-react';
+import Layout from '@/components/Layout';
+import PageLoader from '@/components/PageLoader';
+import { StatusScreen } from '@/components/StatusPage';
+import { IdentityStrip } from '@/components/app/IdentityStrip';
+import { AskAkili } from '@/akili/AskAkili';
+import { AmountBlock } from '@/components/ui/amount-block';
+import { Button } from '@/components/ui/button';
+import { Field, Input, PhoneField } from '@/components/ui/field';
+import { InlineError } from '@/components/ui/inline-error';
+import { StatusChip } from '@/components/ui/status-chip';
+import { Stepper } from '@/components/ui/stepper';
+import { useAccount } from '@/contexts/AccountContext';
+import { useCommunity } from '@/hooks/useCommunities';
+import { useToast } from '@/hooks/use-toast';
+import { apiFetch, submitGuard } from '@/lib/api';
+import { isPaymentSimulatorEnabled, RAIL_UNAVAILABLE_COPY } from '@/lib/devMode';
+import { acceptInviteCode } from '@/lib/inviteAccept';
+import { formatMoney, groupCurrency } from '@/lib/money';
+import { PRODUCT_ENVIRONMENT } from '@/lib/network';
+import { storePaymentOrderActivationSecret } from '@/lib/payments';
+import { calculateDynamicFee, type FeeBreakdown } from '@/lib/payments/feeEngine';
+import { normaliseKenyanPhone } from '@/lib/phone';
+import { useSeo } from '@/lib/seo';
+import { rulesSentence } from '@/lib/voteCopy';
 
-const joinSteps = [
-  { label: "Invite opened", state: "current" },
-  { label: "Payment method selected", state: "pending" },
-  { label: "Payment proof submitted", state: "pending" },
-  { label: "Payment confirmed", state: "pending" },
-  { label: "Credential minted", state: "pending" },
-  { label: "Active member", state: "pending" },
-];
+/**
+ * §13.11 Join — one page, four stages on the stepper at the top.
+ *
+ * Stage A: see the group, the rules and the amount (a server quote when the
+ * intent API answers, the same fee formula locally otherwise). Stage B: pay
+ * with M-Pesa. Confirming and You're In continue on `/join/:id/status`, which
+ * wears the same stepper, so the person never feels they changed rooms.
+ * No bank-transfer copy, no wallet picker.
+ */
+export const JOIN_STEPS = [{ label: 'See Group' }, { label: 'Pay' }, { label: 'Confirming' }, { label: "You're In" }];
 
-function ActivationTracker() {
+const TYPE_LABELS: Record<string, string> = {
+  savings: 'Savings chama',
+  sacco: 'SACCO',
+  cooperative: 'Cooperative',
+  welfare: 'Welfare group',
+  investment: 'Investment club',
+  housing: 'Housing SACCO',
+  professional: 'Professional network',
+};
+
+function initialsOf(name: string): string {
   return (
-    <div className="baraza-card p-4 md:p-5">
-      <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="font-display text-base font-semibold">Membership activation</h2>
-          <p className="mt-1 text-xs">Payment proof and membership approval stay separate.</p>
-        </div>
-        <span className="rounded-full border px-3 py-1 text-[11px] font-semibold">
-          Step 1 of {joinSteps.length}
-        </span>
-      </div>
-      <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
-        {joinSteps.map((step, index) => (
-          <div
-            key={step.label}
-            className={
-              step.state === "current"
-                ? "rounded-lg border border-primary bg-primary/10 p-3"
-                : "rounded-lg border p-3"
-            }
-          >
-            <div
-              className={
-                step.state === "current"
-                  ? "mb-2 grid h-7 w-7 place-items-center rounded-full"
-                  : "mb-2 grid h-7 w-7 place-items-center rounded-full border"
-              }
-            >
-              {step.state === "done" ? <Check className="h-4 w-4" /> : <span className="text-[11px] font-bold">{index + 1}</span>}
-            </div>
-            <span className="block text-[11px] font-bold uppercase tracking-widest">
-              {step.label}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
+    name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0] ?? '')
+      .join('')
+      .toUpperCase() || 'GP'
   );
-}
-
-function generateLocalOrderId(): string {
-  return `ord_local_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
 export default function JoinDao() {
   const { id } = useParams<{ id: string }>();
-  const { community } = useCommunity(id);
+  const [searchParams] = useSearchParams();
+  const { community, isLoading } = useCommunity(id);
   const account = useAccount();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
   useSeo({
-    title: community ? `Join ${community.name}` : "Join a community",
-    description: "Verify your phone, pay membership dues via M-Pesa, and activate your membership.",
+    title: community ? `Join ${community.name}` : 'Join a group',
+    description: 'See the group, the rules and the amount, then pay dues by M-Pesa.',
     path: id ? `/join/${id}` : undefined,
     noIndex: true,
   });
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [phone, setPhone] = useState("");
-  const [stellarTxHash, setStellarTxHash] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isVerifyingStellar, setIsVerifyingStellar] = useState(false);
-  const [pendingWalletJoin, setPendingWalletJoin] = useState(false);
 
-  const amount = community?.membershipFee ?? 0;
-  const feeBreakdown = calculateDynamicFee(amount * 100, 'KES', true);
-  const isFree = feeBreakdown.isFree;
-  const estimatedXlm = Number(((feeBreakdown.totalExpectedMinor / 100) * (1 / 130) / 0.10).toFixed(4));
+  const [phone, setPhone] = useState('');
+  const [txHash, setTxHash] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [quote, setQuote] = useState<FeeBreakdown | null>(null);
+  const [otherWays, setOtherWays] = useState(false);
 
+  const currency = groupCurrency(community);
+  const amountMajor = community?.membershipFee ?? 0;
+  const fee = quote ?? calculateDynamicFee(Math.round(amountMajor * 100), currency, true);
+  const isFree = fee.totalExpectedMinor <= 0;
+  const needsLogin = !account.authenticated;
+  const stage = needsLogin ? 0 : 1;
   const normalisedPhone = normaliseKenyanPhone(phone);
-  const canSubmit = (isFree || (normalisedPhone !== null && amount > 0)) && !isSubmitting;
-  const canVerifyStellar = /^[a-f0-9]{64}$/i.test(stellarTxHash.trim()) && !isVerifyingStellar;
+  const hashOk = /^[a-f0-9]{64}$/i.test(txHash.trim());
 
-  function startAccountJoin(accountId: string) {
-    if (!id) return;
-    const orderId = `ord_local_wallet_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    toast({
-      title: "Account payment started",
-      description: `Membership dues are linked to ${accountId.slice(0, 6)}...${accountId.slice(-4)}.`,
-    });
-    navigate(`/join/${id}/status?orderId=${encodeURIComponent(orderId)}&rail=wallet`);
-  }
-
+  // An invite code in the URL is accepted as soon as the person is signed in.
   useEffect(() => {
-    if (!pendingWalletJoin || !account.authenticated || !account.accountId) return;
-    setPendingWalletJoin(false);
-    startAccountJoin(account.accountId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [account.accountId, account.authenticated, pendingWalletJoin]);
+    const code = searchParams.get('invite');
+    if (!code || !/^[a-zA-Z0-9_-]{6,32}$/.test(code) || !account.authenticated) return;
+    let cancelled = false;
+    void acceptInviteCode(code, account.getAccessToken).then((accepted) => {
+      if (cancelled || !accepted.ok || !accepted.communityId) return;
+      if (accepted.alreadyMember) {
+        toast({ title: 'You Already Belong to This Group', description: 'Opening the group.' });
+        navigate(`/dashboard/${accepted.communityId}`);
+      } else if (accepted.joined) {
+        toast({ title: 'Invite Accepted', description: 'Pay the activation dues if this group charges them.' });
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [account.authenticated, account.getAccessToken, navigate, searchParams, toast]);
 
-  async function handleFreeJoin() {
-    if (!id || isSubmitting) return;
-    setIsSubmitting(true);
+  // The server's quote wins over the local formula when it answers.
+  useEffect(() => {
+    if (!id || !community || amountMajor <= 0) return;
+    let cancelled = false;
+    void apiFetch<{ feeBreakdown?: FeeBreakdown }>('/api/stellar/create-payment-intent', {
+      method: 'POST',
+      body: { communityId: id },
+      auth: 'omit',
+    }).then((result) => {
+      if (result.ok && !cancelled && result.data?.feeBreakdown) setQuote(result.data.feeBreakdown);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [amountMajor, community, id]);
+
+  async function joinFree() {
+    if (!id || busy) return;
+    if (needsLogin) {
+      account.login();
+      return;
+    }
+    setBusy(true);
+    setError(null);
     try {
-      const walletAddress = account.accountId || (phone ? `phone:${phone}` : `phone:anon_${crypto.randomUUID()}`);
-      const freeOrderId = `ord_free_${id}_${Date.now().toString(36)}_${crypto.randomUUID().slice(0, 8)}`;
-      const freeSecret = `sec_free_${crypto.randomUUID()}`;
-      const res = await fetch("/api/membership/activate", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          orderId: freeOrderId,
-          communityId: id,
-          walletAddress,
-          activationSecret: freeSecret,
+      const walletAddress = account.accountId ?? `phone:${normalisedPhone ?? 'unknown'}`;
+      const result = await submitGuard.run(`join-free:${id}`, () =>
+        apiFetch<{ ok?: boolean }>('/api/membership/activate', {
+          method: 'POST',
+          body: {
+            orderId: `ord_free_${id}_${Date.now().toString(36)}`,
+            communityId: id,
+            walletAddress,
+            activationSecret: `sec_free_${crypto.randomUUID()}`,
+          },
+          auth: 'omit',
         }),
-      });
-      const data = (await res.json().catch(() => ({}))) as { ok?: boolean; message?: string };
-      if (res.ok && data.ok) {
-        toast({
-          title: "Membership Activated",
-          description: `Welcome to ${community?.name || 'the community'}!`,
-        });
-        navigate(`/dashboard/${id}`);
+      );
+      if (!result) return;
+      if (!result.ok || !result.data?.ok) {
+        setError(result.ok ? 'Baraza could not activate the membership. Try again.' : result.error.message);
         return;
       }
-      throw new Error(data.message || "Failed to activate free membership.");
-    } catch (err: unknown) {
-      toast({
-        title: "Activation failed",
-        description: err instanceof Error ? err.message : "Please try again.",
-        variant: "destructive",
-      });
+      toast({ title: "You're In", description: `Welcome to ${community?.name ?? 'the group'}.` });
+      navigate(`/dashboard/${id}`);
     } finally {
-      setIsSubmitting(false);
+      setBusy(false);
     }
   }
 
-  async function handleMpesaSubmit() {
-    if (isFree) {
-      return handleFreeJoin();
+  async function payWithMpesa() {
+    if (!id || busy) return;
+    if (needsLogin) {
+      account.login();
+      return;
     }
-    if (!canSubmit || !id || !normalisedPhone) return;
-    setIsSubmitting(true);
-
-    let orderId: string | null = null;
-    let activationSecret: string | null = null;
-    let usedFallback = false;
-
+    if (!normalisedPhone) return;
+    setError(null);
+    if (!isPaymentSimulatorEnabled()) {
+      setError(RAIL_UNAVAILABLE_COPY);
+      return;
+    }
+    setBusy(true);
     try {
-      const res = await fetch("/api/mpesa/simulate", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          phone: `+254${normalisedPhone}`,
-          communityId: id,
-          amount: Math.round(feeBreakdown.totalExpectedMinor / 100),
-          currency: "KES",
-        }),
-      });
-      if (res.ok) {
-        const data = (await res.json()) as { orderId?: string; activationSecret?: string };
-        orderId = data.orderId ?? null;
-        activationSecret = data.activationSecret ?? null;
-      }
-    } catch {
-      // network/CORS/local-dev - fall through to mock
-    }
-
-    if (!orderId) {
-      orderId = generateLocalOrderId();
-      usedFallback = true;
-    }
-
-    toast({
-      title: usedFallback ? "Simulator unreachable - using local order" : "M-Pesa prompt sent",
-      description: usedFallback
-        ? "Run local dev server to exercise the real /api/mpesa/simulate endpoint."
-        : `Enter your M-Pesa PIN on your phone to confirm ${formatKSh(feeBreakdown.totalExpectedMinor / 100)}.`,
-    });
-
-    setIsSubmitting(false);
-    if (activationSecret) storePaymentOrderActivationSecret(orderId, activationSecret);
-    navigate(`/join/${id}/status?orderId=${encodeURIComponent(orderId)}`);
-  }
-
-  async function handleStellarSubmit() {
-    if (!id || !canVerifyStellar) return;
-    setIsVerifyingStellar(true);
-
-    try {
-      let intentToken: string | null = null;
-      try {
-        const intentRes = await fetch("/api/stellar/create-payment-intent", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
+      const result = await submitGuard.run(`join-pay:${id}`, () =>
+        apiFetch<{ orderId?: string; activationSecret?: string }>('/api/mpesa/simulate', {
+          method: 'POST',
+          body: {
+            phone: `+254${normalisedPhone}`,
             communityId: id,
-            amountKes: amount,
-            environment: PRODUCT_ENVIRONMENT,
-          }),
-        });
-        if (intentRes.ok) {
-          const intentData = (await intentRes.json()) as { intentToken?: string };
-          intentToken = intentData.intentToken ?? null;
-        }
-      } catch {
-        // Intent service unavailable
+            amount: Math.round(fee.totalExpectedMinor / 100),
+            currency,
+          },
+          auth: 'omit',
+        }),
+      );
+      if (!result) return;
+      if (!result.ok || !result.data?.orderId) {
+        setError(result.ok ? 'The payment could not be started. Nothing has been charged.' : `${result.error.message} Nothing has been charged.`);
+        return;
       }
-
-      const res = await fetch("/api/stellar/verify-payment", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(
-          intentToken
-            ? { intentToken, txHash: stellarTxHash.trim().toLowerCase(), environment: PRODUCT_ENVIRONMENT }
-            : {
-                communityId: id,
-                txHash: stellarTxHash.trim().toLowerCase(),
-                environment: PRODUCT_ENVIRONMENT,
-              },
-        ),
-      });
-      const data = (await res.json()) as {
-        orderId?: string;
-        activationSecret?: string | null;
-        ledger?: number;
-        amountXlm?: number;
-        persisted?: boolean;
-        message?: string;
-      };
-
-      if (!res.ok || !data.orderId) {
-        throw new Error(data.message ?? "Could not verify this transfer.");
-      }
-
-      toast({
-        title: "Transfer verified",
-        description: data.persisted
-          ? `Payment record ${data.ledger ?? "confirmed"} was accepted.`
-          : "The transfer was verified. This will continue in local preview mode.",
-      });
-
-      if (data.activationSecret) storePaymentOrderActivationSecret(data.orderId, data.activationSecret);
-      navigate(`/join/${id}/status?orderId=${encodeURIComponent(data.orderId)}&rail=stellar`);
-    } catch (err) {
-      toast({
-        title: "Transfer verification failed",
-        description: err instanceof Error ? err.message : "Check the transaction hash and try again.",
-        variant: "destructive",
-      });
+      if (result.data.activationSecret) storePaymentOrderActivationSecret(result.data.orderId, result.data.activationSecret);
+      navigate(`/join/${id}/status?orderId=${encodeURIComponent(result.data.orderId)}`);
     } finally {
-      setIsVerifyingStellar(false);
+      setBusy(false);
     }
   }
+
+  async function verifyTransfer() {
+    if (!id || !hashOk || verifying) return;
+    if (needsLogin) {
+      account.login();
+      return;
+    }
+    setVerifying(true);
+    setError(null);
+    try {
+      // The intent is optional off mainnet; on mainnet verify-payment requires it.
+      const intent = await apiFetch<{ intentToken?: string }>('/api/stellar/create-payment-intent', {
+        method: 'POST',
+        body: { communityId: id, amountKes: amountMajor, environment: PRODUCT_ENVIRONMENT },
+        auth: 'omit',
+      });
+      const intentToken = intent.ok ? intent.data?.intentToken ?? null : null;
+      const result = await submitGuard.run(`verify:${txHash.trim().toLowerCase()}`, () =>
+        apiFetch<{ orderId?: string; activationSecret?: string | null }>('/api/stellar/verify-payment', {
+          method: 'POST',
+          body: intentToken
+            ? { intentToken, txHash: txHash.trim().toLowerCase(), environment: PRODUCT_ENVIRONMENT }
+            : { communityId: id, txHash: txHash.trim().toLowerCase(), environment: PRODUCT_ENVIRONMENT },
+          auth: 'omit',
+        }),
+      );
+      if (!result) return;
+      if (!result.ok || !result.data?.orderId) {
+        setError(
+          !result.ok && (result.error.code === 'stellar_payment_reused' || result.error.code === 'stellar_intent_reused')
+            ? 'That transfer has already been used for a membership.'
+            : !result.ok && result.error.code === 'stellar_verification_failed'
+              ? 'We could not find a matching payment to the group account for that reference. Check it and try again.'
+              : !result.ok
+                ? result.error.message
+                : 'The transfer could not be verified. Check the reference and try again.',
+        );
+        return;
+      }
+      if (result.data.activationSecret) storePaymentOrderActivationSecret(result.data.orderId, result.data.activationSecret);
+      navigate(`/join/${id}/status?orderId=${encodeURIComponent(result.data.orderId)}&rail=stellar`);
+    } finally {
+      setVerifying(false);
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <PageLoader label="Loading Group" />
+      </Layout>
+    );
+  }
+  if (!community) return <StatusScreen kind="community" />;
 
   return (
     <Layout>
-      <section className="relative overflow-hidden py-8 md:py-12">
-        <div className="container relative z-10 mx-auto px-4">
-          <Link to={community ? `/dashboard/${community.id}` : "/communities"} className="mb-6 inline-flex items-center gap-2 text-sm">
-            <ArrowLeft className="h-4 w-4" />
-            Back to community
+      <section className="py-8 md:py-12">
+        <div className="container mx-auto max-w-2xl space-y-6 px-4">
+          <Link
+            to={account.authenticated ? `/dashboard/${community.id}` : '/groups'}
+            className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden />
+            {account.authenticated ? 'Back to Group' : 'Browse Groups'}
           </Link>
 
-          <div className="mx-auto max-w-5xl space-y-5">
-            <div className="baraza-card overflow-hidden">
-              <CommunityBanner className="rounded-none border-0 border-b">
-              <div className="p-5 md:p-7">
-                <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
-                  <div>
-                    <p className="font-mono text-xs uppercase tracking-widest">Join community</p>
-                    <h1 className="mt-2 font-display text-3xl font-bold">
-                      {community?.name ?? "Community"}
-                    </h1>
-                    <p className="mt-2 max-w-xl text-sm leading-6">
-                      Pay with mobile money, bank transfer, or your Privy account. Your membership record stays attached to one Baraza account.
-                    </p>
-                  </div>
-                  <div className="w-full rounded-lg border px-4 py-3 md:w-auto md:text-right">
-                    <p className="text-xs">Membership Dues</p>
-                    <p className="font-display text-lg font-bold">
-                      {isFree ? "Free / Zero Dues" : formatKSh(amount)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              </CommunityBanner>
+          <Stepper steps={JOIN_STEPS} current={stage} />
 
-              {/* Pre-Transaction Itemized Fee Disclosure */}
-              {!isFree && (
-                <div className="mx-5 mt-5 rounded-lg border p-4 bg-muted/30 md:mx-6">
-                  <h3 className="font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-                    Pre-Transaction Fee Breakdown
-                  </h3>
-                  <div className="grid gap-2 text-xs sm:text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Base Community Dues</span>
-                      <span className="font-medium">{formatKSh(feeBreakdown.baseAmountMinor / 100)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Baraza Platform Fee (2.0%)</span>
-                      <span className="font-medium">{formatKSh(feeBreakdown.platformFeeMinor / 100)}</span>
-                    </div>
-                    {feeBreakdown.carrierCostMinor > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Carrier Processing Cost (0.5% capped)</span>
-                        <span className="font-medium">{formatKSh(feeBreakdown.carrierCostMinor / 100)}</span>
-                      </div>
-                    )}
-                    <div className="border-t pt-2 flex justify-between font-semibold text-sm">
-                      <span>Total Expected Payment</span>
-                      <span className="text-primary font-bold">{formatKSh(feeBreakdown.totalExpectedMinor / 100)}</span>
-                    </div>
+          <IdentityStrip
+            name={community.name}
+            initials={community.image ?? initialsOf(community.name)}
+            type={TYPE_LABELS[community.type] ?? community.type}
+            chip={<StatusChip kind="info" icon={null} label="Joining" />}
+          />
+
+          <p className="text-sm text-muted-foreground">
+            {rulesSentence({
+              quorumPct: community.quorumPct,
+              approvalThresholdPct: community.approvalThresholdPct,
+              votingPeriodDays: community.votingPeriodDays,
+            })}
+          </p>
+
+          {/* Stage A — the amount, itemised. A quote from the server when it answers. */}
+          <section className="baraza-card p-5" aria-labelledby="join-amount">
+            <div className="flex items-start justify-between gap-4">
+              <AmountBlock
+                label={isFree ? 'To Join' : 'To Join, Once'}
+                amountMinor={isFree ? 0 : fee.totalExpectedMinor}
+                currency={currency}
+                note={isFree ? 'This group charges nothing to join.' : quote ? 'Quoted by Baraza for this group.' : undefined}
+              />
+              {!isFree ? <AskAkili prompt={`Why is joining ${community.name} ${formatMoney(fee.totalExpectedMinor, currency)}?`} label="Why This Amount?" variant="chip" /> : null}
+            </div>
+            {!isFree ? (
+              <dl className="mt-4 divide-y divide-border border-t border-border text-sm">
+                <div className="flex justify-between py-2">
+                  <dt className="text-muted-foreground">Activation fee</dt>
+                  <dd className="tabular-nums">{formatMoney(fee.baseAmountMinor, currency)}</dd>
+                </div>
+                <div className="flex justify-between py-2">
+                  <dt className="text-muted-foreground">Baraza platform fee (2.0%)</dt>
+                  <dd className="tabular-nums">{formatMoney(fee.platformFeeMinor, currency)}</dd>
+                </div>
+                {fee.carrierCostMinor > 0 ? (
+                  <div className="flex justify-between py-2">
+                    <dt className="text-muted-foreground">Carrier processing cost</dt>
+                    <dd className="tabular-nums">{formatMoney(fee.carrierCostMinor, currency)}</dd>
                   </div>
+                ) : null}
+                <div className="flex justify-between py-2 font-semibold">
+                  <dt id="join-amount">Total</dt>
+                  <dd className="tabular-nums">{formatMoney(fee.totalExpectedMinor, currency)}</dd>
+                </div>
+              </dl>
+            ) : null}
+          </section>
+
+          {/* Stage B — how they get in. */}
+          {(
+            <section className="baraza-card p-5" aria-labelledby="join-pay">
+              <h2 id="join-pay" className="font-display text-base font-bold">
+                {isFree ? 'Join' : 'Pay With M-Pesa'}
+              </h2>
+              {needsLogin ? (
+                <p className="mt-2 text-sm text-muted-foreground">Sign in first so this membership is attached to your Baraza account.</p>
+              ) : isFree ? (
+                <p className="mt-2 text-sm text-muted-foreground">Nothing to pay. Your account becomes the membership.</p>
+              ) : (
+                <div className="mt-4">
+                  <Field
+                    label="M-Pesa Phone Number"
+                    htmlFor="join-phone"
+                    help="Enter your M-Pesa PIN on your phone when the prompt arrives."
+                    error={phone.length > 0 && !normalisedPhone ? 'Enter a Kenyan mobile number, for example 712 345 678.' : undefined}
+                  >
+                    <PhoneField id="join-phone" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="7XX XXX XXX" aria-invalid={phone.length > 0 && !normalisedPhone} />
+                  </Field>
                 </div>
               )}
 
-              <div className="grid gap-4 p-5 lg:grid-cols-3 md:p-6">
-                <div className="rounded-lg border p-5">
-                  <div className="mb-4 flex items-center gap-3">
-                    <div className="grid h-10 w-10 place-items-center rounded-lg">
-                      <Phone className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h2 className="font-display text-base font-semibold">Phone-first M-Pesa</h2>
-                      <p className="text-xs">Primary mobile money rail</p>
-                    </div>
-                  </div>
+              {error ? <InlineError className="mt-4" message={error} /> : null}
 
-                  {!isFree ? (
-                    <>
-                      <label htmlFor="join-phone" className="mb-2 block text-xs font-semibold">M-Pesa phone number</label>
-                      <div className="flex rounded-lg border focus-within:border-current">
-                        <span className="border-r px-3 py-3 text-sm">+254</span>
-                        <input
-                          id="join-phone"
-                          value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
-                          className="min-w-0 flex-1 px-3 py-3 text-sm outline-none"
-                          placeholder="e.g. 0712 345 678"
-                          type="tel"
-                          inputMode="numeric"
-                          autoComplete="tel-national"
-                        />
-                      </div>
-                      <p className="mt-2 text-[11px]">We&apos;ll send an STK prompt. Your number stays private.</p>
-                    </>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">This community has no activation dues. You can join immediately.</p>
-                  )}
+              <Button
+                type="button"
+                fullWidth
+                className="mt-5"
+                onClick={() => void (isFree ? joinFree() : payWithMpesa())}
+                disabled={needsLogin ? !account.ready : busy || (!isFree && !normalisedPhone)}
+              >
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
+                {needsLogin ? 'Sign in to pay' : busy ? 'Check Your Phone' : isFree ? 'Join This Group' : 'Pay With M-Pesa'}
+              </Button>
 
-                  <button
-                    type="button"
-                    onClick={isFree ? handleFreeJoin : handleMpesaSubmit}
-                    disabled={!canSubmit}
-                    className="btn-warm mt-5 w-full justify-center gap-2 py-3 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        {isFree ? "Activating..." : "Sending prompt..."}
-                      </>
-                    ) : isFree ? (
-                      <>
-                        <CheckCircle2 className="h-4 w-4" />
-                        Join Free Community
-                      </>
-                    ) : (
-                      <>
-                        <CreditCard className="h-4 w-4" />
-                        Request M-Pesa Prompt
-                      </>
-                    )}
-                  </button>
-                </div>
+              <p className="mt-3 text-xs text-muted-foreground">
+                A confirmed payment and an active membership are two steps. You will see both on the next screen.
+              </p>
+            </section>
+          )}
 
-                <div className="rounded-lg border p-5">
-                  <div className="mb-4 flex items-center gap-3">
-                    <div className="grid h-10 w-10 place-items-center rounded-lg">
-                      <Stars className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h2 className="font-display text-base font-semibold">Bank or international transfer</h2>
-                      <p className="text-xs">Verify transfer proof</p>
-                    </div>
-                  </div>
-                  <p className="text-sm leading-6">
-                    Paste the transaction reference supplied by your transfer provider. Baraza verifies it before activating membership.
+          {!isFree ? (
+            <section className="baraza-card p-5">
+              <button
+                type="button"
+                onClick={() => setOtherWays((open) => !open)}
+                aria-expanded={otherWays}
+                className="flex min-h-11 w-full items-center justify-between text-left text-sm font-semibold"
+              >
+                Other Ways to Pay
+                <ChevronDown className={`h-4 w-4 transition-transform ${otherWays ? 'rotate-180' : ''}`} aria-hidden />
+              </button>
+              {otherWays ? (
+                <div className="mt-4 space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    If your group settles on-chain and you already sent {formatMoney(fee.totalExpectedMinor, currency)} that way, paste the transfer reference and Baraza checks it.
                   </p>
-
-                  <div className="mb-3 mt-4 rounded-lg border bg-muted/20 p-3">
-                    <p className="text-[11px] text-muted-foreground">Required Transfer Value</p>
-                    <p className="font-mono text-sm font-bold">
-                      ≈ {estimatedXlm} XLM <span className="text-xs font-normal text-muted-foreground">({formatKSh(feeBreakdown.totalExpectedMinor / 100)})</span>
-                    </p>
-                  </div>
-
-                  <label htmlFor="stellar-tx" className="mb-2 mt-3 block text-xs font-semibold">Transaction reference</label>
-                  <input
-                    id="stellar-tx"
-                    value={stellarTxHash}
-                    onChange={(event) => setStellarTxHash(event.target.value)}
-                    className="w-full rounded-lg border px-3 py-3 font-mono text-xs outline-none"
-                    placeholder="64-character transaction reference"
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() => void handleStellarSubmit()}
-                    disabled={!canVerifyStellar}
-                    className="btn-warm mt-5 w-full justify-center gap-2 py-3 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {isVerifyingStellar ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Verifying transfer...
-                      </>
-                    ) : (
-                      <>
-                        <Stars className="h-4 w-4" />
-                        Verify transfer
-                      </>
-                    )}
-                  </button>
+                  <Field label="Transfer Reference" htmlFor="join-hash" help="The 64-character reference from the transfer." error={txHash && !hashOk ? 'A transfer reference is 64 letters and numbers.' : undefined}>
+                    <Input id="join-hash" value={txHash} onChange={(event) => setTxHash(event.target.value)} className="font-mono" aria-invalid={Boolean(txHash && !hashOk)} />
+                  </Field>
+                  <Button type="button" variant="outline" onClick={() => void verifyTransfer()} disabled={!hashOk || verifying}>
+                    {verifying ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
+                    Verify Transfer
+                  </Button>
                 </div>
-
-                <div className="rounded-lg border p-5">
-                  <div className="mb-4 flex items-center gap-3">
-                    <div className="grid h-10 w-10 place-items-center rounded-lg">
-                      <Wallet className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h2 className="font-display text-base font-semibold">Privy account</h2>
-                      <p className="text-xs">Private account access</p>
-                    </div>
-                  </div>
-                  <p className="text-sm leading-6">
-                    Log in or create an account to pay, receive membership credentials, and vote.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (account.authenticated && account.accountId) {
-                        startAccountJoin(account.accountId);
-                        return;
-                      }
-                      setPendingWalletJoin(true);
-                      account.login();
-                    }}
-                    disabled={!account.ready || !account.configured}
-                    className="btn-ghost mt-5 w-full justify-center gap-2 py-3 text-sm font-bold"
-                  >
-                    <Wallet className="h-4 w-4" />
-                    {!account.ready ? "Loading..." : account.authenticated ? "Pay from Privy account" : "Log in with Privy"}
-                  </button>
-                  {!account.authenticated && account.configured && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPendingWalletJoin(true);
-                        account.createAccount();
-                      }}
-                      className="mt-3 w-full text-center text-xs font-semibold"
-                    >
-                      Create a Privy account
-                    </button>
-                  )}
-                  <Link to="/profile" className="mt-3 inline-flex text-xs font-semibold">
-                    Manage Baraza account
-                  </Link>
-                </div>
-              </div>
-
-              <div className="mx-5 mb-5 rounded-lg border p-4 md:mx-6 md:mb-6">
-                <div className="flex gap-3">
-                  <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
-                  <p className="text-sm leading-6">
-                    <strong>Payment confirmed is not membership activation.</strong> Your membership activates after proof review and approval.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <ActivationTracker />
-          </div>
+              ) : null}
+            </section>
+          ) : null}
         </div>
       </section>
     </Layout>

@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, BriefcaseBusiness, CalendarDays, CheckCircle2, Clock, Columns3, LayoutGrid, List, PlusCircle, Search, Send, SlidersHorizontal, Trophy } from 'lucide-react';
-import { useWallet } from '@solana/wallet-adapter-react';
-import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import Layout from '@/components/Layout';
 import { useAccount } from '@/contexts/AccountContext';
 import {
@@ -27,7 +25,7 @@ const STATUS_OPTIONS: { value: BountyStatus | 'all'; label: string }[] = [
   { value: 'open', label: 'Open' },
   { value: 'in_progress', label: 'In progress' },
   { value: 'in_review', label: 'Under review' },
-  { value: 'paid', label: 'Approved' },
+  { value: 'paid', label: 'Paid' },
 ];
 
 const statusLabel: Record<BountyStatus, string> = {
@@ -35,14 +33,14 @@ const statusLabel: Record<BountyStatus, string> = {
   in_progress: 'In progress',
   in_review: 'Under review',
   awarded: 'Approved',
-  paid: 'Approved',
+  paid: 'Paid',
 };
 
 const statusClass: Record<BountyStatus, string> = {
   open: 'border-confirmed/40 bg-confirmed/10 text-confirmed',
-  in_progress: 'border-primary/40 bg-primary/10 text-primary',
-  in_review: 'border-accent/40 bg-accent/10 text-accent',
-  awarded: 'border-secondary/40 bg-secondary/10 text-secondary',
+  in_progress: 'border-foreground/50 text-foreground',
+  in_review: 'border-border bg-surface text-muted-foreground',
+  awarded: 'border-foreground text-foreground',
   paid: 'border-confirmed/50 bg-confirmed/15 text-confirmed',
 };
 
@@ -90,11 +88,9 @@ export default function Bounties() {
   const { communities } = useCommunities();
   const { chain } = useChain();
   const account = useAccount();
-  const { publicKey, connected } = useWallet();
-  const { setVisible } = useWalletModal();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<BountyStatus | 'all'>('all');
-  const [viewMode, setViewMode] = useState<ViewMode>('board');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [bounties, setBounties] = useState(() => listBounties());
   const [draggedBountyId, setDraggedBountyId] = useState<string | null>(null);
   const [dropStatus, setDropStatus] = useState<BountyStatus | null>(null);
@@ -138,7 +134,7 @@ export default function Bounties() {
     () => new Map(communities.map((community) => [community.id, community])),
     [communities],
   );
-  const walletAddress = publicKey?.toBase58() ?? null;
+  const walletAddress = account.accountId ?? null;
   const selectedBountyAccess = useMemo(
     () => getBountyCreateAccess(newBounty.communityId || null, walletAddress),
     [newBounty.communityId, walletAddress],
@@ -179,8 +175,8 @@ export default function Bounties() {
     .reduce((sum, bounty) => sum + bounty.rewardKes, 0);
 
   const handlePostBountyClick = () => {
-    if (!connected || !publicKey) {
-      setVisible(true);
+    if (!account.authenticated) {
+      account.login();
       return;
     }
     if (memberCommunities.length === 0) {
@@ -267,17 +263,9 @@ export default function Bounties() {
 
   return (
     <Layout>
-      <section className="relative pt-24 pb-10 sm:pt-28">
+      <section className="relative py-8 md:py-12">
         <div className="container mx-auto max-w-6xl px-4">
           <div className="relative mb-8 overflow-hidden rounded-lg border border-border/70 bg-card shadow-[var(--shadow-card)]">
-            <img
-              src="https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=1400&q=80"
-              alt=""
-              className="absolute inset-0 h-full w-full object-cover opacity-35"
-              loading="lazy"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-background via-background/88 to-background/35" />
-            <div className="absolute inset-0 bg-gradient-to-t from-background/88 via-transparent to-transparent" />
 
             <div className="relative grid gap-6 p-5 md:grid-cols-[minmax(0,1fr)_minmax(18rem,30rem)] md:items-center md:p-7">
               <div className="max-w-[38rem]">
@@ -294,7 +282,7 @@ export default function Bounties() {
                 <button
                   type="button"
                   onClick={handlePostBountyClick}
-                  className="btn-warm inline-flex w-full items-center justify-center gap-2 text-sm sm:w-auto md:self-end"
+                  className="btn-wipe inline-flex w-full items-center justify-center gap-2 text-sm sm:w-auto md:self-end"
                 >
                   <PlusCircle className="h-4 w-4" />
                   Post bounty
@@ -302,15 +290,15 @@ export default function Bounties() {
                 <div className="grid w-full gap-2 sm:grid-cols-3">
                   <div className="rounded-lg border border-border/70 bg-background/58 p-3 backdrop-blur">
                     <p className="font-display text-xl font-bold">{activeChainBounties.filter((b) => b.status === 'open').length}</p>
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Open tasks</p>
+                    <p className="text-xs uppercase tracking-widest text-muted-foreground">Open tasks</p>
                   </div>
                   <div className="rounded-lg border border-border/70 bg-background/58 p-3 backdrop-blur">
                     <p className="font-display text-xl font-bold text-primary">{formatKSh(openRewardPool)}</p>
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Open rewards</p>
+                    <p className="text-xs uppercase tracking-widest text-muted-foreground">Open rewards</p>
                   </div>
                   <div className="rounded-lg border border-border/70 bg-background/58 p-3 backdrop-blur">
                     <p className="font-display text-xl font-bold">{account.country.currency}</p>
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Account currency</p>
+                    <p className="text-xs uppercase tracking-widest text-muted-foreground">Account currency</p>
                   </div>
                 </div>
               </div>
@@ -336,7 +324,7 @@ export default function Bounties() {
                     ))}
                   </select>
                   {memberCommunities.length === 0 && (
-                    <p className="mt-1 text-[11px] text-muted-foreground">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       Join a community before posting a bounty.
                     </p>
                   )}
@@ -411,7 +399,7 @@ export default function Bounties() {
                 type="button"
                 onClick={() => void handleCreateBounty()}
                 disabled={!selectedBountyAccess.allowed}
-                className="btn-primary mt-4 gap-2 px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+                className="btn-wipe mt-4 gap-2 px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <PlusCircle className="h-4 w-4" />
                 Publish bounty
@@ -530,11 +518,11 @@ export default function Bounties() {
                       )}
                     >
                       {/* Sticky column header */}
-                      <div className="sticky top-0 z-10 flex items-center gap-2 rounded-t-[10px] border-b border-border/50 bg-card/95 px-3 py-2.5 backdrop-blur">
-                        <span className={cn('rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', statusClass[column.status])}>
+                      <div className="sticky top-0 z-10 flex items-center gap-2 rounded-t-chrome border-b border-border/50 bg-card/95 px-3 py-2.5 backdrop-blur">
+                        <span className={cn('rounded-full border px-2 py-0.5 text-xs font-bold uppercase tracking-wider', statusClass[column.status])}>
                           {statusLabel[column.status]}
                         </span>
-                        <span className="ml-auto rounded-full bg-surface px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
+                        <span className="ml-auto rounded-full bg-surface px-2 py-0.5 text-xs font-bold text-muted-foreground">
                           {column.bounties.length}
                         </span>
                       </div>
@@ -543,7 +531,7 @@ export default function Bounties() {
                       <div className="flex flex-col gap-2.5 p-2.5">
                         {column.bounties.length === 0 ? (
                           <div className="rounded-lg border border-dashed border-border/40 p-6 text-center">
-                            <p className="text-[11px] text-muted-foreground/60">
+                            <p className="text-xs text-muted-foreground/60">
                               No {statusLabel[column.status].toLowerCase()} bounties
                             </p>
                           </div>
@@ -570,13 +558,13 @@ export default function Bounties() {
                             >
                               {/* Badge row */}
                               <div className="mb-2 flex flex-wrap items-center gap-1.5">
-                                <span className={cn('rounded-full border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider', statusClass[bounty.status])}>
+                                <span className={cn('rounded-full border px-1.5 py-0.5 text-xs font-bold uppercase tracking-wider', statusClass[bounty.status])}>
                                   {statusLabel[bounty.status]}
                                 </span>
-                                <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/70">
+                                <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground/70">
                                   {bounty.category}
                                 </span>
-                                <span className="ml-auto text-xs font-bold text-accent">{formatKSh(bounty.rewardKes)}</span>
+                                <span className="ml-auto text-xs font-bold text-foreground">{formatKSh(bounty.rewardKes)}</span>
                               </div>
 
                               {/* Title */}
@@ -588,7 +576,7 @@ export default function Bounties() {
                               </Link>
 
                               {/* Summary */}
-                              <p className="mt-1.5 line-clamp-2 text-[11px] leading-5 text-muted-foreground">
+                              <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-muted-foreground">
                                 {bounty.summary}
                               </p>
 
@@ -596,7 +584,7 @@ export default function Bounties() {
                               {bounty.skills.length > 0 && (
                                 <div className="mt-2 flex flex-wrap gap-1">
                                   {bounty.skills.slice(0, 3).map((skill) => (
-                                    <span key={skill} className="rounded-full border border-border/50 px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                                    <span key={skill} className="rounded-full border border-border/50 px-1.5 py-0.5 text-xs text-muted-foreground">
                                       {skill}
                                     </span>
                                   ))}
@@ -604,7 +592,7 @@ export default function Bounties() {
                               )}
 
                               {/* Meta footer */}
-                              <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-border/40 pt-2.5 text-[11px] text-muted-foreground">
+                              <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-border/40 pt-2.5 text-xs text-muted-foreground">
                                 <span className="truncate">{community?.name ?? bounty.postedBy}</span>
                                 <span className="shrink-0">{daysLeft(bounty.deadline)}</span>
                               </div>
@@ -614,7 +602,7 @@ export default function Bounties() {
                                 {bounty.status === 'open' && (
                                   <Link
                                     to={`/bounties/${bounty.id}`}
-                                    className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-confirmed/40 bg-confirmed/10 px-2 py-1.5 text-xs font-bold text-confirmed transition-colors hover:bg-confirmed/15"
+                                    className="btn-wipe w-full gap-1.5 px-2 py-1.5 text-xs"
                                   >
                                     Apply <ArrowRight className="h-3 w-3" />
                                   </Link>
@@ -623,14 +611,14 @@ export default function Bounties() {
                                   <button
                                     type="button"
                                     onClick={() => { setSubmitFor(submitFor === bounty.id ? null : bounty.id); setFormMessage(null); }}
-                                    className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-primary/40 bg-primary/10 px-2 py-1.5 text-xs font-bold text-primary transition-colors hover:bg-primary/15"
+                                    className="btn-wipe-outline w-full gap-1.5 px-2 py-1.5 text-xs"
                                   >
-                                    <Send className="h-3 w-3" /> Send work update
+                                    <Send className="h-3 w-3 shrink-0" /> Update
                                   </button>
                                 )}
                                 {bounty.status === 'in_review' && (
-                                  <span className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-accent/30 bg-accent/5 px-2 py-1.5 text-xs font-semibold text-accent">
-                                    <Clock className="h-3 w-3" /> In review · {submissionCounts[bounty.id] ?? bounty.submissions} subs
+                                  <span className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-accent/30 bg-accent/5 px-2 py-1.5 text-xs font-semibold text-foreground">
+                                    <Clock className="h-3 w-3 shrink-0" /> In review
                                   </span>
                                 )}
                                 {(bounty.status === 'paid' || bounty.status === 'awarded') && (
@@ -658,7 +646,7 @@ export default function Bounties() {
                                   <button
                                     type="button"
                                     onClick={() => void handleSubmitWork(bounty.id)}
-                                    className="flex items-center justify-center gap-1 rounded-md border border-primary/40 bg-primary/10 px-2 py-1.5 text-xs font-bold text-primary"
+                                    className="btn-wipe gap-1 px-2 py-1.5 text-xs"
                                   >
                                     <Send className="h-3 w-3" /> Submit
                                   </button>
@@ -684,11 +672,11 @@ export default function Bounties() {
                       <h3 className="font-display text-base font-bold">{SECTION_COPY[section.status].heading}</h3>
                       <p className="text-xs text-muted-foreground">{SECTION_COPY[section.status].detail}</p>
                     </div>
-                    <span className={cn('w-fit rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', statusClass[section.status])}>
+                    <span className={cn('w-fit rounded-full border px-2 py-0.5 text-xs font-bold uppercase tracking-wider', statusClass[section.status])}>
                       {section.bounties.length} {section.bounties.length === 1 ? 'item' : 'items'}
                     </span>
                   </div>
-                  <div className="hidden grid-cols-[1.3fr_0.8fr_0.5fr_0.55fr_0.65fr] gap-4 border-b px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground md:grid">
+                  <div className="hidden grid-cols-[1.3fr_0.8fr_0.5fr_0.55fr_0.65fr] gap-4 border-b px-4 py-3 text-xs font-bold uppercase tracking-widest text-muted-foreground md:grid">
                     <span>Bounty</span>
                     <span>Group</span>
                     <span>Status</span>
@@ -707,7 +695,7 @@ export default function Bounties() {
                             <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">{bounty.summary}</p>
                           </div>
                           <span className="text-xs text-muted-foreground">{community?.name ?? bounty.postedBy}</span>
-                          <span className={cn('w-fit rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', statusClass[bounty.status])}>
+                          <span className={cn('w-fit rounded-full border px-2 py-0.5 text-xs font-bold uppercase tracking-wider', statusClass[bounty.status])}>
                             {statusLabel[bounty.status]}
                           </span>
                           <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
@@ -715,7 +703,7 @@ export default function Bounties() {
                             {daysLeft(bounty.deadline)}
                           </span>
                           <div className="flex items-center justify-between gap-3 md:justify-end">
-                            <span className="font-display text-sm font-bold text-accent">{formatKSh(bounty.rewardKes)}</span>
+                            <span className="font-display text-sm font-bold text-foreground">{formatKSh(bounty.rewardKes)}</span>
                             <Link to={`/bounties/${bounty.id}`} className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline">
                               Open
                               <ArrowRight className="h-3 w-3" />
@@ -739,7 +727,7 @@ export default function Bounties() {
                     <h3 className="font-display text-base font-bold">{SECTION_COPY[section.status].heading}</h3>
                     <p className="text-xs text-muted-foreground">{SECTION_COPY[section.status].detail}</p>
                   </div>
-                  <span className={cn('w-fit rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', statusClass[section.status])}>
+                  <span className={cn('w-fit rounded-full border px-2 py-0.5 text-xs font-bold uppercase tracking-wider', statusClass[section.status])}>
                     {section.bounties.length} {section.bounties.length === 1 ? 'item' : 'items'}
                   </span>
                 </div>
@@ -752,10 +740,10 @@ export default function Bounties() {
                   <div className="mb-4 flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <div className="mb-2 flex flex-wrap items-center gap-2">
-                        <span className={cn('rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', statusClass[bounty.status])}>
+                        <span className={cn('rounded-full border px-2 py-0.5 text-xs font-bold uppercase tracking-wider', statusClass[bounty.status])}>
                           {statusLabel[bounty.status]}
                         </span>
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{bounty.category}</span>
+                        <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">{bounty.category}</span>
                       </div>
                       <Link
                         to={`/bounties/${bounty.id}`}
@@ -766,14 +754,14 @@ export default function Bounties() {
                       <p className="mt-2 text-sm leading-6 text-muted-foreground">{bounty.summary}</p>
                     </div>
                     <div className="shrink-0 text-right">
-                      <p className="font-display text-xl font-bold text-accent">{formatKSh(bounty.rewardKes)}</p>
-                      <p className="mt-1 text-[10px] text-muted-foreground">{bounty.submissions} submissions</p>
+                      <p className="font-display text-xl font-bold text-foreground">{formatKSh(bounty.rewardKes)}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{bounty.submissions} submissions</p>
                     </div>
                   </div>
 
                   <div className="mb-4 flex flex-wrap gap-2">
                     {bounty.skills.map((skill) => (
-                      <span key={skill} className="rounded-full border px-2 py-1 text-[11px] text-muted-foreground">{skill}</span>
+                      <span key={skill} className="rounded-full border px-2 py-1 text-xs text-muted-foreground">{skill}</span>
                     ))}
                   </div>
 
@@ -789,11 +777,11 @@ export default function Bounties() {
                       </span>
                     </div>
                     <div className="flex flex-col gap-2 sm:flex-row">
-                      <Link to={`/bounties/${bounty.id}`} className="btn-ghost justify-center gap-2 px-3 py-2 text-xs font-bold">
+                      <Link to={`/bounties/${bounty.id}`} className="btn-wipe-outline justify-center gap-2 px-3 py-2 text-xs font-bold">
                         Open bounty
                         <ArrowRight className="h-3.5 w-3.5" />
                       </Link>
-                      <Link to={`/dashboard/${bounty.communityId}`} className="btn-ghost justify-center gap-2 px-3 py-2 text-xs font-bold">
+                      <Link to={`/dashboard/${bounty.communityId}`} className="btn-wipe-outline justify-center gap-2 px-3 py-2 text-xs font-bold">
                         Open group
                         <ArrowRight className="h-3.5 w-3.5" />
                       </Link>
@@ -804,7 +792,7 @@ export default function Bounties() {
                             setSubmitFor(submitFor === bounty.id ? null : bounty.id);
                             setFormMessage(null);
                           }}
-                          className="btn-primary justify-center gap-2 px-3 py-2 text-xs font-bold"
+                          className="btn-wipe justify-center gap-2 px-3 py-2 text-xs font-bold"
                         >
                           Send work update
                           <Send className="h-3.5 w-3.5" />
@@ -842,7 +830,7 @@ export default function Bounties() {
                       <button
                         type="button"
                         onClick={() => void handleSubmitWork(bounty.id)}
-                        className="btn-warm w-fit gap-2 px-4 py-2 text-sm"
+                        className="btn-wipe w-fit gap-2 px-4 py-2 text-sm"
                       >
                         <Send className="h-4 w-4" />
                         Record submission

@@ -7,6 +7,7 @@ import {
   formatRailAmountWithKes,
   formatRailDate,
   formatUSD,
+  toTitleCase,
   truncateAddress,
 } from '@/lib/utils';
 import { writeAccountCountry } from '@/lib/accountLocale';
@@ -14,10 +15,10 @@ import { writeAccountCountry } from '@/lib/accountLocale';
 beforeEach(() => writeAccountCountry('KE'));
 
 describe('formatKSh', () => {
-  it('formats zero', () => expect(formatKSh(0)).toBe('KSh 0'));
-  it('formats thousands', () => expect(formatKSh(234500)).toBe('KSh 234,500'));
-  it('formats millions', () => expect(formatKSh(1248500)).toBe('KSh 1,248,500'));
-  it('formats small fee', () => expect(formatKSh(500)).toBe('KSh 500'));
+  it('formats zero', () => expect(formatKSh(0)).toBe('KES 0'));
+  it('formats thousands', () => expect(formatKSh(234500)).toBe('KES 234,500'));
+  it('formats millions', () => expect(formatKSh(1248500)).toBe('KES 1,248,500'));
+  it('formats small fee', () => expect(formatKSh(500)).toBe('KES 500'));
 });
 
 describe('formatUSD', () => {
@@ -27,16 +28,16 @@ describe('formatUSD', () => {
 
 describe('rail formatting', () => {
   it('formats source amounts in the account currency regardless of payment route', () => {
-    expect(formatRailAmountFromKes(2600, 'solana')).toBe('KSh 2,600');
-    expect(formatRailAmountFromKes(2600, 'mpesa')).toBe('KSh 2,600');
-    expect(formatRailAmountFromKes(1600, 'stellar')).toBe('KSh 1,600');
-    expect(formatRailAmountFromKes(450000, 'base')).toBe('KSh 450,000');
+    expect(formatRailAmountFromKes(2600, 'solana')).toBe('KES 2,600');
+    expect(formatRailAmountFromKes(2600, 'mpesa')).toBe('KES 2,600');
+    expect(formatRailAmountFromKes(1600, 'stellar')).toBe('KES 1,600');
+    expect(formatRailAmountFromKes(450000, 'base')).toBe('KES 450,000');
   });
 
   it('does not expose route-native amounts', () => {
-    expect(formatRailAmountWithKes(6500, 'solana')).toBe('KSh 6,500');
-    expect(formatRailAmountWithKes(6500, 'mpesa')).toBe('KSh 6,500');
-    expect(formatRailAmountWithKes(6500, 'base')).toBe('KSh 6,500');
+    expect(formatRailAmountWithKes(6500, 'solana')).toBe('KES 6,500');
+    expect(formatRailAmountWithKes(6500, 'mpesa')).toBe('KES 6,500');
+    expect(formatRailAmountWithKes(6500, 'base')).toBe('KES 6,500');
   });
 
   it('formats dates in the account country timezone', () => {
@@ -76,6 +77,32 @@ describe('daysRemaining', () => {
     vi.setSystemTime(new Date('2026-01-01T00:00:00Z'));
     expect(daysRemaining('2026-01-08T00:00:00Z')).toBe(7);
     vi.useRealTimers();
+  });
+});
+
+describe('toTitleCase', () => {
+  it('capitalizes principal words and keeps small words lowercase', () => {
+    expect(toTitleCase('run the chama where every member can see the money.')).toBe(
+      'Run the Chama Where Every Member Can See the Money.',
+    );
+  });
+
+  it('capitalizes first and last words even when they are small', () => {
+    expect(toTitleCase('a trail to keep')).toBe('A Trail to Keep');
+  });
+
+  it('title-cases hyphenated words and keeps acronyms', () => {
+    expect(toTitleCase('phone-first M-Pesa for a SACCO')).toBe('Phone-First M-Pesa for a SACCO');
+  });
+
+  it('preserves product names with inner capitals', () => {
+    expect(toTitleCase('link your GitHub account')).toBe('Link Your GitHub Account');
+  });
+
+  it('title-cases error page headings and button labels', () => {
+    expect(toTitleCase("this page isn't part of Baraza.")).toBe("This Page Isn't Part of Baraza.");
+    expect(toTitleCase('browse communities')).toBe('Browse Communities');
+    expect(toTitleCase('sign in to continue')).toBe('Sign in to Continue');
   });
 });
 

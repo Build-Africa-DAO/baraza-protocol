@@ -42,13 +42,28 @@ export default async function handler(req: Request): Promise<Response> {
     return new Response(JSON.stringify({ error: 'Database credentials not configured' }), { status: 503 });
   }
 
-  // 1. Capture UTC ISO-8601 Temporal Snapshot Boundary (Invariant I-REC-1)
+  // 1. Capture UTC ISO-8601 Temporal Snapshot Boundary (Invariant I-REC-1) with 5s clock-skew tolerance
   const now = new Date();
-  const snapshotIso = now.toISOString();
+  const snapshotIso = new Date(now.getTime() + 5000).toISOString();
   // 15-minute in-flight grace window
   const graceWindowStartIso = new Date(now.getTime() - 15 * 60 * 1000).toISOString();
 
-  // 2. Fetch Active and Paused Communities
+  // 2. Fetch Active and Paused Communities (Supports targeted community_id or bounded window)
+  let targetCommunityId: string | null = null;
+  try {
+    const url = new URL(req.url);
+    targetCommunityId = url.searchParams.get('community_id') || url.searchParams.get('communityId');
+    if (!targetCommunityId && req.method === 'POST') {
+      const cloned = req.clone();
+      const body = (await cloned.json().catch(() => null)) as { community_id?: string; communityId?: string } | null;
+      if (body && typeof body === 'object') {
+        targetCommunityId = body.community_id || body.communityId || null;
+      }
+    }
+  } catch {
+    // Non-URL or unparseable payload, proceed with bounded window
+  }
+
   let communities: Array<{
     id: string;
     liquid_vault_balance_minor: number | string;
@@ -58,10 +73,11 @@ export default async function handler(req: Request): Promise<Response> {
   }> = [];
 
   try {
-    const commRes = await fetch(
-      `${supabaseUrl}/rest/v1/communities?status=in.(active,paused)&select=id,liquid_vault_balance_minor,treasury_address,status,is_payout_frozen`,
-      { headers: supabaseHeaders(serviceKey) }
-    );
+    const query = targetCommunityId
+      ? `${supabaseUrl}/rest/v1/communities?id=eq.${encodeURIComponent(targetCommunityId)}&select=id,liquid_vault_balance_minor,treasury_address,status,is_payout_frozen`
+      : `${supabaseUrl}/rest/v1/communities?status=in.(active,paused)&order=created_at.desc&limit=50&select=id,liquid_vault_balance_minor,treasury_address,status,is_payout_frozen`;
+
+    const commRes = await fetch(query, { headers: supabaseHeaders(serviceKey) });
     if (commRes.ok) {
       communities = await commRes.json();
     }

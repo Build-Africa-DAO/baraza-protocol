@@ -53,12 +53,14 @@ export default async function handler(req: Request): Promise<Response> {
     return bad('Body must be valid JSON');
   }
 
-  const { proposalId, voter, option } = body;
+  const { proposalId, voter } = body;
   if (!proposalId?.trim()) return bad('proposalId is required');
   if (!voter?.trim()) return bad('voter is required');
-  if (!['yes', 'no', 'abstain'].includes(option)) {
+  const rawOption = (body.option || '').toLowerCase();
+  if (!['yes', 'no', 'abstain'].includes(rawOption)) {
     return bad("option must be 'yes', 'no', or 'abstain'");
   }
+  const option = rawOption as 'yes' | 'no' | 'abstain';
 
   const weight = typeof body.weight === 'number' && body.weight > 0 ? body.weight : 1;
 
@@ -71,9 +73,11 @@ export default async function handler(req: Request): Promise<Response> {
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+  let resolvedMemberId = body.memberId || voter;
+
   if (supabaseUrl && serviceKey) {
     try {
-      // 1. Fetch proposal to verify status and deadline
+      // 1. Fetch proposal to verify status, community, and deadline
       const propRes = await fetch(
         `${supabaseUrl}/rest/v1/proposals?id=eq.${encodeURIComponent(proposalId)}&select=*`,
         {
@@ -96,16 +100,40 @@ export default async function handler(req: Request): Promise<Response> {
         return json({ error: 'proposal_not_active', message: `Proposal is ${proposal.status}` }, { status: 422 });
       }
 
-      const now = Date.now();
-      const deadline = new Date(proposal.ends_at).getTime();
-      if (now > deadline) {
-        return json({ error: 'voting_ended', message: 'Proposal voting period has ended' }, { status: 422 });
+      if (proposal.ends_at) {
+        const now = Date.now();
+        const deadline = new Date(proposal.ends_at).getTime();
+        if (!isNaN(deadline) && now > deadline) {
+          return json({ error: 'voting_ended', message: 'Proposal voting period has ended' }, { status: 422 });
+        }
       }
 
-      // 2. Check for duplicate vote (DB-level deduplication)
-      const memberId = body.memberId || voter;
+      // 2. Resolve canonical member_id and check active membership standing
+      if (proposal.community_id) {
+        const memRes = await fetch(
+          `${supabaseUrl}/rest/v1/memberships?community_id=eq.${encodeURIComponent(proposal.community_id)}&or=(wallet_address.eq.${encodeURIComponent(voter)},member_id.eq.${encodeURIComponent(voter)})&select=member_id,status,voting_weight&limit=1`,
+          {
+            headers: {
+              apikey: serviceKey,
+              Authorization: `Bearer ${serviceKey}`,
+            },
+          },
+        );
+        if (memRes.ok) {
+          const mems = await memRes.json();
+          if (Array.isArray(mems) && mems.length > 0) {
+            const mem = mems[0];
+            if (mem.status && mem.status.toUpperCase() !== 'ACTIVE') {
+              return json({ error: 'inactive_member', message: 'Member is not active in this community' }, { status: 403 });
+            }
+            resolvedMemberId = mem.member_id;
+          }
+        }
+      }
+
+      // 3. Check for duplicate vote (Application-level pre-check)
       const voteCheckRes = await fetch(
-        `${supabaseUrl}/rest/v1/votes?proposal_id=eq.${encodeURIComponent(proposalId)}&member_id=eq.${encodeURIComponent(memberId)}&select=id`,
+        `${supabaseUrl}/rest/v1/votes?proposal_id=eq.${encodeURIComponent(proposalId)}&member_id=eq.${encodeURIComponent(resolvedMemberId)}&select=id`,
         {
           headers: {
             apikey: serviceKey,
@@ -120,7 +148,7 @@ export default async function handler(req: Request): Promise<Response> {
         }
       }
 
-      // 3. Insert vote record
+      // 4. Insert vote record with DB-level unique constraint backstop
       const voteId = `vote_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
       const voteInsertRes = await fetch(`${supabaseUrl}/rest/v1/votes`, {
         method: 'POST',
@@ -132,7 +160,7 @@ export default async function handler(req: Request): Promise<Response> {
         body: JSON.stringify({
           id: voteId,
           proposal_id: proposalId,
-          member_id: memberId,
+          member_id: resolvedMemberId,
           option,
           weight,
           cast_at: new Date().toISOString(),
@@ -141,8 +169,26 @@ export default async function handler(req: Request): Promise<Response> {
 
       if (!voteInsertRes.ok) {
         const errText = await voteInsertRes.text();
+        // Handle race conditions caught by database unique index or trigger
+        if (/duplicate key|23505|uq_votes_proposal_member|votes_member_proposal_unique|already voted|unique_violation/i.test(errText)) {
+          return json({ error: 'already_voted', message: 'Member has already voted on this proposal' }, { status: 409 });
+        }
         return json({ error: 'vote_write_failed', message: errText }, { status: voteInsertRes.status });
       }
+
+      return json(
+        {
+          ok: true,
+          voteId,
+          proposalId,
+          voter,
+          memberId: resolvedMemberId,
+          option,
+          weight,
+          recordedAt: new Date().toISOString(),
+        },
+        { status: 200 },
+      );
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       return json({ error: 'internal_error', message: msg }, { status: 500 });
@@ -156,6 +202,7 @@ export default async function handler(req: Request): Promise<Response> {
       voteId,
       proposalId,
       voter,
+      memberId: resolvedMemberId,
       option,
       weight,
       recordedAt: new Date().toISOString(),

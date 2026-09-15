@@ -1,14 +1,93 @@
+import { Children, type ReactNode } from 'react';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { type Chain, type ChainMeta } from '@/lib/chain';
-import { formatAccountCurrency, formatAccountDate, readAccountCountry } from '@/lib/accountLocale';
+import { formatAccountDate, readAccountCountry } from '@/lib/accountLocale';
+import { formatMajor } from '@/lib/money';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatKSh(amount: number): string {
-  return formatAccountCurrency(amount);
+const TITLE_SMALL_WORDS = new Set([
+  "a",
+  "an",
+  "and",
+  "as",
+  "at",
+  "but",
+  "by",
+  "for",
+  "from",
+  "in",
+  "into",
+  "nor",
+  "of",
+  "on",
+  "or",
+  "the",
+  "to",
+  "vs",
+  "via",
+  "with",
+]);
+
+function titleCaseToken(token: string, forceCap: boolean): string {
+  if (token.includes("-") && /[A-Za-z]/.test(token)) {
+    return token
+      .split("-")
+      .map((part, index, parts) => titleCaseToken(part, forceCap || index === 0 || index === parts.length - 1))
+      .join("-");
+  }
+
+  const match = token.match(/^([^A-Za-z]*)([A-Za-z][A-Za-z']*)(.*)$/);
+  if (!match) return token;
+
+  const [, lead, word, rest] = match;
+  if (/[A-Z].*[A-Z]/.test(word) && word !== word.toUpperCase()) return token;
+  if (word.length > 1 && word === word.toUpperCase()) return token;
+
+  const lower = word.toLowerCase();
+  if (!forceCap && TITLE_SMALL_WORDS.has(lower)) return `${lead}${lower}${rest}`;
+  return `${lead}${lower.charAt(0).toUpperCase()}${lower.slice(1)}${rest}`;
+}
+
+/** Chicago-style title case for headings and document titles. */
+export function toTitleCase(input: string): string {
+  return input.replace(/[^.!?]+(?:[.!?]+)?/g, (clause) => {
+    const tokens = clause.split(/(\s+)/);
+    const wordIndexes = tokens.flatMap((token, index) => (/[A-Za-z]/.test(token) ? [index] : []));
+    if (wordIndexes.length === 0) return clause;
+
+    const first = wordIndexes[0];
+    const last = wordIndexes[wordIndexes.length - 1];
+    return tokens
+      .map((token, index) =>
+        /[A-Za-z]/.test(token) ? titleCaseToken(token, index === first || index === last) : token,
+      )
+      .join("");
+  });
+}
+
+/** Title-case string children of buttons and links, leaving icons and elements intact. */
+export function titleCaseLabelChildren(children: ReactNode): ReactNode {
+  return Children.map(children, (child) => {
+    if (typeof child !== "string") return child;
+    const leading = child.match(/^\s*/)?.[0] ?? "";
+    const trailing = child.match(/\s*$/)?.[0] ?? "";
+    const body = child.slice(leading.length, child.length - trailing.length);
+    if (!body) return child;
+    return `${leading}${toTitleCase(body)}${trailing}`;
+  });
+}
+
+/**
+ * Format a major-unit amount in the group's currency (default KES). The name is
+ * historical; nothing here converts. Prefer `formatMajor` / `formatMoney` from
+ * `@/lib/money` in new code.
+ */
+export function formatKSh(amount: number, currency: string | null | undefined = 'KES'): string {
+  return formatMajor(amount, currency);
 }
 
 export function formatUSD(amount: number): string {
@@ -19,14 +98,22 @@ export function formatUSD(amount: number): string {
   });
 }
 
-export function formatRailAmountFromKes(amountKes: number, chainOrMeta: Chain | ChainMeta): string {
+export function formatRailAmountFromKes(
+  amountKes: number,
+  chainOrMeta: Chain | ChainMeta,
+  currency: string | null | undefined = 'KES',
+): string {
   void chainOrMeta;
-  return formatKSh(amountKes);
+  return formatMajor(amountKes, currency);
 }
 
-export function formatRailAmountWithKes(amountKes: number, chainOrMeta: Chain | ChainMeta): string {
+export function formatRailAmountWithKes(
+  amountKes: number,
+  chainOrMeta: Chain | ChainMeta,
+  currency: string | null | undefined = 'KES',
+): string {
   void chainOrMeta;
-  return formatKSh(amountKes);
+  return formatMajor(amountKes, currency);
 }
 
 export function formatRailDate(

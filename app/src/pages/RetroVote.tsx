@@ -1,9 +1,11 @@
+import { apiFetch, errorField } from '@/lib/api';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Coins, RefreshCw, Send, Sparkles, Check, AlertTriangle } from 'lucide-react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import Layout from '@/components/Layout';
+import { StatusScreen } from '@/components/StatusPage';
 import { useSeo } from '@/lib/seo';
 import { truncateAddress } from '@/lib/utils';
 import { validateBallot } from '@/lib/brza/retroRounds';
@@ -74,15 +76,15 @@ export default function RetroVote() {
     try {
       const headers: Record<string, string> = {};
       if (voterWallet) headers['X-Voter-Wallet'] = voterWallet;
-      const res = await fetch(
+      const result = await apiFetch<GetResponse>(
         `/api/communities/retro-ballot?communityId=${encodeURIComponent(communityId)}`,
-        { headers },
+        { headers, auth: 'omit' },
       );
-      const json = (await res.json()) as GetResponse;
-      if (!res.ok) {
-        setError(json.error ?? `Read failed (${res.status}).`);
+      if (!result.ok) {
+        setError(result.error.message);
         return;
       }
+      const json = result.data;
       setRound(json.round);
       setRecipients(json.recipients);
       setStatusNote(json.status ?? null);
@@ -152,21 +154,25 @@ export default function RetroVote() {
     setSubmitting(true);
     setError(null);
     try {
-      const res = await fetch('/api/communities/retro-ballot', {
+      const result = await apiFetch<{ ballot?: unknown }>('/api/communities/retro-ballot', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Voter-Wallet': voterWallet,
-          ...(await buildWalletProofHeaders(wallet, 'retro-vote')),
-        },
-        body: JSON.stringify({
-          communityId,
-          allocations: weights,
-        }),
+        headers: { 'X-Voter-Wallet': voterWallet, ...(await buildWalletProofHeaders(wallet, 'retro-vote')) },
+        body: { communityId, allocations: weights },
+        auth: 'omit',
       });
-      const json = (await res.json()) as { error?: string; message?: string };
-      if (!res.ok) {
-        setError(json.message ?? json.error ?? `Submit failed (${res.status}).`);
+      if (!result.ok) {
+        const messages = errorField<string[]>(result.error, 'messages');
+        setError(
+          result.error.code === 'invalid_ballot' && messages?.length
+            ? messages.join(' ')
+            : result.error.code === 'voting_closed'
+              ? 'Voting for this round has closed.'
+              : result.error.code === 'no_active_round'
+                ? 'There is no open round for this group.'
+                : result.error.code === 'not_active_member'
+                  ? 'Only active members of this group can vote in its round.'
+                  : result.error.message,
+        );
         return;
       }
       setSubmitted(true);
@@ -179,22 +185,12 @@ export default function RetroVote() {
 
   if (!connected) {
     return (
-      <Layout>
-        <section className="mx-auto max-w-3xl px-4 py-16 text-center space-y-4">
-          <Sparkles className="mx-auto h-10 w-10 text-muted-foreground" />
-          <h1 className="text-2xl font-semibold">Connect to vote</h1>
-          <p className="text-sm text-muted-foreground">
-            Connect your wallet to cast a retro vote in this community.
-          </p>
-          <button
-            type="button"
-            onClick={() => setVisible(true)}
-            className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground"
-          >
-            Connect wallet
-          </button>
-        </section>
-      </Layout>
+      <StatusScreen
+        kind="unauthorized"
+        title="Connect to Vote"
+        description="Connect your wallet to cast a retro vote in this community."
+        primary={{ label: 'Connect Wallet', onClick: () => setVisible(true), icon: 'login' }}
+      />
     );
   }
 
@@ -214,14 +210,14 @@ export default function RetroVote() {
                 setSubmitted(false);
                 void load();
               }}
-              className="rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-muted-foreground"
+              className="btn-wipe-outline px-4 py-2 text-sm"
             >
               Edit ballot
             </button>
             <button
               type="button"
               onClick={() => navigate(`/dashboard/${communityId}`)}
-              className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+              className="btn-wipe px-4 py-2 text-sm"
             >
               Back to community
             </button>
@@ -368,7 +364,7 @@ export default function RetroVote() {
                 type="button"
                 onClick={() => void submit()}
                 disabled={!ballotValidation.valid || submitting || loading}
-                className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
+                className="btn-wipe inline-flex items-center gap-2 px-5 py-2.5 text-sm disabled:opacity-50"
               >
                 <Send className="h-4 w-4" />
                 {submitting ? 'Submitting…' : 'Submit ballot'}
@@ -391,7 +387,7 @@ export default function RetroVote() {
             onClick={() => void load()}
             disabled={loading}
             aria-label="Refresh"
-            className="rounded-full border border-border bg-surface px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground disabled:opacity-50 inline-flex items-center gap-1"
+            className="btn-wipe-outline gap-1 px-3 py-2 text-xs"
           >
             <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
             Refresh

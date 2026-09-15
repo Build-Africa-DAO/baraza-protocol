@@ -1,87 +1,87 @@
+import { useRef } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ArrowRight, Coins, Link2, ShieldCheck, Users } from "lucide-react";
-import { ShimmerButton } from "@/components/ui/shimmer-button";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Reveal, REVEAL_STAGGER } from "@/components/landing/motion";
+import { toTitleCase } from "@/lib/utils";
 
-const steps = [
-  { icon: Link2, title: "Choose how you sign in", desc: "Use your phone number for M-Pesa flows, or connect a supported account. No seed phrases needed to join." },
-  { icon: ShieldCheck, title: "Set basics & rules", desc: "Name your community, set monthly dues in your account currency, and define quorum, approval, and voting period." },
-  { icon: Users, title: "Invite members", desc: "Share the join link. Members can join with M-Pesa or a connected account." },
-  { icon: Coins, title: "Govern transparently", desc: "Members propose, vote, and release funds. Every action stays visible in one shared record." },
-];
+function PhoneMockup() {
+  const ref = useRef<HTMLDivElement>(null);
+  const reduce = useReducedMotion();
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"],
+  });
+  const y = useTransform(scrollYProgress, [0, 1], ["8%", "-10%"]);
 
-const summary = [
-  { label: "Setup time", value: "4 min" },
-  { label: "Group funds mode", value: "Shared" },
-  { label: "Decision rule", value: "Quorum" },
-];
+  return (
+    <div ref={ref} className="relative min-h-[20rem] overflow-hidden sm:min-h-[24rem] lg:min-h-[28rem]">
+      <div className="absolute left-1/2 top-[18%] w-[20rem] -translate-x-1/2 sm:w-[22rem] lg:top-[16%] lg:w-[88%] lg:max-w-[26rem]">
+        <motion.div style={reduce ? undefined : { y }}>
+          <div className="rounded-[2.6rem] bg-foreground p-[0.65rem] shadow-[0_24px_50px_hsl(0_0%_0%/0.28)]">
+            <div className="relative overflow-hidden rounded-[2rem] bg-background">
+              <span className="absolute left-1/2 top-2.5 z-10 h-[1.25rem] w-[6.25rem] -translate-x-1/2 rounded-full bg-foreground" />
+              <img
+                src="/gallery/gallery-vote.jpg"
+                alt="Two members checking a vote on a phone"
+                width={720}
+                height={900}
+                loading="lazy"
+                decoding="async"
+                className="aspect-[9/17] w-full object-cover object-[center_20%]"
+              />
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
 
 export default function CTASection() {
   return (
-    <section className="py-20">
-      <div className="container mx-auto px-4">
-        <motion.div
-          initial={{ y: 24, opacity: 0 }}
-          whileInView={{ y: 0, opacity: 1 }}
-          viewport={{ once: true, amount: 0 }}
-          transition={{ duration: 0.5 }}
-          className="dark grid overflow-hidden rounded-2xl border border-border/70 bg-[image:var(--gradient-hero)] text-foreground shadow-[var(--shadow-deep)] lg:grid-cols-[0.9fr_1.1fr]"
-        >
-          <div className="border-b border-border/70 p-5 sm:p-8 md:p-10 lg:border-b-0 lg:border-r">
-            <p className="text-xs font-semibold uppercase tracking-widest text-accent">Launch group funds</p>
-            <h2 className="mt-3 max-w-xl font-display text-3xl font-bold leading-tight text-foreground md:text-4xl">
-              Launch your community with rules everyone can inspect
-            </h2>
-            <p className="mt-4 max-w-lg text-base leading-relaxed text-muted-foreground">
-              Start with working group funds, not a blank workspace. Baraza gives members a shared
-              dashboard from the first contribution to the final governance vote.
-            </p>
-
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link to="/create" tabIndex={-1}>
-                <ShimmerButton
-                  background="var(--gradient-warm)"
-                  shimmerColor="rgba(255,255,255,0.5)"
-                  className="w-full justify-center rounded-lg px-7 py-3.5 text-sm font-bold sm:w-auto"
-                >
-                  Launch a community
-                  <ArrowRight className="h-4 w-4" />
-                </ShimmerButton>
-              </Link>
-              <Link to="/communities" className="btn-ghost justify-center rounded-lg px-7 py-3.5 text-sm">
-                Browse communities
-              </Link>
+    <section id="closing-cta" className="relative z-10 w-full py-12 lg:py-[3.75rem]">
+      <div className="page-shell">
+        <div className="audience-band relative overflow-hidden rounded-[2rem] bg-primary text-foreground lg:rounded-[2.75rem]">
+          <div className="grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+            <div className="flex flex-col justify-center px-6 py-10 sm:px-10 sm:py-12 lg:px-14 lg:py-16">
+              <Reveal>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] opacity-80">
+                  Your group
+                </p>
+              </Reveal>
+              <Reveal delay={REVEAL_STAGGER}>
+                <h2 className="mt-4 max-w-2xl font-display text-3xl font-black leading-tight md:text-5xl">
+                  {toTitleCase("Move the Books Off WhatsApp")}
+                </h2>
+              </Reveal>
+              <Reveal delay={REVEAL_STAGGER * 2}>
+                <p className="mt-4 max-w-2xl text-sm leading-7 opacity-85 sm:text-base sm:leading-8">
+                  Name the group, set the dues, and send a link. Members pay with M-Pesa
+                  and open the same record on their phone. If someone asks where last month
+                  went, you open the group page instead of digging through a chat. Money
+                  leaves after a vote, and the receipt stays where everyone can see it.
+                </p>
+              </Reveal>
+              <Reveal delay={REVEAL_STAGGER * 3}>
+                <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+                  <Button asChild size="lg">
+                    <Link to="/create">
+                      Start a Group
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" size="lg">
+                    <Link to="/#faq">Read the FAQ</Link>
+                  </Button>
+                </div>
+              </Reveal>
             </div>
 
-            <div className="mt-8 grid grid-cols-3 gap-3">
-              {summary.map((item) => (
-                <div key={item.label} className="rounded-lg border border-border/60 bg-background/35 p-3">
-                  <p className="text-[10px] uppercase text-muted-foreground">{item.label}</p>
-                  <p className="mt-1 font-display text-sm font-bold text-foreground">{item.value}</p>
-                </div>
-              ))}
-            </div>
+            <PhoneMockup />
           </div>
-
-          <div className="grid gap-3 bg-surface/45 p-4 sm:p-5 sm:grid-cols-2 md:p-6">
-            {steps.map((step, index) => {
-              const Icon = step.icon;
-
-              return (
-                <div key={step.title} className="rounded-xl border border-border/70 bg-background/35 p-4">
-                  <div className="mb-4 flex items-center justify-between">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <span className="font-display text-xs text-muted-foreground">0{index + 1}</span>
-                  </div>
-                  <h3 className="font-display text-base font-bold text-foreground">{step.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.desc}</p>
-                </div>
-              );
-            })}
-          </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

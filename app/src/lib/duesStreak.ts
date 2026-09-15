@@ -10,6 +10,7 @@
  * boundaries (a member who pays late on the 31st in EAT versus UTC).
  */
 
+import { apiFetch } from '@/lib/api';
 export interface ConfirmedPayment {
   /** ISO 8601 timestamp from payment_orders.confirmed_at. */
   confirmedAt: string;
@@ -120,17 +121,12 @@ export async function fetchDuesStreak(wallet: string): Promise<StreakResult> {
   const cached = streakCache.get(wallet);
   if (cached && cached.expiresAt > Date.now()) return cached.result;
 
-  try {
-    const res = await fetch(`/api/payment-orders/streak?wallet=${encodeURIComponent(wallet)}`);
-    if (!res.ok) {
-      return { consecutiveMonthsPaid: 0, lastPaidAt: null, perCommunity: {} };
-    }
-    const data = (await res.json()) as StreakResult;
-    streakCache.set(wallet, { result: data, expiresAt: Date.now() + STREAK_CACHE_TTL_MS });
-    return data;
-  } catch {
+  const result = await apiFetch<StreakResult>(`/api/payment-orders/streak?wallet=${encodeURIComponent(wallet)}`, { auth: 'omit' });
+  if (!result.ok || !result.data) {
     return { consecutiveMonthsPaid: 0, lastPaidAt: null, perCommunity: {} };
   }
+  streakCache.set(wallet, { result: result.data, expiresAt: Date.now() + STREAK_CACHE_TTL_MS });
+  return result.data;
 }
 
 /**
@@ -158,20 +154,20 @@ export async function fetchDuesStreakBatch(
 
   if (toFetch.length === 0) return cachedHits;
 
-  try {
-    const res = await fetch('/api/payment-orders/streak-batch', {
+  // The route caps a batch at 100 wallets; send several when a roster is larger.
+  const fresh: Record<string, StreakResult> = {};
+  for (let i = 0; i < toFetch.length; i += 100) {
+    const chunk = toFetch.slice(i, i + 100);
+    const result = await apiFetch<{ results?: Record<string, StreakResult> }>('/api/payment-orders/streak-batch', {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ wallets: toFetch }),
+      body: { wallets: chunk },
+      auth: 'omit',
     });
-    if (!res.ok) return cachedHits;
-    const data = (await res.json()) as { results: Record<string, StreakResult> };
-    const fresh = data.results ?? {};
-    for (const [w, r] of Object.entries(fresh)) {
+    if (!result.ok) continue;
+    for (const [w, r] of Object.entries(result.data?.results ?? {})) {
       streakCache.set(w, { result: r, expiresAt: now + STREAK_CACHE_TTL_MS });
+      fresh[w] = r;
     }
-    return { ...cachedHits, ...fresh };
-  } catch {
-    return cachedHits;
   }
+  return { ...cachedHits, ...fresh };
 }

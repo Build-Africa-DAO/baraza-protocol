@@ -22,6 +22,8 @@ export interface ReadinessResponse {
     database: ComponentHealth;
     stellar_horizon: ComponentHealth;
     redis: ComponentHealth;
+    minisend?: ComponentHealth;
+    kotani?: ComponentHealth;
   };
 }
 

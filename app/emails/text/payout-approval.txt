@@ -1,0 +1,11 @@
+Payout needs your approval in {{community_name}}
+
+Baraza Protocol
+
+A payout in {{community_name}} needs your approval.
+
+Amount: {{amount_label}}
+Recipient: {{recipient_name}}
+Reference: {{payout_id}}
+
+Review: {{action_url}}

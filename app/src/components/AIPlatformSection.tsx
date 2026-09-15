@@ -1,103 +1,194 @@
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ArrowRight, Bot, Compass, LayoutDashboard, Sparkles, WalletCards } from "lucide-react";
-import { useAkiliChat } from "@/akili/useAkiliChat";
+import { ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Marquee } from "@/components/ui/marquee";
+import { Reveal, REVEAL_STAGGER } from "@/components/landing/motion";
+import { toTitleCase } from "@/lib/utils";
 
-const platformLinks = [
-  {
-    icon: Compass,
-    label: "Discover",
-    title: "Find active communities",
-    detail: "Browse communities — filter by type and payment rail.",
-    to: "/communities",
-  },
-  {
-    icon: WalletCards,
-    label: "Launch",
-    title: "Set group rules",
-    detail: "Set dues, quorum, voting windows, and payment paths in one guided flow.",
-    to: "/create",
-  },
-  {
-    icon: LayoutDashboard,
-    label: "Operate",
-    title: "Run group fund decisions",
-    detail: "Track members, proposals, balances, and releases from the dashboard.",
-    to: "/profile",
-  },
+const stats = [
+  { value: 27, label: toTitleCase("Group types, from chama to SACCO") },
+  { value: 4, label: toTitleCase("Countries: Kenya, Uganda, Tanzania, Rwanda") },
+  { value: 365, label: toTitleCase("Days a year every member can check") },
 ];
 
-export default function AIPlatformSection() {
-  const { open } = useAkiliChat();
+const groupCards = [
+  { src: "/gallery/gallery-dues.jpg", alt: "Members gathered around a laptop" },
+  { src: "/gallery/gallery-plan.jpg", alt: "A group planning together on a glass wall" },
+  { src: "/gallery/gallery-ledger.jpg", alt: "Treasurer reviewing a shared ledger on a screen" },
+  { src: "/gallery/gallery-group.jpg", alt: "Members laughing together at a desk" },
+  { src: "/audience/group.jpg", alt: "A chama gathered around a laptop" },
+  { src: "/contact/group.jpg", alt: "Four chama members checking a payment on their phones" },
+];
+
+function prefersReducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function useInView(threshold = 0.4) {
+  const ref = useRef<HTMLDListElement>(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setInView(entry.isIntersecting),
+      { threshold },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [threshold]);
+
+  return { ref, inView };
+}
+
+function CountStat({
+  value,
+  label,
+  active,
+}: {
+  value: number;
+  label: string;
+  active: boolean;
+}) {
+  const [display, setDisplay] = useState(0);
+  const displayRef = useRef(0);
+
+  useEffect(() => {
+    const target = active ? value : 0;
+    if (prefersReducedMotion()) {
+      displayRef.current = target;
+      setDisplay(target);
+      return;
+    }
+
+    const from = displayRef.current;
+    if (from === target) return;
+
+    let raf = 0;
+    const started = performance.now();
+    const duration = 700;
+    const step = (now: number) => {
+      const t = Math.min(1, (now - started) / duration);
+      const eased = 1 - (1 - t) ** 3;
+      const next = Math.round(from + (target - from) * eased);
+      displayRef.current = next;
+      setDisplay(next);
+      if (t < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [active, value]);
 
   return (
-    <section className="relative py-8 md:py-12" id="ai-platform">
-      <div className="container mx-auto max-w-7xl px-4">
-        <motion.div
-          initial={{ y: 18, opacity: 0 }}
-          whileInView={{ y: 0, opacity: 1 }}
-          viewport={{ once: true, amount: 0 }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr] lg:items-stretch"
-        >
-          <div className="rounded-2xl border border-primary/20 bg-card p-5 shadow-[var(--shadow-card)] md:p-6">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-primary">
-              <Sparkles className="h-3.5 w-3.5" />
-              Baraza platform
-            </div>
-            <h2 className="font-display text-2xl font-black leading-tight md:text-3xl">
-              Website, operating platform, and AI guide in one clean flow.
-            </h2>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground md:text-base md:leading-7">
-              Visitors can understand the model, organisers can launch a community, and members can
-              vote and track funds — Akili is available when someone needs a next step.
-            </p>
+    <div className="flex flex-col items-center text-center">
+      <dt
+        className="font-display text-4xl font-black leading-none tracking-tight tabular-nums md:text-5xl"
+        aria-label={String(value)}
+      >
+        {display}
+      </dt>
+      <dd className="mx-auto mt-2 max-w-[12rem] text-sm leading-6 opacity-75">{label}</dd>
+    </div>
+  );
+}
 
-            <div className="mt-5 flex flex-col gap-2 sm:flex-row">
-              <button
-                type="button"
-                onClick={() => open("Help me set up my community on Baraza")}
-                className="btn-warm inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-extrabold"
-              >
-                Ask Akili
-                <Bot className="h-4 w-4" />
-              </button>
-              <Link
-                to="/communities"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-border/70 px-5 py-3 text-sm font-extrabold transition-colors hover:border-primary/50"
-              >
-                Enter platform
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </div>
+function PhotoCard({ src, alt }: { src: string; alt: string }) {
+  return (
+    <figure className="aspect-square w-full overflow-hidden rounded-2xl bg-background p-1.5">
+      <img src={src} alt={alt} loading="lazy" decoding="async" className="h-full w-full rounded-xl object-cover" />
+    </figure>
+  );
+}
 
-          {/* Mobile: one card per swipe instead of a long stack */}
-          <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 md:pb-0">
-            {platformLinks.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.label}
-                  to={item.to}
-                  className="group min-w-[78%] snap-start rounded-2xl border border-border/70 bg-card/70 p-4 transition-all hover:border-primary/40 hover:bg-surface md:min-w-0"
+export default function AIPlatformSection() {
+  const { ref, inView } = useInView();
+  const leftCards = groupCards.filter((_, index) => index % 2 === 0);
+  const rightCards = groupCards.filter((_, index) => index % 2 === 1);
+
+  return (
+    <section className="scroll-mt-20 py-12 lg:py-[3.75rem]" id="who-its-for">
+      <div className="page-shell">
+        <div className="audience-band relative overflow-hidden rounded-[2rem] bg-primary text-foreground lg:rounded-[2.75rem]">
+          <div className="grid lg:grid-cols-[minmax(18rem,0.48fr)_minmax(0,1.52fr)]">
+            <div
+              className="relative h-56 overflow-hidden sm:h-72 lg:h-auto lg:min-h-[22rem]"
+              aria-hidden="true"
+            >
+              <div className="absolute inset-0 flex justify-center gap-5 px-5 sm:gap-6 sm:px-6 lg:justify-end lg:px-0 lg:pl-8">
+                <Marquee
+                  vertical
+                  reverse
+                  repeat={3}
+                  className="h-full w-[7.25rem] overflow-visible sm:w-[8.75rem] lg:w-[10rem] [--duration:28s] [--gap:1rem]"
                 >
-                  <div className="mb-4 flex items-center justify-between">
-                    <div className="grid h-10 w-10 place-items-center rounded-xl border border-primary/20 bg-primary/10 text-primary">
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <span className="text-[0.65rem] font-bold uppercase tracking-widest text-primary">
-                      {item.label}
-                    </span>
-                  </div>
-                  <h3 className="font-display text-lg font-bold leading-tight">{item.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.detail}</p>
-                  <ArrowRight className="mt-4 h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
-                </Link>
-              );
-            })}
+                  {leftCards.map((card) => (
+                    <PhotoCard key={card.src} src={card.src} alt="" />
+                  ))}
+                </Marquee>
+                <Marquee
+                  vertical
+                  repeat={3}
+                  className="h-full w-[7.25rem] overflow-visible sm:w-[8.75rem] lg:w-[10rem] [--duration:28s] [--gap:1rem]"
+                >
+                  {rightCards.map((card) => (
+                    <PhotoCard key={card.src} src={card.src} alt="" />
+                  ))}
+                </Marquee>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-center justify-center px-6 py-8 text-center sm:px-10 sm:py-10 lg:pl-16 lg:pr-10 lg:py-10 xl:pl-20 xl:pr-14">
+              <Reveal>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] opacity-80">
+                  Everyone Is Welcome
+                </p>
+              </Reveal>
+              <Reveal delay={REVEAL_STAGGER}>
+                <h2 className="mt-3 w-full font-display text-3xl font-black leading-[1.05] tracking-tight md:text-5xl">
+                  {toTitleCase("Bring your group, or find one.")}
+                </h2>
+              </Reveal>
+              <Reveal delay={REVEAL_STAGGER * 2}>
+                <p className="mt-4 w-full max-w-3xl text-sm leading-7 opacity-85 sm:text-base sm:leading-8">
+                  Whether you run a chama, you pay dues in one, or you have not joined yet, the
+                  paid list and the payouts sit on one page that every member can open on their phone.
+                  Browse a group that is already collecting, or start yours and share a link.
+                  SACCOs and cooperatives use that same page.
+                </p>
+              </Reveal>
+
+              <Reveal delay={REVEAL_STAGGER * 3}>
+                <dl ref={ref} className="mt-6 grid w-full justify-items-center gap-6 sm:grid-cols-3">
+                {stats.map((stat) => (
+                  <CountStat
+                    key={stat.label}
+                    value={stat.value}
+                    label={stat.label}
+                    active={inView}
+                  />
+                ))}
+                </dl>
+              </Reveal>
+
+              <Reveal delay={REVEAL_STAGGER * 4}>
+                <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <Button asChild size="lg">
+                  <Link to="/groups">
+                    Browse Groups
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="lg">
+                  <Link to="/create">Start a Group</Link>
+                </Button>
+                </div>
+              </Reveal>
+            </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

@@ -1,0 +1,208 @@
+{
+  "from": "Baraza Protocol <no-reply@barazaprotocol.com>",
+  "logo_url": "https://www.barazaprotocol.com/logo",
+  "support_email": "hello@barazaprotocol.com",
+  "site_url": "https://barazaprotocol.com",
+  "colors": {
+    "black": "#0A0A0A",
+    "white": "#FFFFFF",
+    "orange": "#F97316",
+    "muted": "#525252",
+    "line": "#E5E5E5",
+    "page": "#F5F5F5",
+    "radius": "16px"
+  },
+  "templates": [
+    {
+      "id": "signup-otp",
+      "name": "Sign up code",
+      "group": "Auth",
+      "subject": "Your Baraza code",
+      "variables": [
+        "otp",
+        "expires_minutes",
+        "email"
+      ],
+      "html": "emails/html/signup-otp.html",
+      "text": "emails/text/signup-otp.txt"
+    },
+    {
+      "id": "signin-otp",
+      "name": "Sign in code",
+      "group": "Auth",
+      "subject": "Your Baraza sign in code",
+      "variables": [
+        "otp",
+        "expires_minutes",
+        "email",
+        "device",
+        "browser",
+        "location",
+        "signed_in_at"
+      ],
+      "html": "emails/html/signin-otp.html",
+      "text": "emails/text/signin-otp.txt"
+    },
+    {
+      "id": "signin-new-session",
+      "name": "New sign in",
+      "group": "Auth",
+      "subject": "New sign in to your Baraza account",
+      "variables": [
+        "email",
+        "device",
+        "browser",
+        "location",
+        "signed_in_at",
+        "action_url"
+      ],
+      "html": "emails/html/signin-new-session.html",
+      "text": "emails/text/signin-new-session.txt"
+    },
+    {
+      "id": "account-welcome",
+      "name": "Account created",
+      "group": "Auth",
+      "subject": "Welcome to Baraza",
+      "variables": [
+        "first_name",
+        "email",
+        "action_url"
+      ],
+      "html": "emails/html/account-welcome.html",
+      "text": "emails/text/account-welcome.txt"
+    },
+    {
+      "id": "vote-cast",
+      "name": "Vote recorded",
+      "group": "Notifications",
+      "subject": "Your vote in {{community_name}} was recorded",
+      "variables": [
+        "community_name",
+        "proposal_title",
+        "decision",
+        "action_url",
+        "email"
+      ],
+      "html": "emails/html/vote-cast.html",
+      "text": "emails/text/vote-cast.txt"
+    },
+    {
+      "id": "dues-reminder",
+      "name": "Dues reminder",
+      "group": "Notifications",
+      "subject": "Dues reminder for {{community_name}}",
+      "variables": [
+        "community_name",
+        "amount_label",
+        "due_date",
+        "action_url",
+        "email"
+      ],
+      "html": "emails/html/dues-reminder.html",
+      "text": "emails/text/dues-reminder.txt"
+    },
+    {
+      "id": "member-welcome",
+      "name": "Membership active",
+      "group": "Notifications",
+      "subject": "You are a member of {{community_name}}",
+      "variables": [
+        "community_name",
+        "admin_phone",
+        "action_url",
+        "email"
+      ],
+      "html": "emails/html/member-welcome.html",
+      "text": "emails/text/member-welcome.txt"
+    },
+    {
+      "id": "proposal-created",
+      "name": "New proposal",
+      "group": "Notifications",
+      "subject": "New proposal in {{community_name}}",
+      "variables": [
+        "community_name",
+        "proposal_title",
+        "action_url",
+        "email"
+      ],
+      "html": "emails/html/proposal-created.html",
+      "text": "emails/text/proposal-created.txt"
+    },
+    {
+      "id": "payment-confirmed",
+      "name": "Payment confirmed",
+      "group": "Notifications",
+      "subject": "Payment confirmed for {{community_name}}",
+      "variables": [
+        "community_name",
+        "amount_label",
+        "action_url",
+        "email"
+      ],
+      "html": "emails/html/payment-confirmed.html",
+      "text": "emails/text/payment-confirmed.txt"
+    },
+    {
+      "id": "membership-activate",
+      "name": "Activate membership",
+      "group": "Notifications",
+      "subject": "Activate your {{community_name}} membership",
+      "variables": [
+        "community_name",
+        "amount_label",
+        "action_url",
+        "email"
+      ],
+      "html": "emails/html/membership-activate.html",
+      "text": "emails/text/membership-activate.txt"
+    },
+    {
+      "id": "community-invite",
+      "name": "Group invite",
+      "group": "Notifications",
+      "subject": "{{inviter_name}} invited you to {{community_name}}",
+      "variables": [
+        "community_name",
+        "inviter_name",
+        "action_url",
+        "email"
+      ],
+      "html": "emails/html/community-invite.html",
+      "text": "emails/text/community-invite.txt"
+    },
+    {
+      "id": "payout-approval",
+      "name": "Payout needs approval",
+      "group": "Notifications",
+      "subject": "Payout needs your approval in {{community_name}}",
+      "variables": [
+        "community_name",
+        "amount_label",
+        "recipient_name",
+        "payout_id",
+        "action_url",
+        "email"
+      ],
+      "html": "emails/html/payout-approval.html",
+      "text": "emails/text/payout-approval.txt"
+    },
+    {
+      "id": "payout-settled",
+      "name": "Payout settled",
+      "group": "Notifications",
+      "subject": "Payout settled for {{community_name}}",
+      "variables": [
+        "community_name",
+        "amount_label",
+        "recipient_name",
+        "payout_id",
+        "action_url",
+        "email"
+      ],
+      "html": "emails/html/payout-settled.html",
+      "text": "emails/text/payout-settled.txt"
+    }
+  ]
+}

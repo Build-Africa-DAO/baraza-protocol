@@ -27,15 +27,7 @@ function bad(message: string, status = 400, details?: Record<string, unknown>): 
   return json({ error: 'invalid_request', message, ...(details ?? {}) }, { status });
 }
 
-function isAuthorized(req: Request): boolean {
-  const secret = process.env.PAYMENT_ADAPTER_PROXY_SECRET;
-  const authHeader = req.headers.get('authorization');
-  if (secret && authHeader === `Bearer ${secret}`) return true;
-  // If caller provided wallet signature proof, authorization passes
-  const walletProof = req.headers.get('x-wallet-proof');
-  if (walletProof && walletProof.length > 32) return true;
-  return Boolean(secret && authHeader === `Bearer ${secret}`);
-}
+import { resolveCallerIdentity } from '../_lib/auth-session';
 
 function supabaseHeaders(serviceKey: string): HeadersInit {
   return {
@@ -47,7 +39,16 @@ function supabaseHeaders(serviceKey: string): HeadersInit {
 
 export default async function handler(req: Request): Promise<Response> {
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, { status: 405 });
-  if (!isAuthorized(req)) return bad('Payment adapter proxy is restricted to trusted server calls or verified wallet signers.', 401);
+
+  const secret = process.env.PAYMENT_ADAPTER_PROXY_SECRET;
+  const authHeader = req.headers.get('authorization');
+  const isServiceSecret = Boolean(secret && authHeader === `Bearer ${secret}`);
+
+  // Resolve caller identity via Auth Lattice (Privy Bearer, Baraza Session, or Wallet Proof)
+  const identity = await resolveCallerIdentity(req, 'minisend-payout');
+  if (!isServiceSecret && !identity) {
+    return bad('Payment adapter proxy is restricted to trusted server calls or verified sessions.', 401);
+  }
 
   const key = process.env.MINISEND_API_KEY;
   if (!key) return bad('Minisend provider is not configured.', 503);

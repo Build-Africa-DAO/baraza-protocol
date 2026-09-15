@@ -46,8 +46,8 @@ export default function CombinedBoard({ communityId, decisions }: Props) {
         badge: b.status === 'open' ? 'Open' : b.status === 'in_progress' ? 'In Progress' : 'Under Review',
         badgeClass:
           b.status === 'open' ? 'border-confirmed/40 bg-confirmed/10 text-confirmed' :
-          b.status === 'in_progress' ? 'border-primary/40 bg-primary/10 text-primary' :
-          'border-accent/40 bg-accent/10 text-accent',
+          b.status === 'in_progress' ? 'border-foreground/50 text-foreground' :
+          'border-border bg-surface text-muted-foreground',
         deadline: b.deadline,
         reward: formatRailAmountFromKes(b.rewardKes, chainMeta),
         href: `/bounties/${b.id}`,
@@ -64,7 +64,7 @@ export default function CombinedBoard({ communityId, decisions }: Props) {
         badge: 'Voting',
         badgeClass: 'border-secondary/40 bg-secondary/10 text-secondary',
         deadline: d.endsAt,
-        href: `/dashboard/${communityId}`,
+        href: `/dashboard/${communityId}/votes/${d.id}`,
       })),
   ].sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime());
 
@@ -110,13 +110,13 @@ export default function CombinedBoard({ communityId, decisions }: Props) {
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2 mb-0.5">
                   <span className={cn(
-                    'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold',
+                    'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-bold',
                     item.badgeClass,
                   )}>
                     {item.kind === 'bounty' ? <CircleDot className="h-2.5 w-2.5" /> : <Clock className="h-2.5 w-2.5" />}
                     {item.badge}
                   </span>
-                  <span className="text-[10px] text-muted-foreground">{item.meta}</span>
+                  <span className="text-xs text-muted-foreground">{item.meta}</span>
                 </div>
                 <p className="font-display text-sm font-semibold leading-snug truncate">{item.title}</p>
               </div>
@@ -124,15 +124,15 @@ export default function CombinedBoard({ communityId, decisions }: Props) {
               {/* Right side */}
               <div className="flex flex-shrink-0 flex-col items-end gap-1.5 text-right">
                 {item.reward && (
-                  <span className="font-display text-sm font-bold text-accent">{item.reward}</span>
+                  <span className="font-display text-sm font-bold text-foreground">{item.reward}</span>
                 )}
-                <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                   <CalendarDays className="h-2.5 w-2.5" />
                   {daysLeft(item.deadline)}
                 </span>
                 <Link
                   to={item.href}
-                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
+                  className="inline-flex min-h-11 items-center gap-1 text-xs font-semibold text-foreground hover:underline"
                 >
                   View
                   <ArrowRight className="h-3 w-3" />
@@ -144,7 +144,7 @@ export default function CombinedBoard({ communityId, decisions }: Props) {
       )}
 
       {/* Legend */}
-      <div className="flex items-center gap-4 px-1 text-[11px] text-muted-foreground">
+      <div className="flex items-center gap-4 px-1 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <BriefcaseBusiness className="h-3 w-3 text-confirmed" />
           Bounty

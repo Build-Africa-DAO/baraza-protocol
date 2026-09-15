@@ -80,9 +80,10 @@ function rowToRecord(row: MembershipRow): MembershipRecord {
 }
 
 /**
- * Async variant of `listMembershipsForWallet`. Tries Supabase first (memberships
- * table has public SELECT RLS); falls back to localStorage when Supabase is not
- * configured or the query returns empty.
+ * Async variant of `listMembershipsForWallet`. Supabase is authoritative: when it
+ * answers without error, its result stands even if empty. The localStorage cache
+ * is only consulted when there is no client or the query failed — an empty server
+ * response means "you are not a member", not "check the browser".
  */
 export async function fetchMembershipsForWallet(walletAddress: string): Promise<MembershipRecord[]> {
   const client = getSupabaseClient();
@@ -93,7 +94,7 @@ export async function fetchMembershipsForWallet(walletAddress: string): Promise<
       .eq('wallet_address', walletAddress)
       .in('status', ['ACTIVE', 'PENDING'])
       .order('joined_at', { ascending: false });
-    if (!error && data && data.length > 0) {
+    if (!error && data) {
       return (data as MembershipRow[]).map(rowToRecord);
     }
   }
@@ -101,10 +102,8 @@ export async function fetchMembershipsForWallet(walletAddress: string): Promise<
 }
 
 /**
- * Async variant of `getActiveMembership`. Tries Supabase first; falls back to
- * localStorage. Use this when you need the freshest server state (e.g. dashboard
- * membership badge). The sync `getActiveMembership` is still fine for optimistic
- * UI gates that should be instant.
+ * Async variant of `getActiveMembership`. Same rule: a successful Supabase read
+ * wins, including a successful read that finds nothing.
  */
 export async function fetchActiveMembership(
   communityId: string,
@@ -119,13 +118,18 @@ export async function fetchActiveMembership(
       .eq('wallet_address', walletAddress)
       .in('status', ['ACTIVE', 'PENDING'])
       .maybeSingle();
-    if (!error && data) {
-      return rowToRecord(data as MembershipRow);
+    if (!error) {
+      return data ? rowToRecord(data as MembershipRow) : null;
     }
   }
   return getActiveMembership(communityId, walletAddress);
 }
 
+/**
+ * Cache a membership the server has already confirmed. Never call this to
+ * optimistically mark someone active — `JoinStatus` only reaches it after
+ * `/api/membership/activate` returns 2xx.
+ */
 export function recordActiveMembership(communityId: string, walletAddress: string): MembershipRecord {
   const records = readMemberships();
   const existingIndex = records.findIndex((record) => {

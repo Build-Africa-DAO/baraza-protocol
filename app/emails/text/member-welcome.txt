@@ -1,0 +1,10 @@
+You are a member of {{community_name}}
+
+Baraza Protocol
+
+You are a member of {{community_name}}. Your membership is active.
+
+Pay dues, vote, and read the ledger with the rest of the group.
+Admin: {{admin_phone}}
+Open the group: {{action_url}}
+Or dial *384#

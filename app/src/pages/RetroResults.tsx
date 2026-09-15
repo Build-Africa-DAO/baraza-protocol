@@ -1,3 +1,4 @@
+import { apiFetch } from '@/lib/api';
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Coins, RefreshCw, Trophy } from 'lucide-react';
@@ -61,14 +62,15 @@ export default function RetroResults() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(
+      const result = await apiFetch<ResultsResponse>(
         `/api/communities/retro-allocations?communityId=${encodeURIComponent(communityId)}`,
+        { auth: 'omit' },
       );
-      const json = (await res.json()) as ResultsResponse;
-      if (!res.ok) {
-        setError(`Read failed (${res.status}).`);
+      if (!result.ok) {
+        setError(result.error.message);
         return;
       }
+      const json = result.data;
       setRound(json.round);
       setAllocations(json.allocations);
       setStatusNote(json.status ?? null);
@@ -221,7 +223,7 @@ export default function RetroResults() {
             type="button"
             onClick={() => void load()}
             disabled={loading}
-            className="rounded-full border border-border bg-surface px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground disabled:opacity-50 inline-flex items-center gap-1"
+            className="btn-wipe-outline gap-1 px-3 py-2 text-xs"
           >
             <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
             Refresh

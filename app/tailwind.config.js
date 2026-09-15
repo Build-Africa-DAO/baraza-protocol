@@ -7,20 +7,26 @@ export default {
 	theme: {
 		container: {
 			center: true,
-			padding: '1rem',
+			padding: {
+				DEFAULT: '1rem',
+				sm: '1.5rem',
+				lg: '2.5rem',
+				xl: '3.5rem',
+				'2xl': '4rem',
+			},
 			screens: {
 				sm: '640px',
 				md: '768px',
 				lg: '1024px',
 				xl: '1280px',
-				'2xl': '1440px',
+				'2xl': '1920px',
 			}
 		},
 		extend: {
 			fontFamily: {
-				sans: ['DM Sans', 'system-ui', 'sans-serif'],
-				display: ['Syne', 'system-ui', 'sans-serif'],
-				mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+				sans: ['Geist', 'system-ui', 'sans-serif'],
+				display: ['Geist', 'system-ui', 'sans-serif'],
+				mono: ['Geist Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
@@ -56,32 +62,44 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				warm: {
-					DEFAULT: 'hsl(var(--warm))',
-					foreground: 'hsl(var(--warm-foreground))'
-				},
-				orange: 'hsl(var(--orange))',
-				dao: {
-					DEFAULT: 'hsl(var(--dao))',
-					foreground: 'hsl(var(--dao-foreground))'
-				},
-				network: {
-					DEFAULT: 'hsl(var(--network))',
-					foreground: 'hsl(var(--network-foreground))'
-				},
 				confirmed: {
 					DEFAULT: 'hsl(var(--confirmed))',
 					foreground: 'hsl(var(--confirmed-foreground))'
 				},
+				pending: {
+					DEFAULT: 'hsl(var(--pending))',
+					foreground: 'hsl(var(--pending-foreground))'
+				},
+				hold: {
+					DEFAULT: 'hsl(var(--hold))',
+					foreground: 'hsl(var(--hold-foreground))'
+				},
+				stale: {
+					DEFAULT: 'hsl(var(--stale))',
+					foreground: 'hsl(var(--stale-foreground))'
+				},
 				surface: {
 					DEFAULT: 'hsl(var(--surface))',
 					hover: 'hsl(var(--surface-hover))'
+				},
+				canvas: 'hsl(var(--canvas))',
+				chrome: {
+					DEFAULT: 'hsl(var(--chrome))',
+					foreground: 'hsl(var(--chrome-foreground))'
 				}
 			},
+			/* Radius ladder (decision §9.1). `rounded-lg` and `rounded-xl` both map to
+			   the card radius so legacy call sites collapse onto the ladder without a
+			   rewrite; `rounded-sm`/`rounded-md` are the input radius; `rounded-2xl`
+			   is for sheets. */
 			borderRadius: {
-				lg: 'var(--radius)',
-				md: 'calc(var(--radius) - 2px)',
-				sm: 'calc(var(--radius) - 4px)'
+				DEFAULT: 'var(--radius-sm)',
+				sm: 'var(--radius-sm)',
+				md: 'var(--radius-sm)',
+				lg: 'var(--radius-md)',
+				xl: 'var(--radius-md)',
+				'2xl': 'var(--radius-lg)',
+				chrome: 'var(--radius-chrome)'
 			},
 			keyframes: {
 				'accordion-down': {
@@ -95,10 +113,6 @@ export default {
 				'float': {
 					'0%, 100%': { transform: 'translateY(0px)' },
 					'50%': { transform: 'translateY(-10px)' }
-				},
-				'pulse-glow': {
-					'0%, 100%': { boxShadow: '0 0 20px hsl(22 100% 52% / 0.2)' },
-					'50%': { boxShadow: '0 0 50px hsl(22 100% 52% / 0.45)' }
 				},
 				'fade-up': {
 					'0%': { opacity: '0', transform: 'translateY(24px)' },
@@ -145,7 +159,6 @@ export default {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'float': 'float 6s ease-in-out infinite',
-				'pulse-glow': 'pulse-glow 3s ease-in-out infinite',
 				'fade-up': 'fade-up 0.5s ease-out forwards',
 				'fade-in': 'fade-in 0.3s ease-out forwards',
 				'slide-in-right': 'slide-in-right 0.3s ease-out forwards',
