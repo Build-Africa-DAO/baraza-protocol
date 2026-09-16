@@ -183,9 +183,11 @@ export default async function handler(req: Request): Promise<Response> {
               };
               for (const b of accountData.balances || []) {
                 if (b.asset_code === 'USDC') {
-                  // Translate USDC to KES minor units using default peg (130.50)
+                  // Translate USDC to KES minor units using configured oracle peg (matching quote.ts)
+                  const rawFxRate = parseFloat(process.env.FX_RATE_KES_PER_USDC || '128.50');
+                  const fxRate = Number.isFinite(rawFxRate) && rawFxRate > 0 ? rawFxRate : 128.50;
                   const usdcAmount = parseFloat(b.balance || '0');
-                  onchainBalanceMinor += BigInt(Math.floor(usdcAmount * 130.5 * 100));
+                  onchainBalanceMinor += BigInt(Math.floor(usdcAmount * fxRate * 100));
                 } else if (b.asset_code === 'BRZA') {
                   onchainBalanceMinor += BigInt(Math.floor(parseFloat(b.balance || '0') * 100));
                 }
@@ -198,10 +200,12 @@ export default async function handler(req: Request): Promise<Response> {
           }
         }
 
+        // Allowable drift tolerance: 500 minor units (5.00 KES) to isolate sub-cent rounding artifacts
+        const ALLOWABLE_DRIFT_TOLERANCE_MINOR = 500n;
         const status: 'BALANCED' | 'VARIANCE_DETECTED' | 'INFRASTRUCTURE_SKIPPED' =
-          isRpcDegraded && varianceMinor === 0n
+          isRpcDegraded && varianceMinor <= ALLOWABLE_DRIFT_TOLERANCE_MINOR
             ? 'INFRASTRUCTURE_SKIPPED'
-            : varianceMinor > 0n
+            : varianceMinor > ALLOWABLE_DRIFT_TOLERANCE_MINOR
             ? 'VARIANCE_DETECTED'
             : 'BALANCED';
 

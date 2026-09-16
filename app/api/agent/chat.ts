@@ -286,7 +286,7 @@ async function handleChat(req: Request, corsHeaders: Record<string, string>): Pr
     async start(controller) {
       try {
         const messageStream = client.messages.stream({
-          model: 'claude-sonnet-4-6',
+          model: process.env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-20241022',
           max_tokens: 1024,
           system: systemPrompt,
           messages: [

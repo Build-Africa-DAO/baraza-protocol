@@ -4,6 +4,7 @@
 
 export const config = { runtime: 'nodejs' };
 
+import { timingSafeEqual } from 'node:crypto';
 import { getSupabaseAdmin, jsonResponse } from '../_lib/supabase';
 import { hashOtp } from './signup/request';
 import { hashSessionToken } from '../_lib/auth-session';
@@ -62,8 +63,11 @@ export default async function handler(req: Request): Promise<Response> {
   // 2. Cryptographic Code Verification
   const pepper = process.env.PAYMENT_PHONE_HASH_PEPPER || process.env.OTP_PEPPER || 'baraza_otp_pepper_2026';
   const computedHash = await hashOtp(code, pepper);
+  const bufComputed = Buffer.from(computedHash, 'utf8');
+  const bufExpected = Buffer.from(challenge.code_hash, 'utf8');
+  const isCodeMatch = bufComputed.length === bufExpected.length && timingSafeEqual(bufComputed, bufExpected);
 
-  if (computedHash !== challenge.code_hash) {
+  if (!isCodeMatch) {
     const remaining = challenge.attempts_remaining - 1;
     if (remaining <= 0) {
       // Invalidate on brute-force exhaustion

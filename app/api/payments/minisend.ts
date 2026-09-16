@@ -107,6 +107,50 @@ export default async function handler(req: Request): Promise<Response> {
         { communityId: body.communityId, circuitBreaker: true },
       );
     }
+
+    // 3.6 S&P 500 RBAC Gate: Verify Caller Authorization (Vulnerability V13 Fix)
+    if (!isServiceSecret) {
+      let hasAdminAuth = false;
+      const callerWallet = identity?.walletAddress || body.callerWallet;
+      const authUserId = identity?.privyDid || identity?.userProfileId;
+
+      if (callerWallet || authUserId) {
+        let adminQuery = `${supabaseUrl}/rest/v1/members?community_id=eq.${encodeURIComponent(body.communityId)}&role=in.(founder,admin,treasurer)&activation_status=in.(active,ACTIVE)&select=member_id`;
+        if (callerWallet) {
+          adminQuery += `&wallet_address=eq.${encodeURIComponent(callerWallet)}`;
+        } else if (authUserId) {
+          adminQuery += `&auth_user_id=eq.${encodeURIComponent(authUserId)}`;
+        }
+        const adminRes = await fetch(adminQuery, { headers: supabaseHeaders(serviceKey) });
+        if (adminRes.ok) {
+          const adminRows = (await adminRes.json().catch(() => [])) as Array<{ member_id: string }>;
+          if (Array.isArray(adminRows) && adminRows.length > 0) {
+            hasAdminAuth = true;
+          }
+        }
+      }
+
+      // Check if linked proposal is approved/executed
+      if (!hasAdminAuth && body.proposalId) {
+        const propRes = await fetch(
+          `${supabaseUrl}/rest/v1/proposals?id=eq.${encodeURIComponent(body.proposalId)}&community_id=eq.${encodeURIComponent(body.communityId)}&select=id,status,execution_status`,
+          { headers: supabaseHeaders(serviceKey) }
+        );
+        if (propRes.ok) {
+          const props = (await propRes.json().catch(() => [])) as Array<{ id: string; status: string; execution_status: string }>;
+          if (Array.isArray(props) && props.length > 0) {
+            const prop = props[0];
+            if (prop.status === 'passed' || prop.execution_status === 'executed') {
+              hasAdminAuth = true;
+            }
+          }
+        }
+      }
+
+      if (!hasAdminAuth) {
+        return bad('Caller lacks administrative or proposal authorization to disburse funds from this community treasury.', 403);
+      }
+    }
   }
 
   const orderId = `ord_ms_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;

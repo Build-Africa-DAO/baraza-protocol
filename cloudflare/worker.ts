@@ -127,7 +127,8 @@ export default {
   },
 
   /**
-   * Scheduled Cron Handler: Periodically sweeps stale orders and executes SASRA compliance monitoring
+   * Scheduled Cron Handler: Periodically promotes orders, reconciles treasuries,
+   * monitors SASRA compliance, and settles retro allocations.
    */
   async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
     const secret = env.CRON_SECRET || env.ADMIN_SECRET || 'test_cron_secret';
@@ -135,15 +136,21 @@ export default {
 
     ctx.waitUntil(
       (async () => {
-        const cronPattern = controller.cron;
-        // Run sweep on every invocation (every 5 or 10 min)
+        const cronPattern = controller.cron || '';
+        // 1. Order promotion cadence (every invocation / 5 min)
         const tasks: Promise<CronDispatchResult>[] = [
-          executeCronTask('/api/cron/sweep-stale-orders', 'GET', apiBase, secret),
+          executeCronTask('/api/cron/promote-orders', 'POST', apiBase, secret),
         ];
 
-        // Run SASRA monitoring every 10 min
-        if (cronPattern.includes('10')) {
-          tasks.push(executeCronTask('/api/compliance/sasra-monitoring', 'POST', apiBase, secret));
+        // 2. Treasury reconciliation every 10 min
+        if (cronPattern.includes('10') || cronPattern.includes('*/10')) {
+          tasks.push(executeCronTask('/api/cron/reconcile-treasury', 'POST', apiBase, secret));
+        }
+
+        // 3. Daily compliance & retro settlement
+        if (cronPattern.includes('0 0') || cronPattern.includes('daily')) {
+          tasks.push(executeCronTask('/api/cron/monitor-compliance', 'POST', apiBase, secret));
+          tasks.push(executeCronTask('/api/cron/settle-retro-allocations', 'POST', apiBase, secret));
         }
 
         await Promise.allSettled(tasks);
