@@ -7,7 +7,7 @@ pages_build_output_dir = "app/dist"
 STELLAR_NETWORK = "testnet"
 STELLAR_HORIZON_URL = "https://horizon-testnet.stellar.org"
 STELLAR_SOROBAN_RPC = "https://soroban-testnet.stellar.org"
-VITE_SITE_URL = "https://baraza.app"
+VITE_SITE_URL = "https://barazaprotocol.com"
 
 # FIFO Webhook Ingress Queue
 [[queues.producers]]
