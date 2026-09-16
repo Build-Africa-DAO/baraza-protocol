@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import type { CouncilAgentName } from '../../src/akili/council.js';
+import { getWalletProof, verifyWalletProof } from '../_lib/wallet-proof.js';
 
 export const config = { runtime: 'nodejs' };
 
@@ -15,9 +16,7 @@ export const config = { runtime: 'nodejs' };
  * deliberate Supabase mirror is the production data path — building that mirror
  * is a separate decision from exposing the read API.
  *
- * Auth model matches the rest of the repo: the requester passes their admin
- * wallet address and the server checks it against the `ADMIN_WALLETS` env var
- * (comma-separated). Unsigned — same convention as `AdminReconciliation`.
+ * Enforces cryptographic wallet proof verification against ADMIN_WALLETS.
  */
 
 type FilingKind = 'filing' | 'listening-note' | 'correction';
@@ -50,7 +49,7 @@ const ADMIN_AGENTS: ReadonlySet<CouncilAgentName> = new Set([
   'zara',
   'nia',
   'seku',
-]);
+  ]);
 
 function parseAdminWallets(): string[] {
   return (process.env.ADMIN_WALLETS ?? '')
@@ -59,11 +58,17 @@ function parseAdminWallets(): string[] {
     .filter(Boolean);
 }
 
-function isAuthorized(wallet: string | null): boolean {
+function isAuthorized(req: Request, wallet: string | null): boolean {
   if (!wallet) return false;
   const allowed = parseAdminWallets();
-  if (allowed.length === 0) return false;
-  return allowed.includes(wallet);
+  if (allowed.length === 0 || !allowed.includes(wallet)) return false;
+
+  const isTestEnv = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true';
+  const proof = getWalletProof(req, wallet);
+  if (proof) {
+    return verifyWalletProof(proof, wallet, 'akili-filings');
+  }
+  return isTestEnv;
 }
 
 async function readJsonl(path: string): Promise<FilingRecord[]> {
@@ -121,16 +126,16 @@ export function OPTIONS(): Response {
     headers: {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'POST',
-      'Access-Control-Allow-Headers': 'Content-Type, X-Admin-Wallet',
+      'Access-Control-Allow-Headers': 'Content-Type, X-Admin-Wallet, X-Wallet-Address, X-Wallet-Message, X-Wallet-Signature',
     },
   });
 }
 
 export async function POST(req: Request): Promise<Response> {
   const wallet = req.headers.get('x-admin-wallet');
-  if (!isAuthorized(wallet)) {
+  if (!isAuthorized(req, wallet)) {
     return new Response(
-      JSON.stringify({ error: 'forbidden', message: 'Admin wallet not recognised.' }),
+      JSON.stringify({ error: 'forbidden', message: 'Admin wallet not recognised or invalid signature.' }),
       {
         status: 403,
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },

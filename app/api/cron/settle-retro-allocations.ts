@@ -26,6 +26,7 @@ import {
   STELLAR_MAX_OPS_PER_TX,
   type StellarNetworkName,
 } from './_lib/stellar-mint.js';
+import { getWalletProof, verifyWalletProof } from '../_lib/wallet-proof.js';
 
 export const config = { runtime: 'nodejs' };
 
@@ -53,8 +54,10 @@ function isAuthorized(req: Request): boolean {
   const wallet = req.headers.get('x-admin-wallet');
   if (!wallet) return false;
   const allowed = parseAdminWallets();
-  if (allowed.length === 0) return false;
-  return allowed.includes(wallet);
+  if (allowed.length === 0 || !allowed.includes(wallet)) return false;
+
+  const proof = getWalletProof(req, wallet);
+  return verifyWalletProof(proof, wallet, 'retro-settle');
 }
 
 function getSupabase(): SupabaseClient | null {

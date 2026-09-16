@@ -10,6 +10,7 @@
  */
 
 import { getWalletProof, verifyWalletProof } from '../_lib/wallet-proof.js';
+import { resolveCallerIdentity } from '../_lib/auth-session.js';
 import {
   isValidCertificateUrl,
   isValidSaccoLicenseNumber,
@@ -83,13 +84,15 @@ export default async function handler(req: Request): Promise<Response> {
   const callerWallet = body.wallet || req.headers.get('x-wallet-address');
   const proof = getWalletProof(req, callerWallet);
 
+  const caller = await resolveCallerIdentity(req, 'sacco-license-submit', callerWallet);
+
   if (proof) {
     const verified = verifyWalletProof(proof, callerWallet, 'sacco-license-submit');
     if (!verified) {
       return json({ error: 'unauthorized', message: 'Invalid officer wallet signature.' }, { status: 401 });
     }
-  } else if (process.env.NODE_ENV === 'production' || process.env.CF_PAGES === '1') {
-    return json({ error: 'unauthorized', message: 'Officer wallet signature is mandatory.' }, { status: 401 });
+  } else if (!caller && (process.env.NODE_ENV === 'production' || process.env.CF_PAGES === '1')) {
+    return json({ error: 'unauthorized', message: 'Officer wallet signature or valid session is mandatory.' }, { status: 401 });
   }
 
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;

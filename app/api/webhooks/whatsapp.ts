@@ -6,12 +6,27 @@ export const config = { runtime: 'nodejs' };
 
 import { processTurn, type BotSessionState, type BotWriteCommand } from '../../src/lib/bot/fsm.js';
 import { constantTimeCompare } from '../_lib/crypto';
+import { getSupabaseAdmin } from '../_lib/supabase';
 
 // In-Memory Session Cache (backed by phone key; production loads from user_profiles / auth_sessions)
 const sessionStore = new Map<string, BotSessionState>();
 
-export function clearSessionStore(): void {
-  sessionStore.clear();
+export async function clearSessionStore(phoneNumber?: string): Promise<void> {
+  if (phoneNumber) {
+    sessionStore.delete(phoneNumber);
+  } else {
+    sessionStore.clear();
+  }
+  try {
+    const supabase = getSupabaseAdmin();
+    if (phoneNumber) {
+      await supabase.from('bot_sessions').delete().eq('phone_number', phoneNumber);
+    } else {
+      await supabase.from('bot_sessions').delete().neq('phone_number', '');
+    }
+  } catch {
+    // Non-fatal if database is offline or unconfigured
+  }
 }
 
 function json(body: unknown, init?: ResponseInit): Response {
@@ -80,14 +95,49 @@ export async function handleEvolutionWebhook(
 
   const phoneNumber = remoteJid.split('@')[0] || '';
 
-  // 3. Session State Retrieval & FSM Turn Execution
-  const currentState: BotSessionState = sessionStore.get(phoneNumber) || {
-    currentNode: 'ROOT',
-    slots: { phone: phoneNumber, failureCount: 0 },
-  };
+  // 3. Session State Retrieval (Database-backed with in-memory fast path)
+  let currentState: BotSessionState | null = sessionStore.get(phoneNumber) || null;
+  if (!currentState) {
+    try {
+      const supabase = getSupabaseAdmin();
+      const { data } = await supabase
+        .from('bot_sessions')
+        .select('state')
+        .eq('phone_number', phoneNumber)
+        .maybeSingle();
+      if (data?.state) {
+        currentState = data.state as BotSessionState;
+      }
+    } catch {
+      // Database unconfigured or offline; proceed to fallback
+    }
+  }
+
+  if (!currentState) {
+    currentState = {
+      currentNode: 'ROOT',
+      slots: { phone: phoneNumber, failureCount: 0 },
+    };
+  }
 
   const result = processTurn(currentState, text);
   sessionStore.set(phoneNumber, result.nextState);
+
+  // Asynchronously persist updated FSM state for edge worker durability
+  try {
+    const supabase = getSupabaseAdmin();
+    Promise.resolve(
+      supabase
+        .from('bot_sessions')
+        .upsert({
+          phone_number: phoneNumber,
+          state: result.nextState,
+          updated_at: new Date().toISOString(),
+        })
+    ).catch(() => {});
+  } catch {
+    // Non-fatal
+  }
 
   // 4. Return Output
   return {

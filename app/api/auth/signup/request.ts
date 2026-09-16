@@ -7,8 +7,9 @@ export const config = { runtime: 'nodejs' };
 import { getSupabaseAdmin, jsonResponse } from '../../_lib/supabase';
 import { sendTransactionalEmail } from '../../_lib/mail';
 
-export async function hashOtp(otp: string, pepper: string): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${otp}:${pepper}`));
+export async function hashOtp(otp: string, pepper: string, salt?: string): Promise<string> {
+  const content = salt ? `${otp}:${salt}:${pepper}` : `${otp}:${pepper}`;
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(content));
   return Array.from(new Uint8Array(digest))
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('');
@@ -55,21 +56,26 @@ export default async function handler(req: Request): Promise<Response> {
     .eq('purpose', 'signup')
     .is('consumed_at', null);
 
-  // 3. Generate 6-Digit CSPRNG Code
+  // 3. Generate 6-Digit CSPRNG Code and Per-Challenge Salt (NIST SP 800-63B)
   const randomBytes = new Uint8Array(4);
   crypto.getRandomValues(randomBytes);
   const randomUint32 = new DataView(randomBytes.buffer).getUint32(0, false);
   const otpNumber = 100000 + (randomUint32 % 900000);
   const otp = otpNumber.toString();
 
+  const saltBytes = new Uint8Array(16);
+  crypto.getRandomValues(saltBytes);
+  const salt = Array.from(saltBytes, (b) => b.toString(16).padStart(2, '0')).join('');
+
   const pepper = process.env.PAYMENT_PHONE_HASH_PEPPER || process.env.OTP_PEPPER || 'baraza_otp_pepper_2026';
-  const codeHash = await hashOtp(otp, pepper);
+  const codeHash = await hashOtp(otp, pepper, salt);
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 Minutes TTL
 
-  // 4. Save Challenge to Database
+  // 4. Save Challenge to Database with Salt
   const { error: insertErr } = await supabase.from('auth_otp_challenges').insert({
     destination: email,
     channel: 'email',
+    salt,
     code_hash: codeHash,
     purpose: 'signup',
     attempts_remaining: 5,

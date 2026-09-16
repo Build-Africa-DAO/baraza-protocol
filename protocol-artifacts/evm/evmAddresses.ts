@@ -37,7 +37,7 @@ export interface EvmAddresses {
   WETH?: string;
 }
 
-const NOT_DEPLOYED = '0x0000000000000000000000000000000000000000';
+export const NOT_DEPLOYED = '0x0000000000000000000000000000000000000000';
 
 const PLACEHOLDER: EvmAddresses = {
   Manager: NOT_DEPLOYED,
@@ -62,6 +62,13 @@ const ADDRESSES: Record<number, EvmAddresses> = {
 /** Returns contract addresses for a given EVM chain ID, or null if unsupported. */
 export function getEvmAddresses(chainId: number): EvmAddresses | null {
   return ADDRESSES[chainId] ?? null;
+}
+
+/** Check if contract addresses are deployed on the given chain ID. */
+export function isEvmDeployed(chainId: number): boolean {
+  const addrs = getEvmAddresses(chainId);
+  if (!addrs) return false;
+  return addrs.Token !== NOT_DEPLOYED && addrs.Token !== '';
 }
 
 /** Chain IDs with deployed contracts. */

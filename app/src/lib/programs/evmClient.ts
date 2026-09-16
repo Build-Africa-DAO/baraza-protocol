@@ -11,7 +11,7 @@
  *   - All methods return null on failure rather than throwing
  */
 
-import { getEvmAddresses } from './evmAddresses';
+import { getEvmAddresses, NOT_DEPLOYED } from './evmAddresses';
 
 // Minimal ABI fragments.
 
@@ -31,6 +31,7 @@ async function ethCall(
   to: string,
   data: string,
 ): Promise<string | null> {
+  if (!to || to === NOT_DEPLOYED) return null;
   try {
     const res = await fetch(rpcUrl, {
       method: 'POST',
@@ -104,7 +105,7 @@ export class BarazaEvmClient {
   /** Fetch high-level community info from the deployed contracts. */
   async fetchCommunityInfo(): Promise<EvmCommunityInfo> {
     const addrs = getEvmAddresses(this.chainId);
-    if (!addrs) {
+    if (!addrs || !addrs.Token || addrs.Token === NOT_DEPLOYED) {
       return { tokenName: null, memberCount: 0, proposalCount: 0, treasuryBalanceWei: null };
     }
 
@@ -140,6 +141,7 @@ export class BarazaEvmClient {
 
   /** Fetch ETH balance of the treasury contract in wei (as hex string). */
   async fetchTreasuryBalance(treasuryAddress: string): Promise<string | null> {
+    if (!treasuryAddress || treasuryAddress === NOT_DEPLOYED) return null;
     try {
       const res = await fetch(this.rpcUrl, {
         method: 'POST',
@@ -161,7 +163,7 @@ export class BarazaEvmClient {
   /** Returns how many governance tokens a given address holds. */
   async fetchMemberTokenBalance(walletAddress: string): Promise<number> {
     const addrs = getEvmAddresses(this.chainId);
-    if (!addrs) return 0;
+    if (!addrs || !addrs.Token || addrs.Token === NOT_DEPLOYED) return 0;
     const data = BALANCE_OF_SELECTOR + padAddress(walletAddress);
     const raw = await ethCall(this.rpcUrl, addrs.Token, data);
     return raw ? decodeUint256(raw) : 0;

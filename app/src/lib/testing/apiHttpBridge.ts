@@ -21,6 +21,15 @@ import handleClearingWebhook from '../../../api/webhooks/clearing.js';
 import handleArtizenWebhook from '../../../api/webhooks/artizen.js';
 import handleWhatsAppWebhook from '../../../api/webhooks/whatsapp.js';
 import handleChat from '../../../api/agent/chat.js';
+import handleStkPush from '../../../api/mpesa/stk-push.js';
+import { POST as handlePromoteOrders } from '../../../api/cron/promote-orders.js';
+import handleTreasuryInitialize from '../../../api/treasury/initialize.js';
+import handleSignupRequest from '../../../api/auth/signup/request.js';
+import handleSigninRequest from '../../../api/auth/signin/request.js';
+import handleAuthVerify from '../../../api/auth/verify.js';
+import handleUserProfile from '../../../api/user/profile.js';
+import handleOfficers from '../../../api/communities/officers.js';
+import handleUssd from '../../../api/ussd/index.js';
 
 export interface ApiHttpBridgeInstance {
   server: http.Server;
@@ -90,6 +99,24 @@ export async function startApiHttpBridge(preferredPort = 4000): Promise<ApiHttpB
           webRes = await handleWhatsAppWebhook(webReq);
         } else if (pathname === '/api/agent/chat') {
           webRes = await handleChat(webReq);
+        } else if (pathname === '/api/mpesa/stk-push') {
+          webRes = await handleStkPush(webReq);
+        } else if (pathname === '/api/cron/promote-orders') {
+          webRes = await handlePromoteOrders(webReq);
+        } else if (pathname === '/api/treasury/initialize') {
+          webRes = await handleTreasuryInitialize(webReq);
+        } else if (pathname === '/api/auth/signup/request') {
+          webRes = await handleSignupRequest(webReq);
+        } else if (pathname === '/api/auth/signin/request') {
+          webRes = await handleSigninRequest(webReq);
+        } else if (pathname === '/api/auth/verify') {
+          webRes = await handleAuthVerify(webReq);
+        } else if (pathname === '/api/user/profile') {
+          webRes = await handleUserProfile(webReq);
+        } else if (pathname === '/api/communities/officers') {
+          webRes = await handleOfficers(webReq);
+        } else if (pathname === '/api/ussd') {
+          webRes = await handleUssd(webReq);
         } else {
           webRes = new Response(JSON.stringify({ error: 'not_found', pathname }), {
             status: 404,

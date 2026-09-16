@@ -30,6 +30,9 @@ jobs:
       - name: Contract drift check
         run: npm run test:contracts:drift
 
+      - name: Pre-flight Production Readiness Verification
+        run: node scripts/validate-production-readiness.mjs
+
   check:
     name: Typecheck & Lint
     runs-on: ubuntu-latest
@@ -54,6 +57,9 @@ jobs:
 
       - name: Code Quality Lint
         run: npm run lint
+
+      - name: Dependency Security Audit
+        run: npm audit --audit-level=critical
 
   test:
     name: Unit tests

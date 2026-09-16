@@ -89,6 +89,30 @@ async function fetchBrzaBalanceForPhone(phoneNumber: string): Promise<number> {
   return rows.reduce((sum, r) => sum + (r.voting_weight ?? 1), 0);
 }
 
+async function recordUssdVote(phoneNumber: string, pendingVote: { proposalId: string; option: 'yes' | 'no' }): Promise<void> {
+  const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/$/, '');
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !serviceKey) return;
+
+  const identity = `phone:${phoneNumber}`;
+  await fetch(`${supabaseUrl}/rest/v1/votes`, {
+    method: 'POST',
+    headers: {
+      apikey: serviceKey,
+      Authorization: `Bearer ${serviceKey}`,
+      'content-type': 'application/json',
+      Prefer: 'resolution=ignore-duplicates',
+    },
+    body: JSON.stringify({
+      proposal_id: pendingVote.proposalId,
+      member_id: identity,
+      option: pendingVote.option,
+      weight: 1,
+      cast_at: new Date().toISOString(),
+    }),
+  }).catch(() => undefined);
+}
+
 async function sendRawSms(phoneNumber: string, message: string): Promise<void> {
   const username = process.env.AT_USERNAME;
   const apiKey = process.env.AT_API_KEY;
@@ -188,6 +212,10 @@ export default async function handler(req: Request): Promise<Response> {
   if (result.pendingPayOrder) {
     const origin = new URL(req.url).origin;
     createPaymentOrder(result.pendingPayOrder, origin).catch(() => undefined);
+  }
+
+  if (result.pendingVote) {
+    recordUssdVote(phoneNumber, result.pendingVote).catch(() => undefined);
   }
 
   // Dispatch any queued welcome SMS fallbacks (Nia's W0 "Main menu" skip path).

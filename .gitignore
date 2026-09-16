@@ -94,3 +94,8 @@ scripts/higgsfield/output/
 # Claude Code / Ruflo local tool state (never committed)
 .claude/
 **/.claude-flow/
+
+# Adversarial Simulation & Ephemeral Testing Artifacts
+telemetry/
+tests/personas/
+tests/harness/
