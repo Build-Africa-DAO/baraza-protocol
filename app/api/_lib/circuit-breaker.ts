@@ -148,6 +148,31 @@ export async function setCircuitBreakerState(
 }
 
 /**
+ * Resets the circuit breaker state to unpaused in both memory cache and PostgreSQL (test harness hygiene).
+ */
+export async function resetCircuitBreakerForTesting(): Promise<void> {
+  memoryCache = null;
+  delete process.env.EMERGENCY_CIRCUIT_BREAKER_ACTIVE;
+  delete process.env.EMERGENCY_CIRCUIT_BREAKER_REASON;
+  try {
+    const supabase = getSupabaseAdmin();
+    await supabase.from('system_config').upsert({
+      key: 'circuit_breaker',
+      value: {
+        is_emergency_paused: false,
+        reason: '',
+        paused_at: null,
+        paused_by: null,
+        affected_rails: ['mpesa', 'minisend', 'soroban', 'cron'],
+      },
+      updated_at: new Date().toISOString(),
+    });
+  } catch {
+    // Non-fatal if DB is unreachable in unit test environments
+  }
+}
+
+/**
  * Clears the in-memory cache for isolated testing.
  */
 export function clearCircuitBreakerCache(): void {

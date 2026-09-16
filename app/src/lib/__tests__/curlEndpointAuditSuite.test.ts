@@ -395,11 +395,12 @@ describe('Master Curl End-to-End Endpoint Audit Suite', () => {
     });
 
     it('3.8 curl POST /api/webhooks/whatsapp (Conversational Gateway Turn)', async () => {
+      const curlPhone = `254700${Math.floor(100000 + Math.random() * 900000)}`;
       const payload = {
         event: 'messages.upsert',
         data: {
           key: {
-            remoteJid: '254700000001@s.whatsapp.net',
+            remoteJid: `${curlPhone}@s.whatsapp.net`,
             fromMe: false,
           },
           message: {

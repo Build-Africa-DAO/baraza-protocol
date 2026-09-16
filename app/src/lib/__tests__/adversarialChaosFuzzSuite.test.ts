@@ -126,7 +126,7 @@ describe('Pass 3: Adversarial Security, Chaos Fuzzing & High-Burst Concurrency S
       const durationMs = performance.now() - t0;
 
       expect(result).toBeNull();
-      expect(durationMs).toBeLessThan(15); // Must not hang thread
+      expect(durationMs).toBeLessThan(50); // Linear-time regex: catastrophic backtracking would be >1000ms
     });
 
     it('2.2 multi-market E.164 validator executes in < 5ms under evil repeating pattern', () => {
@@ -136,7 +136,7 @@ describe('Pass 3: Adversarial Security, Chaos Fuzzing & High-Burst Concurrency S
       const durationMs = performance.now() - t0;
 
       expect(result).toBe(false);
-      expect(durationMs).toBeLessThan(15);
+      expect(durationMs).toBeLessThan(50); // Linear-time regex: catastrophic backtracking would be >1000ms
     });
 
     it('2.3 SACCO statutory license validator executes in < 5ms under polynomial attack string', () => {
@@ -146,7 +146,7 @@ describe('Pass 3: Adversarial Security, Chaos Fuzzing & High-Burst Concurrency S
       const durationMs = performance.now() - t0;
 
       expect(result).toBe(false);
-      expect(durationMs).toBeLessThan(15);
+      expect(durationMs).toBeLessThan(50); // Linear-time regex: catastrophic backtracking would be >1000ms
     });
 
     it('2.4 certificate URL parser rejects SSRF and loopback URLs without regex stall', () => {

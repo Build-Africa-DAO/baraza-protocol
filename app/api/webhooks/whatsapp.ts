@@ -11,8 +11,22 @@ import { getSupabaseAdmin } from '../_lib/supabase';
 // In-Memory Session Cache (backed by phone key; production loads from user_profiles / auth_sessions)
 const sessionStore = new Map<string, BotSessionState>();
 
-export function clearSessionStore(): void {
-  sessionStore.clear();
+export async function clearSessionStore(phoneNumber?: string): Promise<void> {
+  if (phoneNumber) {
+    sessionStore.delete(phoneNumber);
+  } else {
+    sessionStore.clear();
+  }
+  try {
+    const supabase = getSupabaseAdmin();
+    if (phoneNumber) {
+      await supabase.from('bot_sessions').delete().eq('phone_number', phoneNumber);
+    } else {
+      await supabase.from('bot_sessions').delete().neq('phone_number', '');
+    }
+  } catch {
+    // Non-fatal if database is offline or unconfigured
+  }
 }
 
 function json(body: unknown, init?: ResponseInit): Response {

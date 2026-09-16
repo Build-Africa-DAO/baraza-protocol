@@ -12,11 +12,12 @@
  * =============================================================================
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, afterAll, vi } from 'vitest';
 import {
   isCircuitBreakerActive,
   setCircuitBreakerState,
   clearCircuitBreakerMemoryCache,
+  resetCircuitBreakerForTesting,
 } from '../_lib/circuit-breaker';
 import {
   checkDistributedRateLimit,
@@ -30,18 +31,25 @@ import { POST as cronPromoteHandler } from '../cron/promote-orders';
 describe('DevOps & Production Reliability Hardening Suite', () => {
   const originalEnv = { ...process.env };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     process.env = { ...originalEnv };
     clearCircuitBreakerMemoryCache();
     clearRateLimiterStore();
     vi.restoreAllMocks();
+    await resetCircuitBreakerForTesting();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     process.env = { ...originalEnv };
     clearCircuitBreakerMemoryCache();
     clearRateLimiterStore();
     vi.restoreAllMocks();
+    await resetCircuitBreakerForTesting();
+  });
+
+  afterAll(async () => {
+    process.env = { ...originalEnv };
+    await resetCircuitBreakerForTesting();
   });
 
   // ---------------------------------------------------------------------------
@@ -78,36 +86,44 @@ describe('DevOps & Production Reliability Hardening Suite', () => {
         affectedRails: ['mpesa'],
       };
 
-      // When checking mpesa rail, should be active
-      const mpesaResult = await setCircuitBreakerState(mockState);
-      expect(mpesaResult.isPaused).toBe(true);
+      try {
+        // When checking mpesa rail, should be active
+        const mpesaResult = await setCircuitBreakerState(mockState);
+        expect(mpesaResult.isPaused).toBe(true);
 
-      const checkMpesa = await isCircuitBreakerActive('mpesa');
-      expect(checkMpesa.active).toBe(true);
-      expect(checkMpesa.reason).toBe('Safaricom Daraja Maintenance');
+        const checkMpesa = await isCircuitBreakerActive('mpesa');
+        expect(checkMpesa.active).toBe(true);
+        expect(checkMpesa.reason).toBe('Safaricom Daraja Maintenance');
 
-      // When checking minisend rail, should remain unpaused
-      const checkMinisend = await isCircuitBreakerActive('minisend');
-      expect(checkMinisend.active).toBe(false);
+        // When checking minisend rail, should remain unpaused
+        const checkMinisend = await isCircuitBreakerActive('minisend');
+        expect(checkMinisend.active).toBe(false);
+      } finally {
+        await resetCircuitBreakerForTesting();
+      }
     });
 
     it('utilizes in-memory caching to avoid database thrashing', async () => {
       delete process.env.EMERGENCY_CIRCUIT_BREAKER_ACTIVE;
 
-      await setCircuitBreakerState({
-        isPaused: true,
-        reason: 'Cached Emergency Freeze',
-        pausedAt: new Date().toISOString(),
-        pausedBy: 'admin',
-        affectedRails: ['mpesa', 'minisend', 'cron'],
-      });
+      try {
+        await setCircuitBreakerState({
+          isPaused: true,
+          reason: 'Cached Emergency Freeze',
+          pausedAt: new Date().toISOString(),
+          pausedBy: 'admin',
+          affectedRails: ['mpesa', 'minisend', 'cron'],
+        });
 
-      // Subsequent call should hit cache without network errors
-      const result1 = await isCircuitBreakerActive('cron');
-      const result2 = await isCircuitBreakerActive('cron');
+        // Subsequent call should hit cache without network errors
+        const result1 = await isCircuitBreakerActive('cron');
+        const result2 = await isCircuitBreakerActive('cron');
 
-      expect(result1.active).toBe(true);
-      expect(result2.active).toBe(true);
+        expect(result1.active).toBe(true);
+        expect(result2.active).toBe(true);
+      } finally {
+        await resetCircuitBreakerForTesting();
+      }
     });
   });
 
