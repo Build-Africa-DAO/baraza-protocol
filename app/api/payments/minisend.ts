@@ -9,6 +9,9 @@ interface MinisendRequest {
   communityId?: string;
   proposalId?: string;
   callerWallet?: string;
+  quoteId?: string;
+  quoteToken?: string;
+  expiresAt?: number;
   phone: string;
   usdcAmount: string;
   chain: 'stellar' | 'base' | 'polygon' | 'celo';
@@ -28,6 +31,7 @@ function bad(message: string, status = 400, details?: Record<string, unknown>): 
 }
 
 import { resolveCallerIdentity } from '../_lib/auth-session';
+import { computeHmacSha256, constantTimeCompare } from '../_lib/crypto';
 
 function supabaseHeaders(serviceKey: string): HeadersInit {
   return {
@@ -80,6 +84,25 @@ export default async function handler(req: Request): Promise<Response> {
   const currency = (body.currency || 'KES').toUpperCase();
   const estimatedFxRate = currency === 'KES' ? 130.50 : currency === 'UGX' ? 3700.00 : currency === 'GHS' ? 15.50 : 1500.00;
   const expectedFiatMinor = calculateExpectedFiat(body.usdcAmount, estimatedFxRate);
+
+  // 2.5 Cryptographic Payout Quote Verification (Invariant I-REC-3)
+  if (body.quoteToken) {
+    if (!body.expiresAt || typeof body.expiresAt !== 'number') {
+      return bad('expiresAt is required when quoteToken is provided.', 422);
+    }
+    if (Date.now() > body.expiresAt) {
+      return bad('Payout quote has expired. Please request a fresh quote.', 422, { quoteExpired: true });
+    }
+    const quoteSecret = process.env.PAYOUT_QUOTE_SECRET || process.env.MINISEND_API_KEY || 'default_payout_quote_secret_2026';
+    const grossKes = Math.round(Number(expectedFiatMinor) / 100);
+    const expectedMessage = `${body.quoteId || ''}:${body.communityId || ''}:${grossKes}:${Number(body.usdcAmount)}:${body.expiresAt}`;
+    const expectedSig = computeHmacSha256(quoteSecret, expectedMessage);
+    const altMessage = `${body.quoteId || ''}:${body.communityId || ''}:${grossKes}:${body.usdcAmount}:${body.expiresAt}`;
+    const altSig = computeHmacSha256(quoteSecret, altMessage);
+    if (!constantTimeCompare(body.quoteToken, expectedSig) && !constantTimeCompare(body.quoteToken, altSig)) {
+      return bad('Invalid payout quoteToken signature.', 401, { quoteInvalid: true });
+    }
+  }
 
   // 3. Pre-Flight Telco Ceiling Validation (Safaricom KES 250,000 Limit Guard)
   if (currency === 'KES' && !isWithinTelcoLimit(expectedFiatMinor)) {
