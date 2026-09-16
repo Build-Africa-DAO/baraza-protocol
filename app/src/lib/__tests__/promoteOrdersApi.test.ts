@@ -1,4 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+vi.mock('../../../api/_lib/circuit-breaker', () => ({
+  isCircuitBreakerActive: vi.fn().mockResolvedValue({ active: false, reason: '' }),
+}));
+
 import { GET as handler } from '../../../api/cron/promote-orders';
 
 function request(secret = 'cron-secret'): Request {

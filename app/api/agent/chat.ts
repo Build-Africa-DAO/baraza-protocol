@@ -8,6 +8,7 @@ import {
 } from '../../src/akili/council.js';
 import { resolveCallerIdentity } from '../_lib/auth-session.js';
 import { resolveClientIp } from '../_lib/crypto.js';
+import { checkDistributedRateLimit, clearRateLimiterStore } from '../_lib/rate-limiter.js';
 
 export const config = { runtime: 'nodejs' };
 
@@ -21,25 +22,8 @@ interface ChatRequest {
   activePrincipals?: ReadonlyArray<AkiliPrincipalName>;
 }
 
-// In-Memory Rate Limiter (Token-Bucket per Caller / Client IP)
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-
-function checkRateLimit(key: string, limit = 20, windowMs = 60_000): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(key);
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(key, { count: 1, resetAt: now + windowMs });
-    return true;
-  }
-  if (entry.count >= limit) {
-    return false;
-  }
-  entry.count++;
-  return true;
-}
-
 export function clearRateLimitStore(): void {
-  rateLimitMap.clear();
+  clearRateLimiterStore();
 }
 
 function getCorsHeaders(req: Request): Record<string, string> {
@@ -166,16 +150,28 @@ export async function POST(req: Request): Promise<Response> {
     );
   }
 
-  // 2. Enforce Token-Bucket Rate Limiting (NET-05)
+  // 2. Enforce Token-Bucket Rate Limiting (NET-05 / Distributed DDoS Defense)
   const clientIp = resolveClientIp(req);
   const rateLimitKey = caller.userProfileId || caller.privyDid || caller.walletAddress || clientIp;
-  if (!checkRateLimit(rateLimitKey, 20, 60_000)) {
+  const rateLimit = await checkDistributedRateLimit(rateLimitKey, 20, 60_000);
+  if (!rateLimit.allowed) {
     return new Response(
       JSON.stringify({
         error: 'rate_limited',
         message: 'Too many requests. Please slow down and try again shortly.',
+        retryAfterMs: Math.max(0, rateLimit.resetAt - Date.now()),
       }),
-      { status: 429, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          'Retry-After': String(Math.ceil((rateLimit.resetAt - Date.now()) / 1000)),
+          'X-RateLimit-Limit': '20',
+          'X-RateLimit-Remaining': String(rateLimit.remaining),
+          'X-RateLimit-Reset': String(rateLimit.resetAt),
+          ...corsHeaders,
+        },
+      }
     );
   }
 

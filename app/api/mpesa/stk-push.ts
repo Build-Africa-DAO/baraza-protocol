@@ -6,6 +6,7 @@ export const config = { runtime: 'nodejs' };
 
 import { getSupabaseAdmin, jsonResponse } from '../_lib/supabase';
 import { resolveClientIp } from '../_lib/crypto';
+import { isCircuitBreakerActive } from '../_lib/circuit-breaker';
 
 interface StkPushRequest {
   phone: string;
@@ -89,6 +90,19 @@ export default async function handler(req: Request): Promise<Response> {
 
   if (req.method !== 'POST') {
     return jsonResponse({ error: 'method_not_allowed' }, { status: 405 });
+  }
+
+  // 0. Global Emergency Freeze Circuit Breaker (Migration 042 & Master Runbook §8.1)
+  const cb = await isCircuitBreakerActive('mpesa');
+  if (cb.active) {
+    return jsonResponse(
+      {
+        error: 'service_temporarily_suspended',
+        message: `M-Pesa payment gateway is temporarily suspended: ${cb.reason}`,
+        circuitBreaker: true,
+      },
+      { status: 503 },
+    );
   }
 
   // 1. IP rate limiting

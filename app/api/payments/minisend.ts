@@ -32,6 +32,8 @@ function bad(message: string, status = 400, details?: Record<string, unknown>): 
 
 import { resolveCallerIdentity } from '../_lib/auth-session';
 import { computeHmacSha256, constantTimeCompare } from '../_lib/crypto';
+import { isCircuitBreakerActive } from '../_lib/circuit-breaker';
+import { alertDeadLetterQueue } from '../_lib/observability';
 
 function supabaseHeaders(serviceKey: string): HeadersInit {
   return {
@@ -43,6 +45,12 @@ function supabaseHeaders(serviceKey: string): HeadersInit {
 
 export default async function handler(req: Request): Promise<Response> {
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, { status: 405 });
+
+  // 0. Global Emergency Freeze Circuit Breaker (Migration 042 & Master Runbook §8.1)
+  const cb = await isCircuitBreakerActive('minisend');
+  if (cb.active) {
+    return bad(`Outbound disbursements are temporarily suspended: ${cb.reason}`, 503, { circuitBreaker: true });
+  }
 
   const secret = process.env.PAYMENT_ADAPTER_PROXY_SECRET;
   const authHeader = req.headers.get('authorization');
@@ -273,6 +281,17 @@ export default async function handler(req: Request): Promise<Response> {
     });
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Minisend off-ramp dispatch failed.';
+
+    // Dispatch critical incident alert to Dead-Letter Queue / Ops Slack (NIST SP 800-61 / Master Runbook §8.3)
+    await alertDeadLetterQueue({
+      orderId,
+      rail: 'minisend',
+      errorMessage,
+      severity: 'CRITICAL',
+      amount: body.usdcAmount,
+      currency: 'USDC',
+      metadata: { phone: normalizedPhone, chain: body.chain },
+    });
 
     // Mark order as failed in database if created
     if (supabaseUrl && serviceKey) {
