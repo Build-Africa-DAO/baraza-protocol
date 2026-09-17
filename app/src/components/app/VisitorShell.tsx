@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 
 const SLOTS: Array<{ to: string; label: string; icon: LucideIcon }> = [
   { to: '/groups', label: 'Browse', icon: Compass },
-  { to: '/create', label: 'Start', icon: PlusCircle },
+  { to: '/create', label: 'New Group', icon: PlusCircle },
   { to: '/help', label: 'Help', icon: HelpCircle },
 ];
 
@@ -89,7 +89,7 @@ export default function VisitorShell({ children }: { children: ReactNode }) {
                 to={to}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'flex min-h-11 flex-col items-center justify-center gap-1 rounded-full px-2 py-1.5 text-xs font-semibold',
+                  'flex min-h-12 flex-col items-center justify-center gap-1 rounded-full px-2 py-1.5 text-xs font-semibold',
                   active ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
                 )}
               >
@@ -102,7 +102,7 @@ export default function VisitorShell({ children }: { children: ReactNode }) {
             type="button"
             onClick={() => account.login()}
             disabled={!account.ready || !account.configured}
-            className="flex min-h-11 flex-col items-center justify-center gap-1 rounded-full px-2 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground disabled:opacity-50"
+            className="flex min-h-12 flex-col items-center justify-center gap-1 rounded-full px-2 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground disabled:opacity-50"
           >
             <LogIn className="h-5 w-5" aria-hidden />
             Sign In

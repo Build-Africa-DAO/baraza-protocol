@@ -28,6 +28,7 @@ import { useMyMemberships } from '@/hooks/useMyMemberships';
 import { useGroupMembership } from '@/hooks/useGroupMembership';
 import { getGroupIdFromPath, isGroupWorkspacePath } from '@/lib/postAuth';
 import { cn } from '@/lib/utils';
+import { prefetchProps } from '@/lib/routePrefetch';
 
 /**
  * The signed-in shell (§13.3). Two floating cards on a quiet background: a
@@ -47,7 +48,7 @@ function readCollapsed(): boolean {
 
 function navClass(active: boolean, collapsed = false) {
   return cn(
-    'flex min-h-11 items-center gap-2.5 rounded-full px-3 text-sm font-semibold transition-colors',
+    'flex min-h-12 items-center gap-2.5 rounded-full px-3 text-sm font-semibold transition-colors',
     collapsed && 'justify-center px-0',
     active ? 'text-primary' : 'text-muted-foreground hover:bg-chrome-foreground/[0.06] hover:text-chrome-foreground',
   );
@@ -139,7 +140,7 @@ function WorkspaceNav({ collapsed, onNavigate }: { collapsed: boolean; onNavigat
                       onClick={onNavigate}
                       aria-current={on ? 'page' : undefined}
                       className={cn(
-                        'flex min-h-10 items-center rounded-full px-3 text-sm font-semibold transition-colors',
+                        'flex min-h-12 items-center rounded-full px-3 text-sm font-semibold transition-colors',
                         on ? 'text-primary' : 'text-muted-foreground hover:bg-chrome-foreground/[0.06] hover:text-chrome-foreground',
                       )}
                     >
@@ -301,9 +302,10 @@ function AppBottomNav() {
       <Link
         key={to}
         to={to}
+        {...prefetchProps(to)}
         aria-current={active ? 'page' : undefined}
         className={cn(
-          'flex min-h-11 flex-col items-center justify-center gap-1 rounded-full px-2 py-1.5 text-xs font-semibold',
+          'flex min-h-12 flex-col items-center justify-center gap-1 rounded-full px-2 py-1.5 text-xs font-semibold',
           active ? 'text-primary' : 'text-muted-foreground',
         )}
       >
@@ -324,7 +326,7 @@ function AppBottomNav() {
     : [
         item('/home', 'Groups', Home, true),
         item('/groups', 'Browse', Compass),
-        item('/create', 'Start', PlusCircle),
+        item('/create', 'New Group', PlusCircle),
         item('/help', 'Help', HelpCircle),
         item('/account', 'Account', CircleUserRound),
       ];
@@ -380,7 +382,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
           <div className="fixed inset-0 z-50 lg:hidden">
             <button type="button" className="absolute inset-0 bg-black/30 backdrop-blur-md" aria-label="Close menu" onClick={() => setOpen(false)} />
             <aside className="relative m-3 h-[calc(100%-1.5rem)] w-[16.5rem] max-w-[85vw] rounded-chrome border border-border bg-chrome text-chrome-foreground shadow-[var(--shadow-deep)]">
-              <button type="button" className="btn-icon absolute right-3 top-3 z-10 h-11 w-11" aria-label="Close menu" onClick={() => setOpen(false)}>
+              <button type="button" className="btn-icon absolute right-3 top-3 z-10 h-12 w-12" aria-label="Close menu" onClick={() => setOpen(false)}>
                 <X className="h-5 w-5" />
               </button>
               <SidebarBody onNavigate={() => setOpen(false)} />
