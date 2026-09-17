@@ -55,7 +55,7 @@ export function usePretextMeasure(
   width: number,
   options: UsePretextMeasureOptions = {},
 ): PretextMeasureResult {
-  const { lineHeight = 20, ...prepareOptions } = options;
+  const { lineHeight = 20, whiteSpace, wordBreak, letterSpacing } = options;
   const supported = useMemo(() => isCanvasMeasurementSupported(), []);
 
   // Memoize the prepared handle so unicode segmentation and segment measurement
@@ -63,11 +63,11 @@ export function usePretextMeasure(
   const prepared = useMemo(() => {
     if (!supported || !text.trim()) return null;
     try {
-      return prepare(text, font, prepareOptions);
+      return prepare(text, font, { whiteSpace, wordBreak, letterSpacing });
     } catch {
       return null;
     }
-  }, [text, font, supported, JSON.stringify(prepareOptions)]);
+  }, [text, font, supported, whiteSpace, wordBreak, letterSpacing]);
 
   return useMemo(() => {
     if (!text.trim()) {
