@@ -62,11 +62,15 @@ export default async function handler(req: Request): Promise<Response> {
   }
   const option = rawOption as 'yes' | 'no' | 'abstain';
 
-  const weight = typeof body.weight === 'number' && body.weight > 0 ? body.weight : 1;
+  const isTestEnv = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true';
 
-  // Verify wallet proof if provided
+  // Verify wallet proof (Mandatory in production; validated in test if provided)
   const proof = getWalletProof(req, voter);
-  if (proof && !verifyWalletProof(proof, voter, 'vote')) {
+  if (proof) {
+    if (!verifyWalletProof(proof, voter, 'vote')) {
+      return json({ error: 'unauthorized', message: 'Valid voter wallet signature required' }, { status: 401 });
+    }
+  } else if (!isTestEnv) {
     return json({ error: 'unauthorized', message: 'Valid voter wallet signature required' }, { status: 401 });
   }
 
@@ -74,12 +78,64 @@ export default async function handler(req: Request): Promise<Response> {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   let resolvedMemberId = body.memberId || voter;
+  let effectiveWeight = 1;
 
-  if (supabaseUrl && serviceKey) {
-    try {
-      // 1. Fetch proposal to verify status, community, and deadline
-      const propRes = await fetch(
-        `${supabaseUrl}/rest/v1/proposals?id=eq.${encodeURIComponent(proposalId)}&select=*`,
+  if (!supabaseUrl || !serviceKey) {
+    if (isTestEnv) {
+      const voteId = `vote_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      return json(
+        {
+          ok: true,
+          voteId,
+          proposalId,
+          voter,
+          memberId: resolvedMemberId,
+          option,
+          weight: effectiveWeight,
+          recordedAt: new Date().toISOString(),
+        },
+        { status: 200 },
+      );
+    }
+    return json({ error: 'db_not_configured', message: 'Database persistence is required to record votes.' }, { status: 503 });
+  }
+
+  try {
+    // 1. Fetch proposal to verify status, community, and deadline
+    const propRes = await fetch(
+      `${supabaseUrl}/rest/v1/proposals?id=eq.${encodeURIComponent(proposalId)}&select=*`,
+      {
+        headers: {
+          apikey: serviceKey,
+          Authorization: `Bearer ${serviceKey}`,
+        },
+      },
+    );
+    if (!propRes.ok) {
+      return json({ error: 'proposal_fetch_failed', message: await propRes.text() }, { status: propRes.status });
+    }
+    const props = await propRes.json();
+    if (!Array.isArray(props) || props.length === 0) {
+      return json({ error: 'not_found', message: 'Proposal not found' }, { status: 404 });
+    }
+
+    const proposal = props[0];
+    if (proposal.status !== 'active' && proposal.status !== 'tied_extended') {
+      return json({ error: 'proposal_not_active', message: `Proposal is ${proposal.status}` }, { status: 422 });
+    }
+
+    if (proposal.ends_at) {
+      const now = Date.now();
+      const deadline = new Date(proposal.ends_at).getTime();
+      if (!isNaN(deadline) && now > deadline) {
+        return json({ error: 'voting_ended', message: 'Proposal voting period has ended' }, { status: 422 });
+      }
+    }
+
+    // 2. Resolve canonical member_id, enforce active standing, and derive weight strictly from membership
+    if (proposal.community_id) {
+      const memRes = await fetch(
+        `${supabaseUrl}/rest/v1/memberships?community_id=eq.${encodeURIComponent(proposal.community_id)}&or=(wallet_address.eq.${encodeURIComponent(voter)},member_id.eq.${encodeURIComponent(voter)})&select=member_id,status,voting_weight&limit=1`,
         {
           headers: {
             apikey: serviceKey,
@@ -87,49 +143,21 @@ export default async function handler(req: Request): Promise<Response> {
           },
         },
       );
-      if (!propRes.ok) {
-        return json({ error: 'proposal_fetch_failed', message: await propRes.text() }, { status: propRes.status });
+      if (!memRes.ok) {
+        return json({ error: 'membership_fetch_failed', message: 'Failed to verify membership standing.' }, { status: 500 });
       }
-      const props = await propRes.json();
-      if (!Array.isArray(props) || props.length === 0) {
-        return json({ error: 'not_found', message: 'Proposal not found' }, { status: 404 });
+      const mems = await memRes.json();
+      if (!Array.isArray(mems) || mems.length === 0) {
+        return json({ error: 'not_a_member', message: 'Voter is not an active member of this community.' }, { status: 403 });
       }
-
-      const proposal = props[0];
-      if (proposal.status !== 'active' && proposal.status !== 'tied_extended') {
-        return json({ error: 'proposal_not_active', message: `Proposal is ${proposal.status}` }, { status: 422 });
+      const mem = mems[0];
+      if (mem.status && mem.status.toUpperCase() !== 'ACTIVE') {
+        return json({ error: 'inactive_member', message: 'Member is not active in this community' }, { status: 403 });
       }
-
-      if (proposal.ends_at) {
-        const now = Date.now();
-        const deadline = new Date(proposal.ends_at).getTime();
-        if (!isNaN(deadline) && now > deadline) {
-          return json({ error: 'voting_ended', message: 'Proposal voting period has ended' }, { status: 422 });
-        }
-      }
-
-      // 2. Resolve canonical member_id and check active membership standing
-      if (proposal.community_id) {
-        const memRes = await fetch(
-          `${supabaseUrl}/rest/v1/memberships?community_id=eq.${encodeURIComponent(proposal.community_id)}&or=(wallet_address.eq.${encodeURIComponent(voter)},member_id.eq.${encodeURIComponent(voter)})&select=member_id,status,voting_weight&limit=1`,
-          {
-            headers: {
-              apikey: serviceKey,
-              Authorization: `Bearer ${serviceKey}`,
-            },
-          },
-        );
-        if (memRes.ok) {
-          const mems = await memRes.json();
-          if (Array.isArray(mems) && mems.length > 0) {
-            const mem = mems[0];
-            if (mem.status && mem.status.toUpperCase() !== 'ACTIVE') {
-              return json({ error: 'inactive_member', message: 'Member is not active in this community' }, { status: 403 });
-            }
-            resolvedMemberId = mem.member_id;
-          }
-        }
-      }
+      resolvedMemberId = mem.member_id;
+      // Derive weight strictly from member's recorded voting weight
+      effectiveWeight = Number(mem.voting_weight || 1);
+    }
 
       // 3. Check for duplicate vote (Application-level pre-check)
       const voteCheckRes = await fetch(
@@ -162,7 +190,7 @@ export default async function handler(req: Request): Promise<Response> {
           proposal_id: proposalId,
           member_id: resolvedMemberId,
           option,
-          weight,
+          weight: effectiveWeight,
           cast_at: new Date().toISOString(),
         }),
       });
@@ -184,7 +212,7 @@ export default async function handler(req: Request): Promise<Response> {
           voter,
           memberId: resolvedMemberId,
           option,
-          weight,
+          weight: effectiveWeight,
           recordedAt: new Date().toISOString(),
         },
         { status: 200 },
@@ -193,22 +221,6 @@ export default async function handler(req: Request): Promise<Response> {
       const msg = err instanceof Error ? err.message : String(err);
       return json({ error: 'internal_error', message: msg }, { status: 500 });
     }
-  }
-
-  const voteId = `vote_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-  return json(
-    {
-      ok: true,
-      voteId,
-      proposalId,
-      voter,
-      memberId: resolvedMemberId,
-      option,
-      weight,
-      recordedAt: new Date().toISOString(),
-    },
-    { status: 200 },
-  );
 }
 
 export { handler as POST, handler as OPTIONS };

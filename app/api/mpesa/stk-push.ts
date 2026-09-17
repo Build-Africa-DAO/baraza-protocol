@@ -6,6 +6,7 @@ export const config = { runtime: 'nodejs' };
 
 import { getSupabaseAdmin, jsonResponse } from '../_lib/supabase';
 import { resolveClientIp } from '../_lib/crypto';
+import { isCircuitBreakerActive } from '../_lib/circuit-breaker';
 
 interface StkPushRequest {
   phone: string;
@@ -91,6 +92,19 @@ export default async function handler(req: Request): Promise<Response> {
     return jsonResponse({ error: 'method_not_allowed' }, { status: 405 });
   }
 
+  // 0. Global Emergency Freeze Circuit Breaker (Migration 042 & Master Runbook §8.1)
+  const cb = await isCircuitBreakerActive('mpesa');
+  if (cb.active) {
+    return jsonResponse(
+      {
+        error: 'service_temporarily_suspended',
+        message: `M-Pesa payment gateway is temporarily suspended: ${cb.reason}`,
+        circuitBreaker: true,
+      },
+      { status: 503 },
+    );
+  }
+
   // 1. IP rate limiting
   const clientIp = resolveClientIp(req);
   if (!checkIpRateLimit(clientIp)) {
@@ -156,33 +170,43 @@ export default async function handler(req: Request): Promise<Response> {
   const checkoutRequestId = `ws_CO_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const merchantRequestId = `REQ_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
 
-  // Test mode or unconfigured credentials mock branch (Deterministic contract adherence)
-  if (isTestEnv || !consumerKey || !consumerSecret) {
-    const supabase = getSupabaseAdmin();
-    if (orderId) {
-      await supabase
-        .from('payment_orders')
-        .update({
+  // Production vs Test Gating: Fail-closed if credentials absent in production
+  if (!consumerKey || !consumerSecret) {
+    if (isTestEnv) {
+      const supabase = getSupabaseAdmin();
+      if (orderId) {
+        await supabase
+          .from('payment_orders')
+          .update({
+            status: 'PAYMENT_REQUESTED',
+            provider: 'mpesa',
+            provider_reference: checkoutRequestId,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('order_id', orderId);
+      }
+
+      return jsonResponse(
+        {
+          ok: true,
+          checkoutRequestId,
+          merchantRequestId,
+          customerMessage: 'Success. Request accepted for processing',
           status: 'PAYMENT_REQUESTED',
-          provider: 'mpesa',
-          provider_reference: checkoutRequestId,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('order_id', orderId);
+          phone: normalizedPhone,
+          amount,
+          communityId,
+        },
+        { status: 200 },
+      );
     }
 
     return jsonResponse(
       {
-        ok: true,
-        checkoutRequestId,
-        merchantRequestId,
-        customerMessage: 'Success. Request accepted for processing',
-        status: 'PAYMENT_REQUESTED',
-        phone: normalizedPhone,
-        amount,
-        communityId,
+        error: 'gateway_not_configured',
+        message: 'Safaricom Daraja M-Pesa gateway credentials are not configured.',
       },
-      { status: 200 },
+      { status: 503 },
     );
   }
 

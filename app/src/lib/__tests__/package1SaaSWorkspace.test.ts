@@ -46,18 +46,19 @@ describe('Package 1: SaaS Community Invites, Officer Governance & Push Subscript
   const supabase = getSupabaseAdmin();
   const originalEnv = { ...process.env };
 
-  // Test entity IDs (unique per run)
+  // Test entity IDs (unique per run with random nonce to prevent parallel collisions)
   const ts = Date.now();
-  const communityA = `pkg1_chama_a_${ts}`;
-  const communityB = `pkg1_sacco_b_${ts}`;
-  const pausedCommunity = `pkg1_paused_${ts}`;
+  const nonce = Array.from(crypto.getRandomValues(new Uint8Array(4))).map(b => b.toString(16).padStart(2, '0')).join('');
+  const communityA = `pkg1_a_${ts}_${nonce}`;
+  const communityB = `pkg1_b_${ts}_${nonce}`;
+  const pausedCommunity = `pkg1_p_${ts}_${nonce}`;
 
-  const founderWallet = `GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7P1_${ts}`;
-  const adminWallet = `SolanaAdmin_pkg1_${ts}`;
-  const memberWallet = `SolanaMember_pkg1_${ts}`;
-  const joinerWallet = `SolanaJoiner_pkg1_${ts}`;
-  const strangerWallet = `SolanaStranger_pkg1_${ts}`;
-  const privyUserDid = `did:privy:cm_pkg1_test_${ts}`;
+  const founderWallet = `Gfnd_${ts}_${nonce}`;
+  const adminWallet = `Gadm_${ts}_${nonce}`;
+  const memberWallet = `Gmem_${ts}_${nonce}`;
+  const joinerWallet = `Gjnr_${ts}_${nonce}`;
+  const strangerWallet = `Gstr_${ts}_${nonce}`;
+  const privyUserDid = `did:privy:cm_p1_${ts}_${nonce}`;
 
   // Stored invite codes (populated during tests)
   let generatedInviteCode = '';
@@ -109,49 +110,49 @@ describe('Package 1: SaaS Community Invites, Officer Governance & Push Subscript
     // Seed members
     const { error: memErr } = await supabase.from('members').insert([
       {
-        member_id: `mem_founder_pkg1_${ts}`,
+        member_id: `mem_fnd_${nonce}`,
         community_id: communityA,
         wallet_address: founderWallet,
-        auth_user_id: `auth_founder_pkg1_${ts}`,
-        phone_hash: `pkg1_founder_hash_${ts}`,
+        auth_user_id: `auth_fnd_${nonce}`,
+        phone_hash: `ph_fnd_${nonce}`,
         role: 'founder',
         activation_status: 'active',
       },
       {
-        member_id: `mem_admin_pkg1_${ts}`,
+        member_id: `mem_adm_${nonce}`,
         community_id: communityA,
         wallet_address: adminWallet,
-        auth_user_id: `auth_admin_pkg1_${ts}`,
-        phone_hash: `pkg1_admin_hash_${ts}`,
+        auth_user_id: `auth_adm_${nonce}`,
+        phone_hash: `ph_adm_${nonce}`,
         role: 'admin',
         activation_status: 'active',
       },
       {
-        member_id: `mem_member_pkg1_${ts}`,
+        member_id: `mem_mbr_${nonce}`,
         community_id: communityA,
         wallet_address: memberWallet,
-        auth_user_id: `auth_member_pkg1_${ts}`,
-        phone_hash: `pkg1_member_hash_${ts}`,
+        auth_user_id: `auth_mbr_${nonce}`,
+        phone_hash: `ph_mbr_${nonce}`,
         role: 'member',
         activation_status: 'active',
       },
       // SACCO founder for governance tests
       {
-        member_id: `mem_sacco_founder_${ts}`,
+        member_id: `mem_sfnd_${nonce}`,
         community_id: communityB,
         wallet_address: founderWallet,
-        auth_user_id: `auth_sacco_founder_${ts}`,
-        phone_hash: `pkg1_sacco_founder_hash_${ts}`,
+        auth_user_id: `auth_sfnd_${nonce}`,
+        phone_hash: `ph_sfnd_${nonce}`,
         role: 'founder',
         activation_status: 'active',
       },
       // Paused community founder for TC-08
       {
-        member_id: `mem_paused_founder_${ts}`,
+        member_id: `mem_pfnd_${nonce}`,
         community_id: pausedCommunity,
         wallet_address: founderWallet,
-        auth_user_id: `auth_paused_founder_${ts}`,
-        phone_hash: `pkg1_paused_founder_hash_${ts}`,
+        auth_user_id: `auth_pfnd_${nonce}`,
+        phone_hash: `ph_pfnd_${nonce}`,
         role: 'founder',
         activation_status: 'active',
       },
@@ -172,7 +173,7 @@ describe('Package 1: SaaS Community Invites, Officer Governance & Push Subscript
 
     // Seed an invite for paused community (TC-08)
     await supabase.from('community_invites').insert({
-      code: `paused_inv_${ts}`,
+      code: `paused_inv_${nonce}`,
       community_id: pausedCommunity,
       created_by: founderWallet,
       max_uses: 100,
@@ -182,7 +183,7 @@ describe('Package 1: SaaS Community Invites, Officer Governance & Push Subscript
 
     // Seed an expired invite (TC-05)
     await supabase.from('community_invites').insert({
-      code: `expired_inv_${ts}`,
+      code: `expired_inv_${nonce}`,
       community_id: communityA,
       created_by: founderWallet,
       max_uses: 100,
@@ -194,7 +195,7 @@ describe('Package 1: SaaS Community Invites, Officer Governance & Push Subscript
   afterAll(async () => {
     // Cleanup: CASCADE deletes members, invites, audit logs
     await supabase.from('user_push_subscriptions').delete().or(
-      `wallet_address.like.%pkg1_${ts}%,privy_did.eq.${privyUserDid}`
+      `wallet_address.like.%${ts}_${nonce}%,privy_did.eq.${privyUserDid}`
     );
     await supabase.from('communities').delete().in('id', [communityA, communityB, pausedCommunity]);
     process.env = originalEnv;
@@ -246,7 +247,7 @@ describe('Package 1: SaaS Community Invites, Officer Governance & Push Subscript
     expect(Array.isArray(body.invites)).toBe(true);
     expect(body.invites.length).toBeGreaterThanOrEqual(1);
     // Expired invites should not appear
-    const expiredInList = body.invites.find((i: { code: string }) => i.code === `expired_inv_${ts}`);
+    const expiredInList = body.invites.find((i: { code: string }) => i.code === `expired_inv_${nonce}`);
     expect(expiredInList).toBeUndefined();
   });
 
@@ -273,7 +274,7 @@ describe('Package 1: SaaS Community Invites, Officer Governance & Push Subscript
     const req = authedRequest('http://localhost:3000/api/communities/invites/accept', {
       method: 'POST',
       wallet: strangerWallet,
-      body: JSON.stringify({ code: `expired_inv_${ts}` }),
+      body: JSON.stringify({ code: `expired_inv_${nonce}` }),
     });
     const res = await handleAcceptInvite(req);
     const body = await res.json();
@@ -284,7 +285,7 @@ describe('Package 1: SaaS Community Invites, Officer Governance & Push Subscript
 
   it('TC-INV-06: High-Concurrency Burst (15 on max=10) — I-INV-1 Row Lock', async () => {
     // Fire 15 concurrent acceptance promises against a max=10 invite
-    const workerWallets = Array.from({ length: 15 }, (_, i) => `ConcurrentWorker_${i}_${ts}`);
+    const workerWallets = Array.from({ length: 15 }, (_, i) => `CW_${i}_${nonce}`);
 
     // Ensure these workers have unique auth_user_ids and unique client IPs
     const promises = workerWallets.map((wallet, idx) => {
@@ -336,7 +337,7 @@ describe('Package 1: SaaS Community Invites, Officer Governance & Push Subscript
     const req = authedRequest('http://localhost:3000/api/communities/invites/accept', {
       method: 'POST',
       wallet: strangerWallet,
-      body: JSON.stringify({ code: `paused_inv_${ts}` }),
+      body: JSON.stringify({ code: `paused_inv_${nonce}` }),
     });
     const res = await handleAcceptInvite(req);
     expect(res.status).toBe(403);
@@ -425,8 +426,8 @@ describe('Package 1: SaaS Community Invites, Officer Governance & Push Subscript
 
   it('TC-ROLE-05: Sole Admin Self-Demotion Block (I-ROLE-2 app-level)', async () => {
     // Create a community with a single admin for sole-admin testing
-    const soleAdminComm = `pkg1_sole_${ts}`;
-    const soleAdminWallet = `SoleAdmin_pkg1_${ts}`;
+    const soleAdminComm = `pkg1_sole_${nonce}`;
+    const soleAdminWallet = `SoleAdm_${nonce}`;
     await supabase.from('communities').insert({
       id: soleAdminComm,
       name: 'Sole Admin Community',
@@ -438,11 +439,11 @@ describe('Package 1: SaaS Community Invites, Officer Governance & Push Subscript
       status: 'active',
     });
     await supabase.from('members').insert({
-      member_id: `mem_sole_${ts}`,
+      member_id: `mem_sole_${nonce}`,
       community_id: soleAdminComm,
       wallet_address: soleAdminWallet,
-      auth_user_id: `auth_sole_${ts}`,
-      phone_hash: `pkg1_sole_hash_${ts}`,
+      auth_user_id: `auth_sole_${nonce}`,
+      phone_hash: `ph_sole_${nonce}`,
       role: 'founder',
       activation_status: 'active',
     });
@@ -468,9 +469,9 @@ describe('Package 1: SaaS Community Invites, Officer Governance & Push Subscript
 
   it('TC-ROLE-06: Sole Admin Direct Deletion Block (I-ROLE-2 trigger guard)', async () => {
     // Direct SQL DELETE against sole admin should be blocked by trg_sole_admin_guard
-    const trigComm = `pkg1_trig_${ts}`;
-    const trigWallet = `TrigAdmin_pkg1_${ts}`;
-    const trigMemberId = `mem_trig_${ts}`;
+    const trigComm = `pkg1_trig_${nonce}`;
+    const trigWallet = `TrigAdm_${nonce}`;
+    const trigMemberId = `mem_trig_${nonce}`;
     await supabase.from('communities').insert({
       id: trigComm,
       name: 'Trigger Test Community',
@@ -485,8 +486,8 @@ describe('Package 1: SaaS Community Invites, Officer Governance & Push Subscript
       member_id: trigMemberId,
       community_id: trigComm,
       wallet_address: trigWallet,
-      auth_user_id: `auth_trig_${ts}`,
-      phone_hash: `pkg1_trig_hash_${ts}`,
+      auth_user_id: `auth_trig_${nonce}`,
+      phone_hash: `ph_trig_${nonce}`,
       role: 'admin',
       activation_status: 'active',
     });

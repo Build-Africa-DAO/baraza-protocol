@@ -58,9 +58,15 @@ export default async function handler(req: Request): Promise<Response> {
   if (!proposalId?.trim()) return bad('proposalId is required');
   if (!executorWallet?.trim()) return bad('executorWallet is required');
 
-  // Verify wallet proof if provided
+  const isTestEnv = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true';
+
+  // Verify wallet proof (Mandatory in production; validated in test if provided)
   const proof = getWalletProof(req, executorWallet);
-  if (proof && !verifyWalletProof(proof, executorWallet, 'execute-proposal')) {
+  if (proof) {
+    if (!verifyWalletProof(proof, executorWallet, 'execute-proposal')) {
+      return json({ error: 'unauthorized', message: 'Valid executor wallet signature required' }, { status: 401 });
+    }
+  } else if (!isTestEnv) {
     return json({ error: 'unauthorized', message: 'Valid executor wallet signature required' }, { status: 401 });
   }
 
@@ -68,14 +74,19 @@ export default async function handler(req: Request): Promise<Response> {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !serviceKey) {
-    // Dev fallback
-    return json({
-      ok: true,
-      proposalId,
-      status: 'executed',
-      executionStatus: 'executed',
-      message: 'Proposal marked as executed (mock)',
-    });
+    if (isTestEnv) {
+      return json({
+        ok: true,
+        proposalId,
+        status: 'executed',
+        executionStatus: 'executed',
+        message: 'Proposal marked as executed (test)',
+      });
+    }
+    return json(
+      { error: 'db_not_configured', message: 'Database persistence is required for proposal execution.' },
+      { status: 503 },
+    );
   }
 
   try {
@@ -180,8 +191,8 @@ export default async function handler(req: Request): Promise<Response> {
             community_id: proposal.community_id,
             reference_type: 'governance_payout',
             reference_id: proposalId,
-            debit_account: 'Community Treasury',
-            credit_account: 'Escrow Clearing',
+            debit_account: 'baraza:community_treasury',
+            credit_account: 'baraza:escrow_clearing',
             amount_minor: fundingAmountMinor,
             currency: 'KES',
             memo: `Payout for proposal: ${proposal.title}`,

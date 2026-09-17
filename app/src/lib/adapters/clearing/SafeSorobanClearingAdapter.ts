@@ -22,6 +22,14 @@ export class SafeSorobanClearingAdapter implements IClearingRailAdapter {
       networkPassphrase || process.env.STELLAR_NETWORK_PASSPHRASE || 'Test SDF Network ; September 2015';
   }
 
+  private isTestOrSandbox(): boolean {
+    return (
+      process.env.NODE_ENV === 'test' ||
+      process.env.VITEST === 'true' ||
+      this.networkPassphrase.includes('Test')
+    );
+  }
+
   public async clearInbound(intent: ClearingIntent): Promise<ClearingResult> {
     if (intent.amountMinor <= 0n) {
       return {
@@ -32,6 +40,19 @@ export class SafeSorobanClearingAdapter implements IClearingRailAdapter {
         feeMinor: 0n,
         status: 'FAILED',
         failureReason: 'Amount must be positive non-zero minor units',
+        timestamp: Date.now(),
+      };
+    }
+
+    if (!this.isTestOrSandbox()) {
+      return {
+        success: false,
+        intentId: intent.intentId,
+        railType: this.railType,
+        clearedAmountMinor: 0n,
+        feeMinor: 0n,
+        status: 'FAILED',
+        failureReason: 'Safe Soroban contract invocation is not configured on production network',
         timestamp: Date.now(),
       };
     }
@@ -76,6 +97,15 @@ export class SafeSorobanClearingAdapter implements IClearingRailAdapter {
       };
     }
 
+    if (!this.isTestOrSandbox()) {
+      return {
+        success: false,
+        disbursementId: intent.disbursementId,
+        settledAt: Date.now(),
+        failureReason: 'Safe Soroban disbursement contract is not configured on production network',
+      };
+    }
+
     const txHash = `soroban_disb_${Date.now().toString(16)}_${Math.random().toString(36).substring(2, 8)}`;
     return {
       success: true,
@@ -88,6 +118,9 @@ export class SafeSorobanClearingAdapter implements IClearingRailAdapter {
   public async getBalance(accountAddress: string, _currency: string): Promise<bigint> {
     if (!accountAddress || accountAddress.length < 10) {
       throw new Error(`Invalid Soroban contract/account address: ${accountAddress}`);
+    }
+    if (!this.isTestOrSandbox()) {
+      throw new Error('Safe Soroban RPC client not configured on production network');
     }
     // Simulation / RPC balance resolution
     return 1000000000n; // 1,000.0000000 XLM or equivalent in stroops
