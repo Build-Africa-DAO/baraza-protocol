@@ -1,4 +1,4 @@
-import { defineConfig, type Plugin } from 'vite';
+import { defineConfig, type Plugin, type Rollup } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
@@ -95,7 +95,7 @@ function routePreloadHeaders(): Plugin {
       outDir = config.build.outDir;
     },
     generateBundle(_options, bundle) {
-      type Chunk = { type: 'chunk'; name: string; fileName: string; imports: string[]; isEntry: boolean };
+      type Chunk = Rollup.OutputChunk;
       const chunks = Object.values(bundle).filter((item): item is Chunk => item.type === 'chunk');
       const byFile = new Map(chunks.map((chunk) => [chunk.fileName, chunk]));
       const closure = (start: Chunk): Set<string> => {
