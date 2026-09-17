@@ -10,6 +10,9 @@ import { useAccount } from '@/contexts/AccountContext';
 import { useCreateDecision } from '@/hooks/useBarazaData';
 import { groupCurrency } from '@/lib/money';
 import { rulesSentence } from '@/lib/voteCopy';
+import { formatMoney } from '@/lib/money';
+import { renderMarkdownLite } from '@/lib/markdownLite';
+import { StatusChip } from '@/components/ui/status-chip';
 import type { Community } from '@/lib/constants';
 
 /**
@@ -35,7 +38,8 @@ export default function CreateDecision() {
   );
 }
 
-const DAY_OPTIONS = [3, 7, 14, 30];
+/** 1 to 30 days: the backend window is at least 24 hours and at most 30 days. */
+const DAY_OPTIONS = [1, 3, 7, 14, 30];
 
 function ProposeForm({ community, isMember, pending }: { community: Community; isMember: boolean; pending: boolean }) {
   const navigate = useNavigate();
@@ -46,6 +50,7 @@ function ProposeForm({ community, isMember, pending }: { community: Community; i
   const [purpose, setPurpose] = useState('');
   const [amount, setAmount] = useState('');
   const [days, setDays] = useState(String(community.votingPeriodDays ?? 7));
+  const [preview, setPreview] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -72,7 +77,18 @@ function ProposeForm({ community, isMember, pending }: { community: Community; i
 
   const amountNumber = Number(amount);
   const amountOk = amount.trim() !== '' && Number.isFinite(amountNumber) && amountNumber > 0;
-  const valid = title.trim().length > 0 && purpose.trim().length > 0 && amountOk;
+  const daysNumber = Number(days);
+  const daysOk = Number.isFinite(daysNumber) && daysNumber >= 1 && daysNumber <= 30;
+  const valid = title.trim().length > 0 && purpose.trim().length > 0 && amountOk && daysOk;
+  // What the group can send now, when the backend shares it; otherwise the pooled total.
+  const availableMinor =
+    typeof community.liquidVaultBalanceMinor === 'number'
+      ? community.liquidVaultBalanceMinor
+      : typeof community.fundBalance === 'number'
+        ? Math.round(community.fundBalance * 100)
+        : null;
+  const requestedMinor = amountOk ? Math.round(amountNumber * 100) : 0;
+  const exceedsAvailable = availableMinor !== null && requestedMinor > availableMinor;
 
   async function publish(event: React.FormEvent) {
     event.preventDefault();
@@ -115,15 +131,35 @@ function ProposeForm({ community, isMember, pending }: { community: Community; i
             required
           />
         </Field>
-        <Field label="What This Is For" htmlFor="propose-purpose">
-          <Textarea
-            id="propose-purpose"
-            value={purpose}
-            onChange={(event) => setPurpose(event.target.value)}
-            placeholder="Why the group should spend this, and what members get."
-            maxLength={2000}
-            required
-          />
+        <Field
+          label="What This Is For"
+          htmlFor="propose-purpose"
+          help={preview ? 'This is how members will read it.' : 'Plain text. Use a blank line between paragraphs, “- ” for a list, **bold** for emphasis.'}
+        >
+          <div className="mb-2 flex justify-end">
+            <button
+              type="button"
+              onClick={() => setPreview((value) => !value)}
+              aria-pressed={preview}
+              className="min-h-12 rounded-full border border-border px-4 text-xs font-semibold text-muted-foreground hover:border-foreground/40 hover:text-foreground"
+            >
+              {preview ? 'Edit Text' : 'Preview'}
+            </button>
+          </div>
+          {preview ? (
+            <div className="min-h-[7.5rem] space-y-3 rounded-chrome border border-border bg-surface px-4 py-3 text-sm leading-6" data-testid="purpose-preview">
+              {purpose.trim() ? renderMarkdownLite(purpose) : <p className="text-muted-foreground">Nothing written yet.</p>}
+            </div>
+          ) : (
+            <Textarea
+              id="propose-purpose"
+              value={purpose}
+              onChange={(event) => setPurpose(event.target.value)}
+              placeholder="Why the group should spend this, and what members get."
+              maxLength={2000}
+              required
+            />
+          )}
         </Field>
         <Field
           label="Amount"
@@ -141,11 +177,19 @@ function ProposeForm({ community, isMember, pending }: { community: Community; i
             required
           />
         </Field>
-        <Field label="Days to Vote" htmlFor="propose-days">
+        {exceedsAvailable && availableMinor !== null ? (
+          <div className="flex flex-col gap-2 rounded-chrome border border-pending bg-pending/10 p-3 text-sm" role="status" data-testid="budget-guard">
+            <StatusChip kind="pending" label="Above What Is Available" />
+            <p className="text-muted-foreground">
+              {formatMoney(requestedMinor, currency)} is more than the {formatMoney(availableMinor, currency)} the group can send today. If members approve, the send waits until dues collection covers it.
+            </p>
+          </div>
+        ) : null}
+        <Field label="Days to Vote" htmlFor="propose-days" help="At least one day, at most thirty.">
           <Select id="propose-days" value={days} onChange={(event) => setDays(event.target.value)}>
             {DAY_OPTIONS.map((option) => (
               <option key={option} value={option}>
-                {option} days
+                {option === 1 ? '1 day' : `${option} days`}
               </option>
             ))}
           </Select>

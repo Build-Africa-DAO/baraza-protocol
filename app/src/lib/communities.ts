@@ -46,6 +46,8 @@ export type CommunityRow = {
   memberCount?: number | null;
   fund_balance?: number | null;
   fundBalance?: number | null;
+  liquid_vault_balance_minor?: number | null;
+  encumbered_balance_minor?: number | null;
   active_decisions?: number | null;
   activeDecisions?: number | null;
   created_at?: string | null;
@@ -178,6 +180,8 @@ function communityFromRow(row: CommunityRow): Community {
     currency: row.currency ?? undefined,
     memberCount: row.member_count ?? row.memberCount ?? 0,
     fundBalance: row.fund_balance ?? row.fundBalance ?? 0,
+    liquidVaultBalanceMinor: typeof row.liquid_vault_balance_minor === 'number' ? row.liquid_vault_balance_minor : null,
+    encumberedBalanceMinor: typeof row.encumbered_balance_minor === 'number' ? row.encumbered_balance_minor : null,
     activeDecisions: row.activeDecisions ?? 0,
     createdAt: row.created_at ?? row.createdAt ?? new Date().toISOString(),
     image: initials(row.name),

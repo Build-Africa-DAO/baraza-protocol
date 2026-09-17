@@ -7,6 +7,7 @@ import { AmountBlock } from '@/components/ui/amount-block';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Field, MoneyField, PhoneField } from '@/components/ui/field';
+import { FilterChips } from '@/components/ui/filter-chips';
 import { InlineError } from '@/components/ui/inline-error';
 import { Sheet } from '@/components/ui/sheet';
 import { SkeletonList } from '@/components/ui/skeletons';
@@ -59,10 +60,8 @@ function MoneyPanel({ community, isOfficer, frozen }: { community: Community; is
       <section className="baraza-card p-5 md:p-6" aria-label="Balances">
         <div className="grid gap-4 sm:grid-cols-3">
           <AmountBlock label="Total" amountMajor={hasBalance ? community.fundBalance : null} currency={currency} />
-          {/* The statement is one pooled figure today; reserved and available
-              stay honest until the server splits them. */}
-          <AmountBlock label="Reserved" amountMajor={null} currency={currency} size="md" />
-          <AmountBlock label="Available" amountMajor={null} currency={currency} size="md" />
+          <AmountBlock label="Reserved" amountMinor={community.encumberedBalanceMinor ?? null} currency={currency} size="md" />
+          <AmountBlock label="Available" amountMinor={community.liquidVaultBalanceMinor ?? null} currency={currency} size="md" />
         </div>
       </section>
 
@@ -150,14 +149,43 @@ function Trail({ communityId, isOfficer }: { communityId: string; isOfficer: boo
   );
 }
 
+type StatementRange = 'all' | 'month' | 'quarter' | 'year';
+
+const RANGE_OPTIONS: { key: StatementRange; label: string }[] = [
+  { key: 'all', label: 'All Time' },
+  { key: 'month', label: 'This Month' },
+  { key: 'quarter', label: 'Last Quarter' },
+  { key: 'year', label: 'This Year' },
+];
+
+/** Start and end dates (YYYY-MM-DD) for a statement range, in the browser's local calendar. */
+export function statementRangeDates(range: StatementRange, now: Date = new Date()): { startDate?: string; endDate?: string } {
+  const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const endDate = iso(now);
+  if (range === 'month') return { startDate: iso(new Date(now.getFullYear(), now.getMonth(), 1)), endDate };
+  if (range === 'year') return { startDate: iso(new Date(now.getFullYear(), 0, 1)), endDate };
+  if (range === 'quarter') {
+    const quarterStart = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+    const previousStart = new Date(quarterStart.getFullYear(), quarterStart.getMonth() - 3, 1);
+    const previousEnd = new Date(quarterStart.getFullYear(), quarterStart.getMonth(), 0);
+    return { startDate: iso(previousStart), endDate: iso(previousEnd) };
+  }
+  return {};
+}
+
 function ExportStatement({ communityId }: { communityId: string }) {
   const { toast } = useToast();
   const [busy, setBusy] = useState(false);
+  const [range, setRange] = useState<StatementRange>('all');
 
   async function run() {
     setBusy(true);
     try {
-      const result = await apiFetch(`/api/communities/statement?communityId=${encodeURIComponent(communityId)}&format=csv`, { parse: 'none' });
+      const params = new URLSearchParams({ communityId, format: 'csv' });
+      const dates = statementRangeDates(range);
+      if (dates.startDate) params.set('startDate', dates.startDate);
+      if (dates.endDate) params.set('endDate', dates.endDate);
+      const result = await apiFetch(`/api/communities/statement?${params.toString()}`, { parse: 'none' });
       if (!result.ok) {
         toast({
           title: 'Export not available',
@@ -170,7 +198,7 @@ function ExportStatement({ communityId }: { communityId: string }) {
       const href = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = href;
-      anchor.download = `baraza-statement-${communityId}.csv`;
+      anchor.download = `baraza-statement-${communityId}${range === 'all' ? '' : `-${range}`}.csv`;
       anchor.click();
       URL.revokeObjectURL(href);
     } catch {
@@ -181,10 +209,13 @@ function ExportStatement({ communityId }: { communityId: string }) {
   }
 
   return (
+    <div className="flex flex-wrap items-center justify-end gap-2">
+      <FilterChips options={RANGE_OPTIONS} value={range} onChange={setRange} aria-label="Statement range" />
     <Button type="button" variant="outline" size="sm" onClick={() => void run()} disabled={busy}>
       {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Download className="h-4 w-4" aria-hidden />}
       Export Statement
     </Button>
+    </div>
   );
 }
 
