@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { GroupRow } from '@/components/app/GroupRow';
@@ -97,6 +98,7 @@ function initialsOf(name: string): string {
 
 function AccountPanel() {
   const account = useAccount();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { memberships, isLoading, error } = useMyMemberships();
   const [displayName, setDisplayName] = useState(account.displayName);
@@ -280,7 +282,7 @@ function AccountPanel() {
                 <Button type="button" variant="outline" onClick={() => setConfirmLogout(false)}>
                   Cancel
                 </Button>
-                <Button type="button" variant="destructive" onClick={() => void account.logout()}>
+                <Button type="button" variant="destructive" onClick={() => void account.logout().finally(() => navigate('/', { replace: true }))}>
                   Log Out
                 </Button>
               </div>

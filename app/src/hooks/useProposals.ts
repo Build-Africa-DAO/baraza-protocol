@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useActivities, useDecision, useDecisions } from '@/hooks/useBarazaData';
 import { listCommunityActivity } from '@/lib/activity';
 import { isSupabaseConfigured } from '@/lib/communities';
+import { RECONNECT_EVENT } from '@/contexts/OfflineContext';
 import type { ActivityEvent, Decision } from '@/lib/dataStore';
 import { getProposal, listProposals } from '@/lib/proposals';
 import { proposalBucket } from '@/lib/proposalStatus';
@@ -52,6 +53,13 @@ export function useProposals(communityId: string): ProposalsState {
     };
   }, [communityId, remote, tick]);
 
+  // Reload when the connection comes back.
+  useEffect(() => {
+    if (!remote) return;
+    window.addEventListener(RECONNECT_EVENT, reload);
+    return () => window.removeEventListener(RECONNECT_EVENT, reload);
+  }, [reload, remote]);
+
   // Keep tallies fresh while a vote is open.
   const anyOpen = useMemo(() => (rows ?? []).some((d) => proposalBucket(d) === 'active' && isVotingOpen(d)), [rows]);
   useEffect(() => {
@@ -99,6 +107,12 @@ export function useProposal(id: string): { decision: Decision | undefined; isLoa
       cancelled = true;
     };
   }, [id, remote, tick]);
+
+  useEffect(() => {
+    if (!remote) return;
+    window.addEventListener(RECONNECT_EVENT, reload);
+    return () => window.removeEventListener(RECONNECT_EVENT, reload);
+  }, [reload, remote]);
 
   const open = decision ? proposalBucket(decision) === 'active' && isVotingOpen(decision) : false;
   useEffect(() => {

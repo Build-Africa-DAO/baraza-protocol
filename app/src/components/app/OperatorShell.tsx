@@ -1,3 +1,4 @@
+import '@/polyfill';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -26,7 +27,7 @@ const NAV: Array<{ to: string; label: string; icon: LucideIcon; devOnly?: boolea
 
 function navClass(active: boolean) {
   return cn(
-    'flex min-h-11 items-center gap-2.5 rounded-full px-3 text-sm font-semibold transition-colors',
+    'flex min-h-12 items-center gap-2.5 rounded-full px-3 text-sm font-semibold transition-colors',
     active ? 'text-primary' : 'text-muted-foreground hover:bg-chrome-foreground/[0.06] hover:text-chrome-foreground',
   );
 }
@@ -81,7 +82,7 @@ function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
           <Button type="button" variant="icon" size="icon" onClick={toggleTheme} aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}>
             {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
-          <Link to="/home" onClick={onNavigate} className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground">
+          <Link to="/home" onClick={onNavigate} className="inline-flex min-h-12 items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" aria-hidden />
             Back to Baraza
           </Link>
@@ -101,15 +102,15 @@ export default function OperatorShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-[100dvh] w-full gap-4 overflow-hidden bg-canvas p-3 md:p-4">
-      <aside className="hidden h-full w-[16.5rem] shrink-0 rounded-chrome border border-border bg-chrome text-chrome-foreground shadow-[var(--shadow-deep)] lg:flex lg:flex-col">
+      <aside className="hidden h-full w-[16.5rem] shrink-0 rounded-chrome bg-chrome text-chrome-foreground shadow-[var(--shadow-deep)] lg:flex lg:flex-col">
         <SidebarBody />
       </aside>
 
       {open ? (
         <div className="fixed inset-0 z-50 lg:hidden">
           <button type="button" className="absolute inset-0 bg-black/30 backdrop-blur-md" aria-label="Close menu" onClick={() => setOpen(false)} />
-          <aside className="relative m-3 h-[calc(100%-1.5rem)] w-[16.5rem] max-w-[85vw] rounded-chrome border border-border bg-chrome text-chrome-foreground shadow-[var(--shadow-deep)]">
-            <button type="button" className="btn-icon absolute right-3 top-3 z-10 h-11 w-11" aria-label="Close menu" onClick={() => setOpen(false)}>
+          <aside className="relative m-3 h-[calc(100%-1.5rem)] w-[16.5rem] max-w-[85vw] rounded-chrome bg-chrome text-chrome-foreground shadow-[var(--shadow-deep)]">
+            <button type="button" className="btn-icon absolute right-3 top-3 z-10 h-12 w-12" aria-label="Close menu" onClick={() => setOpen(false)}>
               <X className="h-5 w-5" />
             </button>
             <SidebarBody onNavigate={() => setOpen(false)} />
@@ -124,7 +125,7 @@ export default function OperatorShell({ children }: { children: ReactNode }) {
         >
           Skip to main content
         </a>
-        <header className="z-40 flex h-14 shrink-0 items-center gap-2 rounded-chrome border border-border bg-chrome px-3 text-chrome-foreground shadow-[var(--shadow-deep)] lg:hidden">
+        <header className="z-40 flex h-14 shrink-0 items-center gap-2 rounded-chrome bg-chrome px-3 text-chrome-foreground shadow-[var(--shadow-deep)] lg:hidden">
           <Button type="button" variant="icon" size="icon" aria-label="Open menu" onClick={() => setOpen(true)}>
             <Menu className="h-5 w-5" />
           </Button>
@@ -132,7 +133,7 @@ export default function OperatorShell({ children }: { children: ReactNode }) {
           <StatusChip kind="info" icon={null} label="Operator" className="ml-auto" />
         </header>
         <OfflineBanner />
-        <main id="main-content" key={location.pathname} className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-chrome border border-border bg-background pb-8 lg:mt-0" tabIndex={-1}>
+        <main id="main-content" key={location.pathname} className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-chrome bg-background pb-8 lg:mt-0" tabIndex={-1}>
           {children}
         </main>
       </div>

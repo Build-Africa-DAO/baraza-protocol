@@ -89,4 +89,10 @@ describe('CreateCommunity wizard', () => {
     expect(screen.getByLabelText('One-Time Fee to Join')).toBeInTheDocument();
     expect(screen.getByText(/pay once to join/)).toBeInTheDocument();
   });
+
+  it('prefills the name from ?name= so Browse can hand off a search', () => {
+    renderCreate('/create?type=welfare&name=Umoja%20Chama');
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    expect(screen.getByLabelText('Group Name')).toHaveValue('Umoja Chama');
+  });
 });

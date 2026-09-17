@@ -30,6 +30,8 @@ export default function CommunityDashboard() {
           currency={community.currency}
           memberCount={community.memberCount}
           fundBalance={community.fundBalance}
+          liquidVaultBalanceMinor={community.liquidVaultBalanceMinor ?? null}
+          encumberedBalanceMinor={community.encumberedBalanceMinor ?? null}
           quorumPct={community.quorumPct}
           membership={membership}
           isOfficer={isOfficer}
@@ -44,6 +46,8 @@ function HomePanel({
   currency,
   memberCount,
   fundBalance,
+  liquidVaultBalanceMinor,
+  encumberedBalanceMinor,
   quorumPct,
   membership,
   isOfficer,
@@ -52,6 +56,8 @@ function HomePanel({
   currency?: string;
   memberCount: number;
   fundBalance: number | undefined;
+  liquidVaultBalanceMinor: number | null;
+  encumberedBalanceMinor: number | null;
   quorumPct?: number;
   membership: GroupMembership;
   isOfficer: boolean;
@@ -82,7 +88,7 @@ function HomePanel({
             </h2>
             <Link
               to={`/dashboard/${communityId}/votes`}
-              className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-foreground underline-offset-4 hover:underline"
+              className="inline-flex min-h-12 items-center gap-1 text-sm font-semibold text-foreground underline-offset-4 hover:underline"
             >
               See All Votes
               <ArrowRight className="h-4 w-4" aria-hidden />
@@ -109,12 +115,11 @@ function HomePanel({
             </Button>
           ) : null}
         </div>
-        {/* The statement API returns one pooled figure today. Reserved and
-            available render as "Not available yet" rather than a guess. */}
-        <div className="grid gap-4 sm:grid-cols-3">
+        {/* Reserved and available come from the community row when the backend has them; otherwise "Not available yet". */}
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
           <AmountBlock label="Total" amountMajor={hasBalance ? fundBalance : null} currency={currency} />
-          <AmountBlock label="Reserved" amountMajor={null} currency={currency} size="md" />
-          <AmountBlock label="Available" amountMajor={null} currency={currency} size="md" />
+          <AmountBlock label="Reserved" amountMinor={encumberedBalanceMinor ?? null} currency={currency} size="md" />
+          <AmountBlock label="Available" amountMinor={liquidVaultBalanceMinor ?? null} currency={currency} size="md" />
         </div>
       </section>
 
@@ -126,7 +131,7 @@ function HomePanel({
           {activities.length > 5 ? (
             <Link
               to={`/dashboard/${communityId}/money`}
-              className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-foreground underline-offset-4 hover:underline"
+              className="inline-flex min-h-12 items-center gap-1 text-sm font-semibold text-foreground underline-offset-4 hover:underline"
             >
               See All
               <ArrowRight className="h-4 w-4" aria-hidden />

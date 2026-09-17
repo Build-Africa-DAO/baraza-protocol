@@ -1,3 +1,7 @@
+/* Self-hosted variable fonts (latin subsets download on demand, swap display). */
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,7 +10,8 @@
   :root {
     /* Baraza: white (light) / black (dark) + site orange */
 
-    --background: 0 0% 100%;
+    /* Page fill sits a shade below the cards so their depth reads. */
+    --background: 0 0% 96.5%;
     --foreground: 0 0% 4%;
 
     --card: 0 0% 100%;
@@ -40,15 +45,15 @@
     --input: 0 0% 96%;
     --ring: 25 95% 53%;
 
-    /* One corner for everything (Eugene, 13 Sept 2026): buttons are 44px pills,
-       whose visible corner is 22px. Cards, inputs, chips, sheets, the shell frame
-       and every Tailwind radius step use that same 22px, so anything 44px or
+    /* One corner for everything (Eugene, 13 Sept 2026): buttons are 48px pills,
+       whose visible corner is 24px. Cards, inputs, chips, sheets, the shell frame
+       and every Tailwind radius step use that same 24px, so anything 48px or
        shorter becomes a pill like a button and anything taller curves the same. */
-    --radius-sm: 1.375rem;
-    --radius-md: 1.375rem;
-    --radius-lg: 1.375rem;
+    --radius-sm: 1.5rem;
+    --radius-md: 1.5rem;
+    --radius-lg: 1.5rem;
     --radius: var(--radius-md);
-    --radius-chrome: 1.375rem;
+    --radius-chrome: 1.5rem;
 
     /* Status tokens. Status is always word + icon; colour only supports it.
        Orange (primary) is never a status. */
@@ -67,25 +72,33 @@
     /* Chrome: the floating sidebar, top bar and bottom nav. White in light,
        true black in dark, so the frame is always the darkest or lightest
        thing on screen and the content panel sits a step inside it. */
-    --chrome: 0 0% 100%;
+    --chrome: 0 0% 96.5%;
     --chrome-foreground: 0 0% 4%;
     /* The page behind the floating frame. A shade off the frame in light, and
        barely off black in dark so it sits back instead of shouting. */
-    --canvas: 0 0% 97%;
+    --canvas: 0 0% 94%;
 
-    /* Shadows: one resting card shadow and one for sheets. No glows. */
-    --shadow-card:  0 14px 32px hsl(0 0% 0% / 0.06);
+    /* Shadows: cards sit on the canvas by depth, not by outline. One resting
+       shadow (contact + ambient + a hairline top highlight), one lifted, one for sheets. */
+    --shadow-card:
+      0 1px 2px hsl(0 0% 0% / 0.05),
+      0 10px 28px -10px hsl(0 0% 0% / 0.12),
+      inset 0 1px 0 hsl(0 0% 100% / 0.9);
+    --shadow-card-hover:
+      0 2px 4px hsl(0 0% 0% / 0.06),
+      0 18px 40px -12px hsl(0 0% 0% / 0.18),
+      inset 0 1px 0 hsl(0 0% 100% / 0.9);
     --shadow-deep:  0 28px 80px -30px hsl(0 0% 0% / 0.22);
   }
 
   .dark {
-    --background: 0 0% 0%;
+    --background: 0 0% 5%;
     --foreground: 0 0% 98%;
 
-    --card: 0 0% 6%;
+    --card: 0 0% 9%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 6%;
+    --popover: 0 0% 9%;
     --popover-foreground: 0 0% 98%;
 
     --primary: 25 95% 53%;
@@ -119,11 +132,18 @@
     --surface: 0 0% 8%;
     --surface-hover: 0 0% 12%;
 
-    --chrome: 0 0% 0%;
+    --chrome: 0 0% 5%;
     --chrome-foreground: 0 0% 98%;
-    --canvas: 0 0% 3%;
+    --canvas: 0 0% 1%;
 
-    --shadow-card:  0 14px 32px hsl(0 0% 0% / 0.35);
+    --shadow-card:
+      0 1px 2px hsl(0 0% 0% / 0.6),
+      0 12px 32px -10px hsl(0 0% 0% / 0.85),
+      inset 0 1px 0 hsl(0 0% 100% / 0.06);
+    --shadow-card-hover:
+      0 2px 4px hsl(0 0% 0% / 0.6),
+      0 20px 44px -12px hsl(0 0% 0% / 0.95),
+      inset 0 1px 0 hsl(0 0% 100% / 0.09);
     --shadow-deep:  0 20px 60px -10px hsl(0 0% 0% / 0.92);
   }
 }
@@ -151,13 +171,13 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-family: Geist, system-ui, sans-serif;
+    font-family: 'Geist Variable', system-ui, sans-serif;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: Geist, system-ui, sans-serif;
+    font-family: 'Geist Variable', system-ui, sans-serif;
   }
   details summary {
     list-style: none;
@@ -216,9 +236,9 @@
     text-decoration: none;
     color: var(--btn-ink);
     background: var(--btn-fill);
-    /* Defaults so a bare `.btn-wipe` is a real button: 44px tap target,
+    /* Defaults so a bare `.btn-wipe` is a real button: 48px tap target,
        14px label. Tailwind utilities on the element still win. */
-    min-height: 2.75rem;
+    min-height: 3rem;
     padding: 0.625rem 1.25rem;
     font-size: 0.875rem;
     gap: 0.5rem;
@@ -348,13 +368,29 @@
   /* Cards */
   .baraza-card {
     background: hsl(var(--card));
-    border: 1px solid hsl(var(--border));
     border-radius: var(--radius);
     box-shadow: var(--shadow-card);
-    transition: border-color 0.2s ease;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
   }
   .baraza-card:hover {
-    border-color: hsl(var(--foreground) / 0.35);
+    box-shadow: var(--shadow-card-hover);
+  }
+  /* Soft-shadow row and tile: the same depth language as the card, smaller. */
+  .baraza-row {
+    background: hsl(var(--card));
+    box-shadow: var(--shadow-card);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .baraza-row-interactive:hover {
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-1px);
+  }
+  .baraza-tile {
+    background: hsl(var(--surface));
+    box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.6), 0 1px 2px hsl(0 0% 0% / 0.06);
+  }
+  .dark .baraza-tile {
+    box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.06), 0 1px 2px hsl(0 0% 0% / 0.5);
   }
 
   /* Wallet adapter overrides — match homepage pill + orange hover */
@@ -362,11 +398,11 @@
     background: hsl(var(--foreground)) !important;
     color: hsl(var(--background)) !important;
     border-radius: 9999px !important;
-    font-family: Geist, system-ui, sans-serif !important;
+    font-family: 'Geist Variable', system-ui, sans-serif !important;
     font-weight: 700 !important;
     font-size: 0.875rem !important;
     letter-spacing: 0.04em !important;
-    height: 2.5rem !important;
+    height: 3rem !important;
     padding: 0 1.25rem !important;
     transition: background-color 0.4s, color 0.4s, transform 0.2s cubic-bezier(0.3, 1, 0.8, 1) !important;
     border: none !important;
@@ -382,10 +418,10 @@
     background: hsl(var(--card)) !important;
     border: 1px solid hsl(var(--border)) !important;
     border-radius: var(--radius-lg) !important;
-    font-family: Geist, system-ui, sans-serif !important;
+    font-family: 'Geist Variable', system-ui, sans-serif !important;
   }
   .wallet-adapter-modal-title {
-    font-family: Geist, system-ui, sans-serif !important;
+    font-family: 'Geist Variable', system-ui, sans-serif !important;
     color: hsl(var(--foreground)) !important;
   }
   .wallet-adapter-modal-list li {
@@ -409,7 +445,7 @@
   }
   .wallet-adapter-dropdown-list-item {
     color: hsl(var(--foreground)) !important;
-    font-family: Geist, system-ui, sans-serif !important;
+    font-family: 'Geist Variable', system-ui, sans-serif !important;
   }
   .wallet-adapter-dropdown-list-item:hover {
     background: hsl(var(--surface)) !important;

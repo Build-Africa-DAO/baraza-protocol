@@ -68,6 +68,8 @@ function VotePanel({
   const [ballot, setBallot] = useState<BallotStage>('idle');
   const [ballotError, setBallotError] = useState<string | null>(null);
   const [choice, setChoice] = useState<'for' | 'against' | null>(null);
+  const [optimistic, setOptimistic] = useState<'for' | 'against' | null>(null);
+  const [lastAttempt, setLastAttempt] = useState<'for' | 'against' | null>(null);
 
   if (proposalLoading) {
     return <SkeletonList count={3} />;
@@ -86,10 +88,18 @@ function VotePanel({
   const open = isVotingOpen(proposal);
   const bucket = proposalBucket(proposal);
   const tied = proposal.lifecycleStage === 'tied' || proposal.lifecycleStage === 'tied_extended';
-  const voted = participationPct(proposal);
-  const support = supportPct(proposal);
+  // While a ballot is in flight the tally shows it already counted; the server
+  // reload replaces this the moment it answers, and a failure rolls it back.
+  const shown = optimistic && ballot === 'sending'
+    ? { ...proposal, votesFor: proposal.votesFor + (optimistic === 'for' ? 1 : 0), votesAgainst: proposal.votesAgainst + (optimistic === 'against' ? 1 : 0) }
+    : proposal;
+  const voted = participationPct(shown);
+  const support = supportPct(shown);
   const quorum = community.quorumPct ?? 51;
   const quorumMet = voted >= quorum;
+  const totalMembers = Math.max(shown.totalMembers, shown.votesFor + shown.votesAgainst, 1);
+  const forPct = Math.round((shown.votesFor / totalMembers) * 100);
+  const againstPct = Math.round((shown.votesAgainst / totalMembers) * 100);
   const canVote = isMember && membership.status !== 'pending' && open && !existingVote && ballot === 'idle';
 
   const outcomeChip: { kind: StatusKind; label: string } = tied
@@ -108,15 +118,21 @@ function VotePanel({
       return;
     }
     setChoice(voteType);
+    setOptimistic(voteType);
+    setLastAttempt(voteType);
     setBallot('sending');
     setBallotError(null);
     const outcome = await submitVote(proposal!.id, voterKey, voteType);
     if (!outcome.ok) {
+      // Roll the optimistic count back and offer one tap to try again.
+      setOptimistic(null);
       setBallot('idle');
       setChoice(null);
       setBallotError(outcome.reason ?? 'The vote was not recorded. Try again.');
+      toast({ title: 'Vote Not Recorded', description: outcome.reason ?? 'Nothing was counted. Try again.', variant: 'destructive' });
       return;
     }
+    setOptimistic(null);
     setBallot(outcome.stage === 'confirmed' ? 'confirmed' : 'recorded');
     reloadProposal();
     toast({
@@ -159,30 +175,48 @@ function VotePanel({
         </p>
 
         <div className="mt-4">
-          <div className="flex items-center justify-between text-sm">
-            <span className="font-semibold">
-              {voted}% voted{quorumMet ? ' · quorum met' : ` · needs ${quorum}%`}
-            </span>
+          <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+            <StatusChip
+              kind={quorumMet ? 'confirmed' : 'pending'}
+              label={quorumMet ? `Quorum Reached (${voted}%)` : `Quorum Pending (${voted}% of ${quorum}% needed)`}
+              data-testid="quorum-pill"
+            />
             <span className="tabular-nums text-muted-foreground">
-              {proposal.votesFor} yes · {proposal.votesAgainst} no
+              {shown.votesFor} support · {shown.votesAgainst} object
             </span>
           </div>
           <div
-            className="mt-2 h-2 overflow-hidden rounded-full bg-muted"
-            role="progressbar"
-            aria-valuenow={voted}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={`${voted} percent of members have voted`}
+            className={`relative mt-3 h-3 overflow-hidden rounded-full bg-muted ${ballot === 'sending' ? 'animate-pulse' : ''}`}
+            role="img"
+            aria-label={`${forPct} percent of members support, ${againstPct} percent object, quorum at ${quorum} percent`}
+            data-testid="tally-bar"
           >
-            <div className="h-full rounded-full bg-foreground" style={{ width: `${Math.min(100, voted)}%` }} />
+            <div className="absolute inset-y-0 left-0 bg-confirmed" style={{ width: `${Math.min(100, forPct)}%` }} />
+            <div className="absolute inset-y-0 bg-destructive" style={{ left: `${Math.min(100, forPct)}%`, width: `${Math.min(100 - forPct, againstPct)}%` }} />
+            <div
+              className="absolute inset-y-0 w-0 border-l-2 border-dashed border-foreground/70"
+              style={{ left: `${Math.min(100, quorum)}%` }}
+              aria-hidden
+            />
           </div>
-          {proposal.votesFor + proposal.votesAgainst > 0 ? (
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5"><span className="inline-block h-2 w-2 rounded-full bg-confirmed" aria-hidden /> Support {forPct}%</span>
+            <span className="inline-flex items-center gap-1.5"><span className="inline-block h-2 w-2 rounded-full bg-destructive" aria-hidden /> Object {againstPct}%</span>
+            <span className="inline-flex items-center gap-1.5"><span className="inline-block h-3 w-0 border-l-2 border-dashed border-foreground/70" aria-hidden /> Quorum {quorum}%</span>
+          </div>
+          {shown.votesFor + shown.votesAgainst > 0 ? (
             <p className="mt-2 text-sm text-muted-foreground">{support}% of those who voted said yes.</p>
           ) : null}
         </div>
 
-        {ballotError ? <InlineError className="mt-4" message={ballotError} /> : null}
+        {ballotError ? (
+          <InlineError
+            className="mt-4"
+            message={ballotError}
+            retryLabel={lastAttempt === 'for' ? 'Try Support Again' : 'Try Object Again'}
+            onRetry={lastAttempt && canVote ? () => void cast(lastAttempt) : undefined}
+          />
+        ) : null}
 
         {ballot !== 'idle' && !ballotError ? (
           <div className="mt-4 flex items-center gap-2 text-sm">

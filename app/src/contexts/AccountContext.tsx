@@ -1,139 +1,37 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { PrivyProvider, usePrivy } from '@privy-io/react-auth';
-import AuthModal, { BarazaAuthModal, type AuthIntent } from '@/components/auth/AuthModal';
+import React, { lazy, Suspense, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { BarazaAuthModal, type AuthIntent } from '@/components/auth/AuthModalView';
 import { getBarazaSessionToken, getBarazaUser, logout as barazaLogout, onBarazaAuthChange, restoreSession, type BarazaUser } from '@/lib/auth/baraza';
 import { getAuthProvider } from '@/lib/auth/provider';
-import { useTheme } from '@/hooks/useTheme';
 import {
   getAccountCountry,
   readAccountCountry,
   writeAccountCountry,
-  type AccountCountry,
   type AccountCountryCode,
 } from '@/lib/accountLocale';
-import { currentLocationPath, isSafeReturnTo, isStayPath } from '@/lib/postAuth';
-import { getPrivyAppId, isPrivyPhoneAuthEnabled } from '@/lib/wallet/mpc';
-import { noteSessionState, registerAccessTokenProvider } from '@/lib/auth/tokenProvider';
+import { getPrivyAppId } from '@/lib/wallet/mpc';
+import { noteSessionState, registerAccessTokenProvider, registerAuthExpiredHandler } from '@/lib/auth/tokenProvider';
+import { AccountContext, EMPTY_HANDOFF, useAuthHandoff, type AccountBridgeProps, type AccountContextValue, type AuthHandoff } from '@/contexts/accountShared';
 
-export interface AuthHandoff {
-  entryPath: string;
-  returnTo: string | null;
-}
+export type { AccountContextValue, AuthHandoff };
 
-interface AccountContextValue {
-  configured: boolean;
-  ready: boolean;
-  authenticated: boolean;
-  accountId: string | null;
-  displayName: string;
-  country: AccountCountry;
-  setCountry: (country: AccountCountryCode) => void;
-  login: (returnTo?: string) => void;
-  createAccount: (returnTo?: string) => void;
-  consumeAuthHandoff: () => AuthHandoff;
-  getAccessToken: () => Promise<string | null>;
-  logout: () => Promise<void>;
-}
+const PrivyAccountProvider = lazy(() => import('@/contexts/PrivyAccountProvider'));
 
-const EMPTY_HANDOFF: AuthHandoff = { entryPath: '/', returnTo: null };
-
-const AccountContext = createContext<AccountContextValue | null>(null);
-
-interface AccountBridgeProps {
-  country: AccountCountry;
-  setCountry: (country: AccountCountryCode) => void;
-  children: React.ReactNode;
-}
-
-/** Remembers where sign-in started so `PostAuthRedirect` can return there. */
-function useAuthHandoff() {
-  const [authIntent, setAuthIntent] = useState<AuthIntent | null>(null);
-  const handoffRef = useRef<AuthHandoff>(EMPTY_HANDOFF);
-  const closeAuth = useCallback(() => setAuthIntent(null), []);
-
-  const captureHandoff = useCallback((returnTo?: string) => {
-    const current = currentLocationPath();
-    const requested = returnTo && isSafeReturnTo(returnTo) ? returnTo : null;
-    handoffRef.current = {
-      entryPath: current,
-      returnTo: requested ?? (isStayPath(current) ? current : null),
-    };
-  }, []);
-
-  const consumeAuthHandoff = useCallback(() => {
-    const current = handoffRef.current;
-    handoffRef.current = EMPTY_HANDOFF;
-    return current;
-  }, []);
-
-  return { authIntent, setAuthIntent, closeAuth, captureHandoff, consumeAuthHandoff };
-}
-
-function AccountBridge({ country, setCountry, children }: AccountBridgeProps) {
-  const { ready, authenticated, user, logout, getAccessToken } = usePrivy();
-  const { authIntent, setAuthIntent, closeAuth, captureHandoff, consumeAuthHandoff } = useAuthHandoff();
-  const displayName =
-    user?.google?.name
-    ?? user?.email?.address
-    ?? user?.phone?.number
-    ?? user?.google?.email
-    ?? 'Baraza member';
-  const accountId = user?.wallet?.address ?? user?.id ?? null;
-
-  const readAccessToken = useCallback(async () => {
-    if (!authenticated) return null;
-    try {
-      return await getAccessToken();
-    } catch {
-      return null;
+/**
+ * Whether this browser probably holds a Privy session. Privy keeps its tokens
+ * in localStorage under `privy:` keys; when none exist the person is a visitor
+ * and the SDK can wait until they tap Sign In.
+ */
+export function hasPrivySessionHint(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    for (let i = 0; i < window.localStorage.length; i += 1) {
+      const key = window.localStorage.key(i) ?? '';
+      if (key.startsWith('privy:') && (key.includes('token') || key.includes('session'))) return true;
     }
-  }, [authenticated, getAccessToken]);
-
-  useEffect(() => {
-    if (authenticated) setAuthIntent(null);
-    noteSessionState(authenticated);
-  }, [authenticated]);
-
-  // The API client asks this provider for the bearer token on every call.
-  useEffect(() => {
-    registerAccessTokenProvider(readAccessToken);
-    return () => registerAccessTokenProvider(null);
-  }, [readAccessToken]);
-
-  const value = useMemo<AccountContextValue>(() => ({
-    configured: true,
-    ready,
-    authenticated,
-    accountId,
-    displayName,
-    country,
-    setCountry,
-    login: (returnTo?: string) => {
-      captureHandoff(returnTo);
-      setAuthIntent('signin');
-    },
-    createAccount: (returnTo?: string) => {
-      captureHandoff(returnTo);
-      setAuthIntent('signup');
-    },
-    consumeAuthHandoff,
-    getAccessToken: readAccessToken,
-    logout,
-  }), [accountId, authenticated, captureHandoff, consumeAuthHandoff, country, displayName, logout, readAccessToken, ready, setCountry]);
-
-  return (
-    <AccountContext.Provider value={value}>
-      {children}
-      {authIntent && (
-        <AuthModal
-          intent={authIntent}
-          countryCode={country.code}
-          onIntentChange={setAuthIntent}
-          onClose={closeAuth}
-        />
-      )}
-    </AccountContext.Provider>
-  );
+  } catch {
+    // Storage blocked: treat as a visitor.
+  }
+  return false;
 }
 
 /**
@@ -144,7 +42,7 @@ function AccountBridge({ country, setCountry, children }: AccountBridgeProps) {
 function BarazaAccountProvider({ country, setCountry, children }: AccountBridgeProps) {
   const [ready, setReady] = useState(false);
   const [user, setUser] = useState<BarazaUser | null>(() => getBarazaUser());
-  const { authIntent, setAuthIntent, closeAuth, captureHandoff, consumeAuthHandoff } = useAuthHandoff();
+  const { authIntent, setAuthIntent, closeAuth, captureHandoff, consumeAuthHandoff, notice, promptReauth, settleReauth } = useAuthHandoff();
 
   useEffect(() => {
     let cancelled = false;
@@ -160,15 +58,22 @@ function BarazaAccountProvider({ country, setCountry, children }: AccountBridgeP
 
   const authenticated = Boolean(user);
   useEffect(() => {
-    if (authenticated) setAuthIntent(null);
+    if (authenticated) {
+      setAuthIntent(null);
+      settleReauth();
+    }
     noteSessionState(authenticated);
-  }, [authenticated, setAuthIntent]);
+  }, [authenticated, setAuthIntent, settleReauth]);
 
   const getAccessToken = useCallback(async () => getBarazaSessionToken(), []);
   useEffect(() => {
     registerAccessTokenProvider(getAccessToken);
-    return () => registerAccessTokenProvider(null);
-  }, [getAccessToken]);
+    registerAuthExpiredHandler(promptReauth);
+    return () => {
+      registerAccessTokenProvider(null);
+      registerAuthExpiredHandler(null);
+    };
+  }, [getAccessToken, promptReauth]);
 
   const value = useMemo<AccountContextValue>(() => ({
     configured: true,
@@ -200,6 +105,7 @@ function BarazaAccountProvider({ country, setCountry, children }: AccountBridgeP
           countryCode={country.code}
           onIntentChange={setAuthIntent}
           onClose={closeAuth}
+          notice={notice}
         />
       )}
     </AccountContext.Provider>
@@ -209,12 +115,22 @@ function BarazaAccountProvider({ country, setCountry, children }: AccountBridgeP
 export function AccountProvider({ children }: { children: React.ReactNode }) {
   const provider = getAuthProvider();
   const appId = getPrivyAppId();
-  const { theme } = useTheme();
   const [countryCode, setCountryCode] = useState<AccountCountryCode>(() => readAccountCountry());
   const country = getAccountCountry(countryCode);
   const setCountry = useCallback((nextCountry: AccountCountryCode) => {
     writeAccountCountry(nextCountry);
     setCountryCode(nextCountry);
+  }, []);
+
+  // Privy mounts at once when a session is likely, otherwise on the first
+  // Sign In / Create Account tap. Until then visitors get a light context.
+  const [mountPrivy, setMountPrivy] = useState<boolean>(() => provider === 'privy' && Boolean(appId) && hasPrivySessionHint());
+  const [initialIntent, setInitialIntent] = useState<AuthIntent | null>(null);
+  const [initialReturnTo, setInitialReturnTo] = useState<string | undefined>(undefined);
+  const requestPrivy = useCallback((intent: AuthIntent, returnTo?: string) => {
+    setInitialIntent(intent);
+    setInitialReturnTo(returnTo);
+    setMountPrivy(true);
   }, []);
 
   const fallbackValue = useMemo<AccountContextValue>(() => ({
@@ -232,6 +148,17 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     logout: async () => undefined,
   }), [country, setCountry]);
 
+  /** Visitor context while Privy is not loaded: configured, signed out, and a tap loads the SDK. */
+  const visitorValue = useMemo<AccountContextValue>(() => ({
+    ...fallbackValue,
+    configured: true,
+    login: (returnTo?: string) => requestPrivy('signin', returnTo),
+    createAccount: (returnTo?: string) => requestPrivy('signup', returnTo),
+  }), [fallbackValue, requestPrivy]);
+
+  /** While the Privy chunk downloads after a tap: same as visitor but not ready, so gates show a spinner rather than a second Sign In. */
+  const loadingValue = useMemo<AccountContextValue>(() => ({ ...visitorValue, ready: false }), [visitorValue]);
+
   if (provider === 'baraza') {
     return (
       <BarazaAccountProvider country={country} setCountry={setCountry}>
@@ -248,35 +175,20 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const phoneAuthEnabled = isPrivyPhoneAuthEnabled();
+  if (!mountPrivy) {
+    return (
+      <AccountContext.Provider value={visitorValue}>
+        {children}
+      </AccountContext.Provider>
+    );
+  }
 
   return (
-    <PrivyProvider
-      appId={appId}
-      config={{
-        loginMethods: phoneAuthEnabled ? ['email', 'sms', 'google'] : ['email', 'google'],
-        intl: { defaultCountry: country.code },
-        appearance: {
-          theme: theme === 'dark' ? 'dark' : 'light',
-          accentColor: '#f97316',
-          logo: '',
-          landingHeader: 'Welcome to Baraza',
-          loginMessage: phoneAuthEnabled
-            ? 'Use your phone number or email to continue.'
-            : 'Use your email to continue.',
-          showWalletLoginFirst: false,
-        },
-        embeddedWallets: {
-          ethereum: { createOnLogin: 'off' },
-          solana: { createOnLogin: 'users-without-wallets' },
-          showWalletUIs: false,
-        },
-      }}
-    >
-      <AccountBridge country={country} setCountry={setCountry}>
+    <Suspense fallback={<AccountContext.Provider value={loadingValue}>{children}</AccountContext.Provider>}>
+      <PrivyAccountProvider appId={appId} country={country} setCountry={setCountry} initialIntent={initialIntent} initialReturnTo={initialReturnTo}>
         {children}
-      </AccountBridge>
-    </PrivyProvider>
+      </PrivyAccountProvider>
+    </Suspense>
   );
 }
 

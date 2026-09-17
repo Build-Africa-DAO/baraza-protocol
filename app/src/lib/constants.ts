@@ -8,6 +8,10 @@ export interface Community {
   currency?: string;
   memberCount: number;
   fundBalance: number;
+  /** Minor units the group can send now; from `liquid_vault_balance_minor` when the row has it. */
+  liquidVaultBalanceMinor?: number | null;
+  /** Minor units reserved for passed votes; from `encumbered_balance_minor`. */
+  encumberedBalanceMinor?: number | null;
   activeDecisions: number;
   createdAt: string;
   image: string;

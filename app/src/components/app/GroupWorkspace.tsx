@@ -171,7 +171,7 @@ export default function GroupWorkspace({
           <TreasuryCircuitBreakerBanner frozen={frozen} />
 
           {membership.isMember && membership.source !== 'api' && (
-            <div className="mb-6 rounded-lg border border-border p-3 text-xs text-muted-foreground">
+            <div className="baraza-row mb-6 rounded-lg p-3 text-xs text-muted-foreground">
               Showing a locally cached membership. Officer tools stay hidden until Baraza confirms your role.
             </div>
           )}
@@ -192,7 +192,7 @@ export default function GroupWorkspace({
           <div className="flex gap-6">
             {!inAppShell && (
               <aside className="hidden w-52 flex-shrink-0 lg:block">
-                <div className="sticky top-24 rounded-xl border border-border/60 bg-card/70 p-3">
+                <div className="baraza-card sticky top-24 rounded-xl p-3">
                   <GroupSidebarNav communityId={community.id} isMember={membership.isMember} isOfficer={membership.isOfficer} />
                 </div>
               </aside>

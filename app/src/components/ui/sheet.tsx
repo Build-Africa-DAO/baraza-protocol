@@ -95,7 +95,7 @@ export function Sheet({ open, onClose, title, description, children, footer, siz
         aria-labelledby={titleId}
         aria-describedby={description ? descriptionId : undefined}
         className={cn(
-          'flex w-full max-h-[90vh] flex-col rounded-t-2xl border border-border bg-background text-foreground shadow-[var(--shadow-deep)] sm:rounded-2xl',
+          'flex w-full max-h-[90vh] flex-col rounded-t-2xl bg-card text-foreground shadow-[var(--shadow-deep)] sm:rounded-2xl',
           SIZE[size],
           className,
         )}
@@ -111,7 +111,7 @@ export function Sheet({ open, onClose, title, description, children, footer, siz
               </p>
             ) : null}
           </div>
-          <button type="button" onClick={onClose} aria-label="Close" className="btn-icon h-11 w-11 shrink-0 -mr-2 -mt-2">
+          <button type="button" onClick={onClose} aria-label="Close" className="btn-icon h-12 w-12 shrink-0 -mr-2 -mt-2">
             <X className="h-5 w-5" />
           </button>
         </header>

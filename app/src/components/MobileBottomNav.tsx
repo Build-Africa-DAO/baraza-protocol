@@ -18,7 +18,7 @@ interface NavItem {
 const ITEMS: NavItem[] = [
   { path: '/', label: 'Home', icon: Home },
   { path: '/groups', label: 'Groups', icon: Compass },
-  { path: '/create', label: 'Start', icon: PlusCircle },
+  { path: '/create', label: 'New Group', icon: PlusCircle },
   { path: '/help', label: 'Help', icon: HelpCircle },
 ];
 
@@ -28,7 +28,7 @@ function isPathActive(currentPath: string, target: string): boolean {
 }
 
 const slotClass =
-  'flex min-h-11 flex-col items-center justify-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
+  'flex min-h-12 flex-col items-center justify-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
 
 export default function MobileBottomNav() {
   const location = useLocation();

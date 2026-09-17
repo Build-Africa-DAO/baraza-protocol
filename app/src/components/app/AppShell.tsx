@@ -28,6 +28,7 @@ import { useMyMemberships } from '@/hooks/useMyMemberships';
 import { useGroupMembership } from '@/hooks/useGroupMembership';
 import { getGroupIdFromPath, isGroupWorkspacePath } from '@/lib/postAuth';
 import { cn } from '@/lib/utils';
+import { prefetchProps } from '@/lib/routePrefetch';
 
 /**
  * The signed-in shell (§13.3). Two floating cards on a quiet background: a
@@ -47,7 +48,7 @@ function readCollapsed(): boolean {
 
 function navClass(active: boolean, collapsed = false) {
   return cn(
-    'flex min-h-11 items-center gap-2.5 rounded-full px-3 text-sm font-semibold transition-colors',
+    'flex min-h-12 items-center gap-2.5 rounded-full px-3 text-sm font-semibold transition-colors',
     collapsed && 'justify-center px-0',
     active ? 'text-primary' : 'text-muted-foreground hover:bg-chrome-foreground/[0.06] hover:text-chrome-foreground',
   );
@@ -139,7 +140,7 @@ function WorkspaceNav({ collapsed, onNavigate }: { collapsed: boolean; onNavigat
                       onClick={onNavigate}
                       aria-current={on ? 'page' : undefined}
                       className={cn(
-                        'flex min-h-10 items-center rounded-full px-3 text-sm font-semibold transition-colors',
+                        'flex min-h-12 items-center rounded-full px-3 text-sm font-semibold transition-colors',
                         on ? 'text-primary' : 'text-muted-foreground hover:bg-chrome-foreground/[0.06] hover:text-chrome-foreground',
                       )}
                     >
@@ -254,7 +255,7 @@ function useContext() {
 function TopBar({ onOpenMenu, collapsed, onToggleCollapsed }: { onOpenMenu: () => void; collapsed: boolean; onToggleCollapsed: () => void }) {
   const ctx = useContext();
   return (
-    <header className="z-40 shrink-0 rounded-chrome border border-border bg-chrome text-chrome-foreground shadow-[var(--shadow-deep)]">
+    <header className="z-40 shrink-0 rounded-chrome bg-chrome text-chrome-foreground shadow-[var(--shadow-deep)]">
       <div className="flex min-h-16 items-center gap-3 px-3 md:px-5">
         <Button type="button" variant="icon" size="icon" aria-label="Open menu" onClick={onOpenMenu} className="lg:hidden">
           <Menu className="h-5 w-5" />
@@ -301,9 +302,10 @@ function AppBottomNav() {
       <Link
         key={to}
         to={to}
+        {...prefetchProps(to)}
         aria-current={active ? 'page' : undefined}
         className={cn(
-          'flex min-h-11 flex-col items-center justify-center gap-1 rounded-full px-2 py-1.5 text-xs font-semibold',
+          'flex min-h-12 flex-col items-center justify-center gap-1 rounded-full px-2 py-1.5 text-xs font-semibold',
           active ? 'text-primary' : 'text-muted-foreground',
         )}
       >
@@ -324,13 +326,13 @@ function AppBottomNav() {
     : [
         item('/home', 'Groups', Home, true),
         item('/groups', 'Browse', Compass),
-        item('/create', 'Start', PlusCircle),
+        item('/create', 'New Group', PlusCircle),
         item('/help', 'Help', HelpCircle),
         item('/account', 'Account', CircleUserRound),
       ];
 
   return (
-    <nav aria-label="Mobile navigation" className="fixed inset-x-3 bottom-3 z-40 rounded-chrome border border-border bg-chrome/95 text-chrome-foreground shadow-[var(--shadow-deep)] backdrop-blur-xl lg:hidden">
+    <nav aria-label="Mobile navigation" className="fixed inset-x-3 bottom-3 z-40 rounded-chrome bg-chrome/95 text-chrome-foreground shadow-[var(--shadow-deep)] backdrop-blur-xl lg:hidden">
       <div className="mx-auto grid max-w-md grid-cols-5 items-end px-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2">{slots}</div>
     </nav>
   );
@@ -369,7 +371,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
       <div className="flex min-h-0 flex-1 gap-4">
         <aside
           className={cn(
-            'hidden h-full shrink-0 rounded-chrome border border-border bg-chrome text-chrome-foreground shadow-[var(--shadow-deep)] transition-[width] duration-200 lg:flex lg:flex-col',
+            'hidden h-full shrink-0 rounded-chrome bg-chrome text-chrome-foreground shadow-[var(--shadow-deep)] transition-[width] duration-200 lg:flex lg:flex-col',
             collapsed ? 'w-[4.5rem]' : 'w-[16.5rem]',
           )}
         >
@@ -379,8 +381,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
         {open ? (
           <div className="fixed inset-0 z-50 lg:hidden">
             <button type="button" className="absolute inset-0 bg-black/30 backdrop-blur-md" aria-label="Close menu" onClick={() => setOpen(false)} />
-            <aside className="relative m-3 h-[calc(100%-1.5rem)] w-[16.5rem] max-w-[85vw] rounded-chrome border border-border bg-chrome text-chrome-foreground shadow-[var(--shadow-deep)]">
-              <button type="button" className="btn-icon absolute right-3 top-3 z-10 h-11 w-11" aria-label="Close menu" onClick={() => setOpen(false)}>
+            <aside className="relative m-3 h-[calc(100%-1.5rem)] w-[16.5rem] max-w-[85vw] rounded-chrome bg-chrome text-chrome-foreground shadow-[var(--shadow-deep)]">
+              <button type="button" className="btn-icon absolute right-3 top-3 z-10 h-12 w-12" aria-label="Close menu" onClick={() => setOpen(false)}>
                 <X className="h-5 w-5" />
               </button>
               <SidebarBody onNavigate={() => setOpen(false)} />
@@ -391,7 +393,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
         <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
           <TopBar onOpenMenu={() => setOpen(true)} collapsed={collapsed} onToggleCollapsed={toggleCollapsed} />
           <OfflineBanner />
-          <main id="main-content" key={location.pathname} className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-chrome border border-border bg-background pb-28 lg:pb-4" tabIndex={-1}>
+          <main id="main-content" key={location.pathname} className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-chrome bg-background pb-28 lg:pb-4" tabIndex={-1}>
             {children}
           </main>
         </div>

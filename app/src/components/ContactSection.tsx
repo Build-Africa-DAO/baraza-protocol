@@ -126,7 +126,7 @@ export default function ContactSection() {
 
           <div className="relative min-h-[22rem] lg:min-h-full">
             <img
-              src="/contact/group.jpg"
+              src="/contact/group.webp"
               alt="Four chama members around a table, checking a payment on their phones"
               className="absolute inset-0 h-full w-full object-cover"
               width={1024}

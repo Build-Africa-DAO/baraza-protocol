@@ -12,6 +12,7 @@ import { StatusChip } from '@/components/ui/status-chip';
 import { Stepper } from '@/components/ui/stepper';
 import { useAccount } from '@/contexts/AccountContext';
 import { formatAccountDate } from '@/lib/accountLocale';
+import { RailHealthLine } from '@/components/app/RailHealthLine';
 import { apiFetch, submitGuard } from '@/lib/api';
 import { isPaymentSimulatorEnabled, RAIL_UNAVAILABLE_COPY } from '@/lib/devMode';
 import { nextPollDelay } from '@/lib/polling';
@@ -243,6 +244,7 @@ function PayPanel({ community, membership }: { community: Community; membership:
           </section>
 
           <section className="baraza-card p-5">
+            <RailHealthLine className="mb-3" />
             <Field
               label="M-Pesa Phone Number"
               htmlFor="pay-phone"

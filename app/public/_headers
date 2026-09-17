@@ -1,6 +1,8 @@
 # Cloudflare Pages response headers for the Baraza web app.
 # Nothing else in the repo sets security headers. The CSP names every origin
 # the bundle talks to; add a source here before adding a new provider.
+# The sha256 in script-src is the inline theme bootstrap in index.html; the
+# test in src/lib/__tests__/productionPolish.test.ts fails when it drifts.
 
 /*
   Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
@@ -9,7 +11,7 @@
   Referrer-Policy: no-referrer
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
   Cross-Origin-Opener-Policy: same-origin-allow-popups
-  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' https://accounts.google.com https://auth.privy.io https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://accounts.google.com https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://auth.privy.io https://api.privy.io wss://*.privy.io https://accounts.google.com https://oauth2.googleapis.com https://horizon.stellar.org https://horizon-testnet.stellar.org https://soroban-testnet.stellar.org https://mainnet.sorobanrpc.com https://api.mainnet-beta.solana.com https://api.devnet.solana.com https://api.testnet.solana.com https://*.walletconnect.com https://*.walletconnect.org wss://*.walletconnect.com wss://*.walletconnect.org https://mainnet.base.org https://sepolia.base.org https://forno.celo.org https://api.barazaprotocol.com https://*.barazaprotocol.com; frame-src 'self' https://accounts.google.com https://auth.privy.io https://verify.walletconnect.com https://verify.walletconnect.org https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' 'sha256-T1sAs8pTxNvwGCtQ6Qm0Ley4WWu7WZFu6AK3xiF5n9Q=' https://accounts.google.com https://auth.privy.io https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://accounts.google.com; font-src 'self' data:; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://auth.privy.io https://api.privy.io wss://*.privy.io https://accounts.google.com https://oauth2.googleapis.com https://horizon.stellar.org https://horizon-testnet.stellar.org https://soroban-testnet.stellar.org https://mainnet.sorobanrpc.com https://api.mainnet-beta.solana.com https://api.devnet.solana.com https://api.testnet.solana.com https://*.walletconnect.com https://*.walletconnect.org wss://*.walletconnect.com wss://*.walletconnect.org https://mainnet.base.org https://sepolia.base.org https://forno.celo.org https://api.barazaprotocol.com https://*.barazaprotocol.com; frame-src 'self' https://accounts.google.com https://auth.privy.io https://verify.walletconnect.com https://verify.walletconnect.org https://challenges.cloudflare.com; worker-src 'self' blob:; manifest-src 'self'
 
 /sw.js
   Cache-Control: no-cache

@@ -5,25 +5,25 @@ const steps = [
   {
     title: "Create the Group",
     detail: "Name it, pick the type, and set dues and the voting rule. People see that before they join.",
-    image: "/gallery/gallery-plan.jpg",
+    image: "/gallery/gallery-plan.webp",
     imageFirst: true,
   },
   {
     title: "Collect Dues",
     detail: "Members pay with M-Pesa. The group page shows who has paid this month.",
-    image: "/steps/collect-dues.jpg",
+    image: "/steps/collect-dues.webp",
     imageFirst: false,
   },
   {
     title: "Vote First",
     detail: "Spending waits for a vote. The treasurer cannot send the money alone.",
-    image: "/steps/vote-first.jpg",
+    image: "/steps/vote-first.webp",
     imageFirst: true,
   },
   {
     title: "Send After the Vote",
     detail: "When the vote passes, an officer sends the payout. The receipt stays on the group page.",
-    image: "/steps/release-by-rule.jpg",
+    image: "/steps/release-by-rule.webp",
     imageFirst: false,
   },
 ];

@@ -80,7 +80,7 @@ export default function CreateCommunity() {
   const requested = searchParams.get('type') ?? '';
   const [step, setStep] = useState<0 | 1 | 2>(0);
   const [kind, setKind] = useState<Kind | null>(LEGACY_TYPE_MAP[requested] ?? null);
-  const [name, setName] = useState('');
+  const [name, setName] = useState(() => (searchParams.get('name') ?? '').slice(0, 80));
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [feeType, setFeeType] = useState<FeeType>('recurring_monthly');
