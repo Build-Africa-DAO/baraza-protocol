@@ -7,12 +7,13 @@
 
 import { useEffect, useReducer, useState, useCallback } from 'react';
 
-import { dataStore } from '@/lib/dataStore';
+import { dataStore, type Member } from '@/lib/dataStore';
 import { proposalBucket } from '@/lib/proposalStatus';
 import { apiFetch, type ApiError } from '@/lib/api';
-import { isSupabaseConfigured } from '@/lib/communities';
+import { isSupabaseConfigured, fetchCommunityMembers } from '@/lib/communities';
 import { getMyVote, onMyVotesChange, recordMyVote } from '@/lib/myVotes';
 import { createProposal } from '@/lib/proposals';
+import { buildWalletProofHeaders, type WalletProofSigner } from '@/lib/walletProof';
 
 // ---------- Low-level subscription ----------
 
@@ -71,7 +72,33 @@ export function useMembership(communityId: string, walletKey: string | null) {
 // ---------- Members ----------
 
 export function useMembers(communityId: string) {
-  return useStoreSnapshot(() => dataStore.getMembersForCommunity(communityId));
+  const storeMembers = useStoreSnapshot(() => dataStore.getMembersForCommunity(communityId));
+  const [liveMembers, setLiveMembers] = useState<Member[] | null>(null);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured() || !communityId) return;
+    let cancelled = false;
+    fetchCommunityMembers(communityId)
+      .then((records) => {
+        if (!cancelled) {
+          setLiveMembers(records);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setLiveMembers([]);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [communityId]);
+
+  if (isSupabaseConfigured() && liveMembers !== null) {
+    return liveMembers;
+  }
+  return storeMembers;
 }
 
 export function useMember(communityId: string, memberId: string) {
@@ -160,13 +187,24 @@ export function useCastVote() {
     decisionId: string,
     walletKey: string,
     voteType: 'for' | 'against',
+    signer?: WalletProofSigner,
   ): Promise<VoteOutcome> => {
     setIsLoading(true);
     try {
+      let headers: Record<string, string> = {};
+      if (signer) {
+        try {
+          headers = await buildWalletProofHeaders(signer, 'vote');
+        } catch {
+          // Fall back if wallet signing is unavailable
+        }
+      }
+
       // The server is the authority on whether this ballot exists. A network
       // error or a 409/422/500 is a failure, not a reason to write locally.
       const result = await apiFetch('/api/governance/vote', {
         method: 'POST',
+        headers,
         body: {
           proposalId: decisionId,
           voter: walletKey,

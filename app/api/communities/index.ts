@@ -1,4 +1,5 @@
 import { getWalletProof, verifyWalletProof } from '../_lib/wallet-proof.js';
+import { resolveCallerIdentity } from '../_lib/auth-session.js';
 
 export const config = { runtime: 'nodejs' };
 
@@ -59,8 +60,13 @@ async function handler(req: Request): Promise<Response> {
   if (!type?.trim()) return bad('type is required');
   if (!description?.trim()) return bad('description is required');
   if (typeof membershipFee !== 'number' || membershipFee < 0) return bad('membershipFee must be a non-negative number');
-  if (body.createdBy && !verifyWalletProof(getWalletProof(req, body.createdBy), body.createdBy, 'create-community')) {
-    return json({ error: 'wallet_proof_required', message: 'Valid founder wallet signature required' }, { status: 401 });
+  const isWallet = body.createdBy && (/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(body.createdBy) || (body.createdBy.startsWith('G') && body.createdBy.length === 56));
+  if (isWallet) {
+    const identity = await resolveCallerIdentity(req, 'create-community', body.createdBy);
+    const hasValidProof = identity?.walletAddress === body.createdBy || verifyWalletProof(getWalletProof(req, body.createdBy), body.createdBy, 'create-community');
+    if (!hasValidProof) {
+      return json({ error: 'wallet_proof_required', message: 'Valid founder wallet signature required' }, { status: 401 });
+    }
   }
 
   const supabaseUrl = process.env.SUPABASE_URL?.trim();

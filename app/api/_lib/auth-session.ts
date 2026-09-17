@@ -108,7 +108,7 @@ export async function resolveCallerIdentity(
 
       const { data: session } = await supabase
         .from('auth_sessions')
-        .select('id, user_profile_id, expires_at, revoked_at, user_profiles(id, email)')
+        .select('id, user_profile_id, expires_at, revoked_at, user_profiles(id, email, wallet_address, privy_did)')
         .eq('session_token_hash', tokenHash)
         .maybeSingle();
 
@@ -121,10 +121,12 @@ export async function resolveCallerIdentity(
           .then();
 
         const rawProfile = Array.isArray(session.user_profiles) ? session.user_profiles[0] : session.user_profiles;
-        const userProfile = rawProfile as { id: string; email?: string } | null | undefined;
+        const userProfile = rawProfile as { id: string; email?: string; wallet_address?: string; privy_did?: string } | null | undefined;
         return {
           userProfileId: session.user_profile_id,
           email: userProfile?.email,
+          walletAddress: userProfile?.wallet_address || undefined,
+          privyDid: userProfile?.privy_did || undefined,
           authMethod: 'BARAZA_SESSION',
         };
       }

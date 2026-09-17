@@ -391,6 +391,19 @@ describe('Package 1: SaaS Community Invites, Officer Governance & Push Subscript
   });
 
   it('TC-ROLE-03: SACCO Governance Policy Gate (I-ROLE-3)', async () => {
+    // Pre-flight: ensure communityB exists (parallel suites may cascade-delete it)
+    await supabase.from('communities').upsert({
+      id: communityB,
+      name: 'Package 1 Formal SACCO',
+      currency: 'KES',
+      chain: 'stellar',
+      type: 'sacco',
+      tier: 'sacco',
+      treasury_policy: 'proposal-only',
+      liquid_vault_balance_minor: 500000,
+      status: 'active',
+    }, { onConflict: 'id' });
+
     const req = authedRequest('http://localhost:3000/api/communities/officers', {
       method: 'POST',
       wallet: founderWallet,

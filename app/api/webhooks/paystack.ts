@@ -103,7 +103,10 @@ export default async function handler(req: Request): Promise<Response> {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !serviceKey) {
-    return json({ ok: true, received: true, unconfigured: true }, { status: 200 });
+    if (process.env.NODE_ENV === 'test' || process.env.VITEST === 'true') {
+      return json({ ok: true, received: true, unconfigured: true }, { status: 200 });
+    }
+    return json({ ok: false, error: 'database_unconfigured', message: 'Database credentials not configured to process payment.' }, { status: 503 });
   }
 
   // Query order

@@ -2,6 +2,8 @@
 // Standard: S&P 500 Enterprise Fintech (Cloudflare Edge Gateway & Scheduled Cron Dispatcher)
 // Strict Zero-Any TypeScript Implementation
 
+import { dispatchApiRoute } from './edgeRouter';
+
 export interface Env {
   STELLAR_NETWORK?: string;
   STELLAR_HORIZON_URL?: string;
@@ -14,6 +16,9 @@ export interface Env {
     send(message: unknown): Promise<void>;
   };
   HYPERDRIVE?: unknown;
+  ASSETS?: {
+    fetch(req: Request): Promise<Response>;
+  };
 }
 
 export interface ScheduledController {
@@ -119,6 +124,16 @@ export default {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
+    }
+
+    // Dispatch all /api/* routes through the canonical edge router
+    if (url.pathname.startsWith('/api/')) {
+      return dispatchApiRoute(req);
+    }
+
+    // Cloudflare Pages Advanced Mode static asset fallback
+    if (env.ASSETS && typeof env.ASSETS.fetch === 'function') {
+      return env.ASSETS.fetch(req);
     }
 
     // Pass through to origin
