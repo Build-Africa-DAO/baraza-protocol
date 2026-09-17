@@ -546,7 +546,7 @@ const AkiliChat: React.FC = () => {
             role="dialog"
             aria-modal="true"
             aria-label="Ask Akili"
-            className="fixed inset-x-0 bottom-0 z-50 flex h-[80vh] flex-col overflow-hidden rounded-t-2xl border border-border bg-card shadow-[var(--shadow-deep)] md:inset-x-auto md:bottom-5 md:right-5 md:h-[520px] md:max-h-[calc(100vh-5rem)] md:w-[360px] md:rounded-2xl"
+            className="fixed inset-x-0 bottom-0 z-50 flex h-[80vh] flex-col overflow-hidden rounded-t-2xl bg-card shadow-[var(--shadow-deep)] md:inset-x-auto md:bottom-5 md:right-5 md:h-[520px] md:max-h-[calc(100vh-5rem)] md:w-[360px] md:rounded-2xl"
           >
             {/* Header: a helper for this screen, not a product of its own. */}
             <div className="flex flex-shrink-0 items-center justify-between border-b border-border px-4 py-3">

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ChevronDown, CircleUserRound, HelpCircle, LogOut, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { InitialsTile } from '@/components/app/ListRow';
@@ -74,7 +74,7 @@ export function AccountMenu() {
         <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform', open && 'rotate-180')} aria-hidden />
       </button>
       {open ? (
-        <div role="menu" aria-label="Account" className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-72 rounded-chrome border border-border bg-card p-2 shadow-[var(--shadow-deep)]">
+        <div role="menu" aria-label="Account" className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-72 rounded-chrome bg-card p-2 shadow-[var(--shadow-deep)]">
           <div className="flex items-center gap-3 px-3 py-3">
             <InitialsTile initials={initialsOf(account.displayName)} />
             <div className="min-w-0">
@@ -103,6 +103,7 @@ export function AccountMenu() {
 /** Log out behind one confirmation step. */
 export function LogoutMenu({ onBeforeLogout }: { onBeforeLogout?: () => void }) {
   const account = useAccount();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const ref = useDismiss(open, () => setOpen(false));
 
@@ -112,7 +113,7 @@ export function LogoutMenu({ onBeforeLogout }: { onBeforeLogout?: () => void }) 
         <LogOut className="h-4 w-4" />
       </Button>
       {open ? (
-        <div role="dialog" aria-label="Confirm log out" className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-72 rounded-chrome border border-border bg-card p-4 shadow-[var(--shadow-deep)]">
+        <div role="dialog" aria-label="Confirm log out" className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-72 rounded-chrome bg-card p-4 shadow-[var(--shadow-deep)]">
           <p className="text-sm font-bold">Log out of Baraza?</p>
           <p className="mt-1 text-xs text-muted-foreground">Your groups and record stay where they are. Sign in again with the same phone or email.</p>
           <div className="mt-3 flex gap-2">
@@ -126,7 +127,7 @@ export function LogoutMenu({ onBeforeLogout }: { onBeforeLogout?: () => void }) 
               onClick={() => {
                 setOpen(false);
                 onBeforeLogout?.();
-                void account.logout();
+                void account.logout().finally(() => navigate('/', { replace: true }));
               }}
             >
               Log Out

@@ -219,7 +219,7 @@ export function AuthModalView({ actions, intent, countryCode, onIntentChange, on
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative flex w-full max-h-[100dvh] max-w-md flex-col overflow-y-auto rounded-t-2xl border border-border bg-background text-foreground shadow-[var(--shadow-deep)] sm:max-h-[min(42rem,calc(100dvh-3rem))] sm:rounded-2xl"
+        className="relative flex w-full max-h-[100dvh] max-w-md flex-col overflow-y-auto rounded-t-2xl bg-card text-foreground shadow-[var(--shadow-deep)] sm:max-h-[min(42rem,calc(100dvh-3rem))] sm:rounded-2xl"
       >
         <div className="relative flex flex-col px-5 pb-[max(env(safe-area-inset-bottom),1.25rem)] pt-6 sm:px-8 sm:py-8">
           <button

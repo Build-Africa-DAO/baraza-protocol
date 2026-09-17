@@ -35,8 +35,8 @@ export function ListRow({ title, meta, leading, trailing, to, onClick, className
     </>
   );
   const classes = cn(
-    'flex min-h-14 w-full items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-left',
-    interactive && 'transition-colors hover:border-foreground/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+    'baraza-row flex min-h-14 w-full items-center gap-3 rounded-lg px-4 py-3 text-left',
+    interactive && 'baraza-row-interactive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
     className,
   );
 
@@ -63,7 +63,7 @@ export function InitialsTile({ initials, size = 'md', className }: { initials: s
     <span
       aria-hidden
       className={cn(
-        'grid shrink-0 place-items-center rounded-md border border-border bg-background font-display font-bold text-foreground',
+        'baraza-tile grid shrink-0 place-items-center rounded-md font-display font-bold text-foreground',
         size === 'sm' && 'h-8 w-8 text-xs',
         size === 'md' && 'h-10 w-10 text-sm',
         size === 'lg' && 'h-14 w-14 text-lg',

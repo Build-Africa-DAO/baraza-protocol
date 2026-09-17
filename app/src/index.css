@@ -10,7 +10,8 @@
   :root {
     /* Baraza: white (light) / black (dark) + site orange */
 
-    --background: 0 0% 100%;
+    /* Page fill sits a shade below the cards so their depth reads. */
+    --background: 0 0% 96.5%;
     --foreground: 0 0% 4%;
 
     --card: 0 0% 100%;
@@ -71,25 +72,33 @@
     /* Chrome: the floating sidebar, top bar and bottom nav. White in light,
        true black in dark, so the frame is always the darkest or lightest
        thing on screen and the content panel sits a step inside it. */
-    --chrome: 0 0% 100%;
+    --chrome: 0 0% 96.5%;
     --chrome-foreground: 0 0% 4%;
     /* The page behind the floating frame. A shade off the frame in light, and
        barely off black in dark so it sits back instead of shouting. */
-    --canvas: 0 0% 97%;
+    --canvas: 0 0% 94%;
 
-    /* Shadows: one resting card shadow and one for sheets. No glows. */
-    --shadow-card:  0 14px 32px hsl(0 0% 0% / 0.06);
+    /* Shadows: cards sit on the canvas by depth, not by outline. One resting
+       shadow (contact + ambient + a hairline top highlight), one lifted, one for sheets. */
+    --shadow-card:
+      0 1px 2px hsl(0 0% 0% / 0.05),
+      0 10px 28px -10px hsl(0 0% 0% / 0.12),
+      inset 0 1px 0 hsl(0 0% 100% / 0.9);
+    --shadow-card-hover:
+      0 2px 4px hsl(0 0% 0% / 0.06),
+      0 18px 40px -12px hsl(0 0% 0% / 0.18),
+      inset 0 1px 0 hsl(0 0% 100% / 0.9);
     --shadow-deep:  0 28px 80px -30px hsl(0 0% 0% / 0.22);
   }
 
   .dark {
-    --background: 0 0% 0%;
+    --background: 0 0% 5%;
     --foreground: 0 0% 98%;
 
-    --card: 0 0% 6%;
+    --card: 0 0% 9%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 6%;
+    --popover: 0 0% 9%;
     --popover-foreground: 0 0% 98%;
 
     --primary: 25 95% 53%;
@@ -123,11 +132,18 @@
     --surface: 0 0% 8%;
     --surface-hover: 0 0% 12%;
 
-    --chrome: 0 0% 0%;
+    --chrome: 0 0% 5%;
     --chrome-foreground: 0 0% 98%;
-    --canvas: 0 0% 3%;
+    --canvas: 0 0% 1%;
 
-    --shadow-card:  0 14px 32px hsl(0 0% 0% / 0.35);
+    --shadow-card:
+      0 1px 2px hsl(0 0% 0% / 0.6),
+      0 12px 32px -10px hsl(0 0% 0% / 0.85),
+      inset 0 1px 0 hsl(0 0% 100% / 0.06);
+    --shadow-card-hover:
+      0 2px 4px hsl(0 0% 0% / 0.6),
+      0 20px 44px -12px hsl(0 0% 0% / 0.95),
+      inset 0 1px 0 hsl(0 0% 100% / 0.09);
     --shadow-deep:  0 20px 60px -10px hsl(0 0% 0% / 0.92);
   }
 }
@@ -352,13 +368,29 @@
   /* Cards */
   .baraza-card {
     background: hsl(var(--card));
-    border: 1px solid hsl(var(--border));
     border-radius: var(--radius);
     box-shadow: var(--shadow-card);
-    transition: border-color 0.2s ease;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
   }
   .baraza-card:hover {
-    border-color: hsl(var(--foreground) / 0.35);
+    box-shadow: var(--shadow-card-hover);
+  }
+  /* Soft-shadow row and tile: the same depth language as the card, smaller. */
+  .baraza-row {
+    background: hsl(var(--card));
+    box-shadow: var(--shadow-card);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .baraza-row-interactive:hover {
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-1px);
+  }
+  .baraza-tile {
+    background: hsl(var(--surface));
+    box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.6), 0 1px 2px hsl(0 0% 0% / 0.06);
+  }
+  .dark .baraza-tile {
+    box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.06), 0 1px 2px hsl(0 0% 0% / 0.5);
   }
 
   /* Wallet adapter overrides — match homepage pill + orange hover */

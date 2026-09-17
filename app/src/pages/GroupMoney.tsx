@@ -507,7 +507,7 @@ function SendToPhone({ community, currency, frozen, startOpen }: { community: Co
                 {formatMoney(amountMinor, currency)} is above the telco ceiling of {formatMajor(TELCO_MAX_SINGLE_TX_MAJOR, 'KES')} per transaction.
                 Baraza will send it to {e164} in {plan.length} parts, one after the other. Each part is recorded separately.
               </p>
-              <ol className="divide-y divide-border rounded-2xl border border-border text-sm">
+              <ol className="baraza-row divide-y divide-border rounded-2xl text-sm">
                 {plan.map((partMinor, index) => (
                   <li key={index} className="flex items-center justify-between px-4 py-2.5">
                     <span className="text-muted-foreground">Part {index + 1} of {plan.length}</span>
