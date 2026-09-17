@@ -28,9 +28,6 @@ export const WALLET_ADAPTER_ALLOWED = [
   // plumbing
   'src/components/BarazaWalletModalProvider.tsx',
   'src/components/WalletProviders.tsx',
-  'src/hooks/useBarazaContract.ts',
-  'src/hooks/useBarazaData.ts',
-  'src/hooks/useWalletGuard.ts',
   'src/lib/**',
   // operator shell (the only chrome where a wallet is furniture)
   'src/components/app/OperatorShell.tsx',

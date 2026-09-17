@@ -13,12 +13,12 @@ const stats = [
 ];
 
 const groupCards = [
-  { src: "/gallery/gallery-dues.jpg", alt: "Members gathered around a laptop" },
-  { src: "/gallery/gallery-plan.jpg", alt: "A group planning together on a glass wall" },
-  { src: "/gallery/gallery-ledger.jpg", alt: "Treasurer reviewing a shared ledger on a screen" },
-  { src: "/gallery/gallery-group.jpg", alt: "Members laughing together at a desk" },
-  { src: "/audience/group.jpg", alt: "A chama gathered around a laptop" },
-  { src: "/contact/group.jpg", alt: "Four chama members checking a payment on their phones" },
+  { src: "/gallery/gallery-dues.webp", alt: "Members gathered around a laptop" },
+  { src: "/gallery/gallery-plan.webp", alt: "A group planning together on a glass wall" },
+  { src: "/gallery/gallery-ledger.webp", alt: "Treasurer reviewing a shared ledger on a screen" },
+  { src: "/gallery/gallery-group.webp", alt: "Members laughing together at a desk" },
+  { src: "/audience/group.webp", alt: "A chama gathered around a laptop" },
+  { src: "/contact/group.webp", alt: "Four chama members checking a payment on their phones" },
 ];
 
 function prefersReducedMotion() {

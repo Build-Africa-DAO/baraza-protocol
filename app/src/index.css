@@ -1,3 +1,7 @@
+/* Self-hosted variable fonts (latin subsets download on demand, swap display). */
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -40,15 +44,15 @@
     --input: 0 0% 96%;
     --ring: 25 95% 53%;
 
-    /* One corner for everything (Eugene, 13 Sept 2026): buttons are 44px pills,
-       whose visible corner is 22px. Cards, inputs, chips, sheets, the shell frame
-       and every Tailwind radius step use that same 22px, so anything 44px or
+    /* One corner for everything (Eugene, 13 Sept 2026): buttons are 48px pills,
+       whose visible corner is 24px. Cards, inputs, chips, sheets, the shell frame
+       and every Tailwind radius step use that same 24px, so anything 48px or
        shorter becomes a pill like a button and anything taller curves the same. */
-    --radius-sm: 1.375rem;
-    --radius-md: 1.375rem;
-    --radius-lg: 1.375rem;
+    --radius-sm: 1.5rem;
+    --radius-md: 1.5rem;
+    --radius-lg: 1.5rem;
     --radius: var(--radius-md);
-    --radius-chrome: 1.375rem;
+    --radius-chrome: 1.5rem;
 
     /* Status tokens. Status is always word + icon; colour only supports it.
        Orange (primary) is never a status. */
@@ -151,13 +155,13 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-family: Geist, system-ui, sans-serif;
+    font-family: 'Geist Variable', system-ui, sans-serif;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: Geist, system-ui, sans-serif;
+    font-family: 'Geist Variable', system-ui, sans-serif;
   }
   details summary {
     list-style: none;
@@ -216,9 +220,9 @@
     text-decoration: none;
     color: var(--btn-ink);
     background: var(--btn-fill);
-    /* Defaults so a bare `.btn-wipe` is a real button: 44px tap target,
+    /* Defaults so a bare `.btn-wipe` is a real button: 48px tap target,
        14px label. Tailwind utilities on the element still win. */
-    min-height: 2.75rem;
+    min-height: 3rem;
     padding: 0.625rem 1.25rem;
     font-size: 0.875rem;
     gap: 0.5rem;
@@ -362,11 +366,11 @@
     background: hsl(var(--foreground)) !important;
     color: hsl(var(--background)) !important;
     border-radius: 9999px !important;
-    font-family: Geist, system-ui, sans-serif !important;
+    font-family: 'Geist Variable', system-ui, sans-serif !important;
     font-weight: 700 !important;
     font-size: 0.875rem !important;
     letter-spacing: 0.04em !important;
-    height: 2.5rem !important;
+    height: 3rem !important;
     padding: 0 1.25rem !important;
     transition: background-color 0.4s, color 0.4s, transform 0.2s cubic-bezier(0.3, 1, 0.8, 1) !important;
     border: none !important;
@@ -382,10 +386,10 @@
     background: hsl(var(--card)) !important;
     border: 1px solid hsl(var(--border)) !important;
     border-radius: var(--radius-lg) !important;
-    font-family: Geist, system-ui, sans-serif !important;
+    font-family: 'Geist Variable', system-ui, sans-serif !important;
   }
   .wallet-adapter-modal-title {
-    font-family: Geist, system-ui, sans-serif !important;
+    font-family: 'Geist Variable', system-ui, sans-serif !important;
     color: hsl(var(--foreground)) !important;
   }
   .wallet-adapter-modal-list li {
@@ -409,7 +413,7 @@
   }
   .wallet-adapter-dropdown-list-item {
     color: hsl(var(--foreground)) !important;
-    font-family: Geist, system-ui, sans-serif !important;
+    font-family: 'Geist Variable', system-ui, sans-serif !important;
   }
   .wallet-adapter-dropdown-list-item:hover {
     background: hsl(var(--surface)) !important;

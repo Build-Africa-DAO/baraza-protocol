@@ -1,6 +1,8 @@
-// Synchronous polyfills for Solana wallet adapters in the browser.
-// Imported first from main.tsx so this module's body executes before any
-// wallet adapter code is evaluated.
+// Synchronous polyfills for the wallet SDKs in the browser. The Privy core
+// and the Solana adapters read a global `Buffer`, so this is the first import
+// of every module that loads them (PrivyAccountProvider, WalletProviders,
+// OperatorShell). It is deliberately not imported from main.tsx: visitors
+// never need it and it costs 8 KiB on the first paint.
 
 import { Buffer } from 'buffer';
 

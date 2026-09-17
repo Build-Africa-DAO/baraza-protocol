@@ -1,38 +1,40 @@
 import React, { lazy, Suspense } from 'react';
 import { Navigate, Routes, Route } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
-import WalletProviders from '@/components/WalletProviders';
+import OperatorArea from '@/components/OperatorArea';
 import ChainProvider from '@/components/ChainProvider';
 import PageLoader from '@/components/PageLoader';
+import { ROUTE_CHUNKS } from '@/lib/routePrefetch';
 import AppErrorBoundary from '@/components/AppErrorBoundary';
 import { AkiliChatProvider } from '@/akili/AkiliChatContext';
 import { OfflineProvider } from '@/contexts/OfflineContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
-import AkiliChat from '@/akili/AkiliChat';
 import { AccountProvider } from '@/contexts/AccountContext';
 import PostAuthRedirect from '@/components/app/PostAuthRedirect';
 import { ParamRedirect } from '@/components/app/RouteRedirects';
 import LegacyTabRedirect from '@/components/app/LegacyTabRedirect';
 
 const Index = lazy(() => import('./pages/Index'));
-const Home = lazy(() => import('./pages/Home'));
-const Communities = lazy(() => import('./pages/Communities'));
-const Help = lazy(() => import('./pages/Help'));
+// The helper panel carries framer-motion; it must not sit on the first-paint path.
+const AkiliChat = lazy(() => import('@/akili/AkiliChat'));
+const Home = lazy(ROUTE_CHUNKS.home);
+const Communities = lazy(ROUTE_CHUNKS.groups);
+const Help = lazy(ROUTE_CHUNKS.help);
 const Bounties = lazy(() => import('./pages/Bounties'));
 const BountyDetail = lazy(() => import('./pages/BountyDetail'));
-const CreateCommunity = lazy(() => import('./pages/CreateCommunity'));
-const CommunityDashboard = lazy(() => import('./pages/CommunityDashboard'));
-const GroupPay = lazy(() => import('./pages/GroupPay'));
-const GroupVotes = lazy(() => import('./pages/GroupVotes'));
-const GroupPeople = lazy(() => import('./pages/GroupPeople'));
-const GroupMoney = lazy(() => import('./pages/GroupMoney'));
-const GroupSettings = lazy(() => import('./pages/GroupSettings'));
-const GroupMore = lazy(() => import('./pages/GroupMore'));
-const CreateDecision = lazy(() => import('./pages/CreateDecision'));
-const JoinDao = lazy(() => import('./pages/JoinDao'));
-const JoinStatus = lazy(() => import('./pages/JoinStatus'));
-const Profile = lazy(() => import('./pages/Profile'));
-const ProposalDetail = lazy(() => import('./pages/ProposalDetail'));
+const CreateCommunity = lazy(ROUTE_CHUNKS.create);
+const CommunityDashboard = lazy(ROUTE_CHUNKS.groupHome);
+const GroupPay = lazy(ROUTE_CHUNKS.groupPay);
+const GroupVotes = lazy(ROUTE_CHUNKS.groupVotes);
+const GroupPeople = lazy(ROUTE_CHUNKS.groupPeople);
+const GroupMoney = lazy(ROUTE_CHUNKS.groupMoney);
+const GroupSettings = lazy(ROUTE_CHUNKS.groupSettings);
+const GroupMore = lazy(ROUTE_CHUNKS.groupMore);
+const CreateDecision = lazy(ROUTE_CHUNKS.groupPropose);
+const JoinDao = lazy(ROUTE_CHUNKS.join);
+const JoinStatus = lazy(ROUTE_CHUNKS.joinStatus);
+const Profile = lazy(ROUTE_CHUNKS.account);
+const ProposalDetail = lazy(ROUTE_CHUNKS.groupVote);
 const AdminReconciliation = lazy(() => import('./pages/AdminReconciliation'));
 const AkiliCouncilFilings = lazy(() => import('./pages/AkiliCouncilFilings'));
 const RetroRounds = lazy(() => import('./pages/RetroRounds'));
@@ -41,7 +43,7 @@ const RetroResults = lazy(() => import('./pages/RetroResults'));
 const RetroCommunity = lazy(() => import('./pages/RetroCommunity'));
 const Onboarding = lazy(() => import('./pages/LeverageOnboarding'));
 const ClaimIdentity = lazy(() => import('./pages/ClaimIdentity'));
-const StatusDashboard = lazy(() => import('./pages/StatusDashboard'));
+const StatusDashboard = lazy(ROUTE_CHUNKS.status);
 const NotFound = lazy(() => import('./pages/NotFound'));
 const DevUi = lazy(() => import('./pages/DevUi'));
 
@@ -50,7 +52,6 @@ const App: React.FC = () => {
     <ThemeProvider>
       <AccountProvider>
         <ChainProvider>
-          <WalletProviders>
           <OfflineProvider>
           <AkiliChatProvider>
             <PostAuthRedirect />
@@ -65,7 +66,7 @@ const App: React.FC = () => {
               <Route path="/bounties" element={<Bounties />} />
               <Route path="/bounties/:bountyId" element={<BountyDetail />} />
               <Route path="/status" element={<StatusDashboard />} />
-              <Route path="/claim" element={<ClaimIdentity />} />
+              <Route path="/claim" element={<OperatorArea><ClaimIdentity /></OperatorArea>} />
               <Route path="/account" element={<Profile />} />
 
               {/* ── Launch ── */}
@@ -87,13 +88,13 @@ const App: React.FC = () => {
               <Route path="/dashboard/:id/more" element={<GroupMore />} />
 
               {/* ── Operator / lab (unchanged) ── */}
-              <Route path="/onboard" element={<Onboarding />} />
-              <Route path="/admin" element={<AdminReconciliation />} />
-              <Route path="/admin/akili" element={<AkiliCouncilFilings />} />
-              <Route path="/admin/retro" element={<RetroRounds />} />
-              <Route path="/retro/:communityId" element={<RetroCommunity />} />
-              <Route path="/retro/:communityId/vote" element={<RetroVote />} />
-              <Route path="/retro/:communityId/results" element={<RetroResults />} />
+              <Route path="/onboard" element={<OperatorArea><Onboarding /></OperatorArea>} />
+              <Route path="/admin" element={<OperatorArea><AdminReconciliation /></OperatorArea>} />
+              <Route path="/admin/akili" element={<OperatorArea><AkiliCouncilFilings /></OperatorArea>} />
+              <Route path="/admin/retro" element={<OperatorArea><RetroRounds /></OperatorArea>} />
+              <Route path="/retro/:communityId" element={<OperatorArea><RetroCommunity /></OperatorArea>} />
+              <Route path="/retro/:communityId/vote" element={<OperatorArea><RetroVote /></OperatorArea>} />
+              <Route path="/retro/:communityId/results" element={<OperatorArea><RetroResults /></OperatorArea>} />
 
               {/* ── §13.25 legacy URLs. Keep these: they are in SMS and email. ── */}
               <Route path="/communities" element={<Navigate to="/groups" replace />} />
@@ -144,11 +145,12 @@ const App: React.FC = () => {
             </Routes>
             </Suspense>
             </AppErrorBoundary>
-            <AkiliChat />
+            <Suspense fallback={null}>
+              <AkiliChat />
+            </Suspense>
             <Toaster />
           </AkiliChatProvider>
           </OfflineProvider>
-          </WalletProviders>
         </ChainProvider>
       </AccountProvider>
     </ThemeProvider>

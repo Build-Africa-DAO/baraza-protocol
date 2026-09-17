@@ -63,6 +63,8 @@ export function ParallaxPhoto({
         alt={alt}
         width={width}
         height={height}
+        loading="lazy"
+        decoding="async"
         style={reduce ? undefined : { y, scale: 1 + strength * 2 }}
         className={cn("h-full w-full object-cover", imgClassName)}
       />
