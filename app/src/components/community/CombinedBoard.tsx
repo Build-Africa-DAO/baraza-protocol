@@ -132,7 +132,7 @@ export default function CombinedBoard({ communityId, decisions }: Props) {
                 </span>
                 <Link
                   to={item.href}
-                  className="inline-flex min-h-11 items-center gap-1 text-xs font-semibold text-foreground hover:underline"
+                  className="inline-flex min-h-12 items-center gap-1 text-xs font-semibold text-foreground hover:underline"
                 >
                   View
                   <ArrowRight className="h-3 w-3" />

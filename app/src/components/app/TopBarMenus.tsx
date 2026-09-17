@@ -49,7 +49,7 @@ export function ThemeToggle() {
 }
 
 const menuRow =
-  'flex min-h-11 w-full items-center gap-2.5 rounded-full px-3 text-left text-sm font-semibold text-foreground hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
+  'flex min-h-12 w-full items-center gap-2.5 rounded-full px-3 text-left text-sm font-semibold text-foreground hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
 
 /** Who is signed in, with the places that concern them. */
 export function AccountMenu() {
@@ -67,7 +67,7 @@ export function AccountMenu() {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Account menu"
-        className="flex min-h-11 items-center gap-2 rounded-full border border-border bg-background pl-1 pr-2.5 text-sm font-semibold hover:border-foreground/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="flex min-h-12 items-center gap-2 rounded-full border border-border bg-background pl-1 pr-2.5 text-sm font-semibold hover:border-foreground/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <InitialsTile initials={initialsOf(account.displayName)} size="sm" className="rounded-full" />
         <span className="hidden max-w-[10rem] truncate md:inline">{account.displayName}</span>

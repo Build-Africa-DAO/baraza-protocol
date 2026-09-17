@@ -529,7 +529,7 @@ const AkiliChat: React.FC = () => {
           type="button"
           onClick={() => open()}
           aria-label="Open Akili chat"
-          className="fixed right-4 z-[45] flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[var(--shadow-deep)] transition-transform hover:scale-105 active:scale-95 bottom-[calc(6rem+env(safe-area-inset-bottom))] md:bottom-6 md:right-6"
+          className="fixed right-4 z-[45] flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[var(--shadow-deep)] transition-transform hover:scale-105 active:scale-95 bottom-[calc(6rem+env(safe-area-inset-bottom))] md:bottom-6 md:right-6"
         >
           <MessageCircle className="h-5 w-5" />
         </button>
@@ -559,7 +559,7 @@ const AkiliChat: React.FC = () => {
                   <p className="mt-0.5 text-xs text-muted-foreground">Explains this screen. It never approves anything.</p>
                 </div>
               </div>
-              <button onClick={close} aria-label="Close chat" className="btn-icon h-11 w-11 -mr-2">
+              <button onClick={close} aria-label="Close chat" className="btn-icon h-12 w-12 -mr-2">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -645,7 +645,7 @@ const AkiliChat: React.FC = () => {
                 type="submit"
                 disabled={!input.trim() || isTyping}
                 aria-label="Send message"
-                className="btn-wipe h-11 w-11 min-h-0 p-0 disabled:cursor-not-allowed"
+                className="btn-wipe h-12 w-12 min-h-0 p-0 disabled:cursor-not-allowed"
               >
                 <Send className="w-4 h-4" />
               </button>
