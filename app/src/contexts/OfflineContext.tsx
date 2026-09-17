@@ -20,8 +20,13 @@ import {
   startAutoSync,
 } from '@/lib/offline/sync';
 
+export const RECONNECT_EVENT = 'baraza:online';
+const RECONNECT_BANNER_MS = 4_000;
+
 interface OfflineContextValue {
   isOnline: boolean;
+  /** True for a few seconds after the connection returns, for the "back online" banner. */
+  justReconnected: boolean;
   queueSize: number;
   enqueue: (action: Parameters<typeof enqueueAction>[0]) => Promise<QueuedAction>;
   processQueue: () => Promise<void>;
@@ -32,6 +37,7 @@ const OfflineContext = createContext<OfflineContextValue | null>(null);
 
 export const OfflineProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
+  const [justReconnected, setJustReconnected] = useState(false);
   const [queueSize, setQueueSize] = useState(0);
   const cleanupRef = useRef<(() => void) | null>(null);
 
@@ -44,8 +50,19 @@ export const OfflineProvider: React.FC<{ children: React.ReactNode }> = ({ child
     Promise.all([openQueue(), openCache()]).catch(() => undefined);
     refreshQueueSize().catch(() => undefined);
 
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+    let reconnectTimer: number | undefined;
+    const handleOnline = () => {
+      setIsOnline(true);
+      setJustReconnected(true);
+      // Data hooks listen for this and reload what they were showing.
+      window.dispatchEvent(new Event(RECONNECT_EVENT));
+      window.clearTimeout(reconnectTimer);
+      reconnectTimer = window.setTimeout(() => setJustReconnected(false), RECONNECT_BANNER_MS);
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setJustReconnected(false);
+    };
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
@@ -61,6 +78,7 @@ export const OfflineProvider: React.FC<{ children: React.ReactNode }> = ({ child
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
       clearInterval(intervalId);
+      window.clearTimeout(reconnectTimer);
       cleanupRef.current?.();
     };
   }, [refreshQueueSize]);
@@ -90,6 +108,7 @@ export const OfflineProvider: React.FC<{ children: React.ReactNode }> = ({ child
     <OfflineContext.Provider
       value={{
         isOnline,
+        justReconnected,
         queueSize,
         enqueue,
         processQueue: handleProcessQueue,

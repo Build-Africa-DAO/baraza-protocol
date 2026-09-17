@@ -15,6 +15,7 @@ import { Stepper } from '@/components/ui/stepper';
 import { useAccount } from '@/contexts/AccountContext';
 import { useCommunity } from '@/hooks/useCommunities';
 import { useToast } from '@/hooks/use-toast';
+import { RailHealthLine } from '@/components/app/RailHealthLine';
 import { apiFetch, submitGuard } from '@/lib/api';
 import { isPaymentSimulatorEnabled, RAIL_UNAVAILABLE_COPY } from '@/lib/devMode';
 import { acceptInviteCode } from '@/lib/inviteAccept';
@@ -258,7 +259,7 @@ export default function JoinDao() {
         <div className="container mx-auto max-w-2xl space-y-6 px-4">
           <Link
             to={account.authenticated ? `/dashboard/${community.id}` : '/groups'}
-            className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
+            className="inline-flex min-h-12 items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden />
             {account.authenticated ? 'Back to Group' : 'Browse Groups'}
@@ -328,6 +329,7 @@ export default function JoinDao() {
                 <p className="mt-2 text-sm text-muted-foreground">Nothing to pay. Your account becomes the membership.</p>
               ) : (
                 <div className="mt-4">
+                  <RailHealthLine className="mb-3" />
                   <Field
                     label="M-Pesa Phone Number"
                     htmlFor="join-phone"
@@ -364,7 +366,7 @@ export default function JoinDao() {
                 type="button"
                 onClick={() => setOtherWays((open) => !open)}
                 aria-expanded={otherWays}
-                className="flex min-h-11 w-full items-center justify-between text-left text-sm font-semibold"
+                className="flex min-h-12 w-full items-center justify-between text-left text-sm font-semibold"
               >
                 Other Ways to Pay
                 <ChevronDown className={`h-4 w-4 transition-transform ${otherWays ? 'rotate-180' : ''}`} aria-hidden />
