@@ -721,3 +721,62 @@ Done on `front-end` after this document was first written. Each item was verifie
 | 20 | Axe pass both themes; commit series | see below |
 
 **Verification.** `tsc` clean for both configs; `eslint` 0 errors; vitest 857 passing with the same 65 pre-existing failures (Supabase-only suites and the local-URL assertion); `vite build` green with `_headers`, `_redirects`, `_routes.json`, `sw.js` and `logo.png` in `dist` and no `emails/` folder. Axe (WCAG 2.0 A/AA, 2.1 AA) on `/`, `/groups`, `/dashboard/1`, `/dashboard/1/votes/1`, `/join/1`, `/help`, `/status`, `/admin` in dark and light: zero violations after fixing the landing footer band (white on orange, 2.7:1, now dark ink) and exposing the wordmark as one `role="img"`. The single remaining report is the orange "Baraza" in the logotype on white backgrounds (2.78:1). Logotypes are exempt from WCAG 1.4.3 and the mark is unchanged by decision.
+
+## 15. Production polish against BRZ-FE-SPEC-2026-001, 17 September 2026
+
+Simon's *Frontend Production Excellence Specification* (`baraza-protocol-docs/03-delivery-specs/FRONTEND_PRODUCTION_EXCELLENCE_SPECIFICATION.md`, 16 September) lists twelve tickets. This pass implemented everything the frontend can do on its own, on `front-end` after merging `origin/dev`, as one PR back to `dev`. Where a ticket needs something the backend does not expose yet, the frontend says so on screen ("Not available yet") rather than inventing it, and the gap is recorded below.
+
+### 15.1 Ticket status
+
+| Ticket | Status | What shipped | Where |
+|---|---|---|---|
+| FE-1.1 Branded 404 | Done | `StatusScreen` "Page Not Found. Ukurasa Haupatikani.", Back to Home (`/home` when signed in), Browse Groups, the missing path, Protocol Status link, Ask Akili prompt | `pages/NotFound.tsx` |
+| FE-1.2 Route prefetch and skeletons | Done | One `ROUTE_CHUNKS` map feeds `React.lazy` and hover/focus/touch prefetch on every nav link (honours Save-Data); `PageLoader` is a layout skeleton with `role="status"` | `lib/routePrefetch.ts`, `components/PageLoader.tsx`, `GroupSidebarNav`, `AppShell` |
+| FE-2.1 Debounced search and typology filter | Done (already had filters) | 300 ms debounce writes `?q=`; "Showing X of Y groups" | `pages/Communities.tsx` |
+| FE-2.2 Action-oriented empty state | Done | "No Group Called “q” Yet" with **Start This Group** carrying the name into `/create?name=` | `pages/Communities.tsx`, `pages/CreateCommunity.tsx` |
+| FE-3.1 Proposal validation and budget guard | Done | Days 1–30 chips, amount ≤ available (from `liquid_vault_balance_minor`, else total), Preview/Edit with safe markdown-lite | `pages/CreateDecision.tsx`, `lib/markdownLite.tsx` |
+| FE-3.2 Live quorum bar and optimistic ballot | Done | Segmented support/object bar with quorum marker, "Quorum Reached (X%)" pill, +1 optimistic tally while sending, rollback and retry on failure | `pages/ProposalDetail.tsx` |
+| FE-4.1 Carrier health indicator | Done for the health line; **countdown and Paybill fallback blocked** | `RailHealthLine` above the phone field on Join and Pay, fed by `GET /api/health/ready` | `hooks/useRailHealth.ts`, `components/app/RailHealthLine.tsx` |
+| FE-4.2 Statement and CSV export | Done | Date-range chips (This Month, Last Month, 3 Months, Year, All) on the export; Reserved and Available read the encumbered and liquid balance columns when the API returns them | `pages/GroupMoney.tsx`, `lib/communities.ts` |
+| FE-5.1 Session expiry with form preservation | Done | A 401 after a working session opens the sign-in sheet with a notice, and `apiFetch` replays the original request once after re-auth, so a drafted proposal is never lost | `lib/api.ts`, `lib/auth/tokenProvider.ts`, `contexts/accountShared.ts` |
+| FE-5.2 Multi-chain network banner | **Blocked** | Nothing in the community row or any endpoint says which chain a group settles on or whether EVM contracts are `NOT_DEPLOYED`; see 15.3 | — |
+| FE-6.1 WCAG 2.1 AA and touch targets | Done at 48 px | Every button, chip, icon button and nav slot is 48 px on phones (36 px only from `sm` for secondary chips); Lighthouse accessibility 98–100 on the four measured routes | `components/ui/button.tsx`, `filter-chips.tsx`, `index.css`, 18 screens |
+| FE-6.2 Offline queue and network banner | Done for the banner and reconnect refresh; **mutation queue deliberately not built** | Offline banner, green "Back Online" banner for 4 s, `baraza:online` event reloads vote lists; see 15.3 | `contexts/OfflineContext.tsx`, `components/OfflineBanner.tsx`, `hooks/useProposals.ts` |
+
+### 15.2 Performance work (the acceptance gate)
+
+Lighthouse 13, mobile emulation with the default simulated throttling (Slow 4G: 150 ms RTT, 1.6 Mbps), against `vite build` served by `vite preview`. The spec says "Fast 3G"; Lighthouse's Fast 3G preset has a 562 ms RTT and is not its default, so these numbers use the tool's standard mobile run. The same runs on the same commit are reproducible with `CHROME_PATH=… npx lighthouse http://localhost:4173/<route> --only-categories=performance,accessibility,best-practices,seo`.
+
+| Route | Before (perf / a11y / BP / SEO) | After | FCP | LCP | CLS |
+|---|---|---|---|---|---|
+| `/` | 61 / 98 / 77 / 92 | **83 / 99 / 100 / 100** | 2.6 s | 4.1 s | 0 |
+| `/groups` | 61 / 98 / 77 / 92 | **90 / 98 / 100 / 100** | 2.7 s | 3.0 s | 0.01 |
+| `/dashboard/1` | — | **87 / 100 / 100 / 66** | 2.7 s | 3.4 s | 0 |
+| `/help` | — | **91 / 100 / 100 / 100** | 2.6 s | 2.9 s | 0 |
+
+The `/dashboard/*` SEO score is intentional: group pages carry `noindex` (`GroupWorkspace.tsx`), so the "page is blocked from indexing" audit fails by design. JavaScript on Browse fell from 2,112 KiB to about 120 KiB gzipped on the critical path.
+
+What changed, in order of effect:
+
+1. **Wallet code off the visitor path.** The Privy SDK mounts only when a session hint exists or on the first Sign In tap (`PrivyAccountProvider` is lazy); the Solana wallet adapter mounts only under operator routes (`OperatorArea`); `useBarazaData` lost its chain legs. The Buffer polyfill moved from `main.tsx` to the three modules that load wallet SDKs.
+2. **Chunking under Vite 8 (rolldown).** Rolldown's `manualChunks` shim also captures a matched module's dependencies, which put React itself inside a framer-motion chunk on one attempt and the Buffer polyfill inside `solana-web3` on another. Every shared dependency now has its own rule (`buffer-polyfill`, `noble-crypto`, `scure-crypto`, `react-vendor` including the router packages); framer-motion is left to default splitting so it only travels with the Akili panel and the landing sections that use it. `modulePreload` is back on so the entry graph downloads in parallel.
+3. **No third-party stylesheet on first paint.** Geist and Geist Mono are self-hosted variable fonts (`@fontsource-variable/*`, `font-display: swap`, latin subsets on demand); the Google Fonts request that blocked rendering for about 1.2 s on Slow 4G is gone, and `font-src`/`style-src` in the CSP no longer name Google's hosts.
+4. **Landing page split.** The hero renders its copy statically (no fade-in from zero, which had been holding the LCP until the motion chunk arrived); the polaroid gallery loads behind a same-size skeleton, everything below the hero is one lazy chunk, and the Akili panel is lazy too. Landing photos are WebP at the size they render (1.7 MB → 0.5 MB total).
+5. **zod out of the entry.** `lib/env.ts` validates nine strings with 60 lines of plain code instead of an 18 KiB-gzipped schema library.
+6. **Content-Security-Policy fixed for the inline theme script.** The `_headers` policy allowed `script-src 'self'` only, which on Cloudflare would have blocked the inline theme bootstrap and produced a flash of the wrong theme plus a console violation on every load. The script is now allowed by hash, and a test fails if the script or the hash drifts.
+7. **Per-route Early Hints.** A build plugin appends `Link: <chunk>; rel=modulepreload` lines to the published `_headers` for `/`, `/groups`, `/help`, `/home` and `/dashboard/*` with the hashed chunk names of that route and its private imports. Cloudflare Pages sends these as 103 Early Hints, which removes the one round trip that `vite preview` still shows between the entry executing and the page chunk arriving. This cannot be measured locally; it should lift the production numbers above the local ones.
+
+**Honest reading of the gate.** The four routes measure 83–91 locally against the spec's ≥ 92. What remains is the network shape of a single-page app on a 150 ms RTT link: HTML → CSS and the entry graph (about 120 KiB gzipped, of which React and the router are 54) → the route chunk → paint. Point 7 addresses the last hop in production. Going further means either server rendering the first screen or dropping React Router, both of which are architecture decisions rather than polish, and neither belongs in this PR.
+
+### 15.3 Pushback and corrections for the spec
+
+- **FE-4.1 countdown and Paybill fallback.** The frontend has no signal to count down against: `POST /api/payment-orders` returns an order id and a status, not the STK timeout or a Paybill number for the group. The health line shipped; the 60-second countdown and "pay manually via Paybill" need the order response to carry `stk_expires_at` and the community row to carry a Paybill (it is "Not Set" in Settings today because nothing returns it). Building either against a hard-coded 60 s or a made-up Paybill would be exactly the kind of invented data the rest of the app removed.
+- **FE-5.2 EVM gasless badge.** No endpoint or column says which chain a community settles on or whether EVM contracts are deployed. Rendering "Gasless Staging Mode" from nothing would be a false status. Ask: a `settlement` object on the community row (`chain`, `contracts_state`).
+- **FE-6.1 48 px vs WCAG.** WCAG 2.1 AA (2.5.5 is AAA; 2.5.8 in 2.2 is AA) asks for 24 px minimum with spacing, and the widely used platform guidance is 44 px (Apple) / 48 dp (Material). We went to 48 px on phones for the whole app because the audience is phone-first; the spec should cite 2.5.8 / platform guidance rather than "WCAG 44 px", which does not exist as a criterion.
+- **FE-6.2 offline mutation queue.** Deliberately not built. Queuing a vote or a payment while offline and replaying it later is unsafe for money: the vote window may have closed, the dues may have been paid on another phone, and an STK prompt cannot be "queued". The banner tells the person to reconnect and the lists refresh themselves on reconnect. If a queue is wanted for idempotent writes only (drafts), it needs idempotency keys on the API first.
+- **Header corrections.** The repository is `app/` (not `apps/web`) on React 18.3 and Vite 8, and `FIFTH_PASS_RECURSIVE_COMPONENT_PRODUCTION_READINESS_AUDIT.md` is not in `baraza-protocol-docs`. Please add the audit or drop the reference.
+- **How was 96.4% measured?** The spec's "Current Rating: 96.4% (Grade A)" has no method, tool or route list attached. If it is a Lighthouse figure, the runs above are the reproducible baseline; if it is a rubric, please share it so the target can be checked the same way.
+
+### 15.4 Verification
+
+`tsc --noEmit -p tsconfig.app.json` clean; `eslint .` 0 errors (45 pre-existing `react-hooks/set-state-in-effect` warnings, none introduced); frontend vitest 259 passing across 28 files (the Docker-only backend suites, including `postPr89IntegrationBridge.test.ts` from `dev`, still need the local API and are not part of this gate); `vite build` green with the generated `_headers`. Browser pass on the production build: 404 page, offline and back-online banners, 320 px width without horizontal scroll on `/`, `/groups` and `/dashboard/1`, the sign-in sheet loading Privy lazily without console errors, the polaroid gallery and WebP photos rendering, buttons measured at 48 px.
