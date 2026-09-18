@@ -42,6 +42,7 @@ export default function GroupPay() {
   return (
     <GroupWorkspace
       title="Pay Dues"
+      subtitle="Contribute your dues to the shared group pool."
       gate={{ title: 'Sign in to pay', description: 'Log in to pay your dues for this group.' }}
       hideBanner
     >

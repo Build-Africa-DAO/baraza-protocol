@@ -57,11 +57,11 @@ function MoneyPanel({ community, isOfficer, frozen }: { community: Community; is
 
   return (
     <div className="space-y-5">
-      <section className="baraza-card p-5 md:p-6" aria-label="Balances">
-        <div className="grid gap-4 sm:grid-cols-3">
-          <AmountBlock label="Total" amountMajor={hasBalance ? community.fundBalance : null} currency={currency} />
-          <AmountBlock label="Reserved" amountMinor={community.encumberedBalanceMinor ?? null} currency={currency} size="md" />
-          <AmountBlock label="Available" amountMinor={community.liquidVaultBalanceMinor ?? null} currency={currency} size="md" />
+      <section className="baraza-card p-5 md:p-6 text-center" aria-label="Balances">
+        <div className="grid gap-4 text-center sm:grid-cols-3">
+          <AmountBlock className="text-center" label="Total" amountMajor={hasBalance ? community.fundBalance : null} currency={currency} />
+          <AmountBlock className="text-center" label="Reserved" amountMinor={community.encumberedBalanceMinor ?? null} currency={currency} size="md" />
+          <AmountBlock className="text-center" label="Available" amountMinor={community.liquidVaultBalanceMinor ?? null} currency={currency} size="md" />
         </div>
       </section>
 
