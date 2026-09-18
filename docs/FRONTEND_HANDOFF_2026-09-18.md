@@ -1,6 +1,6 @@
 # Frontend changes on 18 September 2026 and what the backend needs to add
 
-**From:** Eugene (frontend) · **To:** Simon (backend) · **Branch:** `front-end` (uncommitted at the time of writing, will land as one PR to `dev`)
+**From:** Eugene (frontend) · **To:** Simon (backend) · **Branch:** `front-end`, merged with `dev` at PR #94 (commit `df5aa23`); lands as one PR to `dev`
 **Context:** PR #93 (production polish against BRZ-FE-SPEC-2026-001) is already on `dev`. Everything below is on top of it. The frontend never invents data: where a backend field or endpoint does not exist yet, the screen keeps working from local state and says so. This document lists exactly what is missing so those fallbacks can be removed.
 
 ---
@@ -78,7 +78,7 @@ Ordered by how much of the frontend is waiting on it.
 Ask:
 1. `POST /api/user/avatar` — session bearer; body `multipart/form-data` with `file` (JPEG/PNG/WebP, ≤ 2 MB) **or** JSON `{ "dataUrl": "data:image/jpeg;base64,…" }`; stores to Supabase Storage (public bucket `avatars/<user_id>.<ext>`), writes `user_profiles.avatar_url`, returns `{ "avatarUrl": "https://…" }`. `DELETE /api/user/avatar` clears it.
 2. Keep `PATCH /api/user/profile` accepting only https `avatarUrl` (the frontend will switch to calling 2.1.1 first, then PATCH the returned URL, then drop the local copy).
-3. Return `avatar_url` in `GET /api/user/profile` (already does) **and** on every member row: `GET /api/communities/:id/members` and the officers list. Today the People directory can only show the signed-in person's own photo because other members' URLs are not in the roster payload.
+3. `GET /api/user/profile` already returns `avatar_url`, and since PR #94 `GET /api/communities/members` returns `avatarUrl` per member. The frontend mapper in `src/lib/communities.ts` (`fetchCommunityMembers`) drops it today; we will carry it onto `Member` so the People directory shows everyone's photo once 2.1.1 gives those URLs somewhere to live. The officers list (`GET /api/communities/officers`) should return `avatarUrl` too.
 
 ### 2.2 Group logo storage (blocks 1.5 for logos)
 There is no `communities.image_url` column and no write endpoint (the mapper in `src/lib/communities.ts` notes the column was never created; the frontend derives initials from the name).
@@ -89,10 +89,10 @@ Ask:
 3. Include `image_url` in every community payload: `GET /api/communities`, `GET /api/communities/:id`, `GET /api/user/memberships`, and the join page's community fetch. The frontend will map it to `community.image` and stop reading local storage.
 
 ### 2.3 Real Airtel Money and card rails (blocks 1.1 beyond the simulator)
-The chooser is wired, but only M-Pesa and Stellar have real endpoints. Today:
+The chooser is wired, but only M-Pesa and Stellar have real endpoints. PR #94 pointed the M-Pesa button at the live `POST /api/mpesa/stk-push` whenever the simulator is off, and the merge kept that. Today:
 - **Airtel Money** posts to `POST /api/mpesa/simulate` with `rail: "airtel"` and lands on `/join/:id/status?rail=airtel`.
 - **Card / Bank** posts to `POST /api/mpesa/simulate` with `channel: "card"` and an email, and lands on `?rail=card`.
-Both only work with the dev simulator flag; in production the button shows the "rail unavailable" copy. `api/payments/paystack.ts` and `api/payments/kotani.ts` exist but are internal proxies behind `PAYMENT_ADAPTER_PROXY_SECRET`, so the browser cannot call them.
+Both only work with the dev simulator flag; in production the Airtel and card buttons show the "rail unavailable" copy. `api/payments/paystack.ts` and `api/payments/kotani.ts` exist but are internal proxies behind `PAYMENT_ADAPTER_PROXY_SECRET`, so the browser cannot call them.
 
 Ask:
 1. `POST /api/payments/airtel/stk` (or extend `POST /api/mpesa/stk-push` with `rail: "mpesa" | "airtel"`): body `{ communityId, phone, amountMinor, currency, purpose: "join" | "dues" }`; returns `{ orderId, activationSecret?, stkExpiresAt }`; same callback/status machinery as M-Pesa.
