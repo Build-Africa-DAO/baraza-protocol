@@ -40,7 +40,7 @@ export default function VisitorShell({ children }: { children: ReactNode }) {
         Skip to main content
       </a>
 
-      <header className="z-40 shrink-0 rounded-chrome bg-chrome text-chrome-foreground shadow-[var(--shadow-deep)]">
+      <header className="z-40 shrink-0 rounded-chrome bg-chrome text-chrome-foreground shadow-deep">
         <div className="flex h-16 items-center justify-between gap-3 px-4 md:px-5">
           <Link to="/" aria-label="Baraza Protocol home" className="min-w-0">
             <BrandLogo size="sm" showIcon={false} lockup="protocol" />
@@ -78,7 +78,7 @@ export default function VisitorShell({ children }: { children: ReactNode }) {
 
       <nav
         aria-label="Visitor navigation"
-        className="fixed inset-x-3 bottom-3 z-40 rounded-chrome bg-chrome/95 text-chrome-foreground shadow-[var(--shadow-deep)] backdrop-blur-xl md:hidden"
+        className="fixed inset-x-3 bottom-3 z-40 rounded-chrome bg-chrome/95 text-chrome-foreground shadow-deep backdrop-blur-xl md:hidden"
       >
         <div className="mx-auto grid max-w-md grid-cols-4 items-end px-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2">
           {SLOTS.map(({ to, label, icon: Icon }) => {

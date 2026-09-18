@@ -529,7 +529,7 @@ const AkiliChat: React.FC = () => {
           type="button"
           onClick={() => open()}
           aria-label="Open Akili chat"
-          className="fixed right-4 z-[45] flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[var(--shadow-deep)] transition-transform hover:scale-105 active:scale-95 bottom-[calc(6rem+env(safe-area-inset-bottom))] md:bottom-6 md:right-6"
+          className="fixed right-4 z-[45] flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-deep transition-transform hover:scale-105 active:scale-95 bottom-[calc(6rem+env(safe-area-inset-bottom))] md:bottom-6 md:right-6"
         >
           <MessageCircle className="h-5 w-5" />
         </button>
@@ -546,7 +546,7 @@ const AkiliChat: React.FC = () => {
             role="dialog"
             aria-modal="true"
             aria-label="Ask Akili"
-            className="fixed inset-x-0 bottom-0 z-50 flex h-[80vh] flex-col overflow-hidden rounded-t-2xl bg-card shadow-[var(--shadow-deep)] md:inset-x-auto md:bottom-5 md:right-5 md:h-[520px] md:max-h-[calc(100vh-5rem)] md:w-[360px] md:rounded-2xl"
+            className="fixed inset-x-0 bottom-0 z-50 flex h-[80vh] flex-col overflow-hidden rounded-t-2xl bg-card shadow-deep md:inset-x-auto md:bottom-5 md:right-5 md:h-[520px] md:max-h-[calc(100vh-5rem)] md:w-[360px] md:rounded-2xl"
           >
             {/* Header: a helper for this screen, not a product of its own. */}
             <div className="flex flex-shrink-0 items-center justify-between border-b border-border px-4 py-3">
