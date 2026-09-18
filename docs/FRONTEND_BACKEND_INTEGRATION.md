@@ -836,3 +836,7 @@ Following the merge of PR #92 (Backend Enterprise Hardening) and PR #93 (Fronten
 3. **Root `api/` Shim Desynchronization:**
    - 28 endpoints from `app/api/` are missing from the root `api/` re-export directory.
 
+## 17. 18 September 2026: join flow, account, photos and logos
+
+Documented in full in `docs/FRONTEND_HANDOFF_2026-09-18.md`: payment method chooser on Join (M-Pesa, Airtel Money, Card / Bank, Crypto), fee cards, centred join and create steps, Account layout with Log Out moved to the top bar menu, profile photo and group logo changes propagating to every tile, collapsible sidebar sections, theme-aware toasts, and the named shadow utilities that fixed shadows that never rendered. Backend asks: avatar and logo upload endpoints with `avatar_url` on member rows and `image_url` on community rows, real Airtel Money and card checkout endpoints, `rail` and `stkExpiresAt` on payment order status, per-rail health components.
+

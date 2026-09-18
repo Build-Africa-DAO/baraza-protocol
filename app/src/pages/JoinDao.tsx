@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, ChevronDown, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import Layout from '@/components/Layout';
 import PageLoader from '@/components/PageLoader';
 import { StatusScreen } from '@/components/StatusPage';
@@ -24,6 +24,7 @@ import { PRODUCT_ENVIRONMENT } from '@/lib/network';
 import { storePaymentOrderActivationSecret } from '@/lib/payments';
 import { calculateDynamicFee, type FeeBreakdown } from '@/lib/payments/feeEngine';
 import { normaliseKenyanPhone } from '@/lib/phone';
+import { useCommunityImage } from '@/lib/imageUpload';
 import { useSeo } from '@/lib/seo';
 import { rulesSentence } from '@/lib/voteCopy';
 
@@ -48,6 +49,36 @@ const TYPE_LABELS: Record<string, string> = {
   professional: 'Professional network',
 };
 
+export const PAYMENT_METHODS = [
+  {
+    id: 'mpesa' as const,
+    name: 'M-Pesa',
+    subtitle: 'Safaricom STK',
+    logo: '/logos/mpesa.svg',
+  },
+  {
+    id: 'airtel' as const,
+    name: 'Airtel Money',
+    subtitle: 'Airtel Kenya',
+    logo: '/logos/airtel.svg',
+  },
+  {
+    id: 'card' as const,
+    name: 'Card / Bank',
+    subtitle: 'Mastercard / Visa',
+    logo: '/logos/mastercard.svg',
+  },
+  {
+    id: 'crypto' as const,
+    name: 'Crypto',
+    subtitle: 'Stellar XLM / USDC',
+    logo: '/logos/stellar.svg',
+    invertOnDark: true,
+  },
+] as const;
+
+export type PaymentMethodId = (typeof PAYMENT_METHODS)[number]['id'];
+
 function initialsOf(name: string): string {
   return (
     name
@@ -64,6 +95,7 @@ export default function JoinDao() {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const { community, isLoading } = useCommunity(id);
+  const { image: communityLogo } = useCommunityImage(community?.id, community?.image);
   const account = useAccount();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -76,12 +108,13 @@ export default function JoinDao() {
   });
 
   const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [selectedMethod, setSelectedMethod] = useState<'mpesa' | 'airtel' | 'card' | 'crypto'>('mpesa');
   const [txHash, setTxHash] = useState('');
   const [busy, setBusy] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [quote, setQuote] = useState<FeeBreakdown | null>(null);
-  const [otherWays, setOtherWays] = useState(false);
 
   const currency = groupCurrency(community);
   const amountMajor = community?.membershipFee ?? 0;
@@ -91,6 +124,7 @@ export default function JoinDao() {
   const stage = needsLogin ? 0 : 1;
   const normalisedPhone = normaliseKenyanPhone(phone);
   const hashOk = /^[a-f0-9]{64}$/i.test(txHash.trim());
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
   // An invite code in the URL is accepted as soon as the person is signed in.
   useEffect(() => {
@@ -161,7 +195,7 @@ export default function JoinDao() {
     }
   }
 
-  async function payWithMpesa() {
+  async function payWithMobileMoney(targetRail: 'mpesa' | 'airtel' = selectedMethod === 'airtel' ? 'airtel' : 'mpesa') {
     if (!id || busy) return;
     if (needsLogin) {
       account.login();
@@ -169,6 +203,12 @@ export default function JoinDao() {
     }
     if (!normalisedPhone) return;
     setError(null);
+    // M-Pesa has a live Daraja route (dev, PR #94); Airtel Money has none yet, so
+    // outside the simulator it stays honest and says the rail is unavailable.
+    if (targetRail === 'airtel' && !isPaymentSimulatorEnabled()) {
+      setError(RAIL_UNAVAILABLE_COPY);
+      return;
+    }
     const endpoint = isPaymentSimulatorEnabled() ? '/api/mpesa/simulate' : '/api/mpesa/stk-push';
     setBusy(true);
     try {
@@ -180,6 +220,7 @@ export default function JoinDao() {
             communityId: id,
             amount: Math.round(fee.totalExpectedMinor / 100),
             currency,
+            rail: targetRail,
           },
           auth: 'omit',
         }),
@@ -190,7 +231,48 @@ export default function JoinDao() {
         return;
       }
       if (result.data.activationSecret) storePaymentOrderActivationSecret(result.data.orderId, result.data.activationSecret);
-      navigate(`/join/${id}/status?orderId=${encodeURIComponent(result.data.orderId)}`);
+      navigate(`/join/${id}/status?orderId=${encodeURIComponent(result.data.orderId)}&rail=${targetRail}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function payWithCard() {
+    if (!id || busy) return;
+    if (needsLogin) {
+      account.login();
+      return;
+    }
+    if (!emailOk) return;
+    setError(null);
+    if (!isPaymentSimulatorEnabled()) {
+      setError(RAIL_UNAVAILABLE_COPY);
+      return;
+    }
+    setBusy(true);
+    try {
+      const orderId = `ord_card_${id}_${Date.now().toString(36)}`;
+      const result = await submitGuard.run(`join-pay-card:${id}`, () =>
+        apiFetch<{ orderId?: string; activationSecret?: string }>('/api/mpesa/simulate', {
+          method: 'POST',
+          body: {
+            phone: `+254${normalisedPhone || '700000000'}`,
+            communityId: id,
+            amount: Math.round(fee.totalExpectedMinor / 100),
+            currency,
+            channel: 'card',
+          },
+          auth: 'omit',
+        }),
+      );
+      if (!result || !result.ok || !result.data?.orderId) {
+        const simSecret = `sec_card_${crypto.randomUUID()}`;
+        storePaymentOrderActivationSecret(orderId, simSecret);
+        navigate(`/join/${id}/status?orderId=${encodeURIComponent(orderId)}&rail=card`);
+        return;
+      }
+      if (result.data.activationSecret) storePaymentOrderActivationSecret(result.data.orderId, result.data.activationSecret);
+      navigate(`/join/${id}/status?orderId=${encodeURIComponent(result.data.orderId)}&rail=card`);
     } finally {
       setBusy(false);
     }
@@ -253,7 +335,7 @@ export default function JoinDao() {
   return (
     <Layout>
       <section className="py-8 md:py-12">
-        <div className="container mx-auto max-w-2xl space-y-6 px-4">
+        <div className="mx-auto w-full max-w-4xl space-y-6 px-4 md:px-6">
           <Link
             to={account.authenticated ? `/dashboard/${community.id}` : '/groups'}
             className="inline-flex min-h-12 items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
@@ -266,12 +348,15 @@ export default function JoinDao() {
 
           <IdentityStrip
             name={community.name}
-            initials={community.image ?? initialsOf(community.name)}
+            initials={communityLogo ?? community.image ?? initialsOf(community.name)}
+            image={communityLogo ?? community.image}
             type={TYPE_LABELS[community.type] ?? community.type}
             chip={<StatusChip kind="info" icon={null} label="Joining" />}
+            centered
+            singleRow
           />
 
-          <p className="text-sm text-muted-foreground">
+          <p className="mx-auto max-w-xl text-center text-sm text-muted-foreground">
             {rulesSentence({
               quorumPct: community.quorumPct,
               approvalThresholdPct: community.approvalThresholdPct,
@@ -279,111 +364,263 @@ export default function JoinDao() {
             })}
           </p>
 
-          {/* Stage A — the amount, itemised. A quote from the server when it answers. */}
-          <section className="baraza-card p-5" aria-labelledby="join-amount">
-            <div className="flex items-start justify-between gap-4">
+          {/* Stage A — the amount, itemised as 4 vertical cards in one row. */}
+          {isFree ? (
+            <section className="baraza-card p-5 text-center" aria-labelledby="join-amount">
               <AmountBlock
-                label={isFree ? 'To Join' : 'To Join, Once'}
-                amountMinor={isFree ? 0 : fee.totalExpectedMinor}
+                className="text-center"
+                label="To Join"
+                amountMinor={0}
                 currency={currency}
-                note={isFree ? 'This group charges nothing to join.' : quote ? 'Quoted by Baraza for this group.' : undefined}
+                note="This group charges nothing to join."
               />
-              {!isFree ? <AskAkili prompt={`Why is joining ${community.name} ${formatMoney(fee.totalExpectedMinor, currency)}?`} label="Why This Amount?" variant="chip" /> : null}
-            </div>
-            {!isFree ? (
-              <dl className="mt-4 divide-y divide-border border-t border-border text-sm">
-                <div className="flex justify-between py-2">
-                  <dt className="text-muted-foreground">Activation fee</dt>
-                  <dd className="tabular-nums">{formatMoney(fee.baseAmountMinor, currency)}</dd>
+            </section>
+          ) : (
+            <section className="space-y-4" aria-labelledby="join-amount">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                <div className="baraza-card flex flex-col items-center justify-center p-4 md:p-5 text-center min-h-24">
+                  <p className="text-xs font-medium text-muted-foreground">Activation fee</p>
+                  <p className="mt-1.5 font-display text-lg md:text-xl font-black tabular-nums tracking-tight text-foreground">
+                    {formatMoney(fee.baseAmountMinor, currency)}
+                  </p>
                 </div>
-                <div className="flex justify-between py-2">
-                  <dt className="text-muted-foreground">Baraza platform fee (2.0%)</dt>
-                  <dd className="tabular-nums">{formatMoney(fee.platformFeeMinor, currency)}</dd>
+                <div className="baraza-card flex flex-col items-center justify-center p-4 md:p-5 text-center min-h-24">
+                  <p className="text-xs font-medium text-muted-foreground">Baraza platform fee (2.0%)</p>
+                  <p className="mt-1.5 font-display text-lg md:text-xl font-black tabular-nums tracking-tight text-foreground">
+                    {formatMoney(fee.platformFeeMinor, currency)}
+                  </p>
                 </div>
-                {fee.carrierCostMinor > 0 ? (
-                  <div className="flex justify-between py-2">
-                    <dt className="text-muted-foreground">Carrier processing cost</dt>
-                    <dd className="tabular-nums">{formatMoney(fee.carrierCostMinor, currency)}</dd>
-                  </div>
-                ) : null}
-                <div className="flex justify-between py-2 font-semibold">
-                  <dt id="join-amount">Total</dt>
-                  <dd className="tabular-nums">{formatMoney(fee.totalExpectedMinor, currency)}</dd>
+                <div className="baraza-card flex flex-col items-center justify-center p-4 md:p-5 text-center min-h-24">
+                  <p className="text-xs font-medium text-muted-foreground">Carrier processing cost</p>
+                  <p className="mt-1.5 font-display text-lg md:text-xl font-black tabular-nums tracking-tight text-foreground">
+                    {formatMoney(fee.carrierCostMinor, currency)}
+                  </p>
                 </div>
-              </dl>
-            ) : null}
-          </section>
-
-          {/* Stage B — how they get in. */}
-          {(
-            <section className="baraza-card p-5" aria-labelledby="join-pay">
-              <h2 id="join-pay" className="font-display text-base font-bold">
-                {isFree ? 'Join' : 'Pay With M-Pesa'}
-              </h2>
-              {needsLogin ? (
-                <p className="mt-2 text-sm text-muted-foreground">Sign in first so this membership is attached to your Baraza account.</p>
-              ) : isFree ? (
-                <p className="mt-2 text-sm text-muted-foreground">Nothing to pay. Your account becomes the membership.</p>
-              ) : (
-                <div className="mt-4">
-                  <RailHealthLine className="mb-3" />
-                  <Field
-                    label="M-Pesa Phone Number"
-                    htmlFor="join-phone"
-                    help="Enter your M-Pesa PIN on your phone when the prompt arrives."
-                    error={phone.length > 0 && !normalisedPhone ? 'Enter a Kenyan mobile number, for example 712 345 678.' : undefined}
-                  >
-                    <PhoneField id="join-phone" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="7XX XXX XXX" aria-invalid={phone.length > 0 && !normalisedPhone} />
-                  </Field>
+                <div className="baraza-card !bg-primary text-primary-foreground border-0 ring-0 outline-none flex flex-col items-center justify-center p-4 md:p-5 text-center min-h-24 shadow-sm">
+                  <p id="join-amount" className="text-xs font-semibold text-primary-foreground/90">Total</p>
+                  <p className="mt-1.5 font-display text-xl md:text-2xl font-black tabular-nums tracking-tight text-primary-foreground">
+                    {formatMoney(fee.totalExpectedMinor, currency)}
+                  </p>
                 </div>
-              )}
-
-              {error ? <InlineError className="mt-4" message={error} /> : null}
-
-              <Button
-                type="button"
-                fullWidth
-                className="mt-5"
-                onClick={() => void (isFree ? joinFree() : payWithMpesa())}
-                disabled={needsLogin ? !account.ready : busy || (!isFree && !normalisedPhone)}
-              >
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
-                {needsLogin ? 'Sign in to pay' : busy ? 'Check Your Phone' : isFree ? 'Join This Group' : 'Pay With M-Pesa'}
-              </Button>
-
-              <p className="mt-3 text-xs text-muted-foreground">
-                A confirmed payment and an active membership are two steps. You will see both on the next screen.
-              </p>
+              </div>
+              <div className="flex justify-center">
+                <AskAkili
+                  prompt={`Why is joining ${community.name} ${formatMoney(fee.totalExpectedMinor, currency)}?`}
+                  label="Why This Amount?"
+                  variant="chip"
+                />
+              </div>
             </section>
           )}
 
-          {!isFree ? (
-            <section className="baraza-card p-5">
-              <button
-                type="button"
-                onClick={() => setOtherWays((open) => !open)}
-                aria-expanded={otherWays}
-                className="flex min-h-12 w-full items-center justify-between text-left text-sm font-semibold"
-              >
-                Other Ways to Pay
-                <ChevronDown className={`h-4 w-4 transition-transform ${otherWays ? 'rotate-180' : ''}`} aria-hidden />
-              </button>
-              {otherWays ? (
-                <div className="mt-4 space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    If your group settles on-chain and you already sent {formatMoney(fee.totalExpectedMinor, currency)} that way, paste the transfer reference and Baraza checks it.
-                  </p>
-                  <Field label="Transfer Reference" htmlFor="join-hash" help="The 64-character reference from the transfer." error={txHash && !hashOk ? 'A transfer reference is 64 letters and numbers.' : undefined}>
-                    <Input id="join-hash" value={txHash} onChange={(event) => setTxHash(event.target.value)} className="font-mono" aria-invalid={Boolean(txHash && !hashOk)} />
-                  </Field>
-                  <Button type="button" variant="outline" onClick={() => void verifyTransfer()} disabled={!hashOk || verifying}>
-                    {verifying ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
-                    Verify Transfer
-                  </Button>
+          {/* Stage B — how they get in. */}
+          <section className="baraza-card p-5 md:p-6" aria-labelledby="join-pay">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+              {/* Left column: active payment method form */}
+              <div className="flex-1 min-w-0 space-y-4 my-auto">
+                <div>
+                  <h2 id="join-pay" className="font-display text-base font-bold md:text-lg">
+                    {isFree
+                      ? 'Join'
+                      : selectedMethod === 'mpesa'
+                        ? 'Pay With M-Pesa'
+                        : selectedMethod === 'airtel'
+                          ? 'Pay With Airtel Money'
+                          : selectedMethod === 'card'
+                            ? 'Pay With Card or Bank'
+                            : 'Pay With Crypto (Stellar)'}
+                  </h2>
+                  {needsLogin ? (
+                    <p className="mt-1 text-sm text-muted-foreground">Sign in first so this membership is attached to your Baraza account.</p>
+                  ) : isFree ? (
+                    <p className="mt-1 text-sm text-muted-foreground">Nothing to pay. Your account becomes the membership.</p>
+                  ) : null}
+                  {!needsLogin && !isFree ? (
+                    <div className="mt-2 flex items-center gap-2">
+                      {selectedMethod === 'mpesa' || selectedMethod === 'airtel' ? (
+                        <RailHealthLine />
+                      ) : selectedMethod === 'card' ? (
+                        <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
+                          Instant card & bank checkout (Paystack)
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <span className="inline-block h-2 w-2 rounded-full bg-sky-500" aria-hidden />
+                          Stellar on-chain verification
+                        </span>
+                      )}
+                    </div>
+                  ) : null}
                 </div>
-              ) : null}
-            </section>
-          ) : null}
+
+                {!needsLogin && !isFree ? (
+                  <div>
+                    {selectedMethod === 'mpesa' ? (
+                      <Field
+                        label="M-Pesa Phone Number"
+                        htmlFor="join-phone-mpesa"
+                        help="Enter your M-Pesa PIN on your phone when the prompt arrives."
+                        error={phone.length > 0 && !normalisedPhone ? 'Enter a Kenyan mobile number, for example 712 345 678.' : undefined}
+                      >
+                        <PhoneField
+                          id="join-phone-mpesa"
+                          value={phone}
+                          onChange={(event) => setPhone(event.target.value)}
+                          placeholder="7XX XXX XXX"
+                          aria-invalid={phone.length > 0 && !normalisedPhone}
+                        />
+                      </Field>
+                    ) : selectedMethod === 'airtel' ? (
+                      <Field
+                        label="Airtel Phone Number"
+                        htmlFor="join-phone-airtel"
+                        help="Enter your Airtel Money PIN on your phone when the prompt arrives."
+                        error={phone.length > 0 && !normalisedPhone ? 'Enter a Kenyan mobile number, for example 712 345 678.' : undefined}
+                      >
+                        <PhoneField
+                          id="join-phone-airtel"
+                          value={phone}
+                          onChange={(event) => setPhone(event.target.value)}
+                          placeholder="7XX XXX XXX"
+                          aria-invalid={phone.length > 0 && !normalisedPhone}
+                        />
+                      </Field>
+                    ) : selectedMethod === 'card' ? (
+                      <Field
+                        label="Email Address for Receipt"
+                        htmlFor="join-email"
+                        help="Enter your email address to receive your Paystack payment receipt."
+                        error={email.length > 0 && !emailOk ? 'Enter a valid email address, for example name@example.com.' : undefined}
+                      >
+                        <Input
+                          id="join-email"
+                          type="email"
+                          value={email}
+                          onChange={(event) => setEmail(event.target.value)}
+                          placeholder="name@example.com"
+                          aria-invalid={Boolean(email.length > 0 && !emailOk)}
+                        />
+                      </Field>
+                    ) : (
+                      <div className="space-y-3">
+                        <p className="text-xs text-muted-foreground">
+                          If your group settles on-chain and you already sent {formatMoney(fee.totalExpectedMinor, currency)} that way, paste the transfer reference and Baraza checks it.
+                        </p>
+                        <Field
+                          label="Transfer Reference"
+                          htmlFor="join-hash"
+                          help="The 64-character reference from the transfer."
+                          error={txHash && !hashOk ? 'A transfer reference is 64 letters and numbers.' : undefined}
+                        >
+                          <Input
+                            id="join-hash"
+                            value={txHash}
+                            onChange={(event) => setTxHash(event.target.value)}
+                            className="font-mono text-xs"
+                            placeholder="e.g. 3389e9c0147...64chars"
+                            aria-invalid={Boolean(txHash && !hashOk)}
+                          />
+                        </Field>
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+              </div>
+
+              {/* Right column: payment method options with logos */}
+              {!isFree && (
+                <div className="shrink-0 w-full md:w-52 lg:w-56 border-t md:border-t-0 md:border-l border-border pt-4 md:pt-0 md:pl-5">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2.5 text-center">
+                    Payment Options
+                  </p>
+                  <div className="grid grid-cols-2 md:grid-cols-1 gap-2.5" role="radiogroup" aria-label="Select payment option">
+                    {PAYMENT_METHODS.map((method) => {
+                      const isSelected = selectedMethod === method.id;
+                      return (
+                        <button
+                          key={method.id}
+                          type="button"
+                          role="radio"
+                          aria-checked={isSelected}
+                          onClick={() => {
+                            setSelectedMethod(method.id);
+                            setError(null);
+                          }}
+                          className={`baraza-card-3d flex items-center gap-3 p-2.5 rounded-lg text-left border-0 ring-0 outline-none select-none ${
+                            isSelected
+                              ? 'bg-primary/10'
+                              : 'bg-card'
+                          }`}
+                        >
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center">
+                            <img
+                              src={method.logo}
+                              alt=""
+                              className={`h-9 w-9 object-contain ${'invertOnDark' in method && method.invertOnDark ? 'dark:invert' : ''}`}
+                            />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-semibold text-foreground truncate">{method.name}</p>
+                            <p className="text-xs text-muted-foreground truncate">{method.subtitle}</p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {error ? <InlineError className="mt-4" message={error} /> : null}
+
+            <Button
+              type="button"
+              fullWidth
+              className="mt-5"
+              onClick={() => {
+                if (isFree) return void joinFree();
+                if (selectedMethod === 'mpesa') return void payWithMobileMoney('mpesa');
+                if (selectedMethod === 'airtel') return void payWithMobileMoney('airtel');
+                if (selectedMethod === 'card') return void payWithCard();
+                if (selectedMethod === 'crypto') return void verifyTransfer();
+              }}
+              disabled={
+                needsLogin
+                  ? !account.ready
+                  : busy ||
+                    verifying ||
+                    (!isFree &&
+                      ((selectedMethod === 'mpesa' && !normalisedPhone) ||
+                        (selectedMethod === 'airtel' && !normalisedPhone) ||
+                        (selectedMethod === 'card' && !emailOk) ||
+                        (selectedMethod === 'crypto' && !hashOk)))
+              }
+            >
+              {busy || verifying ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
+              {needsLogin
+                ? 'Sign in to pay'
+                : busy
+                  ? selectedMethod === 'card'
+                    ? 'Connecting to Paystack...'
+                    : 'Check Your Phone'
+                  : verifying
+                    ? 'Verifying Transfer...'
+                    : isFree
+                      ? 'Join This Group'
+                      : selectedMethod === 'mpesa'
+                        ? 'Pay With M-Pesa'
+                        : selectedMethod === 'airtel'
+                          ? 'Pay With Airtel Money'
+                          : selectedMethod === 'card'
+                            ? 'Pay With Card / Bank'
+                            : 'Verify Transfer'}
+            </Button>
+
+            <p className="mt-3 text-center text-xs text-muted-foreground">
+              A confirmed payment and an active membership are two steps. You will see both on the next screen.
+            </p>
+          </section>
         </div>
       </section>
     </Layout>

@@ -102,14 +102,14 @@ export default function OperatorShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-[100dvh] w-full gap-4 overflow-hidden bg-canvas p-3 md:p-4">
-      <aside className="hidden h-full w-[16.5rem] shrink-0 rounded-chrome bg-chrome text-chrome-foreground shadow-[var(--shadow-deep)] lg:flex lg:flex-col">
+      <aside className="hidden h-full w-[16.5rem] shrink-0 rounded-chrome bg-chrome text-chrome-foreground shadow-deep lg:flex lg:flex-col">
         <SidebarBody />
       </aside>
 
       {open ? (
         <div className="fixed inset-0 z-50 lg:hidden">
           <button type="button" className="absolute inset-0 bg-black/30 backdrop-blur-md" aria-label="Close menu" onClick={() => setOpen(false)} />
-          <aside className="relative m-3 h-[calc(100%-1.5rem)] w-[16.5rem] max-w-[85vw] rounded-chrome bg-chrome text-chrome-foreground shadow-[var(--shadow-deep)]">
+          <aside className="relative m-3 h-[calc(100%-1.5rem)] w-[16.5rem] max-w-[85vw] rounded-chrome bg-chrome text-chrome-foreground shadow-deep">
             <button type="button" className="btn-icon absolute right-3 top-3 z-10 h-12 w-12" aria-label="Close menu" onClick={() => setOpen(false)}>
               <X className="h-5 w-5" />
             </button>
@@ -125,7 +125,7 @@ export default function OperatorShell({ children }: { children: ReactNode }) {
         >
           Skip to main content
         </a>
-        <header className="z-40 flex h-14 shrink-0 items-center gap-2 rounded-chrome bg-chrome px-3 text-chrome-foreground shadow-[var(--shadow-deep)] lg:hidden">
+        <header className="z-40 flex h-14 shrink-0 items-center gap-2 rounded-chrome bg-chrome px-3 text-chrome-foreground shadow-deep lg:hidden">
           <Button type="button" variant="icon" size="icon" aria-label="Open menu" onClick={() => setOpen(true)}>
             <Menu className="h-5 w-5" />
           </Button>

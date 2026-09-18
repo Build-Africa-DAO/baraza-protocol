@@ -94,10 +94,10 @@ function VotesPanel({
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <FilterChips options={options} value={filter} onChange={setFilter} aria-label="Vote filters" />
+      <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-center">
+        <FilterChips className="justify-center" options={options} value={filter} onChange={setFilter} aria-label="Vote filters" />
         {isMember && (
-          <Button asChild variant="outline" className="hidden sm:inline-flex">
+          <Button asChild variant="outline" className="hidden sm:inline-flex sm:absolute sm:right-0">
             <Link to={`/dashboard/${communityId}/votes/new`}>Propose a Spend</Link>
           </Button>
         )}

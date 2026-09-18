@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 export interface IdentityStripProps {
   name: string;
   initials: string;
+  image?: string | null;
   /** Group type or role, sentence case; shown as a neutral chip. */
   type?: string;
   /** Relationship chip: Visitor / Pending / Active / Officer / On Hold. */
@@ -18,13 +19,72 @@ export interface IdentityStripProps {
   /** Extra chips, e.g. a SACCO licence status. */
   extra?: ReactNode;
   size?: 'md' | 'lg';
+  centered?: boolean;
+  singleRow?: boolean;
+  editable?: boolean;
+  onImageChange?: (dataUrl: string) => void;
   className?: string;
 }
 
-export function IdentityStrip({ name, initials, type, chip, extra, size = 'lg', className }: IdentityStripProps) {
+export function IdentityStrip({
+  name,
+  initials,
+  image,
+  type,
+  chip,
+  extra,
+  size = 'lg',
+  centered = false,
+  singleRow = false,
+  editable = false,
+  onImageChange,
+  className,
+}: IdentityStripProps) {
+  const tile = (
+    <InitialsTile
+      initials={initials}
+      image={image}
+      size={size === 'lg' ? 'lg' : 'md'}
+      editable={editable}
+      onImageChange={onImageChange}
+    />
+  );
+
+  if (singleRow) {
+    return (
+      <div className={cn('flex flex-wrap items-center gap-3', centered ? 'justify-center text-center' : '', className)}>
+        {tile}
+        <h1 className={cn('font-display font-black tracking-tight', size === 'lg' ? 'text-2xl md:text-3xl' : 'text-lg')}>
+          {name}
+        </h1>
+        {type ? <StatusChip kind="info" icon={null} label={type} /> : null}
+        {chip}
+        {extra}
+      </div>
+    );
+  }
+
+  if (centered) {
+    return (
+      <div className={cn('flex flex-col items-center text-center', className)}>
+        {tile}
+        <div className="mt-3 min-w-0">
+          <h1 className={cn('truncate font-display font-black tracking-tight', size === 'lg' ? 'text-2xl md:text-3xl' : 'text-lg')}>
+            {name}
+          </h1>
+          <div className="mt-1.5 flex flex-wrap items-center justify-center gap-2">
+            {type ? <StatusChip kind="info" icon={null} label={type} /> : null}
+            {chip}
+            {extra}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={cn('flex items-center gap-4', className)}>
-      <InitialsTile initials={initials} size={size === 'lg' ? 'lg' : 'md'} />
+      {tile}
       <div className="min-w-0 flex-1">
         <h1 className={cn('truncate font-display font-black tracking-tight', size === 'lg' ? 'text-2xl md:text-3xl' : 'text-lg')}>
           {name}

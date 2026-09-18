@@ -2,6 +2,7 @@ import { InitialsTile, ListRow } from '@/components/app/ListRow';
 import { StatusChip, type StatusKind } from '@/components/ui/status-chip';
 import { useProposals } from '@/hooks/useProposals';
 import type { MembershipPair } from '@/hooks/useMyMemberships';
+import { useCommunityImage } from '@/lib/imageUpload';
 import { formatMoney } from '@/lib/money';
 import { proposalBucket } from '@/lib/proposalStatus';
 import { isVotingOpen } from '@/lib/voteCopy';
@@ -14,6 +15,7 @@ import { isVotingOpen } from '@/lib/voteCopy';
  */
 export function GroupRow({ pair }: { pair: MembershipPair }) {
   const { community, record, summary } = pair;
+  const { image } = useCommunityImage(community.id, community.image);
   const { all } = useProposals(community.id);
   const openVotes = all.filter((decision) => proposalBucket(decision) === 'active' && isVotingOpen(decision)).length;
 
@@ -41,7 +43,7 @@ export function GroupRow({ pair }: { pair: MembershipPair }) {
       title={community.name}
       meta={meta}
       to={`/dashboard/${community.id}`}
-      leading={<InitialsTile initials={community.image} />}
+      leading={<InitialsTile initials={image ?? community.image} image={image ?? community.image} />}
       trailing={<StatusChip kind={chip.kind} label={chip.label} />}
     />
   );

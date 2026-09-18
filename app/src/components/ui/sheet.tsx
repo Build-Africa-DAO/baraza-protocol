@@ -95,7 +95,7 @@ export function Sheet({ open, onClose, title, description, children, footer, siz
         aria-labelledby={titleId}
         aria-describedby={description ? descriptionId : undefined}
         className={cn(
-          'flex w-full max-h-[90vh] flex-col rounded-t-2xl bg-card text-foreground shadow-[var(--shadow-deep)] sm:rounded-2xl',
+          'flex w-full max-h-[90vh] flex-col rounded-t-2xl bg-card text-foreground shadow-deep sm:rounded-2xl',
           SIZE[size],
           className,
         )}
