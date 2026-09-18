@@ -24,6 +24,8 @@ export interface ReadinessResponse {
     redis: ComponentHealth;
     minisend?: ComponentHealth;
     kotani?: ComponentHealth;
+    airtel?: ComponentHealth;
+    paystack?: ComponentHealth;
   };
 }
 

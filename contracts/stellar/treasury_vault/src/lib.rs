@@ -65,6 +65,9 @@ impl TreasuryVaultContract {
         if threshold == 0 || threshold > signers.len() {
             panic!("threshold out of range");
         }
+        if signers.len() > 1 && threshold < 2 {
+            panic!("1-of-N prohibited by ADR-013");
+        }
 
         env.storage().instance().set(&DataKey::Config, &Config {
             community_id,
@@ -270,6 +273,9 @@ impl TreasuryVaultContract {
         }
         if new_threshold == 0 || new_threshold > new_signers.len() {
             panic!("threshold out of range");
+        }
+        if new_signers.len() > 1 && new_threshold < 2 {
+            panic!("1-of-N prohibited by ADR-013");
         }
 
         env.storage().instance().set(&DataKey::Config, &Config {
@@ -661,4 +667,32 @@ mod test {
         let new_signers = vec![&h.env, Address::generate(&h.env)];
         h.client.set_signers(&outsider, &new_signers, &1);
     }
+
+    #[test]
+    #[should_panic(expected = "1-of-N prohibited by ADR-013")]
+    fn test_initialize_1_of_n_rejected() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let token_admin = Address::generate(&env);
+        let token = env.register_stellar_asset_contract_v2(token_admin).address();
+        let vault = env.register(TreasuryVaultContract, ());
+        let client = TreasuryVaultContractClient::new(&env, &vault);
+        let signers = vec![&env, Address::generate(&env), Address::generate(&env)];
+        client.initialize(
+            &String::from_str(&env, "x"),
+            &token,
+            &signers,
+            &1,
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "1-of-N prohibited by ADR-013")]
+    fn test_set_signers_1_of_n_rejected() {
+        let h = setup(1, 1);
+        let founder = h.signers.get(0).unwrap();
+        let new_signers = vec![&h.env, founder.clone(), Address::generate(&h.env)];
+        h.client.set_signers(&founder, &new_signers, &1);
+    }
 }
+

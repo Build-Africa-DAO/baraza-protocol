@@ -97,6 +97,10 @@ async function handler(req: Request): Promise<Response> {
     ? body.threshold
     : 1;
 
+  if (signers.length > 1 && threshold < 2) {
+    return bad('1-of-N multisig configuration is strictly prohibited by ADR-013. Minimum threshold is 2 for multisig.', 400, req);
+  }
+
   const supabase = getSupabaseAdmin();
 
   try {

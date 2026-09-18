@@ -68,14 +68,25 @@ export default async function handler(req: Request): Promise<Response> {
 
   const communityIds = Array.from(new Set(memberRows.map((m) => m.community_id)));
 
-  // Step 2: Query communities
-  const { data: commRows, error: commErr } = await supabase
+  // Step 2: Query communities (graceful fallback if image_url column is not yet migrated)
+  let commRows: Array<{ id: string; name?: string; currency?: string; liquid_vault_balance_minor?: number; image_url?: string | null }> | null;
+  const initialCommRes = await supabase
     .from('communities')
-    .select('id, name, currency, liquid_vault_balance_minor')
+    .select('id, name, currency, liquid_vault_balance_minor, image_url')
     .in('id', communityIds);
 
-  if (commErr) {
-    return jsonResponse({ error: 'database_error', message: commErr.message }, { status: 500 });
+  if (initialCommRes.error) {
+    const fallbackRes = await supabase
+      .from('communities')
+      .select('id, name, currency, liquid_vault_balance_minor')
+      .in('id', communityIds);
+
+    if (fallbackRes.error) {
+      return jsonResponse({ error: 'database_error', message: fallbackRes.error.message }, { status: 500 });
+    }
+    commRows = fallbackRes.data;
+  } else {
+    commRows = initialCommRes.data;
   }
 
   const commMap = new Map((commRows || []).map((c) => [c.id, c]));
@@ -138,6 +149,7 @@ export default async function handler(req: Request): Promise<Response> {
       vaultBalanceMinor: Number(comm?.liquid_vault_balance_minor || 0),
       currency: comm?.currency || 'KES',
       membershipStatus: ms?.status || 'ACTIVE',
+      imageUrl: comm?.image_url || null,
     };
   });
 

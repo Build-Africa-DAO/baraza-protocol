@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { DEFAULT_GOVERNANCE, type Community, type VerificationTier, MOCK_COMMUNITIES } from '@/lib/constants';
+import { DEFAULT_GOVERNANCE, type Community, type CommunitySettlement, type VerificationTier, MOCK_COMMUNITIES } from '@/lib/constants';
+export type { CommunitySettlement };
 import { isSyntheticDataEnabled } from '@/lib/devMode';
 import type { Chain } from '@/lib/chain';
 import { apiFetch } from '@/lib/api';
@@ -82,6 +83,8 @@ export type CommunityRow = {
   isPayoutFrozen?: boolean | null;
   status?: string | null;
   communityStatus?: string | null;
+  operational_address?: string | null;
+  chain_config?: Record<string, unknown> | null;
 };
 
 const VALID_TREASURY_POLICIES: TreasuryPolicy[] = ['multisig-ready', 'proposal-only', 'manual-review'];
@@ -203,6 +206,12 @@ function communityFromRow(row: CommunityRow): Community {
     saccoLicenseStatus: row.sacco_license_status ?? row.saccoLicenseStatus ?? undefined,
     isPayoutFrozen: row.is_payout_frozen ?? row.isPayoutFrozen ?? false,
     communityStatus: row.status === 'paused' || row.communityStatus === 'paused' ? 'paused' : 'active',
+    settlement: {
+      chain,
+      contracts_state: chain === 'stellar' || chain === 'base' ? 'DEPLOYED' : 'NOT_DEPLOYED',
+      treasury_address: (row.operational_address as string) || (row.chain_config?.treasury_address as string) || undefined,
+      gasless_eligible: chain === 'stellar' || chain === 'base',
+    } satisfies CommunitySettlement,
   };
 }
 

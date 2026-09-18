@@ -282,6 +282,7 @@ export default async function handler(req: Request): Promise<Response> {
 
     const resolvedCheckoutId = (stkData.CheckoutRequestID as string) || checkoutRequestId;
     const resolvedMerchantId = (stkData.MerchantRequestID as string) || merchantRequestId;
+    const stkExpiresAt = new Date(Date.now() + 120 * 1000).toISOString();
 
     if (orderId) {
       const supabase = getSupabaseAdmin();
@@ -291,6 +292,7 @@ export default async function handler(req: Request): Promise<Response> {
           status: 'PAYMENT_REQUESTED',
           provider: 'mpesa',
           provider_reference: resolvedCheckoutId,
+          expires_at: stkExpiresAt,
           updated_at: new Date().toISOString(),
         })
         .eq('order_id', orderId);
@@ -303,6 +305,8 @@ export default async function handler(req: Request): Promise<Response> {
         merchantRequestId: resolvedMerchantId,
         customerMessage: (stkData.CustomerMessage as string) || 'Success. Request accepted for processing',
         status: 'PAYMENT_REQUESTED',
+        stkExpiresAt,
+        stk_expires_at: stkExpiresAt,
         phone: normalizedPhone,
         amount,
         communityId,

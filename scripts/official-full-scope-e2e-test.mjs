@@ -393,7 +393,8 @@ async function run() {
 
     // Custom 404
     try {
-      await page.goto(`${BASE_URL}/this-route-does-not-exist-xyz`, { waitUntil: 'networkidle2', timeout: 15000 });
+      await page.goto(`${BASE_URL}/this-route-does-not-exist-xyz`, { waitUntil: 'domcontentloaded', timeout: 15000 });
+      await new Promise((r) => setTimeout(r, 800));
       const is404 = await page.evaluate(() => {
         return document.body.innerText.includes('404') || document.body.innerText.includes('Not Found') || document.body.innerText.includes('Page Not Found');
       });

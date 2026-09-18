@@ -191,10 +191,13 @@ export function useCastVote() {
   ): Promise<VoteOutcome> => {
     setIsLoading(true);
     try {
-      let headers: Record<string, string> = {};
+      let headers: Record<string, string> = {
+        'x-wallet-address': walletKey,
+      };
       if (signer) {
         try {
-          headers = await buildWalletProofHeaders(signer, 'vote');
+          const proofHeaders = await buildWalletProofHeaders(signer, 'vote');
+          headers = { ...headers, ...proofHeaders };
         } catch {
           // Fall back if wallet signing is unavailable
         }

@@ -45,6 +45,14 @@ export interface Community {
   saccoLicenseStatus?: string;
   isPayoutFrozen?: boolean;
   communityStatus?: 'active' | 'paused';
+  settlement?: CommunitySettlement;
+}
+
+export interface CommunitySettlement {
+  chain: NonNullable<Community['chain']>;
+  contracts_state: 'DEPLOYED' | 'NOT_DEPLOYED' | 'TESTNET_MOCK';
+  treasury_address?: string;
+  gasless_eligible?: boolean;
 }
 
 export type VerificationTier = 'activation' | 'vouching' | 'phone' | 'proof_of_personhood';

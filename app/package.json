@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host",
-    "build": "vite build",
+    "build": "vite build && node -e \"import fs from 'node:fs'; if (!fs.existsSync('dist/_routes.json')) throw new Error('Missing dist/_routes.json'); if (!fs.existsSync('dist/_headers')) throw new Error('Missing dist/_headers');\"",
     "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.node.json",
     "lint": "eslint .",
     "test": "vitest run",
