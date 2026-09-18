@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { COMMUNITY_TYPES, DEFAULT_GOVERNANCE, type Community } from '@/lib/constants';
 import { formatMajor, groupCurrency } from '@/lib/money';
 import { apiFetch } from '@/lib/api';
+import { useCommunityImage, useUserAvatar } from '@/lib/imageUpload';
 import { rulesSentence } from '@/lib/voteCopy';
 import type { Member } from '@/lib/dataStore';
 
@@ -31,6 +32,7 @@ export default function GroupSettings() {
   return (
     <GroupWorkspace
       title="Group Settings"
+      subtitle="Group rules, account links and controls."
       gate={{ title: 'Sign in to see settings', description: 'Log in to view this group’s rules.' }}
       hideBanner
     >
@@ -45,9 +47,16 @@ function typeLabel(type: string): string {
   return COMMUNITY_TYPES.find((item) => item.value === type)?.label ?? type;
 }
 
+function initialsOf(name: string): string {
+  const letters = name.replace(/[^a-z0-9 ]/gi, ' ').trim().split(/\s+/).filter(Boolean);
+  const initials = letters.slice(0, 2).map((part) => part[0] ?? '').join('').toUpperCase();
+  return initials || 'GP';
+}
+
 function SettingsPanel({ community, isMember, isOfficer }: { community: Community; isMember: boolean; isOfficer: boolean }) {
   const { toast } = useToast();
   const currency = groupCurrency(community);
+  const { image, setImage, removeImage } = useCommunityImage(community.id, community.image);
 
   async function copyId() {
     try {
@@ -70,6 +79,40 @@ function SettingsPanel({ community, isMember, isOfficer }: { community: Communit
         id="identity"
         title="Group Identity"
         rows={[
+          {
+            label: 'Group Logo',
+            value: (
+              <div className="flex items-center gap-3">
+                <InitialsTile
+                  initials={image ?? community.image ?? initialsOf(community.name)}
+                  image={image ?? community.image}
+                  size="md"
+                  editable={isOfficer}
+                  onImageChange={(newLogo) => {
+                    setImage(newLogo);
+                    toast({ title: 'Group Logo Updated', description: 'The new logo is active across the app.' });
+                  }}
+                />
+                <div>
+                  <span className="text-xs text-muted-foreground block">
+                    {isOfficer ? 'Click logo or camera icon to upload a new image.' : 'Group logo'}
+                  </span>
+                  {isOfficer && (image || community.image) ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        removeImage();
+                        toast({ title: 'Logo Removed', description: 'Reverted to default group initials.' });
+                      }}
+                      className="text-xs font-semibold text-destructive hover:underline mt-0.5"
+                    >
+                      Remove custom logo
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            ),
+          },
           { label: 'Name', value: community.name },
           { label: 'Type', value: typeLabel(community.type) },
           {
@@ -268,13 +311,16 @@ function OfficersSection({ community }: { community: Community }) {
 }
 
 function OfficerRow({ officer, busy, onRemove }: { officer: Member; busy: boolean; onRemove: () => void }) {
+  const account = useAccount();
+  const { avatarUrl } = useUserAvatar();
+  const isSelf = account.displayName.toLowerCase() === officer.name.toLowerCase();
   const initials = officer.name.split(/\s+/).map((p) => p[0] ?? '').join('').slice(0, 2).toUpperCase();
   return (
     <li>
       <ListRow
         title={officer.name}
         meta={officer.role === 'founder' ? 'Founder' : 'Officer'}
-        leading={<InitialsTile initials={initials} />}
+        leading={<InitialsTile initials={initials} image={isSelf ? avatarUrl : null} />}
         trailing={
           officer.role === 'founder' ? (
             <StatusChip kind="info" icon={null} label="Founder" />

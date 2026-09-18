@@ -5,7 +5,9 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { FilterChips } from '@/components/ui/filter-chips';
 import { Input } from '@/components/ui/field';
 import { StatusChip } from '@/components/ui/status-chip';
+import { useOptionalAccount } from '@/contexts/AccountContext';
 import { useMembers } from '@/hooks/useBarazaData';
+import { useUserAvatar } from '@/lib/imageUpload';
 import { formatAccountDate } from '@/lib/accountLocale';
 import { fetchDuesStreakBatch, type StreakResult } from '@/lib/duesStreak';
 import { formatMajor } from '@/lib/money';
@@ -46,6 +48,9 @@ function roleLabel(role: Member['role']): string | null {
 }
 
 export default function MemberDirectory({ communityId, currency, isOfficer = false }: MemberDirectoryProps) {
+  const account = useOptionalAccount();
+  const { avatarUrl } = useUserAvatar();
+  const isSelf = (name: string) => Boolean(account) && name.trim().toLowerCase() === (account?.displayName ?? '').trim().toLowerCase();
   const members = useMembers(communityId);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<PeopleFilter>('all');
@@ -128,7 +133,7 @@ export default function MemberDirectory({ communityId, currency, isOfficer = fal
                 <ListRow
                   title={member.name}
                   meta={`Joined ${formatAccountDate(member.joinedAt, undefined, { month: 'short', year: 'numeric' })}`}
-                  leading={<InitialsTile initials={initialsOf(member.name)} />}
+                  leading={<InitialsTile initials={initialsOf(member.name)} image={isSelf(member.name) ? avatarUrl : null} />}
                   onClick={() => setExpandedId(expanded ? null : member.id)}
                   aria-label={`${member.name}, ${expanded ? 'hide' : 'show'} contributions`}
                   trailing={
