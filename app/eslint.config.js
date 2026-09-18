@@ -9,7 +9,7 @@ export default tseslint.config(
   // Build config files live outside tsconfig.app.json's `include` (which
   // covers src/ only). Linting them through the typed parser fails the build,
   // so skip them entirely — they're plain JS/TS that needs no rules to enforce.
-  { ignores: ['dist', 'vite.config.ts', 'vitest.config.ts', 'eslint.guards.js'] },
+  { ignores: ['dist', 'coverage', 'functions', 'vite.config.ts', 'vitest.config.ts', 'eslint.guards.js'] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],

@@ -17,20 +17,59 @@ import { TELCO_MAX_SINGLE_TX_MINOR } from '@/lib/payments/slippage';
  *    that receipt is confirmed by the provider's webhook, not by this page.
  */
 
+import { apiFetch } from '@/lib/api';
+
 export interface PayoutQuote {
+  quoteId?: string;
+  quoteToken?: string;
   usdcAmount: string;
   fiatMinor: number;
   currency: string;
   rate: number;
   expiresAt: string;
+  expiresAtMs?: number;
 }
 
-export async function requestPayoutQuote(_input: {
+export async function requestPayoutQuote(input: {
   communityId: string;
   amountMinor: number;
   currency: string;
   phone: string;
 }): Promise<PayoutQuote | null> {
+  try {
+    const amountKes = input.amountMinor / 100;
+    const res = await apiFetch<{
+      ok: boolean;
+      quoteId: string;
+      quoteToken: string;
+      amountKes: number;
+      grossDisbursementKes: number;
+      exchangeRate: number;
+      usdcRequired: number;
+      expiresAt: number;
+    }>('/api/payments/quote', {
+      method: 'POST',
+      body: {
+        communityId: input.communityId,
+        amountKes,
+      },
+    });
+
+    if (res.ok && res.data) {
+      return {
+        quoteId: res.data.quoteId,
+        quoteToken: res.data.quoteToken,
+        usdcAmount: String(res.data.usdcRequired),
+        fiatMinor: Math.round(res.data.grossDisbursementKes * 100),
+        currency: input.currency || 'KES',
+        rate: res.data.exchangeRate,
+        expiresAt: new Date(res.data.expiresAt).toISOString(),
+        expiresAtMs: res.data.expiresAt,
+      };
+    }
+  } catch {
+    // Fall back to null if quoting unavailable
+  }
   return null;
 }
 

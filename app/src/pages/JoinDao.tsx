@@ -203,14 +203,17 @@ export default function JoinDao() {
     }
     if (!normalisedPhone) return;
     setError(null);
-    if (!isPaymentSimulatorEnabled()) {
+    // M-Pesa has a live Daraja route (dev, PR #94); Airtel Money has none yet, so
+    // outside the simulator it stays honest and says the rail is unavailable.
+    if (targetRail === 'airtel' && !isPaymentSimulatorEnabled()) {
       setError(RAIL_UNAVAILABLE_COPY);
       return;
     }
+    const endpoint = isPaymentSimulatorEnabled() ? '/api/mpesa/simulate' : '/api/mpesa/stk-push';
     setBusy(true);
     try {
       const result = await submitGuard.run(`join-pay:${id}`, () =>
-        apiFetch<{ orderId?: string; activationSecret?: string }>('/api/mpesa/simulate', {
+        apiFetch<{ orderId?: string; activationSecret?: string }>(endpoint, {
           method: 'POST',
           body: {
             phone: `+254${normalisedPhone}`,

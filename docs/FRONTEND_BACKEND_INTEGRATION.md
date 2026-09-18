@@ -27,19 +27,21 @@ This document is the single map of what the web app calls, what the backend serv
 - **Web Push done properly** (service worker, `pushManager.subscribe`, the exact payload the backend validates), a one-time fee option at creation, payout tracker on the real statuses with a tranche plan, polling backoff, security headers for Pages, and the email preview gallery out of the public build.
 - **Design-system lint guards**, 857 passing tests (65 failures are the three Supabase-integration suites that need a local instance plus one URL assertion tied to a local `.env`), typecheck and lint clean, production build green, axe clean in both themes except the orange logotype (exempt, §14).
 
-### 1.2 What the backend has in place (verified in code)
+### 1.2 What the backend has in place (verified in code, 17 Sept 2026)
 
-- 64 handlers under `app/api` covering custom auth (email OTP, Google, sessions), communities, invites, officers, statement export, memberships, payment intents and Stellar verification, Minisend payout, Kotani and Paystack proxies, payment-order status and streaks, disputes, governance (proposals, vote, finalize, execute), SACCO compliance, treasury freeze and unfreeze, health probes, USSD, WhatsApp FSM, Akili chat, retro rounds, and seven inbound webhooks.
-- 39 migrations to `038`, with RLS on every table and deny-all on the auth and exception tables.
+- 70 handlers under `app/api` covering custom auth (email OTP, Google, sessions), communities, members roster, invites, officers, statement export, memberships, payment intents and Stellar verification, Minisend payout & quote, Kotani and Paystack proxies, payment-order status and streaks, disputes, governance (proposals, vote, finalize, execute), SACCO compliance, treasury freeze and unfreeze, health probes, USSD, WhatsApp FSM, Akili chat, retro rounds, and seven inbound webhooks.
+- 40 migrations (000–039), with RLS on every table, deny-all on auth/exception tables, and migration 039 resolving user profile identity fields, payment order lifecycle states, and vote constraints.
 - SendGrid mail library with template rendering and a mock mode.
 
-### 1.3 The five things that block integration (ranked)
+### 1.3 The five things that block integration (ranked, updated post-PR#92/#93)
 
-1. **The API is not deployed by anything in the repo.** CI ships `app/dist` to Cloudflare Pages as a static site. There is no `functions/` directory, no `_worker.js`, no cron trigger, and the Vercel projects were purged on 31 Aug. `app/public/_routes.json` routes `/api/*` to a Function that does not exist. Every relative `/api/...` call from the SPA falls through to `index.html`. (§3.2)
-2. **The custom-auth signup cannot create a user.** `user_profiles` has no `email`, `role` or `is_active` column in any migration, and `chk_user_profiles_identity_present` requires `wallet_address` or `privy_did`. The email and Google handlers insert `email` and nothing else, so the insert is rejected. (§4.3)
-3. **Nothing advances a payment after confirmation.** `cron/promote-orders` walks `PAYMENT_CONFIRMED → … → RECONCILED`, and `membership/activate` requires `INDEXER_CONFIRMED` or `RECONCILED`. No scheduler calls the cron. There is also no server-side STK push route: the only initiation path in the app is the dev-only simulator. (§7)
-4. **Five payment statuses the code writes are not in the database constraint** (`PROVIDER_PENDING_VERIFICATION`, `SETTLED`, `FAILED`, `REVERSAL_DETECTED`, `REFUNDED`). Every Minisend settlement or reversal fails at the DB, and there is no readable status source for a payout because payout orders never get an activation secret. (§7.4)
-5. **Governance writes and the people roster.** Votes and activity now come from the public tables (fixed on the frontend), but a ballot still fails on the backend: `votes.member_id` is a foreign key to `memberships` that the vote handler fills with a wallet address, and the quorum snapshot queries `memberships.status = 'active'` against uppercase data. There is no members endpoint and the `members` table is closed to the anon key, so People and the officer list show an honest "not available yet". (§5.9, §5.10, §6.3)
+1. **The API is not deployed by anything in the repo (DevOps Block).** CI ships `app/dist` to Cloudflare Pages as a static SPA. There is no `functions/` directory, no `_worker.js`, and no cron trigger in `dist`. `app/public/_routes.json` routes `/api/*` to a non-existent Function. Every relative `/api/...` call from the browser returns `index.html` (SPA fallback), breaking `JSON.parse` in `lib/api.ts`. (§3.2, §16.1)
+2. **Missing Cryptographic Wallet Proof Headers in Frontend Mutations (Contract Block).** In production (`!isTestEnv`), `governance/vote.ts`, `governance/execute.ts`, and `communities/index.ts` require cryptographic wallet signatures (`x-wallet-address`, `x-wallet-signature`, `x-wallet-message`). The frontend hooks (`useCastVote`, `GroupMoney:approve`, `CreateCommunity:openGroup`) send raw JSON with no proof headers, resulting in universal 401 Unauthorized in live environments. (§16.2)
+3. **Polymorphic Auth Identity Resolution Gaps (Auth Block).** `resolveCallerIdentity` in `app/api/_lib/auth-session.ts` returns `{ userProfileId, email, authMethod: 'BARAZA_SESSION' }` without populating `walletAddress` or `privyDid`. Downstream route guards (`communities/officers.ts`, `push-subscribe.ts`) enforce `if (!identity.walletAddress && !identity.privyDid) return 401;`, rejecting email/session authenticated users. (§16.3)
+4. **Nothing advances a payment after confirmation (Scheduler Block).** `cron/promote-orders` walks `PAYMENT_CONFIRMED → … → RECONCILED`, and `membership/activate` requires `INDEXER_CONFIRMED` or `RECONCILED`. No Cloudflare scheduler calls the cron in production. Furthermore, the UI calls `/api/mpesa/simulate` (blocked when simulator is disabled) instead of the live Daraja route `app/api/mpesa/stk-push.ts`. (§7.2, §16.4)
+5. **Orphaned Member Directory & Payout Quoting Engine (Wiring Gaps).** `app/api/communities/members.ts` is fully implemented, but `MemberDirectory.tsx` shows "Member List Not Available Yet" and `useMembers` queries `dataStore.ts`. `app/api/payments/quote.ts` is implemented, but `lib/payouts.ts:requestPayoutQuote()` returns `null` and environment variable names diverge (`PAYMENT_QUOTE_SECRET` vs `PAYOUT_QUOTE_SECRET`). (§16.5)
+
+*(Note: The previous blockers #2 and #4 regarding missing `user_profiles` columns and missing `payment_orders` status CHECK constraints were fully resolved by migration `039_user_profiles_identity_expansion_and_payout_statuses.sql`.)*
 
 ### 1.4 One decision needed this week
 
@@ -781,6 +783,60 @@ What changed, in order of effect:
 
 `tsc --noEmit -p tsconfig.app.json` clean; `eslint .` 0 errors (45 pre-existing `react-hooks/set-state-in-effect` warnings, none introduced); frontend vitest 259 passing across 28 files (the Docker-only backend suites, including `postPr89IntegrationBridge.test.ts` from `dev`, still need the local API and are not part of this gate); `vite build` green with the generated `_headers`. Browser pass on the production build: 404 page, offline and back-online banners, 320 px width without horizontal scroll on `/`, `/groups` and `/dashboard/1`, the sign-in sheet loading Privy lazily without console errors, the polaroid gallery and WebP photos rendering, buttons measured at 48 px.
 
-## 16. 18 September 2026: join flow, account, photos and logos
+---
+
+## 16. Post-PR #92 & #93 Convergence & Eighth-Pass Forensic Audit (17 September 2026)
+
+Following the merge of PR #92 (Backend Enterprise Hardening) and PR #93 (Frontend Production UI Refactoring) into `dev`, a comprehensive Eighth-Pass forensic audit was conducted across all 70 backend endpoints, all 30 frontend page screens, and the Cloudflare edge deployment pipeline.
+
+### 16.1 DevOps & Edge Deployment Architecture (Showstopper)
+1. **Cloudflare Pages SPA Routing Fallback:**
+   - CI deploys via `wrangler pages deploy app/dist --project-name=baraza-protocol --branch=main`.
+   - `app/dist` contains only the client-side SPA bundle. There is no `functions/` directory and no compiled `_worker.js`.
+   - In production, any relative fetch to `/api/*` returns `index.html` with HTTP 200, causing `JSON.parse` in `lib/api.ts` to crash with `SyntaxError: Unexpected token '<'`.
+   - **Resolution Architecture:** Bundle `cloudflare/worker.ts` into `app/dist/_worker.js` (or deploy `app/functions/api/[[catchall]].ts`) mounting all 70 `app/api/**` handlers.
+2. **Cron Trigger Inactivity:**
+   - The cron triggers declared in `wrangler.toml` (`*/5 * * * *`, `*/10 * * * *`) and implemented in `cloudflare/worker.ts:scheduled` do not execute on Pages static deploys.
+   - `cron/promote-orders` never runs automatically; payments confirmed on-chain or via webhooks stall before reaching `RECONCILED`.
+3. **Queue Consumer Absence:**
+   - Webhook ingress queue `WEBHOOK_QUEUE` is declared in `wrangler.toml`, but webhooks under `app/api/webhooks/*` process requests synchronously.
+
+### 16.2 Cryptographic Multi-Chain Wallet Proof Bridge
+1. **Production Proof Requirement:**
+   - In non-test environments (`!isTestEnv`), `app/api/governance/vote.ts`, `app/api/governance/execute.ts`, and `app/api/communities/index.ts` require cryptographic wallet signatures (`x-wallet-address`, `x-wallet-signature`, `x-wallet-message`).
+2. **Frontend Omission:**
+   - `useCastVote` in `hooks/useBarazaData.ts` and `GroupMoney.tsx:approve()` dispatch raw HTTP requests with no proof headers.
+   - All production voting and proposal execution requests return `401 Unauthorized`.
+3. **Wallet Proof Client Limitation:**
+   - `app/src/lib/walletProof.ts` currently only implements Solana wallet signing; Stellar (Freighter) and EVM (Wagmi) signers are unsupported, and purposes `'vote'`, `'execute-proposal'`, and `'treasury-init'` are omitted from `WalletProofPurpose`.
+
+### 16.3 Polymorphic Authentication Resolution
+1. **`resolveCallerIdentity` Defect:**
+   - In `app/api/_lib/auth-session.ts`, when a user authenticates via `BARAZA_SESSION`, the returned identity object only contains `{ userProfileId, email, authMethod: 'BARAZA_SESSION' }`. `walletAddress` and `privyDid` are left undefined.
+2. **Downstream Rejection:**
+   - Handlers like `communities/officers.ts` and `user/notifications/push-subscribe.ts` check `if (!identity.walletAddress && !identity.privyDid) return 401;`.
+   - Valid session users are locked out of officer assignments and web push registration.
+   - **Resolution:** Include `user_profiles(wallet_address, privy_did)` in session lookup and permit `userProfileId` in route authorization checks.
+
+### 16.4 Live Payment Rails vs. Simulator
+1. **M-Pesa STK Push Route:**
+   - `app/api/mpesa/stk-push.ts` is fully implemented for live Safaricom Daraja Express (rate limiting, circuit breaker, phone normalization, order persistence).
+2. **Frontend Hardcoding:**
+   - `GroupPay.tsx` and `JoinDao.tsx` hardcode calls to `/api/mpesa/simulate` and show "Rail Unavailable" if `isPaymentSimulatorEnabled()` is false.
+   - Staging and production users cannot trigger real Daraja STK pushes.
+
+### 16.5 Orphaned Subsystems & Wiring Gaps
+1. **Member Directory Roster:**
+   - `app/api/communities/members.ts` provides paginated roster queries with activation status and roles.
+   - `MemberDirectory.tsx` displays "Member List Not Available Yet" because `useMembers` queries the synthetic in-memory store `dataStore.ts`.
+2. **Payout Quoting Engine:**
+   - `app/api/payments/quote.ts` implements SASRA reserve checking and HMAC quote tokens.
+   - `lib/payouts.ts:requestPayoutQuote()` returns `null`.
+   - Discrepancy: `quote.ts` signs using `PAYMENT_QUOTE_SECRET`, while `minisend.ts` verifies against `PAYOUT_QUOTE_SECRET`.
+3. **Root `api/` Shim Desynchronization:**
+   - 28 endpoints from `app/api/` are missing from the root `api/` re-export directory.
+
+
+## 17. 18 September 2026: join flow, account, photos and logos
 
 Documented in full in `docs/FRONTEND_HANDOFF_2026-09-18.md`: payment method chooser on Join (M-Pesa, Airtel Money, Card / Bank, Crypto), fee cards, centred join and create steps, Account layout with Log Out moved to the top bar menu, profile photo and group logo changes propagating to every tile, collapsible sidebar sections, theme-aware toasts, and the named shadow utilities that fixed shadows that never rendered. Backend asks: avatar and logo upload endpoints with `avatar_url` on member rows and `image_url` on community rows, real Airtel Money and card checkout endpoints, `rail` and `stkExpiresAt` on payment order status, per-rail health components.

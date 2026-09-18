@@ -122,7 +122,8 @@ jobs:
         run: |
           test -f dist/index.html
           test -f dist/_routes.json
-          echo "Cloudflare Pages bundle successfully verified."
+          test -f ../functions/api/\[\[catchall\]\].ts
+          echo "Cloudflare Pages bundle and Functions edge router successfully verified."
 
   deploy:
     name: Cloudflare Pages Deployment

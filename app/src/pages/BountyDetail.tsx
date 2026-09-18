@@ -146,8 +146,8 @@ export default function BountyDetail() {
                   </span>
                   <span className="font-mono text-xs uppercase tracking-widest">{bounty.category}</span>
                 </div>
-                <h1 className="font-display text-3xl font-bold md:text-5xl">{bounty.title}</h1>
-                <p className="mt-4 max-w-2xl text-sm leading-6">{bounty.summary}</p>
+                <h1 className="font-display text-3xl font-bold md:text-5xl break-words [overflow-wrap:anywhere]">{bounty.title}</h1>
+                <p className="mt-4 max-w-2xl text-sm leading-6 break-words [overflow-wrap:anywhere] whitespace-pre-wrap">{bounty.summary}</p>
                 <div className="mt-6 flex flex-wrap gap-3">
                   <Link to={`/dashboard/${bounty.communityId}`} className="btn-wipe-outline inline-flex items-center gap-2 text-sm">
                     Open group

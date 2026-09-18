@@ -2,6 +2,8 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { DEFAULT_GOVERNANCE, type Community, type VerificationTier, MOCK_COMMUNITIES } from '@/lib/constants';
 import { isSyntheticDataEnabled } from '@/lib/devMode';
 import type { Chain } from '@/lib/chain';
+import { apiFetch } from '@/lib/api';
+import type { Member } from '@/lib/dataStore';
 
 type TreasuryPolicy = 'multisig-ready' | 'proposal-only' | 'manual-review';
 
@@ -310,11 +312,11 @@ export async function createCommunityRecord(input: CommunityInsert): Promise<Com
     saccoRegistrationNumber: input.saccoRegistrationNumber || undefined,
   };
 
-  try {
-    const res = await fetch('/api/communities', {
+  if (isSupabaseConfigured()) {
+    const res = await apiFetch<{ persisted: boolean; community?: CommunityRow }>('/api/communities', {
       method: 'POST',
-      headers: { 'content-type': 'application/json', ...(input.walletProofHeaders ?? {}) },
-      body: JSON.stringify({
+      headers: input.walletProofHeaders,
+      body: {
         name: input.name,
         type: input.type,
         description: input.description,
@@ -331,20 +333,62 @@ export async function createCommunityRecord(input: CommunityInsert): Promise<Com
         paybillNumber: input.paybillNumber,
         ussdShortcode: input.ussdShortcode,
         createdBy: input.createdBy,
-      }),
+      },
     });
 
-    if (res.ok) {
-      const payload = await res.json() as { persisted: boolean; community?: CommunityRow };
-      if (payload.persisted && payload.community) {
-        return communityFromRow(payload.community);
-      }
+    if (!res.ok) {
+      throw new Error(res.error.message || 'Failed to create group on Baraza protocol.');
     }
-  } catch {
-    // Network/CORS/local-dev fallback — fall through to localStorage
+    if (res.data?.community) {
+      return communityFromRow(res.data.community);
+    }
+  } else if (!import.meta.env.DEV) {
+    throw new Error(
+      'Database persistence is not configured. Communities cannot be created offline in production. Please contact support.',
+    );
   }
 
   const communities = readLocalCommunities();
   writeLocalCommunities([localCommunity, ...communities]);
   return localCommunity;
+}
+
+export interface CommunityMemberRecord {
+  memberId: string;
+  walletAddress: string;
+  role: string;
+  activationStatus: string;
+  displayName: string;
+  avatarUrl: string;
+  votingWeight: number;
+  joinedAt: string;
+  activatedAt?: string | null;
+}
+
+export async function fetchCommunityMembers(communityId: string): Promise<Member[]> {
+  try {
+    const res = await apiFetch<{ ok: boolean; members: CommunityMemberRecord[]; total: number }>(
+      `/api/communities/members?communityId=${encodeURIComponent(communityId)}&limit=100`,
+    );
+    if (res.ok && res.data?.members) {
+      return res.data.members.map((r): Member => ({
+        id: r.memberId,
+        communityId,
+        name: r.displayName || 'Anonymous Member',
+        walletKey: r.walletAddress,
+        joinedAt: r.joinedAt ? new Date(r.joinedAt).getTime() : Date.now(),
+        role: r.role === 'founder' || r.role === 'admin' ? r.role : 'member',
+        status: r.activationStatus === 'active' ? 'active' : 'inactive',
+        totalContributed: 0,
+        contributionCount: 0,
+        lastContributionAt: r.activatedAt ? new Date(r.activatedAt).getTime() : Date.now(),
+        contributions: [],
+        votesCount: 0,
+        proposalsCount: 0,
+      }));
+    }
+  } catch {
+    // fall through
+  }
+  return [];
 }

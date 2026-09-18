@@ -48,6 +48,9 @@ vi.mock('@/hooks/useBarazaData', () => ({
   useVoteStatus: () => null,
   useCastVote: () => ({ vote: castVote, isLoading: false }),
 }));
+vi.mock('@/hooks/useProposals', () => ({
+  useProposal: () => ({ decision: openVote, isLoading: false, error: null, reload: vi.fn() }),
+}));
 vi.mock('@/hooks/useChain', () => ({ useChain: () => ({ chain: 'stellar' }) }));
 vi.mock('@/components/Layout', () => ({ default: ({ children }: { children: ReactNode }) => <div>{children}</div> }));
 vi.mock('@/hooks/useCommunities', () => ({

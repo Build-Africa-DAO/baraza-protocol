@@ -56,7 +56,9 @@ export default function Communities() {
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     return communities.filter((community) => {
-      const matchesSearch = !term || community.name.toLowerCase().includes(term) || community.description.toLowerCase().includes(term);
+      const nameStr = (community.name ?? '').toLowerCase();
+      const descStr = (community.description ?? '').toLowerCase();
+      const matchesSearch = !term || nameStr.includes(term) || descStr.includes(term);
       const matchesKind = kind === 'all' || browseKindOf(community.type) === kind;
       return matchesSearch && matchesKind;
     });

@@ -8,6 +8,7 @@ import { useChain } from '@/hooks/useChain';
 import { useLocation } from 'react-router-dom';
 import type { ChainMeta } from '@/lib/chain';
 import type { CouncilAgentName } from '@/akili/council';
+import { usePretextMeasure } from '@/hooks/usePretextMeasure';
 
 interface Message {
   id: string;
@@ -373,6 +374,28 @@ const TypingDots: React.FC = () => (
   </div>
 );
 
+const AkiliBubble: React.FC<{ msg: Message }> = ({ msg }) => {
+  const { lineCount } = usePretextMeasure(
+    msg.text,
+    '14px Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    280,
+    { lineHeight: 22, whiteSpace: 'pre-wrap' },
+  );
+
+  return (
+    <div
+      data-lines={lineCount}
+      className={`max-w-[88%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed break-words [overflow-wrap:anywhere] whitespace-pre-wrap ${
+        msg.role === 'user'
+          ? 'rounded-br-[6px] bg-foreground text-background'
+          : 'rounded-bl-[6px] bg-surface text-foreground'
+      }`}
+    >
+      {msg.text}
+    </div>
+  );
+};
+
 const AkiliChat: React.FC = () => {
   const { isOpen, open, close, pendingMessage, clearPending } = useAkiliChat();
   const reduceMotion = useReducedMotion() ?? false;
@@ -574,15 +597,7 @@ const AkiliChat: React.FC = () => {
                   transition={{ duration: reduceMotion ? 0 : 0.18 }}
                   className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
                 >
-                  <div
-                    className={`max-w-[88%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed ${
-                      msg.role === 'user'
-                        ? 'rounded-br-[6px] bg-foreground text-background'
-                        : 'rounded-bl-[6px] bg-surface text-foreground'
-                    }`}
-                  >
-                    {msg.text}
-                  </div>
+                  <AkiliBubble msg={msg} />
                   <span className="mt-1 px-1 text-xs text-muted-foreground">
                     {msg.saved ? 'Saved answer · ' : ''}
                     {msg.time}

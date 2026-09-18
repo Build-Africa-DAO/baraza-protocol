@@ -137,8 +137,59 @@ function routePreloadHeaders(): Plugin {
   };
 }
 
+function edgeApiDevPlugin(): Plugin {
+  return {
+    name: 'baraza:edge-api-dev-middleware',
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        if (!req.url || !req.url.startsWith('/api')) {
+          return next();
+        }
+        try {
+          const { dispatchApiRoute } = await server.ssrLoadModule('../cloudflare/edgeRouter.ts');
+          const chunks: Buffer[] = [];
+          req.on('data', (chunk: Buffer | Uint8Array) => chunks.push(Buffer.from(chunk)));
+          req.on('end', async () => {
+            try {
+              const hasBody = ['POST', 'PUT', 'PATCH'].includes(req.method || '') && chunks.length > 0;
+              const body = hasBody ? Buffer.concat(chunks) : undefined;
+              const fullUrl = `http://${req.headers.host || 'localhost:5173'}${req.url}`;
+              const headers = new Headers();
+              for (const [key, val] of Object.entries(req.headers)) {
+                if (val !== undefined) {
+                  if (Array.isArray(val)) {
+                    val.forEach((v) => headers.append(key, v));
+                  } else {
+                    headers.set(key, val);
+                  }
+                }
+              }
+              const webReq = new Request(fullUrl, {
+                method: req.method,
+                headers,
+                body,
+              });
+              const response = await dispatchApiRoute(webReq);
+              res.statusCode = response.status;
+              response.headers.forEach((val: string, key: string) => {
+                res.setHeader(key, val);
+              });
+              const resBody = Buffer.from(await response.arrayBuffer());
+              res.end(resBody);
+            } catch (err) {
+              next(err);
+            }
+          });
+        } catch (err) {
+          next(err);
+        }
+      });
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), routePreloadHeaders()],
+  plugins: [react(), routePreloadHeaders(), edgeApiDevPlugin()],
   resolve: {
     alias: {
       '@': path.resolve(import.meta.dirname, './src'),
@@ -149,6 +200,14 @@ export default defineConfig({
   define: {
     'process.env': {},
     global: 'globalThis',
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: process.env.VITE_API_BASE || 'http://127.0.0.1:3000',
+        changeOrigin: true,
+      },
+    },
   },
   build: {
     target: 'esnext',
