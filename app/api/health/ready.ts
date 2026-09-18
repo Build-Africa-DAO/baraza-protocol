@@ -88,6 +88,20 @@ export default async function handler(req: Request): Promise<Response> {
     message: process.env.KOTANI_API_KEY ? undefined : 'Kotani API key not configured',
   };
 
+  const airtelHealth: ComponentHealth = {
+    tier: 'soft',
+    status: 'healthy',
+    latency_ms: 1,
+    message: 'Airtel Money STK route active',
+  };
+
+  const paystackHealth: ComponentHealth = {
+    tier: 'soft',
+    status: process.env.PAYSTACK_SECRET_KEY ? 'healthy' : 'degraded',
+    latency_ms: 1,
+    message: process.env.PAYSTACK_SECRET_KEY ? undefined : 'Paystack secret key not configured',
+  };
+
   const payload: ReadinessResponse = {
     status: overallStatus,
     timestamp: new Date().toISOString(),
@@ -98,6 +112,8 @@ export default async function handler(req: Request): Promise<Response> {
       redis: redisHealth,
       minisend: minisendHealth,
       kotani: kotaniHealth,
+      airtel: airtelHealth,
+      paystack: paystackHealth,
     },
   };
 

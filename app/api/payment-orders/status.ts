@@ -13,6 +13,7 @@ interface PaymentOrderRow {
   updated_at: string;
   expires_at: string | null;
   activation_secret_hash: string | null;
+  metadata?: Record<string, unknown> | null;
 }
 
 function json(body: unknown, init?: ResponseInit): Response {
@@ -28,41 +29,53 @@ function json(body: unknown, init?: ResponseInit): Response {
 
 async function hashActivationSecret(secret: string): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(secret));
-  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 function timingSafeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
   let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
   return diff === 0;
 }
 
 export default async function handler(req: Request): Promise<Response> {
   if (req.method === 'OPTIONS') {
     return new Response(null, {
+      status: 204,
       headers: {
         'access-control-allow-origin': '*',
-        'access-control-allow-methods': 'GET, OPTIONS',
-        'access-control-allow-headers': 'content-type, x-activation-secret',
+        'access-control-allow-methods': 'GET,OPTIONS',
+        'access-control-allow-headers': 'content-type,x-activation-secret',
       },
     });
   }
-  if (req.method !== 'GET') return json({ error: 'method_not_allowed' }, { status: 405 });
+  if (req.method !== 'GET') {
+    return json({ error: 'method_not_allowed' }, { status: 405 });
+  }
 
-  const url = process.env.SUPABASE_URL?.replace(/\/$/, '');
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceKey) return json({ error: 'supabase_not_configured' }, { status: 503 });
+  const url = process.env.SUPABASE_URL?.trim();
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (!url || !serviceKey) {
+    return json({ error: 'db_not_configured' }, { status: 503 });
+  }
 
-  const requestUrl = new URL(req.url);
-  const orderId = requestUrl.searchParams.get('orderId') ?? '';
+  const reqUrl = new URL(req.url);
+  const orderId = reqUrl.searchParams.get('orderId') ?? '';
+  if (reqUrl.searchParams.has('activationSecret')) {
+    return json({ error: 'invalid_request', message: 'activationSecret in query string is forbidden' }, { status: 400 });
+  }
   const activationSecret = req.headers.get('x-activation-secret') ?? '';
   if (!orderId || !activationSecret) {
     return json({ error: 'invalid_request', message: 'orderId and x-activation-secret are required' }, { status: 400 });
   }
 
   const res = await fetch(
-    `${url}/rest/v1/payment_orders?order_id=eq.${encodeURIComponent(orderId)}&select=order_id,community_id,membership_tier_id,status,amount_expected,amount_received,currency,confirmed_at,created_at,updated_at,activation_secret_hash,expires_at`,
+    `${url}/rest/v1/payment_orders?order_id=eq.${encodeURIComponent(orderId)}&select=order_id,community_id,membership_tier_id,status,amount_expected,amount_received,currency,confirmed_at,created_at,updated_at,activation_secret_hash,expires_at,metadata`,
     {
       headers: {
         apikey: serviceKey,
@@ -80,6 +93,11 @@ export default async function handler(req: Request): Promise<Response> {
   }
 
   const { activation_secret_hash: _secretHash, ...safeOrder } = order;
-  return json({ ...safeOrder, stk_expires_at: order.expires_at });
+  const rail = (order.metadata as Record<string, unknown> | null)?.rail || 'mpesa';
+  return json({
+    ...safeOrder,
+    rail,
+    stk_expires_at: order.expires_at,
+    stkExpiresAt: order.expires_at,
+  });
 }
-

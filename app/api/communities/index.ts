@@ -1,5 +1,6 @@
 import { getWalletProof, verifyWalletProof } from '../_lib/wallet-proof.js';
 import { resolveCallerIdentity } from '../_lib/auth-session.js';
+import { getSupabaseAdmin } from '../_lib/supabase.js';
 
 export const config = { runtime: 'nodejs' };
 
@@ -20,6 +21,7 @@ interface CommunityCreateRequest {
   paybillNumber?: string;
   ussdShortcode?: string;
   createdBy?: string;
+  imageUrl?: string;
 }
 
 function json(body: unknown, init?: ResponseInit): Response {
@@ -42,8 +44,46 @@ async function handler(req: Request): Promise<Response> {
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       status: 204,
-      headers: { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'POST,OPTIONS', 'access-control-allow-headers': 'content-type,x-wallet-address,x-wallet-message,x-wallet-signature' },
+      headers: { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET,POST,OPTIONS', 'access-control-allow-headers': 'content-type,x-wallet-address,x-wallet-message,x-wallet-signature' },
     });
+  }
+
+  // --- GET: Fetch Community or List ---
+  if (req.method === 'GET') {
+    const url = new URL(req.url);
+    const id = url.searchParams.get('id') || url.searchParams.get('communityId');
+    const supabaseUrl = process.env.SUPABASE_URL?.trim();
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+
+    if (!supabaseUrl || !serviceKey) {
+      return json({ error: 'db_not_configured' }, { status: 503 });
+    }
+
+    const supabase = getSupabaseAdmin();
+    if (id) {
+      const { data: comm, error } = await supabase
+        .from('communities')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (error || !comm) {
+        return json({ error: 'not_found', message: 'Community not found' }, { status: 404 });
+      }
+      return json({ ok: true, community: comm, image_url: comm.image_url });
+    }
+
+    const limit = Math.min(parseInt(url.searchParams.get('limit') || '50', 10), 100);
+    const { data: comms, error } = await supabase
+      .from('communities')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      return json({ error: 'database_error', message: error.message }, { status: 500 });
+    }
+    return json({ ok: true, communities: comms || [] });
   }
 
   if (req.method !== 'POST') return bad('method not allowed', 405);
@@ -107,6 +147,7 @@ async function handler(req: Request): Promise<Response> {
     voting_period_days: votingPeriodDays,
     treasury_policy: treasuryPolicy,
     created_by: body.createdBy ?? null,
+    ...(body.imageUrl ? { image_url: body.imageUrl } : {}),
   };
 
   const res = await fetch(`${supabaseUrl}/rest/v1/communities`, {

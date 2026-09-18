@@ -17,7 +17,7 @@ import { useCommunity } from '@/hooks/useCommunities';
 import { useToast } from '@/hooks/use-toast';
 import { RailHealthLine } from '@/components/app/RailHealthLine';
 import { apiFetch, submitGuard } from '@/lib/api';
-import { isPaymentSimulatorEnabled } from '@/lib/devMode';
+import { isPaymentSimulatorEnabled, RAIL_UNAVAILABLE_COPY } from '@/lib/devMode';
 import { acceptInviteCode } from '@/lib/inviteAccept';
 import { formatMoney, groupCurrency } from '@/lib/money';
 import { PRODUCT_ENVIRONMENT } from '@/lib/network';
