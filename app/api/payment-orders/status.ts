@@ -11,6 +11,7 @@ interface PaymentOrderRow {
   confirmed_at: string | null;
   created_at: string;
   updated_at: string;
+  expires_at: string | null;
   activation_secret_hash: string | null;
 }
 
@@ -61,7 +62,7 @@ export default async function handler(req: Request): Promise<Response> {
   }
 
   const res = await fetch(
-    `${url}/rest/v1/payment_orders?order_id=eq.${encodeURIComponent(orderId)}&select=order_id,community_id,membership_tier_id,status,amount_expected,amount_received,currency,confirmed_at,created_at,updated_at,activation_secret_hash`,
+    `${url}/rest/v1/payment_orders?order_id=eq.${encodeURIComponent(orderId)}&select=order_id,community_id,membership_tier_id,status,amount_expected,amount_received,currency,confirmed_at,created_at,updated_at,activation_secret_hash,expires_at`,
     {
       headers: {
         apikey: serviceKey,
@@ -79,5 +80,6 @@ export default async function handler(req: Request): Promise<Response> {
   }
 
   const { activation_secret_hash: _secretHash, ...safeOrder } = order;
-  return json(safeOrder);
+  return json({ ...safeOrder, stk_expires_at: order.expires_at });
 }
+

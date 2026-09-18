@@ -6,6 +6,7 @@
  */
 
 import { getWalletProof, verifyWalletProof } from '../_lib/wallet-proof.js';
+import { resolveCallerIdentity } from '../_lib/auth-session.js';
 
 export const config = { runtime: 'nodejs' };
 
@@ -39,7 +40,7 @@ export default async function handler(req: Request): Promise<Response> {
       headers: {
         'access-control-allow-origin': '*',
         'access-control-allow-methods': 'POST,OPTIONS',
-        'access-control-allow-headers': 'content-type,x-wallet-address,x-wallet-message,x-wallet-signature',
+        'access-control-allow-headers': 'content-type,authorization,x-wallet-address,x-wallet-message,x-wallet-signature',
       },
     });
   }
@@ -64,14 +65,21 @@ export default async function handler(req: Request): Promise<Response> {
 
   const isTestEnv = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true';
 
-  // Verify wallet proof (Mandatory in production; validated in test if provided)
+  // Verify caller identity via cryptographic proof OR authenticated session
+  const caller = await resolveCallerIdentity(req, 'vote', voter);
   const proof = getWalletProof(req, voter);
-  if (proof) {
-    if (!verifyWalletProof(proof, voter, 'vote')) {
-      return json({ error: 'unauthorized', message: 'Valid voter wallet signature required' }, { status: 401 });
-    }
-  } else if (!isTestEnv) {
-    return json({ error: 'unauthorized', message: 'Valid voter wallet signature required' }, { status: 401 });
+  const isProofValid = proof ? verifyWalletProof(proof, voter, 'vote') : false;
+  const isCallerAuthorized = Boolean(
+    isProofValid ||
+    (caller && (
+      (caller.walletAddress && caller.walletAddress.toLowerCase() === voter.toLowerCase()) ||
+      caller.userProfileId ||
+      caller.privyDid
+    ))
+  );
+
+  if (!isCallerAuthorized && !isTestEnv) {
+    return json({ error: 'unauthorized', message: 'Valid voter wallet signature or active session required' }, { status: 401 });
   }
 
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;

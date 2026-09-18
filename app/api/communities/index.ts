@@ -99,7 +99,7 @@ async function handler(req: Request): Promise<Response> {
     fee_type: body.feeType ?? (membershipFee === 0 ? 'free' : 'one_time'),
     carrier_pass_through: body.carrierPassThrough !== false,
     currency: (body.currency || 'KES').toUpperCase(),
-    member_count: 0,
+    member_count: body.createdBy ? 1 : 0,
     fund_balance: 0,
     chain,
     quorum_pct: quorumPct,
@@ -126,9 +126,59 @@ async function handler(req: Request): Promise<Response> {
     return json({ error: 'db_error', message: 'Failed to persist community', detail }, { status: 502 });
   }
 
+  // Atomically initialize founder membership record (ADR-013 & Invariant I11)
+  if (body.createdBy) {
+    const memberId = crypto.randomUUID();
+    const now = new Date().toISOString();
+    try {
+      await fetch(`${supabaseUrl}/rest/v1/memberships`, {
+        method: 'POST',
+        headers: {
+          apikey: serviceKey,
+          Authorization: `Bearer ${serviceKey}`,
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          member_id: memberId,
+          community_id: row.id,
+          user_id_hash: body.createdBy,
+          wallet_address: body.createdBy,
+          status: 'ACTIVE',
+          voting_weight: 1,
+          joined_at: now,
+          activated_at: now,
+        }),
+      });
+
+      await fetch(`${supabaseUrl}/rest/v1/members`, {
+        method: 'POST',
+        headers: {
+          apikey: serviceKey,
+          Authorization: `Bearer ${serviceKey}`,
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          member_id: memberId,
+          auth_user_id: body.createdBy,
+          community_id: row.id,
+          wallet_address: body.createdBy,
+          role: 'founder',
+          activation_status: 'active',
+          activated_at: now,
+          created_at: now,
+          updated_at: now,
+        }),
+      });
+    } catch (err) {
+      console.error('[api/communities] Failed to insert initial founder membership:', err);
+    }
+  }
+
   const rows = await res.json() as unknown[];
   const created = Array.isArray(rows) ? rows[0] : rows;
   return json({ persisted: true, community: created }, { status: 201 });
 }
 
 export { handler as POST, handler as OPTIONS };
+export default handler;
+
