@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { InitialsTile } from '@/components/app/ListRow';
 import { Button } from '@/components/ui/button';
 import { StatusChip } from '@/components/ui/status-chip';
+import { useCommunityImage } from '@/lib/imageUpload';
 import { formatMajor } from '@/lib/money';
 import { cn } from '@/lib/utils';
 
@@ -41,10 +42,12 @@ interface CommunityCardProps {
 }
 
 export default function CommunityCard({ id, name, type, description, membershipFee, memberCount, image, currency, className }: CommunityCardProps) {
+  const { image: communityLogo } = useCommunityImage(id, image);
+
   return (
     <article className={cn('baraza-card flex h-full flex-col p-5', className)}>
       <div className="flex items-start gap-3">
-        <InitialsTile initials={image} />
+        <InitialsTile initials={communityLogo ?? image} image={communityLogo ?? image} />
         <div className="min-w-0 flex-1">
           <h3 className="truncate font-display text-base font-bold">{name}</h3>
           <div className="mt-1.5 flex flex-wrap items-center gap-2">

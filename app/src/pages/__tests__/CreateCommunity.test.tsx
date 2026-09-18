@@ -95,4 +95,16 @@ describe('CreateCommunity wizard', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
     expect(screen.getByLabelText('Group Name')).toHaveValue('Umoja Chama');
   });
+
+  it('shows minimum character count next to description helper when user starts typing', () => {
+    renderCreate('/create?type=chama');
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    expect(screen.getByText('One or two sentences members will see when they join.')).toBeInTheDocument();
+    expect(screen.queryByText(/At least 10 characters/)).toBeNull();
+
+    fireEvent.change(screen.getByLabelText('What This Group Does'), { target: { value: 'kjsfsfs' } });
+    expect(
+      screen.getByText('One or two sentences members will see when they join. At least 10 characters.'),
+    ).toBeInTheDocument();
+  });
 });

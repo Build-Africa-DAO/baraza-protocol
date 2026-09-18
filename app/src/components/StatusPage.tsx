@@ -149,7 +149,7 @@ export default function StatusPage({
       </div>
 
       <div className="relative z-10 mx-auto max-w-xl px-4 text-center">
-        <div className="rise mx-auto mb-6 grid h-12 w-12 place-items-center rounded-xl border border-border bg-card text-foreground shadow-[var(--shadow-card)]">
+        <div className="rise mx-auto mb-6 grid h-12 w-12 place-items-center rounded-xl border border-border bg-card text-foreground shadow-card">
           <KindIcon className="h-5 w-5" />
         </div>
         <p className="rise rise-1 font-mono text-xs font-semibold uppercase tracking-[0.28em] text-primary">

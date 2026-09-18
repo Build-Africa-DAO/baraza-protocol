@@ -17,6 +17,7 @@ import { Sheet } from '@/components/ui/sheet';
 import { SkeletonAmount, SkeletonHeader, SkeletonList } from '@/components/ui/skeletons';
 import { StatusChip, type StatusKind } from '@/components/ui/status-chip';
 import { Stepper } from '@/components/ui/stepper';
+import { useToast } from '@/hooks/use-toast';
 import { useSeo } from '@/lib/seo';
 
 /**
@@ -51,6 +52,20 @@ const VOTE_FILTERS = [
   { key: 'did-not-pass' as const, label: 'Did Not Pass', count: 0 },
 ];
 
+function ToastFixture() {
+  const { toast } = useToast();
+  return (
+    <div className="flex flex-wrap gap-2">
+      <Button variant="outline" onClick={() => toast({ title: 'Profile Photo Updated', description: 'Your new avatar is updated across the app.' })}>
+        Show Toast
+      </Button>
+      <Button variant="outline" onClick={() => toast({ title: 'Push Not Enabled', description: 'This browser blocked notifications.', variant: 'destructive' })}>
+        Show Destructive Toast
+      </Button>
+    </div>
+  );
+}
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="space-y-4">
@@ -78,6 +93,10 @@ export default function DevUi() {
           back={{ label: 'My Groups', to: '/home' }}
           action={<Button>Desktop Primary</Button>}
         />
+
+        <Section title="Toasts">
+          <ToastFixture />
+        </Section>
 
         <Section title="Buttons">
           <div className="flex flex-wrap items-center gap-3">

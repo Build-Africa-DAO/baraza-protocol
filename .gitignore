@@ -99,3 +99,6 @@ scripts/higgsfield/output/
 telemetry/
 tests/personas/
 tests/harness/
+
+# Knowledge Graph outputs (local only, regenerated via /graphify)
+graphify-out/
