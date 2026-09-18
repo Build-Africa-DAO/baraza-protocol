@@ -153,12 +153,13 @@ export default function CreateCommunity() {
             title={step === 0 ? 'What Kind of Group?' : step === 1 ? 'Name Your Group' : 'Open This Group'}
             subtitle={`Step ${step + 1} of 3`}
             back={step === 0 ? { label: 'My Groups', to: '/home' } : undefined}
+            centered
           />
           <Stepper steps={STEPS} current={step} />
 
           {step === 0 ? (
             <div className="space-y-5">
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" role="radiogroup" aria-label="Kind of group">
+              <div className="grid gap-4 py-1 sm:grid-cols-2 lg:grid-cols-3" role="radiogroup" aria-label="Kind of group">
                 {KINDS.map((option) => {
                   const selected = kind === option.value;
                   return (
@@ -169,33 +170,48 @@ export default function CreateCommunity() {
                       aria-checked={selected}
                       onClick={() => setKind(option.value)}
                       className={cn(
-                        'flex min-h-24 items-start gap-3 rounded-lg border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                        selected ? 'border-primary bg-primary/10' : 'border-border bg-card hover:border-foreground/35',
+                        'baraza-card-3d flex min-h-24 items-start gap-3.5 p-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                        selected ? 'bg-primary text-primary-foreground' : 'bg-card text-foreground',
                       )}
                     >
                       <span
                         aria-hidden
                         className={cn(
-                          'mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full border',
-                          selected ? 'border-primary bg-primary text-primary-foreground' : 'border-border',
+                          'mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full transition-all duration-200',
+                          selected
+                            ? 'bg-primary-foreground text-primary shadow-sm'
+                            : 'bg-black/5 text-transparent dark:bg-white/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.4)]',
                         )}
                       >
-                        {selected ? <Check className="h-3 w-3" /> : null}
+                        {selected ? <Check className="h-3 w-3 stroke-[3]" /> : null}
                       </span>
-                      <span className="min-w-0">
-                        <span className="block font-display text-base font-bold">{option.label}</span>
-                        <span className="mt-1 block text-sm text-muted-foreground">{option.help}</span>
+                      <span className="min-w-0 flex-1">
+                        <span className={cn('block font-display text-base font-bold', selected ? 'text-primary-foreground' : 'text-foreground')}>
+                          {option.label}
+                        </span>
+                        <span className={cn('mt-1 block text-sm leading-snug', selected ? 'text-primary-foreground/90' : 'text-muted-foreground')}>
+                          {option.help}
+                        </span>
                       </span>
                     </button>
                   );
                 })}
               </div>
-              {kind === 'sacco' ? (
-                <p className="text-sm text-muted-foreground">Regulated lending stays off until officers add the SACCO licence in Settings. Dues and votes work from day one.</p>
-              ) : null}
-              <Button type="button" fullWidth onClick={() => setStep(1)} disabled={!kind} className="sm:w-auto">
-                Continue
-              </Button>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                {kind === 'sacco' ? (
+                  <p className="text-sm text-muted-foreground max-w-xl">
+                    Regulated lending stays off until officers add the SACCO licence in Settings. Dues and votes work from day one.
+                  </p>
+                ) : null}
+                <Button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  disabled={!kind}
+                  className="sm:w-auto shrink-0 sm:ml-auto"
+                >
+                  Continue
+                </Button>
+              </div>
             </div>
           ) : null}
 
@@ -206,13 +222,28 @@ export default function CreateCommunity() {
                   <Field label="Group Name" htmlFor="create-name" help="What members call it. At least three characters." error={name && name.trim().length < 3 ? 'Give the group a name of at least three characters.' : undefined}>
                     <Input id="create-name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Milele Chama" maxLength={80} aria-invalid={Boolean(name && name.trim().length < 3)} />
                   </Field>
-                  <Field label="What This Group Does" htmlFor="create-description" help="One or two sentences members will see when they join.">
-                    <Textarea id="create-description" value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Monthly savings for members' school fees and emergencies." maxLength={500} />
+                  <Field
+                    label="What This Group Does"
+                    htmlFor="create-description"
+                    help={
+                      description.length > 0
+                        ? 'One or two sentences members will see when they join. At least 10 characters.'
+                        : 'One or two sentences members will see when they join.'
+                    }
+                  >
+                    <Textarea
+                      id="create-description"
+                      value={description}
+                      onChange={(event) => setDescription(event.target.value)}
+                      placeholder="Monthly savings for members' school fees and emergencies."
+                      maxLength={500}
+                      aria-invalid={Boolean(description && description.trim().length < 10)}
+                    />
                   </Field>
                 </section>
 
                 <section className="baraza-card space-y-5 p-5">
-                  <div>
+                  <div className="text-center">
                     <h2 className="font-display text-base font-bold">What Members Pay</h2>
                     <p className="mt-1 text-sm text-muted-foreground">{FEE_TYPE_HELP[feeType]}</p>
                   </div>
@@ -235,7 +266,7 @@ export default function CreateCommunity() {
                 </section>
 
                 <section className="baraza-card space-y-5 p-5">
-                  <div>
+                  <div className="text-center">
                     <h2 className="font-display text-base font-bold">Who Must Vote</h2>
                     <p className="mt-1 text-sm text-muted-foreground">{rules}</p>
                   </div>
@@ -329,7 +360,7 @@ function Summary({ kind, name, free, oneTime = false, amount, currency, rules }:
     // from the form and fee cards. Every child colour is overridden to white
     // so AmountBlock's greys stay legible on orange.
     <section
-      className="space-y-4 rounded-2xl border border-primary bg-primary p-5 text-primary-foreground shadow-[var(--shadow-card)] lg:sticky lg:top-4 [&_.text-foreground]:text-primary-foreground [&_.text-muted-foreground]:text-primary-foreground/80"
+      className="space-y-4 rounded-2xl border border-primary bg-primary p-5 text-primary-foreground shadow-card lg:sticky lg:top-4 [&_.text-foreground]:text-primary-foreground [&_.text-muted-foreground]:text-primary-foreground/80"
       aria-label="Summary"
     >
       <div>
