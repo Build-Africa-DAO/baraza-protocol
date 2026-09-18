@@ -780,3 +780,7 @@ What changed, in order of effect:
 ### 15.4 Verification
 
 `tsc --noEmit -p tsconfig.app.json` clean; `eslint .` 0 errors (45 pre-existing `react-hooks/set-state-in-effect` warnings, none introduced); frontend vitest 259 passing across 28 files (the Docker-only backend suites, including `postPr89IntegrationBridge.test.ts` from `dev`, still need the local API and are not part of this gate); `vite build` green with the generated `_headers`. Browser pass on the production build: 404 page, offline and back-online banners, 320 px width without horizontal scroll on `/`, `/groups` and `/dashboard/1`, the sign-in sheet loading Privy lazily without console errors, the polaroid gallery and WebP photos rendering, buttons measured at 48 px.
+
+## 16. 18 September 2026: join flow, account, photos and logos
+
+Documented in full in `docs/FRONTEND_HANDOFF_2026-09-18.md`: payment method chooser on Join (M-Pesa, Airtel Money, Card / Bank, Crypto), fee cards, centred join and create steps, Account layout with Log Out moved to the top bar menu, profile photo and group logo changes propagating to every tile, collapsible sidebar sections, theme-aware toasts, and the named shadow utilities that fixed shadows that never rendered. Backend asks: avatar and logo upload endpoints with `avatar_url` on member rows and `image_url` on community rows, real Airtel Money and card checkout endpoints, `rail` and `stkExpiresAt` on payment order status, per-rail health components.
