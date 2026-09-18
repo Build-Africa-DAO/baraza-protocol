@@ -155,7 +155,7 @@ function VotePanel({
             <StatusChip kind="info" icon={null} label={myChoice === 'for' ? 'You Supported' : 'You Objected'} />
           ) : null}
         </div>
-        <h1 className="mt-3 font-display text-2xl font-black tracking-tight md:text-3xl">{proposal.title}</h1>
+        <h1 className="mt-3 font-display text-2xl font-black tracking-tight md:text-3xl break-words [overflow-wrap:anywhere]">{proposal.title}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Proposed by {proposal.proposedBy} · {open ? voteTimeLabel(proposal) : `Closed ${formatAccountDate(proposal.endsAt)}`}
         </p>
@@ -163,7 +163,7 @@ function VotePanel({
 
       <section className="baraza-card p-5">
         <AmountBlock label="Amount" amountMajor={proposal.fundingAmount} currency={community.currency} />
-        <p className="mt-4 text-sm leading-6 text-foreground">{proposal.description}</p>
+        <p className="mt-4 text-sm leading-6 text-foreground break-words [overflow-wrap:anywhere] whitespace-pre-wrap">{proposal.description}</p>
       </section>
 
       <section className="baraza-card p-5" aria-labelledby="vote-tally">

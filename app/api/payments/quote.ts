@@ -61,8 +61,7 @@ export default async function handler(req: Request): Promise<Response> {
     });
   }
 
-  // 1. Fail-closed secret check (Invariant I-SEC-1)
-  const quoteSecret = process.env.PAYMENT_QUOTE_SECRET?.trim();
+  const quoteSecret = (process.env.PAYMENT_QUOTE_SECRET || process.env.PAYOUT_QUOTE_SECRET || process.env.MINISEND_API_KEY)?.trim();
   if (!quoteSecret) {
     return jsonResponse(
       { error: 'service_unavailable', message: 'Quote service temporarily unavailable' },

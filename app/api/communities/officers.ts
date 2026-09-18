@@ -27,8 +27,8 @@ export default async function handler(req: Request): Promise<Response> {
   }
 
   const identity = await resolveCallerIdentity(req, 'officer-mutation');
-  if (!identity || (!identity.walletAddress && !identity.privyDid)) {
-    return jsonResponse({ error: 'unauthorized', message: 'Authentication required via Web3 wallet proof or Privy session.' }, { status: 401 });
+  if (!identity || (!identity.walletAddress && !identity.privyDid && !identity.userProfileId)) {
+    return jsonResponse({ error: 'unauthorized', message: 'Authentication required via Web3 wallet proof, Privy session, or user session.' }, { status: 401 });
   }
 
   let body: OfficerMutationRequest;
@@ -82,8 +82,10 @@ export default async function handler(req: Request): Promise<Response> {
   let callerQuery = supabase.from('members').select('*').eq('community_id', communityId);
   if (identity.walletAddress) {
     callerQuery = callerQuery.eq('wallet_address', identity.walletAddress);
-  } else {
+  } else if (identity.privyDid) {
     callerQuery = callerQuery.eq('auth_user_id', identity.privyDid);
+  } else if (identity.userProfileId) {
+    callerQuery = callerQuery.or(`auth_user_id.eq.${identity.userProfileId},wallet_address.eq.${identity.userProfileId}`);
   }
 
   const { data: callerMember } = await callerQuery.maybeSingle();

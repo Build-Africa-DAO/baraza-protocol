@@ -10,9 +10,9 @@
 ## Table of Contents
 1. [Master Repository File Inventory & Classification](#1-master-repository-file-inventory--classification)
 2. [Smart Contracts Architecture & Logic](#2-smart-contracts-architecture--logic)
-3. [Serverless Edge API Layer (`app/api/`) — 58 Routes](#3-serverless-edge-api-layer-appapi--58-routes)
+3. [Serverless Edge API Layer (`app/api/`) — 70 Routes](#3-serverless-edge-api-layer-appapi--70-routes)
 4. [Domain Libraries & Adapters (`app/src/lib/`)](#4-domain-libraries--adapters-appsrclib)
-5. [Database Schema & Migrations (`supabase/migrations/`) — 37 Migrations](#5-database-schema--migrations-supabasemigrations--37-migrations)
+5. [Database Schema & Migrations (`supabase/migrations/`) — 40 Migrations](#5-database-schema--migrations-supabasemigrations--40-migrations)
 6. [Transactional Notifications & Email Catalog](#6-transactional-notifications--email-catalog)
 7. [Conversational Gateway & Bot Engine](#7-conversational-gateway--bot-engine)
 8. [Interconnected End-to-End Execution Flows](#8-interconnected-end-to-end-execution-flows)
@@ -94,6 +94,10 @@ Every non-asset, non-vendor source file in `baraza-protocol` has been inventorie
 | **API Route** | `app/api/payment-orders/streak-batch.ts` | Batch streak calculator | Verified (§3.8) |
 | **API Route** | `app/api/payment-orders/dispute.ts` | Two-phase dispute recourse FSM & reconciler dual-write sync | Verified (§3.8) |
 | **API Route** | `app/api/membership/activate.ts` | Direct membership activation & secret verifier | Verified (§3.8) |
+| **API Route** | `app/api/communities/members.ts` | Community Member Roster with pagination & role filtering | Verified (§3.5) |
+| **API Route** | `app/api/mpesa/stk-push.ts` | Live Safaricom Daraja Express STK push with dual rate-limit | Verified (§3.1) |
+| **API Route** | `app/api/payments/quote.ts` | KES to USDC fixed-point quote with SASRA liquid reserve check & HMAC token | Verified (§3.1) |
+| **API Route** | `app/api/webhooks/whatsapp.ts` | Evolution WhatsApp conversational webhook dispatcher | Verified (§3.2) |
 | **API Route** | `app/api/health/live.ts` | Ultra-fast zero-I/O liveness probe (< 2.0ms SLA) | Verified (§3.9) |
 | **API Route** | `app/api/health/ready.ts` | Multi-rail readiness probe with hard/soft tier isolation & cache | Verified (§3.9) |
 | **API Route** | `app/api/health/metrics.ts` | Prometheus OpenMetrics exporter with 30s TTL cache | Verified (§3.9) |

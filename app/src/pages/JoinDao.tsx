@@ -17,7 +17,7 @@ import { useCommunity } from '@/hooks/useCommunities';
 import { useToast } from '@/hooks/use-toast';
 import { RailHealthLine } from '@/components/app/RailHealthLine';
 import { apiFetch, submitGuard } from '@/lib/api';
-import { isPaymentSimulatorEnabled, RAIL_UNAVAILABLE_COPY } from '@/lib/devMode';
+import { isPaymentSimulatorEnabled } from '@/lib/devMode';
 import { acceptInviteCode } from '@/lib/inviteAccept';
 import { formatMoney, groupCurrency } from '@/lib/money';
 import { PRODUCT_ENVIRONMENT } from '@/lib/network';
@@ -169,14 +169,11 @@ export default function JoinDao() {
     }
     if (!normalisedPhone) return;
     setError(null);
-    if (!isPaymentSimulatorEnabled()) {
-      setError(RAIL_UNAVAILABLE_COPY);
-      return;
-    }
+    const endpoint = isPaymentSimulatorEnabled() ? '/api/mpesa/simulate' : '/api/mpesa/stk-push';
     setBusy(true);
     try {
       const result = await submitGuard.run(`join-pay:${id}`, () =>
-        apiFetch<{ orderId?: string; activationSecret?: string }>('/api/mpesa/simulate', {
+        apiFetch<{ orderId?: string; activationSecret?: string }>(endpoint, {
           method: 'POST',
           body: {
             phone: `+254${normalisedPhone}`,

@@ -72,14 +72,14 @@ export function reviewBounty(bounty: Bounty): SecurityReview {
     {
       id: 'brief',
       label: 'Brief is clear enough',
-      passed: bounty.summary.trim().length >= 40,
+      passed: (bounty.summary ?? '').trim().length >= 40,
       detail: 'Members need a useful scope, expected output, and review basis.',
       severity: 'warning',
     },
     {
       id: 'skills',
       label: 'Skills are tagged',
-      passed: bounty.skills.length > 0,
+      passed: (bounty.skills ?? []).length > 0,
       detail: 'Skill tags help the right member or contributor find the task.',
       severity: 'warning',
     },
@@ -97,7 +97,7 @@ export function reviewBounty(bounty: Bounty): SecurityReview {
     .map((check) => check.detail)
     .slice(0, 3);
 
-  return createReview(bounty.title, checks, nextSteps.length ? nextSteps : ['Keep payout approval and work review visible to members.']);
+  return createReview(bounty.title || 'Untitled Bounty', checks, nextSteps.length ? nextSteps : ['Keep payout approval and work review visible to members.']);
 }
 
 export function reviewProposal(proposal: Decision, community?: Community): SecurityReview {
@@ -113,7 +113,7 @@ export function reviewProposal(proposal: Decision, community?: Community): Secur
     {
       id: 'description',
       label: 'Proposal explains the decision',
-      passed: proposal.title.trim().length > 0 && proposal.description.trim().length >= 50,
+      passed: (proposal.title ?? '').trim().length > 0 && (proposal.description ?? '').trim().length >= 50,
       detail: 'Members should see the reason, requested amount, and expected outcome.',
       severity: 'critical',
     },
@@ -127,7 +127,7 @@ export function reviewProposal(proposal: Decision, community?: Community): Secur
     {
       id: 'voting-window',
       label: 'Voting window is valid',
-      passed: proposal.status !== 'active' || isFutureDate(proposal.endsAt.slice(0, 10)),
+      passed: proposal.status !== 'active' || isFutureDate((proposal.endsAt ?? '').slice(0, 10)),
       detail: 'Active proposals need a future closing date so members have time to vote.',
       severity: 'critical',
     },
@@ -152,7 +152,7 @@ export function reviewProposal(proposal: Decision, community?: Community): Secur
     .map((check) => check.detail)
     .slice(0, 3);
 
-  return createReview(proposal.title, checks, nextSteps.length ? nextSteps : ['Keep vote receipts and treasury release records visible after the vote.']);
+  return createReview(proposal.title || 'Untitled Proposal', checks, nextSteps.length ? nextSteps : ['Keep vote receipts and treasury release records visible after the vote.']);
 }
 
 export function reviewCommunity(community: Community): SecurityReview {
@@ -171,7 +171,7 @@ export function reviewCommunity(community: Community): SecurityReview {
     {
       id: 'group-purpose',
       label: 'Group purpose is explained',
-      passed: community.description.trim().length >= 50,
+      passed: (community.description ?? '').trim().length >= 50,
       detail: 'Members need a clear purpose before contributing dues.',
       severity: 'warning',
     },

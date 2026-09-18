@@ -101,7 +101,7 @@ export default async function handler(req: Request): Promise<Response> {
     if (Date.now() > body.expiresAt) {
       return bad('Payout quote has expired. Please request a fresh quote.', 422, { quoteExpired: true });
     }
-    const quoteSecret = process.env.PAYOUT_QUOTE_SECRET || process.env.MINISEND_API_KEY || 'default_payout_quote_secret_2026';
+    const quoteSecret = process.env.PAYOUT_QUOTE_SECRET || process.env.PAYMENT_QUOTE_SECRET || process.env.MINISEND_API_KEY || 'default_payout_quote_secret_2026';
     const grossKes = Math.round(Number(expectedFiatMinor) / 100);
     const expectedMessage = `${body.quoteId || ''}:${body.communityId || ''}:${grossKes}:${Number(body.usdcAmount)}:${body.expiresAt}`;
     const expectedSig = computeHmacSha256(quoteSecret, expectedMessage);
