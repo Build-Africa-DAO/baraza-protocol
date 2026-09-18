@@ -69,7 +69,7 @@ export default async function handler(req: Request): Promise<Response> {
   const communityIds = Array.from(new Set(memberRows.map((m) => m.community_id)));
 
   // Step 2: Query communities (graceful fallback if image_url column is not yet migrated)
-  let commRows: Array<{ id: string; name?: string; currency?: string; liquid_vault_balance_minor?: number; image_url?: string | null }> | null = null;
+  let commRows: Array<{ id: string; name?: string; currency?: string; liquid_vault_balance_minor?: number; image_url?: string | null }> | null;
   const initialCommRes = await supabase
     .from('communities')
     .select('id, name, currency, liquid_vault_balance_minor, image_url')

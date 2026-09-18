@@ -82,7 +82,7 @@ export default async function handler(req: Request): Promise<Response> {
   // --- POST: Upload Avatar ---
   if (req.method === 'POST') {
     let buffer: Uint8Array;
-    let mimeType = '';
+    let mimeType: string;
 
     const contentTypeHeader = req.headers.get('content-type') || '';
 
@@ -168,7 +168,7 @@ export default async function handler(req: Request): Promise<Response> {
     const fileName = `${sanitizedId}.${extension}`;
 
     // Upload to Supabase Storage 'avatars' bucket
-    let publicUrl = '';
+    let publicUrl: string;
     const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || 'http://localhost:54321';
 
     try {

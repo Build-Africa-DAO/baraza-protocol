@@ -125,7 +125,7 @@ export default async function handler(req: Request): Promise<Response> {
   const expiresAt = new Date(Date.now() + 120_000).toISOString(); // 120 seconds TTL
 
   // Compute activation secret hash
-  let activationSecretHash = '';
+  let activationSecretHash: string;
   try {
     const enc = new TextEncoder().encode(activationSecret);
     const hashBuf = await crypto.subtle.digest('SHA-256', enc);

@@ -139,7 +139,7 @@ export default async function handler(req: Request): Promise<Response> {
   // --- POST: Upload Community Logo ---
   if (req.method === 'POST') {
     let buffer: Uint8Array;
-    let mimeType = '';
+    let mimeType: string;
 
     if (parsedBody && parsedBody.dataUrl) {
       const match = parsedBody.dataUrl.match(/^data:(image\/[a-zA-Z0-9+.-]+);base64,(.+)$/);
@@ -205,7 +205,7 @@ export default async function handler(req: Request): Promise<Response> {
 
     const fileName = `${communityId}.${extension}`;
     const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || 'http://localhost:54321';
-    let publicUrl = '';
+    let publicUrl: string;
 
     try {
       const { error: uploadErr } = await supabase.storage
