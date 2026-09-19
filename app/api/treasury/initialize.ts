@@ -123,8 +123,9 @@ async function handler(req: Request): Promise<Response> {
       }
     }
 
-    // If community has a creator/founder assigned, enforce role authorization
-    if (!isFounder && !isOfficer && comm.created_by) {
+    // Always require founder or officer authorization, even when the
+    // community has no founder assigned yet (created_by null/falsy).
+    if (!isFounder && !isOfficer) {
       return json({ error: 'forbidden', message: 'Only community founders or officers can initialize treasury.' }, { status: 403 }, req);
     }
 
