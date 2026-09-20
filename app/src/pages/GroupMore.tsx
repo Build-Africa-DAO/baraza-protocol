@@ -63,7 +63,7 @@ function MorePanel({
 
   return (
         <div className="space-y-5">
-          <div className="flex flex-wrap gap-2" role="tablist" aria-label="More sections">
+          <div className="flex flex-wrap justify-center gap-2" role="tablist" aria-label="More sections">
             {MORE_TABS.map((tab) => {
               const meta = TAB_META[tab];
               const Icon = meta.icon;

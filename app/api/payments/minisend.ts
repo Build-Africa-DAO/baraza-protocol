@@ -9,6 +9,9 @@ interface MinisendRequest {
   communityId?: string;
   proposalId?: string;
   callerWallet?: string;
+  quoteId?: string;
+  quoteToken?: string;
+  expiresAt?: number;
   phone: string;
   usdcAmount: string;
   chain: 'stellar' | 'base' | 'polygon' | 'celo';
@@ -28,6 +31,9 @@ function bad(message: string, status = 400, details?: Record<string, unknown>): 
 }
 
 import { resolveCallerIdentity } from '../_lib/auth-session';
+import { computeHmacSha256, constantTimeCompare } from '../_lib/crypto';
+import { isCircuitBreakerActive } from '../_lib/circuit-breaker';
+import { alertDeadLetterQueue } from '../_lib/observability';
 
 function supabaseHeaders(serviceKey: string): HeadersInit {
   return {
@@ -39,6 +45,12 @@ function supabaseHeaders(serviceKey: string): HeadersInit {
 
 export default async function handler(req: Request): Promise<Response> {
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, { status: 405 });
+
+  // 0. Global Emergency Freeze Circuit Breaker (Migration 042 & Master Runbook §8.1)
+  const cb = await isCircuitBreakerActive('minisend');
+  if (cb.active) {
+    return bad(`Outbound disbursements are temporarily suspended: ${cb.reason}`, 503, { circuitBreaker: true });
+  }
 
   const secret = process.env.PAYMENT_ADAPTER_PROXY_SECRET;
   const authHeader = req.headers.get('authorization');
@@ -81,6 +93,25 @@ export default async function handler(req: Request): Promise<Response> {
   const estimatedFxRate = currency === 'KES' ? 130.50 : currency === 'UGX' ? 3700.00 : currency === 'GHS' ? 15.50 : 1500.00;
   const expectedFiatMinor = calculateExpectedFiat(body.usdcAmount, estimatedFxRate);
 
+  // 2.5 Cryptographic Payout Quote Verification (Invariant I-REC-3)
+  if (body.quoteToken) {
+    if (!body.expiresAt || typeof body.expiresAt !== 'number') {
+      return bad('expiresAt is required when quoteToken is provided.', 422);
+    }
+    if (Date.now() > body.expiresAt) {
+      return bad('Payout quote has expired. Please request a fresh quote.', 422, { quoteExpired: true });
+    }
+    const quoteSecret = process.env.PAYOUT_QUOTE_SECRET || process.env.PAYMENT_QUOTE_SECRET || process.env.MINISEND_API_KEY || 'default_payout_quote_secret_2026';
+    const grossKes = Math.round(Number(expectedFiatMinor) / 100);
+    const expectedMessage = `${body.quoteId || ''}:${body.communityId || ''}:${grossKes}:${Number(body.usdcAmount)}:${body.expiresAt}`;
+    const expectedSig = computeHmacSha256(quoteSecret, expectedMessage);
+    const altMessage = `${body.quoteId || ''}:${body.communityId || ''}:${grossKes}:${body.usdcAmount}:${body.expiresAt}`;
+    const altSig = computeHmacSha256(quoteSecret, altMessage);
+    if (!constantTimeCompare(body.quoteToken, expectedSig) && !constantTimeCompare(body.quoteToken, altSig)) {
+      return bad('Invalid payout quoteToken signature.', 401, { quoteInvalid: true });
+    }
+  }
+
   // 3. Pre-Flight Telco Ceiling Validation (Safaricom KES 250,000 Limit Guard)
   if (currency === 'KES' && !isWithinTelcoLimit(expectedFiatMinor)) {
     return bad(
@@ -106,6 +137,50 @@ export default async function handler(req: Request): Promise<Response> {
         403,
         { communityId: body.communityId, circuitBreaker: true },
       );
+    }
+
+    // 3.6 S&P 500 RBAC Gate: Verify Caller Authorization (Vulnerability V13 Fix)
+    if (!isServiceSecret) {
+      let hasAdminAuth = false;
+      const callerWallet = identity?.walletAddress || body.callerWallet;
+      const authUserId = identity?.privyDid || identity?.userProfileId;
+
+      if (callerWallet || authUserId) {
+        let adminQuery = `${supabaseUrl}/rest/v1/members?community_id=eq.${encodeURIComponent(body.communityId)}&role=in.(founder,admin,treasurer)&activation_status=in.(active,ACTIVE)&select=member_id`;
+        if (callerWallet) {
+          adminQuery += `&wallet_address=eq.${encodeURIComponent(callerWallet)}`;
+        } else if (authUserId) {
+          adminQuery += `&auth_user_id=eq.${encodeURIComponent(authUserId)}`;
+        }
+        const adminRes = await fetch(adminQuery, { headers: supabaseHeaders(serviceKey) });
+        if (adminRes.ok) {
+          const adminRows = (await adminRes.json().catch(() => [])) as Array<{ member_id: string }>;
+          if (Array.isArray(adminRows) && adminRows.length > 0) {
+            hasAdminAuth = true;
+          }
+        }
+      }
+
+      // Check if linked proposal is approved/executed
+      if (!hasAdminAuth && body.proposalId) {
+        const propRes = await fetch(
+          `${supabaseUrl}/rest/v1/proposals?id=eq.${encodeURIComponent(body.proposalId)}&community_id=eq.${encodeURIComponent(body.communityId)}&select=id,status,execution_status`,
+          { headers: supabaseHeaders(serviceKey) }
+        );
+        if (propRes.ok) {
+          const props = (await propRes.json().catch(() => [])) as Array<{ id: string; status: string; execution_status: string }>;
+          if (Array.isArray(props) && props.length > 0) {
+            const prop = props[0];
+            if (prop.status === 'passed' || prop.execution_status === 'executed') {
+              hasAdminAuth = true;
+            }
+          }
+        }
+      }
+
+      if (!hasAdminAuth) {
+        return bad('Caller lacks administrative or proposal authorization to disburse funds from this community treasury.', 403);
+      }
     }
   }
 
@@ -206,6 +281,17 @@ export default async function handler(req: Request): Promise<Response> {
     });
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Minisend off-ramp dispatch failed.';
+
+    // Dispatch critical incident alert to Dead-Letter Queue / Ops Slack (NIST SP 800-61 / Master Runbook §8.3)
+    await alertDeadLetterQueue({
+      orderId,
+      rail: 'minisend',
+      errorMessage,
+      severity: 'CRITICAL',
+      amount: body.usdcAmount,
+      currency: 'USDC',
+      metadata: { phone: normalizedPhone, chain: body.chain },
+    });
 
     // Mark order as failed in database if created
     if (supabaseUrl && serviceKey) {

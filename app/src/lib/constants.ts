@@ -8,6 +8,10 @@ export interface Community {
   currency?: string;
   memberCount: number;
   fundBalance: number;
+  /** Minor units the group can send now; from `liquid_vault_balance_minor` when the row has it. */
+  liquidVaultBalanceMinor?: number | null;
+  /** Minor units reserved for passed votes; from `encumbered_balance_minor`. */
+  encumberedBalanceMinor?: number | null;
   activeDecisions: number;
   createdAt: string;
   image: string;
@@ -41,6 +45,14 @@ export interface Community {
   saccoLicenseStatus?: string;
   isPayoutFrozen?: boolean;
   communityStatus?: 'active' | 'paused';
+  settlement?: CommunitySettlement;
+}
+
+export interface CommunitySettlement {
+  chain: NonNullable<Community['chain']>;
+  contracts_state: 'DEPLOYED' | 'NOT_DEPLOYED' | 'TESTNET_MOCK';
+  treasury_address?: string;
+  gasless_eligible?: boolean;
 }
 
 export type VerificationTier = 'activation' | 'vouching' | 'phone' | 'proof_of_personhood';

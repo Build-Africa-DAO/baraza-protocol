@@ -108,4 +108,14 @@ describe('CommunityDashboard next action', () => {
     expect(screen.getByText('KES 0')).toBeInTheDocument();
     expect(screen.getAllByText('Not available yet')).toHaveLength(2);
   });
+
+  it('renders centered description text below Money heading and centers Recent Movement', () => {
+    renderHome();
+    const moneyHeading = screen.getByRole('heading', { name: 'Money' });
+    expect(moneyHeading).toHaveClass('text-center');
+    expect(screen.getByText('What this group holds, and what has moved.')).toBeInTheDocument();
+
+    const movementHeading = screen.getByRole('heading', { name: 'Recent Movement' });
+    expect(movementHeading).toHaveClass('text-center');
+  });
 });

@@ -5,9 +5,9 @@ import {
   type AkiliPrincipalName,
   type CouncilAgent,
   type CouncilAgentName,
-} from '@/akili/prompts';
+} from './prompts.js';
 
-const COUNCIL_MODEL = 'claude-sonnet-4-6';
+const COUNCIL_MODEL = process.env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-20241022';
 const DEFAULT_MAX_TOKENS = 1024;
 
 const ALL_PRINCIPALS: ReadonlyArray<AkiliPrincipalName> = [
@@ -207,5 +207,5 @@ export function routeToCouncilAgent(message: string): CouncilAgentName {
   return 'kofi';
 }
 
-export { COUNCIL_AGENTS } from '@/akili/prompts';
-export type { CouncilAgent, CouncilAgentName } from '@/akili/prompts';
+export { COUNCIL_AGENTS } from './prompts.js';
+export type { CouncilAgent, CouncilAgentName } from './prompts.js';

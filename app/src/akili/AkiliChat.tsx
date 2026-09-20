@@ -8,6 +8,7 @@ import { useChain } from '@/hooks/useChain';
 import { useLocation } from 'react-router-dom';
 import type { ChainMeta } from '@/lib/chain';
 import type { CouncilAgentName } from '@/akili/council';
+import { usePretextMeasure } from '@/hooks/usePretextMeasure';
 
 interface Message {
   id: string;
@@ -373,6 +374,28 @@ const TypingDots: React.FC = () => (
   </div>
 );
 
+const AkiliBubble: React.FC<{ msg: Message }> = ({ msg }) => {
+  const { lineCount } = usePretextMeasure(
+    msg.text,
+    '14px Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    280,
+    { lineHeight: 22, whiteSpace: 'pre-wrap' },
+  );
+
+  return (
+    <div
+      data-lines={lineCount}
+      className={`max-w-[88%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed break-words [overflow-wrap:anywhere] whitespace-pre-wrap ${
+        msg.role === 'user'
+          ? 'rounded-br-[6px] bg-foreground text-background'
+          : 'rounded-bl-[6px] bg-surface text-foreground'
+      }`}
+    >
+      {msg.text}
+    </div>
+  );
+};
+
 const AkiliChat: React.FC = () => {
   const { isOpen, open, close, pendingMessage, clearPending } = useAkiliChat();
   const reduceMotion = useReducedMotion() ?? false;
@@ -529,7 +552,7 @@ const AkiliChat: React.FC = () => {
           type="button"
           onClick={() => open()}
           aria-label="Open Akili chat"
-          className="fixed right-4 z-[45] flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[var(--shadow-deep)] transition-transform hover:scale-105 active:scale-95 bottom-[calc(6rem+env(safe-area-inset-bottom))] md:bottom-6 md:right-6"
+          className="fixed right-4 z-[45] flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-deep transition-transform hover:scale-105 active:scale-95 bottom-[calc(6rem+env(safe-area-inset-bottom))] md:bottom-6 md:right-6"
         >
           <MessageCircle className="h-5 w-5" />
         </button>
@@ -546,7 +569,7 @@ const AkiliChat: React.FC = () => {
             role="dialog"
             aria-modal="true"
             aria-label="Ask Akili"
-            className="fixed inset-x-0 bottom-0 z-50 flex h-[80vh] flex-col overflow-hidden rounded-t-2xl border border-border bg-card shadow-[var(--shadow-deep)] md:inset-x-auto md:bottom-5 md:right-5 md:h-[520px] md:max-h-[calc(100vh-5rem)] md:w-[360px] md:rounded-2xl"
+            className="fixed inset-x-0 bottom-0 z-50 flex h-[80vh] flex-col overflow-hidden rounded-t-2xl bg-card shadow-deep md:inset-x-auto md:bottom-5 md:right-5 md:h-[520px] md:max-h-[calc(100vh-5rem)] md:w-[360px] md:rounded-2xl"
           >
             {/* Header: a helper for this screen, not a product of its own. */}
             <div className="flex flex-shrink-0 items-center justify-between border-b border-border px-4 py-3">
@@ -559,7 +582,7 @@ const AkiliChat: React.FC = () => {
                   <p className="mt-0.5 text-xs text-muted-foreground">Explains this screen. It never approves anything.</p>
                 </div>
               </div>
-              <button onClick={close} aria-label="Close chat" className="btn-icon h-11 w-11 -mr-2">
+              <button onClick={close} aria-label="Close chat" className="btn-icon h-12 w-12 -mr-2">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -574,15 +597,7 @@ const AkiliChat: React.FC = () => {
                   transition={{ duration: reduceMotion ? 0 : 0.18 }}
                   className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
                 >
-                  <div
-                    className={`max-w-[88%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed ${
-                      msg.role === 'user'
-                        ? 'rounded-br-[6px] bg-foreground text-background'
-                        : 'rounded-bl-[6px] bg-surface text-foreground'
-                    }`}
-                  >
-                    {msg.text}
-                  </div>
+                  <AkiliBubble msg={msg} />
                   <span className="mt-1 px-1 text-xs text-muted-foreground">
                     {msg.saved ? 'Saved answer · ' : ''}
                     {msg.time}
@@ -645,7 +660,7 @@ const AkiliChat: React.FC = () => {
                 type="submit"
                 disabled={!input.trim() || isTyping}
                 aria-label="Send message"
-                className="btn-wipe h-11 w-11 min-h-0 p-0 disabled:cursor-not-allowed"
+                className="btn-wipe h-12 w-12 min-h-0 p-0 disabled:cursor-not-allowed"
               >
                 <Send className="w-4 h-4" />
               </button>

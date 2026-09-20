@@ -30,11 +30,11 @@ export async function dispatchNotification(event: NotificationEvent): Promise<vo
         break;
 
       case 'proposal_created':
-        message = `Baraza: New proposal in ${event.communityName}: "${event.proposalTitle}". Dial *384# to vote or visit baraza.app.`;
+        message = `Baraza: New proposal in ${event.communityName}: "${event.proposalTitle}". Dial *384# to vote or visit barazaprotocol.com.`;
         break;
 
       case 'payment_confirmed':
-        message = `Baraza: Payment of KES ${event.amountKes} confirmed for ${event.communityName}. Your membership is active. Visit baraza.app.`;
+        message = `Baraza: Payment of KES ${event.amountKes} confirmed for ${event.communityName}. Your membership is active. Visit barazaprotocol.com.`;
         break;
     }
 

@@ -37,9 +37,9 @@ export default async function handler(req: Request): Promise<Response> {
     return jsonResponse({ error: 'method_not_allowed' }, { status: 405 });
   }
 
-  // Dual Auth Ingress
+  // Dual/Polymorphic Auth Ingress
   const identity = await resolveCallerIdentity(req, 'push-subscribe');
-  if (!identity || (!identity.walletAddress && !identity.privyDid)) {
+  if (!identity || (!identity.walletAddress && !identity.privyDid && !identity.userProfileId)) {
     return jsonResponse({ error: 'unauthorized', message: 'Authentication required to register push subscription.' }, { status: 401 });
   }
 
@@ -95,15 +95,15 @@ export default async function handler(req: Request): Promise<Response> {
   const supabase = getSupabaseAdmin();
 
   // Resolve optional user_profile_id FK for polymorphic binding
-  let userProfileId: string | null = null;
-  if (identity.walletAddress) {
+  let userProfileId: string | null = identity.userProfileId || null;
+  if (!userProfileId && identity.walletAddress) {
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('id')
       .eq('wallet_address', identity.walletAddress)
       .maybeSingle();
     if (profile) userProfileId = profile.id;
-  } else if (identity.privyDid) {
+  } else if (!userProfileId && identity.privyDid) {
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('id')

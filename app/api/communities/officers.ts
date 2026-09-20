@@ -16,9 +16,79 @@ export default async function handler(req: Request): Promise<Response> {
       status: 204,
       headers: {
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-wallet-address, x-wallet-signature, x-wallet-message, x-test-wallet-address, x-test-privy-did',
       },
+    });
+  }
+
+  // --- GET: List Officers with Avatars ---
+  if (req.method === 'GET') {
+    const url = new URL(req.url);
+    const communityId = url.searchParams.get('communityId');
+    if (!communityId) {
+      return jsonResponse({ error: 'invalid_request', message: 'communityId query parameter is required.' }, { status: 400 });
+    }
+
+    try {
+      assertValidSlug(communityId, 'communityId');
+    } catch (err: unknown) {
+      return jsonResponse({ error: 'invalid_parameter', message: (err as Error).message }, { status: 400 });
+    }
+
+    const supabase = getSupabaseAdmin();
+    const { data: officerRows, error: fetchErr } = await supabase
+      .from('members')
+      .select('member_id, wallet_address, auth_user_id, role, activation_status, created_at')
+      .eq('community_id', communityId)
+      .in('role', ['founder', 'admin', 'chairperson', 'treasurer', 'secretary'])
+      .eq('activation_status', 'active')
+      .order('created_at', { ascending: true });
+
+    if (fetchErr) {
+      return jsonResponse({ error: 'database_error', message: fetchErr.message }, { status: 500 });
+    }
+
+    const wallets = (officerRows || []).map((r) => r.wallet_address).filter(Boolean);
+    const authIds = (officerRows || []).map((r) => r.auth_user_id).filter(Boolean);
+
+    const profileMap: Record<string, { displayName: string; avatarUrl: string }> = {};
+    if (wallets.length > 0 || authIds.length > 0) {
+      let profQuery = supabase.from('user_profiles').select('wallet_address, privy_did, display_name, avatar_url');
+      if (wallets.length > 0 && authIds.length > 0) {
+        profQuery = profQuery.or(`wallet_address.in.(${wallets.join(',')}),privy_did.in.(${authIds.join(',')})`);
+      } else if (wallets.length > 0) {
+        profQuery = profQuery.in('wallet_address', wallets);
+      } else {
+        profQuery = profQuery.in('privy_did', authIds);
+      }
+
+      const { data: profiles } = await profQuery;
+      if (profiles) {
+        for (const p of profiles) {
+          const entry = { displayName: p.display_name || '', avatarUrl: p.avatar_url || '' };
+          if (p.wallet_address) profileMap[p.wallet_address] = entry;
+          if (p.privy_did) profileMap[p.privy_did] = entry;
+        }
+      }
+    }
+
+    const officers = (officerRows || []).map((row) => {
+      const prof = profileMap[row.wallet_address] || (row.auth_user_id ? profileMap[row.auth_user_id] : null);
+      return {
+        memberId: row.member_id,
+        walletAddress: row.wallet_address || '',
+        role: row.role,
+        activationStatus: row.activation_status,
+        displayName: prof?.displayName || '',
+        avatarUrl: prof?.avatarUrl || '',
+        joinedAt: row.created_at,
+      };
+    });
+
+    return jsonResponse({
+      ok: true,
+      officers,
     });
   }
 
@@ -27,8 +97,8 @@ export default async function handler(req: Request): Promise<Response> {
   }
 
   const identity = await resolveCallerIdentity(req, 'officer-mutation');
-  if (!identity || (!identity.walletAddress && !identity.privyDid)) {
-    return jsonResponse({ error: 'unauthorized', message: 'Authentication required via Web3 wallet proof or Privy session.' }, { status: 401 });
+  if (!identity || (!identity.walletAddress && !identity.privyDid && !identity.userProfileId)) {
+    return jsonResponse({ error: 'unauthorized', message: 'Authentication required via Web3 wallet proof, Privy session, or user session.' }, { status: 401 });
   }
 
   let body: OfficerMutationRequest;
@@ -82,8 +152,10 @@ export default async function handler(req: Request): Promise<Response> {
   let callerQuery = supabase.from('members').select('*').eq('community_id', communityId);
   if (identity.walletAddress) {
     callerQuery = callerQuery.eq('wallet_address', identity.walletAddress);
-  } else {
+  } else if (identity.privyDid) {
     callerQuery = callerQuery.eq('auth_user_id', identity.privyDid);
+  } else if (identity.userProfileId) {
+    callerQuery = callerQuery.or(`auth_user_id.eq.${identity.userProfileId},wallet_address.eq.${identity.userProfileId}`);
   }
 
   const { data: callerMember } = await callerQuery.maybeSingle();

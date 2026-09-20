@@ -20,6 +20,7 @@ import {
   Wallet as WalletIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { prefetchProps } from '@/lib/routePrefetch';
 
 export type DashboardTab =
   | 'overview' | 'members' | 'roles' | 'suggestions'
@@ -79,9 +80,10 @@ function NavLinkRow({
     <Link
       to={to}
       onClick={onNavigate}
+      {...prefetchProps(to)}
       aria-current={isActive ? 'page' : undefined}
       className={cn(
-        'flex min-h-11 w-full items-center gap-2.5 rounded-full px-3 py-2 text-sm font-semibold transition-colors',
+        'flex min-h-12 w-full items-center gap-2.5 rounded-full px-3 py-2 text-sm font-semibold transition-colors',
         isActive
           ? 'text-primary'
           : 'text-muted-foreground hover:bg-chrome-foreground/[0.06] hover:text-chrome-foreground',

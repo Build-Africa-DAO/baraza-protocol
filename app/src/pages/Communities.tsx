@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import Layout from '@/components/Layout';
@@ -19,6 +19,8 @@ import { useSeo } from '@/lib/seo';
  */
 type Kind = 'all' | (typeof BROWSE_KINDS)[number]['key'];
 
+const SEARCH_DEBOUNCE_MS = 300;
+
 export default function Communities() {
   useSeo({
     title: 'Browse groups',
@@ -28,6 +30,19 @@ export default function Communities() {
   const { communities, isLoading, error } = useCommunities();
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState(() => searchParams.get('q') ?? '');
+  // The list filters on every keystroke; the URL (shareable by WhatsApp or SMS)
+  // is written 300 ms after typing stops so history is not flooded.
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const params = new URLSearchParams(searchParams);
+      const current = params.get('q') ?? '';
+      if (search.trim() === current.trim()) return;
+      if (search.trim()) params.set('q', search.trim());
+      else params.delete('q');
+      setSearchParams(params, { replace: true });
+    }, SEARCH_DEBOUNCE_MS);
+    return () => window.clearTimeout(timer);
+  }, [search, searchParams, setSearchParams]);
   // `?kind=` is what the sidebar's Browse sub-pages link to; the chips write it too.
   const kindParam = searchParams.get('kind');
   const kind: Kind = kindParam && BROWSE_KINDS.some((item) => item.key === kindParam) ? (kindParam as Kind) : 'all';
@@ -41,7 +56,9 @@ export default function Communities() {
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     return communities.filter((community) => {
-      const matchesSearch = !term || community.name.toLowerCase().includes(term) || community.description.toLowerCase().includes(term);
+      const nameStr = (community.name ?? '').toLowerCase();
+      const descStr = (community.description ?? '').toLowerCase();
+      const matchesSearch = !term || nameStr.includes(term) || descStr.includes(term);
       const matchesKind = kind === 'all' || browseKindOf(community.type) === kind;
       return matchesSearch && matchesKind;
     });
@@ -72,14 +89,7 @@ export default function Communities() {
               <Input
                 type="search"
                 value={search}
-                onChange={(event) => {
-                  const next = event.target.value;
-                  setSearch(next);
-                  const params = new URLSearchParams(searchParams);
-                  if (next.trim()) params.set('q', next);
-                  else params.delete('q');
-                  setSearchParams(params, { replace: true });
-                }}
+                onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search by name"
                 aria-label="Search groups"
                 className="pl-9"
@@ -99,15 +109,15 @@ export default function Communities() {
           ) : filtered.length === 0 ? (
             <EmptyState
               icon={Search}
-              title={search.trim() || kind !== 'all' ? 'No Groups Match' : 'No Groups Yet'}
-              body={search.trim() || kind !== 'all' ? 'Try another name or kind, or start your own group.' : 'Be the first: start a group and invite your members.'}
-              primary={{ label: 'Start a Group', to: '/create' }}
+              title={search.trim() ? `No Group Called “${search.trim()}” Yet` : kind !== 'all' ? 'No Groups of This Kind Yet' : 'No Groups Yet'}
+              body={search.trim() ? 'Ready to start yours? The name is filled in for you.' : kind !== 'all' ? 'Try another kind, or start your own group.' : 'Be the first: start a group and invite your members.'}
+              primary={{ label: search.trim() ? 'Start This Group' : 'Start a Group', to: search.trim() ? `/create?name=${encodeURIComponent(search.trim())}` : '/create' }}
               secondary={search.trim() || kind !== 'all' ? { label: 'Clear Search', onClick: () => { setSearch(''); setKind('all'); } } : undefined}
             />
           ) : (
             <>
               <p className="text-center text-sm text-muted-foreground" aria-live="polite">
-                {filtered.length} {filtered.length === 1 ? 'group' : 'groups'}
+                Showing {filtered.length} of {communities.length} {communities.length === 1 ? 'group' : 'groups'}
               </p>
               <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {filtered.map((community) => (

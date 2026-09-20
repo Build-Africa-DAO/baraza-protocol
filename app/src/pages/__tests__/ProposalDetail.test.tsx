@@ -48,6 +48,9 @@ vi.mock('@/hooks/useBarazaData', () => ({
   useVoteStatus: () => null,
   useCastVote: () => ({ vote: castVote, isLoading: false }),
 }));
+vi.mock('@/hooks/useProposals', () => ({
+  useProposal: () => ({ decision: openVote, isLoading: false, error: null, reload: vi.fn() }),
+}));
 vi.mock('@/hooks/useChain', () => ({ useChain: () => ({ chain: 'stellar' }) }));
 vi.mock('@/components/Layout', () => ({ default: ({ children }: { children: ReactNode }) => <div>{children}</div> }));
 vi.mock('@/hooks/useCommunities', () => ({
@@ -79,7 +82,8 @@ describe('ProposalDetail', () => {
     expect(screen.getByText(/More than half of members must vote and two thirds of those who vote must agree/)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Support' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Object' })).toBeNull();
-    expect(screen.getByText('85% voted · quorum met')).toBeInTheDocument();
+    expect(screen.getByText('Quorum Reached (85%)')).toBeInTheDocument();
+    expect(screen.getByTestId('tally-bar')).toHaveAttribute('aria-label', expect.stringContaining('quorum at'));
   });
 
   it('lets an active member Support or Object and records the ballot as pending', async () => {

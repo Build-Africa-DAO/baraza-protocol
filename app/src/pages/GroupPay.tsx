@@ -12,8 +12,9 @@ import { StatusChip } from '@/components/ui/status-chip';
 import { Stepper } from '@/components/ui/stepper';
 import { useAccount } from '@/contexts/AccountContext';
 import { formatAccountDate } from '@/lib/accountLocale';
+import { RailHealthLine } from '@/components/app/RailHealthLine';
 import { apiFetch, submitGuard } from '@/lib/api';
-import { isPaymentSimulatorEnabled, RAIL_UNAVAILABLE_COPY } from '@/lib/devMode';
+import { isPaymentSimulatorEnabled } from '@/lib/devMode';
 import { nextPollDelay } from '@/lib/polling';
 import { fetchDuesStreak } from '@/lib/duesStreak';
 import { groupCurrency } from '@/lib/money';
@@ -41,6 +42,7 @@ export default function GroupPay() {
   return (
     <GroupWorkspace
       title="Pay Dues"
+      subtitle="Contribute your dues to the shared group pool."
       gate={{ title: 'Sign in to pay', description: 'Log in to pay your dues for this group.' }}
       hideBanner
     >
@@ -166,13 +168,10 @@ function PayPanel({ community, membership }: { community: Community; membership:
   async function pay() {
     if (!canPay || !normalisedPhone || duesOwedMinor === null) return;
     setError(null);
-    if (!isPaymentSimulatorEnabled()) {
-      setError(RAIL_UNAVAILABLE_COPY);
-      return;
-    }
+    const endpoint = isPaymentSimulatorEnabled() ? '/api/mpesa/simulate' : '/api/mpesa/stk-push';
     setStage('sending');
     const result = await submitGuard.run(`pay:${community.id}`, () =>
-      apiFetch<{ orderId?: string; activationSecret?: string }>('/api/mpesa/simulate', {
+      apiFetch<{ orderId?: string; activationSecret?: string }>(endpoint, {
         method: 'POST',
         body: {
           phone: `+254${normalisedPhone}`,
@@ -243,6 +242,7 @@ function PayPanel({ community, membership }: { community: Community; membership:
           </section>
 
           <section className="baraza-card p-5">
+            <RailHealthLine className="mb-3" />
             <Field
               label="M-Pesa Phone Number"
               htmlFor="pay-phone"

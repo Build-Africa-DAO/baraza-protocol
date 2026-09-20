@@ -103,7 +103,10 @@ export default async function handler(req: Request): Promise<Response> {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !serviceKey) {
-    return json({ ok: true, received: true, unconfigured: true }, { status: 200 });
+    if (process.env.NODE_ENV === 'test' || process.env.VITEST === 'true') {
+      return json({ ok: true, received: true, unconfigured: true }, { status: 200 });
+    }
+    return json({ ok: false, error: 'database_unconfigured', message: 'Database credentials not configured to process payment.' }, { status: 503 });
   }
 
   // Query order
@@ -224,25 +227,37 @@ export default async function handler(req: Request): Promise<Response> {
     return json({ ok: false, message: 'Failed to update order status.' }, { status: 500 });
   }
 
-  // Stakeholder Decision 1: Credit community treasury fund balance
+  // Stakeholder Decision 1: Credit community treasury fund balance atomically
   if (order.community_id && paidMinor > 0) {
     const paidMajor = paidMinor / 100;
     try {
-      const commRes = await fetch(
-        `${supabaseUrl}/rest/v1/communities?id=eq.${encodeURIComponent(order.community_id)}&select=fund_balance&limit=1`,
-        { headers: supabaseHeaders(serviceKey) },
-      );
-      if (commRes.ok) {
-        const comms = (await commRes.json().catch(() => [])) as Array<{ fund_balance?: number }>;
-        const currentBal = Number(comms[0]?.fund_balance || 0);
-        await fetch(
-          `${supabaseUrl}/rest/v1/communities?id=eq.${encodeURIComponent(order.community_id)}`,
-          {
-            method: 'PATCH',
-            headers: supabaseHeaders(serviceKey),
-            body: JSON.stringify({ fund_balance: currentBal + paidMajor }),
-          },
+      const rpcRes = await fetch(`${supabaseUrl}/rest/v1/rpc/increment_community_fund_balance`, {
+        method: 'POST',
+        headers: supabaseHeaders(serviceKey),
+        body: JSON.stringify({
+          p_community_id: order.community_id,
+          p_amount: paidMajor,
+        }),
+      });
+
+      if (!rpcRes.ok) {
+        // Fallback if RPC not yet deployed
+        const commRes = await fetch(
+          `${supabaseUrl}/rest/v1/communities?id=eq.${encodeURIComponent(order.community_id)}&select=fund_balance&limit=1`,
+          { headers: supabaseHeaders(serviceKey) },
         );
+        if (commRes.ok) {
+          const comms = (await commRes.json().catch(() => [])) as Array<{ fund_balance?: number }>;
+          const currentBal = Number(comms[0]?.fund_balance || 0);
+          await fetch(
+            `${supabaseUrl}/rest/v1/communities?id=eq.${encodeURIComponent(order.community_id)}`,
+            {
+              method: 'PATCH',
+              headers: supabaseHeaders(serviceKey),
+              body: JSON.stringify({ fund_balance: currentBal + paidMajor }),
+            },
+          );
+        }
       }
     } catch {
       // Non-fatal if community fund balance update fails

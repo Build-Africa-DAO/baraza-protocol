@@ -35,6 +35,7 @@ import {
 } from './_lib/stellar-mint.js';
 import { flagPendingWelcomeOnOrder } from '../../src/lib/ussd/welcome.js';
 import { sweepInvisibleUssdMembers } from '../../src/lib/ussd/monitoring.js';
+import { isCircuitBreakerActive } from '../_lib/circuit-breaker.js';
 
 // nodejs runtime — Stellar SDK isn't edge-compatible (Buffer + Node fetch).
 export const config = { runtime: 'nodejs' };
@@ -686,6 +687,16 @@ async function sweepStalledOrders(maxAgeHours = 24): Promise<number> {
 async function handler(req: Request): Promise<Response> {
   if (!isAuthorized(req)) {
     return json({ error: 'unauthorized' }, { status: 401 });
+  }
+
+  // Global Emergency Freeze Circuit Breaker (Migration 042 & Master Runbook §8.1)
+  const breaker = await isCircuitBreakerActive('cron');
+  if (breaker.active) {
+    return json({
+      ok: false,
+      status: 'emergency_paused',
+      reason: breaker.reason || 'Cron promotions halted by global emergency circuit breaker',
+    }, { status: 503 });
   }
 
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {

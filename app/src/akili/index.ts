@@ -4,13 +4,13 @@ export {
   routeToCouncilAgent,
   buildCouncilSessionContext,
   COUNCIL_AGENTS,
-} from '@/akili/council';
+} from './council.js';
 export type {
   CouncilAgent,
   CouncilAgentName,
   InvokeCouncilOptions,
   InvokeCouncilResult,
-} from '@/akili/council';
+} from './council.js';
 
 // Character / relay surface (prompts.ts)
 export {
@@ -21,7 +21,7 @@ export {
   SIGNATURE_PHRASES,
   buildRelationshipTensionContext,
   listTensionPairs,
-} from '@/akili/prompts';
+} from './prompts.js';
 export type {
   AkiliPrincipalName,
   AkiliRelay,
@@ -29,4 +29,4 @@ export type {
   Orientation,
   Register,
   Speed,
-} from '@/akili/prompts';
+} from './prompts.js';

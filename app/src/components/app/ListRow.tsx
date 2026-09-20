@@ -1,7 +1,8 @@
-import type { ReactNode } from 'react';
+import { useState, useRef, type ReactNode, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight } from 'lucide-react';
+import { Camera, ChevronRight, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { fileToOptimizedDataUrl } from '@/lib/imageUpload';
 
 /**
  * One line in a list: a vote, a member, a movement, a group. Leading tile or
@@ -35,8 +36,8 @@ export function ListRow({ title, meta, leading, trailing, to, onClick, className
     </>
   );
   const classes = cn(
-    'flex min-h-14 w-full items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-left',
-    interactive && 'transition-colors hover:border-foreground/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+    'baraza-row flex min-h-14 w-full items-center gap-3 rounded-lg px-4 py-3 text-left',
+    interactive && 'baraza-row-interactive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
     className,
   );
 
@@ -57,22 +58,110 @@ export function ListRow({ title, meta, leading, trailing, to, onClick, className
   return <div className={classes}>{body}</div>;
 }
 
-/** Bordered initials tile used as a row's leading element or a group avatar. */
-export function InitialsTile({ initials, size = 'md', className }: { initials: string; size?: 'sm' | 'md' | 'lg'; className?: string }) {
-  return (
+export interface InitialsTileProps {
+  initials?: string;
+  image?: string | null;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  editable?: boolean;
+  onImageChange?: (dataUrl: string) => void;
+  className?: string;
+}
+
+/** Bordered initials tile used as a row's leading element or a group/profile avatar. Supports custom logos/images with editable upload mode. */
+export function InitialsTile({
+  initials = 'GP',
+  image,
+  size = 'md',
+  editable = false,
+  onImageChange,
+  className,
+}: InitialsTileProps) {
+  const [imgFailed, setImgFailed] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isUrlLike = typeof initials === 'string' && (initials.startsWith('data:') || initials.startsWith('http') || initials.startsWith('/') || initials.startsWith('blob:'));
+  const candidateImage = image || (isUrlLike ? initials : null);
+  // A failed load only hides that one image. A new upload or a new URL gets a fresh try,
+  // otherwise one broken picture would stop every later change from showing.
+  useEffect(() => {
+    setImgFailed(false);
+  }, [candidateImage]);
+  const showImage = candidateImage && !imgFailed;
+  const letters = !isUrlLike && initials ? initials.slice(0, 2).toUpperCase() : 'GP';
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const dataUrl = await fileToOptimizedDataUrl(file);
+      setImgFailed(false);
+      onImageChange?.(dataUrl);
+    } catch {
+      // Ignore file read failure
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const tileContent = (
     <span
-      aria-hidden
       className={cn(
-        'grid shrink-0 place-items-center rounded-md border border-border bg-background font-display font-bold text-foreground',
+        'baraza-tile relative grid shrink-0 place-items-center overflow-hidden rounded-md font-display font-bold text-foreground transition-transform',
         size === 'sm' && 'h-8 w-8 text-xs',
         size === 'md' && 'h-10 w-10 text-sm',
         size === 'lg' && 'h-14 w-14 text-lg',
+        size === 'xl' && 'h-20 w-20 text-2xl',
+        editable && 'cursor-pointer hover:opacity-90 group',
         className,
       )}
+      aria-hidden={!editable}
     >
-      {initials.slice(0, 2).toUpperCase()}
+      {showImage ? (
+        <img
+          src={candidateImage}
+          alt=""
+          className="h-full w-full object-cover"
+          onError={() => setImgFailed(true)}
+        />
+      ) : (
+        letters
+      )}
+
+      {editable && (
+        <span
+          className="absolute inset-0 flex items-center justify-center bg-black/40 text-white opacity-0 transition-opacity group-hover:opacity-100"
+          aria-hidden="true"
+        >
+          {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+        </span>
+      )}
     </span>
   );
+
+  if (editable) {
+    return (
+      <label
+        className="relative inline-block cursor-pointer shrink-0"
+        title="Click to change image"
+        aria-label="Click to change image"
+      >
+        {tileContent}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="sr-only"
+          onChange={handleFileChange}
+          disabled={uploading}
+        />
+      </label>
+    );
+  }
+
+  return tileContent;
 }
 
 export default ListRow;

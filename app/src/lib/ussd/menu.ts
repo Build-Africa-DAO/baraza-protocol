@@ -8,19 +8,39 @@ export interface PendingPayOrder {
   currency: string;
 }
 
+export interface UssdCommunity {
+  id: string;
+  name: string;
+  memberCount: number;
+  adminPhone: string;
+}
+
+export interface UssdProposal {
+  id: string;
+  title: string;
+}
+
+export interface PendingVote {
+  proposalId: string;
+  proposalTitle: string;
+  option: 'yes' | 'no';
+}
+
 export interface MenuResult {
   text: string;
   action: 'CON' | 'END';
   /** Set when the USSD handler should create a payment order after returning this response. */
   pendingPayOrder?: PendingPayOrder;
+  /** Set when the USSD user confirmed a governance vote. */
+  pendingVote?: PendingVote;
 }
 
-const MOCK_COMMUNITIES = [
+export const MOCK_COMMUNITIES: UssdCommunity[] = [
   { id: '1', name: 'Kibera Youth Collective', memberCount: 47, adminPhone: '+254700000001' },
   { id: '2', name: 'Mama Mboga Association', memberCount: 123, adminPhone: '+254700000002' },
 ];
 
-const MOCK_PROPOSALS = [
+export const MOCK_PROPOSALS: UssdProposal[] = [
   { id: 'd1', title: 'Purchase Shared Boda-Boda' },
   { id: 'd2', title: 'Emergency Fund for Members' },
 ];
@@ -47,10 +67,11 @@ function balanceMenu(path: string[], brzaBalance?: number): MenuResult {
   };
 }
 
-function voteMenu(path: string[]): MenuResult {
+function voteMenu(path: string[], proposals?: UssdProposal[]): MenuResult {
+  const activeProposals = proposals && proposals.length > 0 ? proposals : MOCK_PROPOSALS;
   if (path.length === 1) {
     const lines = ['Active Proposals'];
-    MOCK_PROPOSALS.forEach((p, i) => lines.push(`${i + 1}. ${p.title}`));
+    activeProposals.forEach((p, i) => lines.push(`${i + 1}. ${p.title}`));
     lines.push('0. Back');
     return { text: lines.join('\n'), action: 'CON' };
   }
@@ -58,7 +79,7 @@ function voteMenu(path: string[]): MenuResult {
   const proposalIdx = parseInt(path[1] ?? '', 10) - 1;
   if (path[1] === '0') return mainMenu();
 
-  const proposal = MOCK_PROPOSALS[proposalIdx];
+  const proposal = activeProposals[proposalIdx];
   if (!proposal) {
     return { text: 'Invalid selection. Please try again.', action: 'END' };
   }
@@ -73,7 +94,7 @@ function voteMenu(path: string[]): MenuResult {
   const choice = path[2];
   if (choice === '0') {
     const lines = ['Active Proposals'];
-    MOCK_PROPOSALS.forEach((p, i) => lines.push(`${i + 1}. ${p.title}`));
+    activeProposals.forEach((p, i) => lines.push(`${i + 1}. ${p.title}`));
     lines.push('0. Back');
     return { text: lines.join('\n'), action: 'CON' };
   }
@@ -101,6 +122,11 @@ function voteMenu(path: string[]): MenuResult {
     return {
       text: 'USSD voting opens soon. For now, vote on baraza.app or ask your community admin.',
       action: 'END',
+      pendingVote: {
+        proposalId: proposal.id,
+        proposalTitle: proposal.title,
+        option: choice === '1' ? 'yes' : 'no',
+      },
     };
   }
 
@@ -133,10 +159,11 @@ function payDuesMenu(path: string[], phoneNumber: string): MenuResult {
   return { text: 'Invalid selection.', action: 'END' };
 }
 
-function communityMenu(path: string[]): MenuResult {
+function communityMenu(path: string[], communities?: UssdCommunity[]): MenuResult {
+  const activeCommunities = communities && communities.length > 0 ? communities : MOCK_COMMUNITIES;
   if (path.length === 1) {
     const lines = ['My Communities'];
-    MOCK_COMMUNITIES.forEach((c, i) => lines.push(`${i + 1}. ${c.name}`));
+    activeCommunities.forEach((c, i) => lines.push(`${i + 1}. ${c.name}`));
     lines.push('0. Back');
     return { text: lines.join('\n'), action: 'CON' };
   }
@@ -144,7 +171,7 @@ function communityMenu(path: string[]): MenuResult {
   if (path[1] === '0') return mainMenu();
 
   const communityIdx = parseInt(path[1] ?? '', 10) - 1;
-  const community = MOCK_COMMUNITIES[communityIdx];
+  const community = activeCommunities[communityIdx];
   if (!community) {
     return { text: 'Invalid selection.', action: 'END' };
   }
@@ -158,7 +185,7 @@ function communityMenu(path: string[]): MenuResult {
 
   if (path[2] === '0') {
     const lines = ['My Communities'];
-    MOCK_COMMUNITIES.forEach((c, i) => lines.push(`${i + 1}. ${c.name}`));
+    activeCommunities.forEach((c, i) => lines.push(`${i + 1}. ${c.name}`));
     lines.push('0. Back');
     return { text: lines.join('\n'), action: 'CON' };
   }
@@ -181,8 +208,10 @@ export function handleUssdInput(params: {
   text: string;
   phoneNumber: string;
   brzaBalance?: number;
+  communities?: UssdCommunity[];
+  proposals?: UssdProposal[];
 }): MenuResult {
-  const { text, phoneNumber, brzaBalance } = params;
+  const { text, phoneNumber, brzaBalance, communities, proposals } = params;
 
   // Nia's welcome flow — if MINT_CONFIRMED has flagged this phone as a
   // freshly-onboarded member, the entire session belongs to the welcome
@@ -203,11 +232,11 @@ export function handleUssdInput(params: {
     case '1':
       return balanceMenu(path, brzaBalance);
     case '2':
-      return voteMenu(path);
+      return voteMenu(path, proposals);
     case '3':
       return payDuesMenu(path, phoneNumber);
     case '4':
-      return communityMenu(path);
+      return communityMenu(path, communities);
     case '5':
       return helpMenu();
     default:

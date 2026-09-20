@@ -180,17 +180,27 @@ export default function JoinStatus() {
             { code: "payment-requested", label: "Submit transfer reference", minStatus: "PAYMENT_REQUESTED" },
             { code: "payment-confirmed", label: "Transfer verified", minStatus: "PAYMENT_CONFIRMED" },
           ]
-        : [
-            { code: "payment-requested", label: "Check your phone for the M-Pesa STK PIN prompt", minStatus: "PAYMENT_REQUESTED" },
-            { code: "payment-confirmed", label: "Payment received - activating membership", minStatus: "PAYMENT_CONFIRMED" },
-          ];
+        : rail === "airtel"
+          ? [
+              { code: "payment-requested", label: "Check your phone for the Airtel Money PIN prompt", minStatus: "PAYMENT_REQUESTED" },
+              { code: "payment-confirmed", label: "Payment received - activating membership", minStatus: "PAYMENT_CONFIRMED" },
+            ]
+          : rail === "card"
+            ? [
+                { code: "payment-requested", label: "Card / bank checkout authorization", minStatus: "PAYMENT_REQUESTED" },
+                { code: "payment-confirmed", label: "Payment received - activating membership", minStatus: "PAYMENT_CONFIRMED" },
+              ]
+            : [
+                { code: "payment-requested", label: "Check your phone for the M-Pesa STK PIN prompt", minStatus: "PAYMENT_REQUESTED" },
+                { code: "payment-confirmed", label: "Payment received - activating membership", minStatus: "PAYMENT_CONFIRMED" },
+              ];
 
       return [...paymentSteps, ...getDisplaySteps()].map((step) => ({
         ...step,
         state: deriveStepState(step.minStatus, status),
       }));
     },
-    [isStellarRail, status],
+    [isStellarRail, rail, status],
   );
 
   const isFailed = isFailureStatus(status);
@@ -218,21 +228,21 @@ export default function JoinStatus() {
   return (
     <Layout>
       <section className="py-8 md:py-12">
-        <div className="container mx-auto max-w-2xl space-y-6 px-4">
+        <div className="mx-auto w-full max-w-4xl space-y-6 px-4 md:px-6">
           <Stepper steps={JOIN_STEPS} current={topStep} failed={isFailed} />
 
-          <header>
-            <div className="flex flex-wrap items-center gap-2">
+          <header className="text-center">
+            <div className="flex flex-wrap items-center justify-center gap-2">
               <StatusChip
                 kind={isUnverifiable || isFailed ? "failed" : isComplete ? "confirmed" : "pending"}
                 label={isUnverifiable ? "Cannot Be Checked" : isFailed ? "Failed" : isComplete ? "You're In" : "Confirming"}
               />
             </div>
             <h1 className="mt-3 font-display text-2xl font-black tracking-tight md:text-3xl">{headline}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mx-auto mt-1 max-w-xl text-sm text-muted-foreground">
               Payment reference <span className="font-mono">{displayReference}</span> for{" "}
               {community?.name ?? "this group"} moves from{" "}
-              {isStellarRail ? "transfer verification" : "M-Pesa confirmation"} to active membership.
+              {isStellarRail ? "transfer verification" : rail === "airtel" ? "Airtel confirmation" : rail === "card" ? "card verification" : "M-Pesa confirmation"} to active membership.
             </p>
           </header>
 

@@ -1,0 +1,38 @@
+[
+  {
+    "description": "Protect Auth OTP endpoints from brute-force & credential stuffing",
+    "expression": "(http.request.uri.path in {\"/api/auth/signin/request\" \"/api/auth/signup/request\" \"/api/auth/verify\"})",
+    "action": "block",
+    "ratelimit": {
+      "characteristics": [
+        "ip.src"
+      ],
+      "period": 60,
+      "requests_per_period": 5,
+      "mitigation_timeout": 300
+    }
+  },
+  {
+    "description": "Throttle high-velocity STK push fraud and SIM card spamming",
+    "expression": "(http.request.uri.path in {\"/api/mpesa/stk-push\" \"/api/payments/airtel/stk\" \"/api/payments/card/checkout\"})",
+    "action": "block",
+    "ratelimit": {
+      "characteristics": [
+        "ip.src"
+      ],
+      "period": 60,
+      "requests_per_period": 10,
+      "mitigation_timeout": 600
+    }
+  },
+  {
+    "description": "Block known malicious bots, scrapers & Tor exit nodes from financial ledgers",
+    "expression": "(cf.client.bot or cf.threat_score gt 20) and starts_with(http.request.uri.path, \"/api/\")",
+    "action": "block"
+  },
+  {
+    "description": "Enforce strict TLS 1.3 and HSTS on all Baraza Protocol traffic",
+    "expression": "(ssl.protocol in {\"TLSv1\" \"TLSv1.1\" \"TLSv1.2\"} and starts_with(http.request.uri.path, \"/api/\"))",
+    "action": "block"
+  }
+]

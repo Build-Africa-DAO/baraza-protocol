@@ -3,19 +3,20 @@ import { Loader2 } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { GroupRow } from '@/components/app/GroupRow';
 import { IdentityStrip } from '@/components/app/IdentityStrip';
+import { InitialsTile } from '@/components/app/ListRow';
 import { SettingsSection } from '@/components/app/SettingsSection';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Field, Input, Select, Switch } from '@/components/ui/field';
 import { FilterChips } from '@/components/ui/filter-chips';
 import { InlineError } from '@/components/ui/inline-error';
-import { PageHeader } from '@/components/ui/page-header';
 import { SkeletonList } from '@/components/ui/skeletons';
 import { StatusChip } from '@/components/ui/status-chip';
 import { useAccount } from '@/contexts/AccountContext';
 import { useMyMemberships } from '@/hooks/useMyMemberships';
 import { useToast } from '@/hooks/use-toast';
 import { ACCOUNT_COUNTRIES, type AccountCountryCode } from '@/lib/accountLocale';
+import { useUserAvatar } from '@/lib/imageUpload';
 import { subscribeWebPush } from '@/lib/push';
 import { useSeo } from '@/lib/seo';
 import {
@@ -31,9 +32,10 @@ import {
 } from '@/lib/userProfile';
 
 /**
- * §13.20 Account. Name, country and currency, language, notifications, my
- * groups, log out. Nothing about wallets, tokens, badges or bounties: the
- * account is the person, not a profile page.
+ * §13.20 Account. Photo, name, country and currency, language, notifications
+ * and my groups. Log Out lives in the top bar account menu, not here. Nothing
+ * about wallets, tokens, badges or bounties: the account is the person, not a
+ * profile page.
  */
 export default function Profile() {
   useSeo({
@@ -99,6 +101,7 @@ function AccountPanel() {
   const account = useAccount();
   const { toast } = useToast();
   const { memberships, isLoading, error } = useMyMemberships();
+  const { avatarUrl, setAvatarUrl, removeAvatar } = useUserAvatar();
   const [displayName, setDisplayName] = useState(account.displayName);
   const [locale, setLocale] = useState<SupportedLocale>(readLocalLocale);
   const [notifications, setNotifications] = useState<UserNotificationPreferences>(DEFAULT_NOTIFICATIONS);
@@ -111,6 +114,9 @@ function AccountPanel() {
     void fetchUserProfile(account.getAccessToken).then((profile) => {
       if (cancelled || !profile) return;
       if (profile.displayName) setDisplayName(profile.displayName);
+      if (profile.avatarUrl && !avatarUrl) {
+        setAvatarUrl(profile.avatarUrl, account.getAccessToken);
+      }
       if (profile.locale) {
         setLocale(profile.locale);
         writeLocalLocale(profile.locale);
@@ -128,7 +134,7 @@ function AccountPanel() {
     try {
       writeLocalLocale(locale);
       const result = await patchUserProfile(
-        { displayName: displayName.trim(), locale, country: countryForProfilePatch(account.country.code), notifications },
+        { displayName: displayName.trim(), avatarUrl: avatarUrl ?? undefined, locale, country: countryForProfilePatch(account.country.code), notifications },
         account.getAccessToken,
       );
       if (!result.ok) {
@@ -140,8 +146,6 @@ function AccountPanel() {
       setSaving(false);
     }
   }
-
-  const [confirmLogout, setConfirmLogout] = useState(false);
 
   async function enablePush() {
     setPushBusy(true);
@@ -157,19 +161,58 @@ function AccountPanel() {
   return (
     <section className="py-8 md:py-12">
       <div className="mx-auto w-full max-w-6xl space-y-6 px-4 md:px-6">
-        <PageHeader title="Account" />
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="font-display text-2xl font-black tracking-tight md:text-3xl">Account</h1>
 
-        <IdentityStrip
-          name={displayName.trim() || account.displayName}
-          initials={initialsOf(displayName.trim() || account.displayName)}
-          type={account.country.name}
-          chip={<StatusChip kind="confirmed" label="Signed In" />}
-        />
+          <IdentityStrip
+            name={displayName.trim() || account.displayName}
+            initials={initialsOf(displayName.trim() || account.displayName)}
+            image={avatarUrl}
+            editable
+            onImageChange={(newAvatar) => {
+              setAvatarUrl(newAvatar, account.getAccessToken);
+              toast({ title: 'Profile Photo Updated', description: 'Your new avatar is updated across the app.' });
+            }}
+            type={account.country.name}
+            chip={<StatusChip kind="confirmed" label="Signed In" />}
+            size="md"
+            singleRow
+          />
+        </header>
 
         {/* Settings as a grid of upright cards, not a stack of wide bands. */}
         <div className="grid gap-4 md:grid-cols-2">
           <SettingsSection id="profile" title="Name" className="h-full">
             <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <InitialsTile
+                  initials={initialsOf(displayName.trim() || account.displayName)}
+                  image={avatarUrl}
+                  size="lg"
+                  editable
+                  onImageChange={(newAvatar) => {
+                    setAvatarUrl(newAvatar, account.getAccessToken);
+                    toast({ title: 'Profile Photo Updated', description: 'Your new avatar is updated across the app.' });
+                  }}
+                />
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold">Profile Photo</p>
+                  <p className="text-xs text-muted-foreground">Click the photo or camera icon to upload a picture.</p>
+                  {avatarUrl ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        removeAvatar(account.getAccessToken);
+                        toast({ title: 'Profile Photo Removed', description: 'Reverted to your name initials.' });
+                      }}
+                      className="text-xs font-semibold text-destructive hover:underline"
+                    >
+                      Remove photo
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+
               <Field label="Display Name" htmlFor="account-name" help="How other members see you in a group.">
                 <Input id="account-name" value={displayName} onChange={(event) => setDisplayName(event.target.value)} maxLength={80} />
               </Field>
@@ -221,39 +264,43 @@ function AccountPanel() {
             </dl>
           </SettingsSection>
 
-          <SettingsSection id="notifications" title="Notifications" description="How you hear about votes, dues and sends." className="h-full">
-            <ul className="grid grid-cols-2 gap-x-6">
-              {NOTIFICATION_ROWS.map((row) => (
-                <li key={row.key} className="flex items-center justify-between gap-4 border-b border-border py-3 [&:nth-last-child(-n+2)]:border-b-0">
-                  <label htmlFor={`notify-${row.key}`} className="text-sm font-semibold">
-                    {row.label}
-                  </label>
-                  <Switch
-                    id={`notify-${row.key}`}
-                    checked={notifications[row.key]}
-                    onCheckedChange={(checked) => setNotifications((prev) => ({ ...prev, [row.key]: checked }))}
-                    aria-label={`${row.label} notifications`}
-                  />
-                </li>
-              ))}
-            </ul>
-            <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-              <Button type="button" variant="outline" onClick={() => void enablePush()} disabled={pushBusy}>
-                {pushBusy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
-                Enable Push
-              </Button>
+          <SettingsSection id="notifications" title="Notifications" description="How you hear about votes, dues and sends." className="h-full flex flex-col">
+            <div className="my-auto flex flex-col justify-center py-2">
+              <ul className="grid grid-cols-2 gap-x-6">
+                {NOTIFICATION_ROWS.map((row) => (
+                  <li key={row.key} className="flex items-center justify-between gap-4 border-b border-border py-3 [&:nth-last-child(-n+2)]:border-b-0">
+                    <label htmlFor={`notify-${row.key}`} className="text-sm font-semibold">
+                      {row.label}
+                    </label>
+                    <Switch
+                      id={`notify-${row.key}`}
+                      checked={notifications[row.key]}
+                      onCheckedChange={(checked) => setNotifications((prev) => ({ ...prev, [row.key]: checked }))}
+                      aria-label={`${row.label} notifications`}
+                    />
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-5 flex justify-center">
+                <Button type="button" variant="outline" onClick={() => void enablePush()} disabled={pushBusy}>
+                  {pushBusy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
+                  Enable Push
+                </Button>
+              </div>
             </div>
           </SettingsSection>
         </div>
 
-        {saveError ? <InlineError message={saveError} /> : null}
-        <Button type="button" onClick={() => void save()} disabled={saving} fullWidth className="sm:w-auto">
-          {saving ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
-          Save
-        </Button>
+        {saveError ? <InlineError message={saveError} className="text-center" /> : null}
+        <div className="flex justify-center">
+          <Button type="button" onClick={() => void save()} disabled={saving} className="w-full sm:w-auto min-w-36">
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
+            Save
+          </Button>
+        </div>
 
         <section aria-labelledby="account-groups" className="space-y-3">
-          <h2 id="account-groups" className="font-display text-base font-bold">
+          <h2 id="account-groups" className="font-display text-base font-bold text-center">
             Your Groups
           </h2>
           {error ? <InlineError message={error} /> : null}
@@ -272,25 +319,6 @@ function AccountPanel() {
           )}
         </section>
 
-        <div className="border-t border-border pt-6">
-          {confirmLogout ? (
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <p className="text-sm font-semibold">Log out of Baraza on this device?</p>
-              <div className="flex gap-2">
-                <Button type="button" variant="outline" onClick={() => setConfirmLogout(false)}>
-                  Cancel
-                </Button>
-                <Button type="button" variant="destructive" onClick={() => void account.logout()}>
-                  Log Out
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <Button type="button" variant="destructive" onClick={() => setConfirmLogout(true)}>
-              Log Out
-            </Button>
-          )}
-        </div>
       </div>
     </section>
   );

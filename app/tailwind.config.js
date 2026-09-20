@@ -23,10 +23,17 @@ export default {
 			}
 		},
 		extend: {
+			// Named shadows so utilities compile: Tailwind reads a bare `shadow-[var(--x)]`
+			// as a colour, which left every chrome and popup shadow at none.
+			boxShadow: {
+				card: 'var(--shadow-card)',
+				'card-hover': 'var(--shadow-card-hover)',
+				deep: 'var(--shadow-deep)',
+			},
 			fontFamily: {
-				sans: ['Geist', 'system-ui', 'sans-serif'],
-				display: ['Geist', 'system-ui', 'sans-serif'],
-				mono: ['Geist Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+				sans: ['Geist Variable', 'system-ui', 'sans-serif'],
+				display: ['Geist Variable', 'system-ui', 'sans-serif'],
+				mono: ['Geist Mono Variable', 'ui-monospace', 'SFMono-Regular', 'monospace'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',

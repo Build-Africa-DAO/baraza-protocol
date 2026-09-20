@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import MobileBottomNav from '@/components/MobileBottomNav';
@@ -6,7 +6,10 @@ import BackendStatus from '@/components/BackendStatus';
 import OfflineBanner from '@/components/OfflineBanner';
 import AppShell from '@/components/app/AppShell';
 import VisitorShell from '@/components/app/VisitorShell';
-import OperatorShell from '@/components/app/OperatorShell';
+import PageLoader from '@/components/PageLoader';
+
+// Operator chrome carries the wallet adapter; members never download it.
+const OperatorShell = lazy(() => import('@/components/app/OperatorShell'));
 import { useLocation } from 'react-router-dom';
 import WalletGate from '@/components/auth/WalletGate';
 import { useAccount } from '@/contexts/AccountContext';
@@ -67,7 +70,11 @@ const Layout: React.FC<LayoutProps> = ({ children, gate }) => {
   ) : children;
 
   if (isOperatorPath(location.pathname)) {
-    return <OperatorShell>{body}</OperatorShell>;
+    return (
+      <Suspense fallback={<PageLoader label="Loading operator tools" />}>
+        <OperatorShell>{body}</OperatorShell>
+      </Suspense>
+    );
   }
 
   if (account.authenticated) {

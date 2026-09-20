@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { StatusScreen } from '@/components/StatusPage';
-import { IdentityStrip } from '@/components/app/IdentityStrip';
+import { InitialsTile } from '@/components/app/ListRow';
 import { StatusChip } from '@/components/ui/status-chip';
 import { SaccoComplianceBadge } from '@/components/SaccoComplianceBadge';
 import { TreasuryCircuitBreakerBanner } from '@/components/TreasuryCircuitBreakerBanner';
@@ -12,6 +12,7 @@ import { useCommunity } from '@/hooks/useCommunities';
 import { useGroupMembership, type GroupMembership } from '@/hooks/useGroupMembership';
 import { useChain } from '@/hooks/useChain';
 import { useAccount } from '@/contexts/AccountContext';
+import { useCommunityImage } from '@/lib/imageUpload';
 import { useSeo } from '@/lib/seo';
 import { CHAINS, type ChainMeta } from '@/lib/chain';
 import type { Community } from '@/lib/constants';
@@ -73,6 +74,8 @@ export default function GroupWorkspace({
   const { chain } = useChain();
   const { community, isLoading, error, reload } = useCommunity(id);
   const membership = useGroupMembership(id);
+  // Custom logo set in Settings; called before the early returns below so hook order is stable.
+  const { image: communityLogo, setImage: setCommunityLogo } = useCommunityImage(community?.id, community?.image);
 
   useSeo({
     title: community ? (title ? `${title} — ${community.name}` : `${community.name}`) : undefined,
@@ -140,38 +143,52 @@ export default function GroupWorkspace({
     <Layout gate={gate}>
       <section className="relative overflow-x-clip py-8 md:py-12">
         <div className="container relative z-10 mx-auto px-4">
-          <Link
-            to={account.authenticated ? '/home' : '/groups'}
-            className="mb-6 inline-flex items-center gap-2 text-sm"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            {account.authenticated ? 'My Groups' : 'All Groups'}
-          </Link>
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+            <Link
+              to={account.authenticated ? '/home' : '/groups'}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground shrink-0"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              {account.authenticated ? 'My Groups' : 'All Groups'}
+            </Link>
 
-          {/* §13.12 identity strip: who this is, what kind of group, and how the
-              viewer relates to it. No photo, no dues, no founding date — those
-              live in Settings. */}
-          {!hideBanner && (
-            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <IdentityStrip
-                name={community.name}
-                initials={community.image}
-                type={formatType(community.type)}
-                chip={<MembershipChip membership={membership} />}
-                extra={<SaccoComplianceBadge type={community.type} status={community.saccoLicenseStatus} />}
-              />
-              {!membership.isMember && !membership.isLoading && !hideJoinCta && (
-                <Link to={`/join/${community.id}`} className="btn-wipe hidden shrink-0 md:inline-flex">
-                  Join This Group
-                </Link>
-              )}
-            </div>
-          )}
+            {!hideBanner ? (
+              <div className="flex flex-wrap items-center justify-end gap-3 min-w-0">
+                <InitialsTile
+                  initials={communityLogo ?? community.image}
+                  image={communityLogo ?? community.image}
+                  size="md"
+                  editable={membership.isOfficer}
+                  onImageChange={setCommunityLogo}
+                />
+                <h1 className="font-display text-xl font-black tracking-tight sm:text-2xl truncate">
+                  {community.name}
+                </h1>
+                <div className="flex flex-wrap items-center gap-2">
+                  {community.type ? <StatusChip kind="info" icon={null} label={formatType(community.type)} /> : null}
+                  <MembershipChip membership={membership} />
+                  <SaccoComplianceBadge type={community.type} status={community.saccoLicenseStatus} />
+                </div>
+                {!membership.isMember && !membership.isLoading && !hideJoinCta && (
+                  <Link to={`/join/${community.id}`} className="btn-wipe hidden shrink-0 md:inline-flex ml-2">
+                    Join This Group
+                  </Link>
+                )}
+              </div>
+            ) : title ? (
+              <div className="text-right min-w-0">
+                <h1 className="font-display text-xl font-black tracking-tight sm:text-2xl">
+                  {title}
+                </h1>
+                {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
+              </div>
+            ) : null}
+          </div>
 
           <TreasuryCircuitBreakerBanner frozen={frozen} />
 
           {membership.isMember && membership.source !== 'api' && (
-            <div className="mb-6 rounded-lg border border-border p-3 text-xs text-muted-foreground">
+            <div className="baraza-row mb-6 rounded-lg p-3 text-xs text-muted-foreground">
               Showing a locally cached membership. Officer tools stay hidden until Baraza confirms your role.
             </div>
           )}
@@ -182,7 +199,7 @@ export default function GroupWorkspace({
             <div className="fixed inset-x-0 bottom-[calc(4.25rem+env(safe-area-inset-bottom))] z-30 pl-4 pr-[4.25rem] md:hidden">
               <Link
                 to={`/join/${community.id}`}
-                className="btn-wipe w-full justify-center shadow-[var(--shadow-deep)]"
+                className="btn-wipe w-full justify-center shadow-deep"
               >
                 Join This Group
               </Link>
@@ -192,19 +209,13 @@ export default function GroupWorkspace({
           <div className="flex gap-6">
             {!inAppShell && (
               <aside className="hidden w-52 flex-shrink-0 lg:block">
-                <div className="sticky top-24 rounded-xl border border-border/60 bg-card/70 p-3">
+                <div className="baraza-card sticky top-24 rounded-xl p-3">
                   <GroupSidebarNav communityId={community.id} isMember={membership.isMember} isOfficer={membership.isOfficer} />
                 </div>
               </aside>
             )}
 
             <main className="min-w-0 flex-1">
-              {title && (
-                <header className="mb-5">
-                  <h2 className="font-display text-2xl font-bold">{title}</h2>
-                  {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
-                </header>
-              )}
               {children(ctx)}
             </main>
           </div>

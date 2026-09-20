@@ -265,7 +265,7 @@ export default function Bounties() {
     <Layout>
       <section className="relative py-8 md:py-12">
         <div className="container mx-auto max-w-6xl px-4">
-          <div className="relative mb-8 overflow-hidden rounded-lg border border-border/70 bg-card shadow-[var(--shadow-card)]">
+          <div className="relative mb-8 overflow-hidden rounded-lg border border-border/70 bg-card shadow-card">
 
             <div className="relative grid gap-6 p-5 md:grid-cols-[minmax(0,1fr)_minmax(18rem,30rem)] md:items-center md:p-7">
               <div className="max-w-[38rem]">

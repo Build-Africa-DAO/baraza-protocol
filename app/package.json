@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host",
-    "build": "vite build",
+    "build": "vite build && node -e \"import fs from 'node:fs'; if (!fs.existsSync('dist/_routes.json')) throw new Error('Missing dist/_routes.json'); if (!fs.existsSync('dist/_headers')) throw new Error('Missing dist/_headers');\"",
     "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.node.json",
     "lint": "eslint .",
     "test": "vitest run",
@@ -17,7 +17,10 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.102.0",
     "@apollo/client": "^4.2.0",
+    "@chenglou/pretext": "^0.0.9",
     "@coral-xyz/anchor": "^0.32.1",
+    "@fontsource-variable/geist": "^5.3.0",
+    "@fontsource-variable/geist-mono": "^5.3.0",
     "@gooddollar/goodprotocol": "^2.2.1",
     "@privy-io/react-auth": "^3.27.1",
     "@radix-ui/react-toast": "^1.2.15",
@@ -74,6 +77,7 @@
     "globals": "^17.6.0",
     "jsdom": "^29.1.1",
     "postcss": "^8.4.35",
+    "puppeteer-core": "^25.11.0",
     "tailwindcss": "^3.4.11",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.3.0",

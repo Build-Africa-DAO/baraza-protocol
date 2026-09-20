@@ -272,11 +272,11 @@ export default function Header() {
             {account.authenticated ? (
               <>
                 <p className="truncate px-3 pb-1 text-xs text-muted-foreground">{account.displayName}</p>
-                <Link to="/account" className="inline-flex min-h-11 items-center gap-2 rounded-md px-3 text-sm font-semibold">
+                <Link to="/account" className="inline-flex min-h-12 items-center gap-2 rounded-md px-3 text-sm font-semibold">
                   <CircleUserRound className="h-4 w-4 text-primary" />
                   Account
                 </Link>
-                <Link to="/create" className="inline-flex min-h-11 items-center gap-2 rounded-md px-3 text-sm font-semibold">
+                <Link to="/create" className="inline-flex min-h-12 items-center gap-2 rounded-md px-3 text-sm font-semibold">
                   <PlusCircle className="h-4 w-4 text-primary" />
                   Start a Group
                 </Link>
@@ -291,7 +291,7 @@ export default function Header() {
                 <button
                   type="button"
                   onClick={() => void account.logout()}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-md px-3 text-left text-sm font-semibold"
+                  className="inline-flex min-h-12 items-center gap-2 rounded-md px-3 text-left text-sm font-semibold"
                 >
                   <LogOut className="h-4 w-4" />
                   Log Out

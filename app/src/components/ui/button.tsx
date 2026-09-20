@@ -15,14 +15,14 @@ const buttonVariants = cva(
         link: "bg-transparent font-semibold tracking-normal text-primary underline-offset-4 hover:underline",
         icon: "btn-icon",
       },
-      /* 44px is the floor for anything a thumb has to hit (§13.2). `sm` is for
-         desktop-only secondary actions and toast actions; never the one
-         primary on a phone screen. */
+      /* 48px is the floor for anything a thumb has to hit (production spec
+         FE-6.1). `sm` keeps 36px from the `sm` breakpoint up, for desktop-only
+         secondary actions and toast actions; on phones it is 48px too. */
       size: {
-        default: "h-11 px-5 text-sm",
-        sm: "h-9 min-h-0 px-4 text-xs",
-        lg: "h-12 px-8 text-sm",
-        icon: "h-11 w-11 min-h-0 p-0",
+        default: "h-12 px-5 text-sm",
+        sm: "h-12 min-h-0 px-4 text-xs sm:h-9",
+        lg: "h-14 px-8 text-sm",
+        icon: "h-12 w-12 min-h-0 p-0",
       },
       fullWidth: {
         true: "w-full",

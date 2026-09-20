@@ -1,4 +1,4 @@
-import { getAccessToken, hadWorkingSession } from '@/lib/auth/tokenProvider';
+import { getAccessToken, hadWorkingSession, requestReauth } from '@/lib/auth/tokenProvider';
 
 /**
  * The one HTTP client for `/api/*`.
@@ -52,6 +52,11 @@ export interface ApiRequest {
   /** How to read the body. `json` (default), `text`, or `none` for blobs and streams (read `response` yourself). */
   parse?: 'json' | 'text' | 'none';
   signal?: AbortSignal;
+  /**
+   * On a 401 after a working session, open sign-in and replay this request once
+   * the person is back (default). `never` returns the 401 to the caller.
+   */
+  reauth?: 'once' | 'never';
 }
 
 export const API_COPY = {
@@ -179,6 +184,16 @@ function readHeader(response: Response, name: string): string | null {
 }
 
 export async function apiFetch<T = unknown>(path: string, init: ApiRequest = {}): Promise<ApiResult<T>> {
+  const result = await apiFetchOnce<T>(path, init);
+  const wantsReauth = (init.reauth ?? 'once') === 'once' && (init.auth ?? 'attach') === 'attach';
+  if (!result.ok && result.error.kind === 'auth' && wantsReauth && hadWorkingSession()) {
+    const signedIn = await requestReauth();
+    if (signedIn) return apiFetchOnce<T>(path, init);
+  }
+  return result;
+}
+
+async function apiFetchOnce<T>(path: string, init: ApiRequest): Promise<ApiResult<T>> {
   const headers: Record<string, string> = { ...(init.headers ?? {}) };
   const isForm = typeof FormData !== 'undefined' && init.body instanceof FormData;
   const hasBody = init.body !== undefined && init.body !== null;

@@ -40,6 +40,27 @@ describe('IdentityStrip', () => {
     expect(screen.getByRole('status', { name: 'Active' })).toBeInTheDocument();
     expect(container.querySelector('img')).toBeNull();
   });
+
+  it('renders in a single row layout when singleRow is true', () => {
+    const { container } = render(
+      <IdentityStrip
+        name="123"
+        initials="1"
+        type="Savings chama"
+        chip={<StatusChip kind="info" icon={null} label="Joining" />}
+        centered
+        singleRow
+      />,
+    );
+    const row = container.firstChild as HTMLElement;
+    expect(row.className).toContain('flex');
+    expect(row.className).toContain('items-center');
+    expect(row.className).toContain('justify-center');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('123');
+    expect(screen.getByText('1')).toBeInTheDocument();
+    expect(screen.getByText('Savings chama')).toBeInTheDocument();
+    expect(screen.getByText('Joining')).toBeInTheDocument();
+  });
 });
 
 describe('SettingsSection', () => {

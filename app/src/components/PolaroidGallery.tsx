@@ -2,11 +2,11 @@ import type { CSSProperties } from "react";
 import { ParallaxPhoto, Reveal, REVEAL_STAGGER } from "@/components/landing/motion";
 
 const frames = [
-  { src: "/gallery/gallery-dues.jpg", alt: "Members gathered around a laptop", rotate: "-7deg", lift: "0.45rem", strength: 0.08 },
-  { src: "/gallery/gallery-plan.jpg", alt: "A group planning together on a glass wall", rotate: "5deg", lift: "-0.7rem", strength: 0.1 },
-  { src: "/gallery/gallery-ledger.jpg", alt: "Treasurer reviewing a shared ledger on a screen", rotate: "-3deg", lift: "0.1rem", strength: 0.12 },
-  { src: "/gallery/gallery-vote.jpg", alt: "Two members checking a vote on a phone", rotate: "6deg", lift: "-0.4rem", strength: 0.1 },
-  { src: "/gallery/gallery-group.jpg", alt: "Members laughing together at a desk", rotate: "-4.5deg", lift: "0.55rem", strength: 0.09 },
+  { src: "/gallery/gallery-dues.webp", alt: "Members gathered around a laptop", rotate: "-7deg", lift: "0.45rem", strength: 0.08 },
+  { src: "/gallery/gallery-plan.webp", alt: "A group planning together on a glass wall", rotate: "5deg", lift: "-0.7rem", strength: 0.1 },
+  { src: "/gallery/gallery-ledger.webp", alt: "Treasurer reviewing a shared ledger on a screen", rotate: "-3deg", lift: "0.1rem", strength: 0.12 },
+  { src: "/gallery/gallery-vote.webp", alt: "Two members checking a vote on a phone", rotate: "6deg", lift: "-0.4rem", strength: 0.1 },
+  { src: "/gallery/gallery-group.webp", alt: "Members laughing together at a desk", rotate: "-4.5deg", lift: "0.55rem", strength: 0.09 },
 ];
 
 export default function PolaroidGallery() {

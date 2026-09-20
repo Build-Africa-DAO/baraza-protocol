@@ -2,6 +2,8 @@
 // Standard: S&P 500 Enterprise Fintech (Cloudflare Edge Gateway & Scheduled Cron Dispatcher)
 // Strict Zero-Any TypeScript Implementation
 
+import { dispatchApiRoute } from './edgeRouter';
+
 export interface Env {
   STELLAR_NETWORK?: string;
   STELLAR_HORIZON_URL?: string;
@@ -14,6 +16,9 @@ export interface Env {
     send(message: unknown): Promise<void>;
   };
   HYPERDRIVE?: unknown;
+  ASSETS?: {
+    fetch(req: Request): Promise<Response>;
+  };
 }
 
 export interface ScheduledController {
@@ -111,8 +116,10 @@ export default {
 
       const apiBase = env.API_BASE_URL || env.VITE_SITE_URL || 'http://127.0.0.1:3000';
       const results: CronDispatchResult[] = await Promise.all([
-        executeCronTask('/api/cron/sweep-stale-orders', 'GET', apiBase, secret),
-        executeCronTask('/api/compliance/sasra-monitoring', 'POST', apiBase, secret),
+        executeCronTask('/api/cron/promote-orders', 'POST', apiBase, secret),
+        executeCronTask('/api/cron/reconcile-treasury', 'POST', apiBase, secret),
+        executeCronTask('/api/cron/monitor-compliance', 'POST', apiBase, secret),
+        executeCronTask('/api/cron/settle-retro-allocations', 'POST', apiBase, secret),
       ]);
 
       return new Response(JSON.stringify({ ok: true, results }), {
@@ -121,13 +128,24 @@ export default {
       });
     }
 
+    // Dispatch all /api/* routes through the canonical edge router
+    if (url.pathname.startsWith('/api/')) {
+      return dispatchApiRoute(req);
+    }
+
+    // Cloudflare Pages Advanced Mode static asset fallback
+    if (env.ASSETS && typeof env.ASSETS.fetch === 'function') {
+      return env.ASSETS.fetch(req);
+    }
+
     // Pass through to origin
     ctx.passThroughOnException();
     return fetch(req);
   },
 
   /**
-   * Scheduled Cron Handler: Periodically sweeps stale orders and executes SASRA compliance monitoring
+   * Scheduled Cron Handler: Periodically promotes orders, reconciles treasuries,
+   * monitors SASRA compliance, and settles retro allocations.
    */
   async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
     const secret = env.CRON_SECRET || env.ADMIN_SECRET || 'test_cron_secret';
@@ -135,15 +153,21 @@ export default {
 
     ctx.waitUntil(
       (async () => {
-        const cronPattern = controller.cron;
-        // Run sweep on every invocation (every 5 or 10 min)
+        const cronPattern = controller.cron || '';
+        // 1. Order promotion cadence (every invocation / 5 min)
         const tasks: Promise<CronDispatchResult>[] = [
-          executeCronTask('/api/cron/sweep-stale-orders', 'GET', apiBase, secret),
+          executeCronTask('/api/cron/promote-orders', 'POST', apiBase, secret),
         ];
 
-        // Run SASRA monitoring every 10 min
-        if (cronPattern.includes('10')) {
-          tasks.push(executeCronTask('/api/compliance/sasra-monitoring', 'POST', apiBase, secret));
+        // 2. Treasury reconciliation every 10 min
+        if (cronPattern.includes('10') || cronPattern.includes('*/10')) {
+          tasks.push(executeCronTask('/api/cron/reconcile-treasury', 'POST', apiBase, secret));
+        }
+
+        // 3. Daily compliance & retro settlement
+        if (cronPattern.includes('0 0') || cronPattern.includes('daily')) {
+          tasks.push(executeCronTask('/api/cron/monitor-compliance', 'POST', apiBase, secret));
+          tasks.push(executeCronTask('/api/cron/settle-retro-allocations', 'POST', apiBase, secret));
         }
 
         await Promise.allSettled(tasks);

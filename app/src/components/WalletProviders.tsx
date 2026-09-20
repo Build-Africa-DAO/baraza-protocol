@@ -1,3 +1,4 @@
+import '@/polyfill';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ConnectionProvider as SolanaConnectionProvider,

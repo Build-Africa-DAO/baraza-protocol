@@ -110,7 +110,7 @@ export default function Help() {
           <div className="divide-y divide-border border-y border-border">
             {TOPICS.map((topic) => (
               <details key={topic.id} id={topic.id} className="group scroll-mt-24 py-2">
-                <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 py-2 font-display text-base font-bold marker:content-none">
+                <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-4 py-2 font-display text-base font-bold marker:content-none">
                   {topic.question}
                   <Plus className="h-5 w-5 shrink-0 text-primary transition-transform group-open:rotate-45" aria-hidden />
                 </summary>
@@ -129,7 +129,7 @@ export default function Help() {
                 Email Help
               </a>
             </Button>
-            <Link to="/status" className="inline-flex min-h-11 items-center text-sm font-semibold text-muted-foreground hover:text-foreground">
+            <Link to="/status" className="inline-flex min-h-12 items-center text-sm font-semibold text-muted-foreground hover:text-foreground">
               System Status
             </Link>
           </div>

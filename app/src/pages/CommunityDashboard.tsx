@@ -30,6 +30,8 @@ export default function CommunityDashboard() {
           currency={community.currency}
           memberCount={community.memberCount}
           fundBalance={community.fundBalance}
+          liquidVaultBalanceMinor={community.liquidVaultBalanceMinor ?? null}
+          encumberedBalanceMinor={community.encumberedBalanceMinor ?? null}
           quorumPct={community.quorumPct}
           membership={membership}
           isOfficer={isOfficer}
@@ -44,6 +46,8 @@ function HomePanel({
   currency,
   memberCount,
   fundBalance,
+  liquidVaultBalanceMinor,
+  encumberedBalanceMinor,
   quorumPct,
   membership,
   isOfficer,
@@ -52,6 +56,8 @@ function HomePanel({
   currency?: string;
   memberCount: number;
   fundBalance: number | undefined;
+  liquidVaultBalanceMinor: number | null;
+  encumberedBalanceMinor: number | null;
   quorumPct?: number;
   membership: GroupMembership;
   isOfficer: boolean;
@@ -82,7 +88,7 @@ function HomePanel({
             </h2>
             <Link
               to={`/dashboard/${communityId}/votes`}
-              className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-foreground underline-offset-4 hover:underline"
+              className="inline-flex min-h-12 items-center gap-1 text-sm font-semibold text-foreground underline-offset-4 hover:underline"
             >
               See All Votes
               <ArrowRight className="h-4 w-4" aria-hidden />
@@ -98,35 +104,41 @@ function HomePanel({
         </section>
       )}
 
-      <section className="baraza-card p-5" aria-labelledby="home-money">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 id="home-money" className="font-display text-base font-bold">
-            Money
-          </h2>
+      <section className="baraza-card p-5 text-center" aria-labelledby="home-money">
+        <div className="relative mb-4 flex items-center justify-center">
+          <div className="text-center">
+            <h2 id="home-money" className="font-display text-base font-bold text-center">
+              Money
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground text-center">
+              What this group holds, and what has moved.
+            </p>
+          </div>
           {isOfficer ? (
-            <Button asChild variant="outline" size="sm">
-              <Link to={`/dashboard/${communityId}/money`}>Open Money</Link>
-            </Button>
+            <div className="absolute right-0 top-0">
+              <Button asChild variant="outline" size="sm">
+                <Link to={`/dashboard/${communityId}/money`}>Open Money</Link>
+              </Button>
+            </div>
           ) : null}
         </div>
-        {/* The statement API returns one pooled figure today. Reserved and
-            available render as "Not available yet" rather than a guess. */}
-        <div className="grid gap-4 sm:grid-cols-3">
-          <AmountBlock label="Total" amountMajor={hasBalance ? fundBalance : null} currency={currency} />
-          <AmountBlock label="Reserved" amountMajor={null} currency={currency} size="md" />
-          <AmountBlock label="Available" amountMajor={null} currency={currency} size="md" />
+        {/* Reserved and available come from the community row when the backend has them; otherwise "Not available yet". */}
+        <div className="mt-4 grid gap-4 text-center sm:grid-cols-3">
+          <AmountBlock className="text-center" label="Total" amountMajor={hasBalance ? fundBalance : null} currency={currency} />
+          <AmountBlock className="text-center" label="Reserved" amountMinor={encumberedBalanceMinor ?? null} currency={currency} size="md" />
+          <AmountBlock className="text-center" label="Available" amountMinor={liquidVaultBalanceMinor ?? null} currency={currency} size="md" />
         </div>
       </section>
 
       <section aria-labelledby="home-movement">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <h2 id="home-movement" className="font-display text-base font-bold">
+        <div className="relative mb-3 flex items-center justify-center">
+          <h2 id="home-movement" className="font-display text-base font-bold text-center">
             Recent Movement
           </h2>
           {activities.length > 5 ? (
             <Link
               to={`/dashboard/${communityId}/money`}
-              className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-foreground underline-offset-4 hover:underline"
+              className="absolute right-0 inline-flex min-h-12 items-center gap-1 text-sm font-semibold text-foreground underline-offset-4 hover:underline"
             >
               See All
               <ArrowRight className="h-4 w-4" aria-hidden />
@@ -318,13 +330,15 @@ function ActionCard({
   icon: React.ElementType;
 }) {
   return (
-    <div className="baraza-card p-6">
-      <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary/10" aria-hidden>
-        <Icon className="h-5 w-5 text-primary" />
+    <div className="baraza-card flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+      <div className="flex items-start gap-4 sm:items-center min-w-0">
+        <Icon className="h-10 w-10 shrink-0 text-primary" aria-hidden />
+        <div className="min-w-0 flex-1">
+          <h2 className="font-display text-lg font-bold">{heading}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{body}</p>
+        </div>
       </div>
-      <h2 className="font-display text-lg font-bold">{heading}</h2>
-      <p className="mt-2 text-sm text-muted-foreground">{body}</p>
-      <Button asChild className="mt-5 w-full sm:w-auto">
+      <Button asChild className="w-full sm:w-auto shrink-0 sm:ml-4">
         <Link to={cta.to}>{cta.label}</Link>
       </Button>
     </div>

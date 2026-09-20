@@ -56,21 +56,26 @@ export default async function handler(req: Request): Promise<Response> {
     .eq('purpose', 'signin')
     .is('consumed_at', null);
 
-  // 3. Generate 6-Digit CSPRNG Code
+  // 3. Generate 6-Digit CSPRNG Code and Per-Challenge Salt (NIST SP 800-63B)
   const randomBytes = new Uint8Array(4);
   crypto.getRandomValues(randomBytes);
   const randomUint32 = new DataView(randomBytes.buffer).getUint32(0, false);
   const otpNumber = 100000 + (randomUint32 % 900000);
   const otp = otpNumber.toString();
 
+  const saltBytes = new Uint8Array(16);
+  crypto.getRandomValues(saltBytes);
+  const salt = Array.from(saltBytes, (b) => b.toString(16).padStart(2, '0')).join('');
+
   const pepper = process.env.PAYMENT_PHONE_HASH_PEPPER || process.env.OTP_PEPPER || 'baraza_otp_pepper_2026';
-  const codeHash = await hashOtp(otp, pepper);
+  const codeHash = await hashOtp(otp, pepper, salt);
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 Minutes TTL
 
-  // 4. Save Challenge to Database
+  // 4. Save Challenge to Database with Salt
   const { error: insertErr } = await supabase.from('auth_otp_challenges').insert({
     destination: email,
     channel: 'email',
+    salt,
     code_hash: codeHash,
     purpose: 'signin',
     attempts_remaining: 5,

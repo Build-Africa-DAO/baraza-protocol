@@ -63,6 +63,7 @@ export interface UserMembershipSummary {
   vaultBalanceMinor: number;
   currency: string;
   membershipStatus: string;
+  imageUrl?: string | null;
 }
 
 export interface UserMembershipsResponse {

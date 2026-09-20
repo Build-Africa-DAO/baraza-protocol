@@ -1,16 +1,13 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import Layout from "@/components/Layout";
 import HeroSection from "@/components/HeroSection";
-import FeaturesSection from "@/components/FeaturesSection";
-import AIPlatformSection from "@/components/AIPlatformSection";
-import FlowWalkthrough from "@/components/FlowWalkthrough";
-import FaqSection from "@/components/FaqSection";
-import PricingSection from "@/components/PricingSection";
-import ContactSection from "@/components/ContactSection";
-import CTASection from "@/components/CTASection";
 import { useAccount } from "@/contexts/AccountContext";
 import { useSeo } from "@/lib/seo";
+
+// Everything under the hero shares one chunk and arrives after first paint.
+// The fallback keeps the footer below the fold so nothing visible shifts.
+const BelowTheFold = lazy(() => import("@/components/landing/BelowTheFold"));
 
 export default function Index() {
   useSeo({
@@ -39,13 +36,9 @@ export default function Index() {
   return (
     <Layout>
       <HeroSection />
-      <FeaturesSection />
-      <FlowWalkthrough />
-      <AIPlatformSection />
-      <PricingSection />
-      <FaqSection />
-      <ContactSection />
-      <CTASection />
+      <Suspense fallback={<div className="min-h-screen" aria-hidden />}>
+        <BelowTheFold />
+      </Suspense>
     </Layout>
   );
 }

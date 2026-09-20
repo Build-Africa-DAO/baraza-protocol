@@ -1,7 +1,10 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { DEFAULT_GOVERNANCE, type Community, type VerificationTier, MOCK_COMMUNITIES } from '@/lib/constants';
+import { DEFAULT_GOVERNANCE, type Community, type CommunitySettlement, type VerificationTier, MOCK_COMMUNITIES } from '@/lib/constants';
+export type { CommunitySettlement };
 import { isSyntheticDataEnabled } from '@/lib/devMode';
 import type { Chain } from '@/lib/chain';
+import { apiFetch } from '@/lib/api';
+import type { Member } from '@/lib/dataStore';
 
 type TreasuryPolicy = 'multisig-ready' | 'proposal-only' | 'manual-review';
 
@@ -46,6 +49,8 @@ export type CommunityRow = {
   memberCount?: number | null;
   fund_balance?: number | null;
   fundBalance?: number | null;
+  liquid_vault_balance_minor?: number | null;
+  encumbered_balance_minor?: number | null;
   active_decisions?: number | null;
   activeDecisions?: number | null;
   created_at?: string | null;
@@ -78,6 +83,8 @@ export type CommunityRow = {
   isPayoutFrozen?: boolean | null;
   status?: string | null;
   communityStatus?: string | null;
+  operational_address?: string | null;
+  chain_config?: Record<string, unknown> | null;
 };
 
 const VALID_TREASURY_POLICIES: TreasuryPolicy[] = ['multisig-ready', 'proposal-only', 'manual-review'];
@@ -178,6 +185,8 @@ function communityFromRow(row: CommunityRow): Community {
     currency: row.currency ?? undefined,
     memberCount: row.member_count ?? row.memberCount ?? 0,
     fundBalance: row.fund_balance ?? row.fundBalance ?? 0,
+    liquidVaultBalanceMinor: typeof row.liquid_vault_balance_minor === 'number' ? row.liquid_vault_balance_minor : null,
+    encumberedBalanceMinor: typeof row.encumbered_balance_minor === 'number' ? row.encumbered_balance_minor : null,
     activeDecisions: row.activeDecisions ?? 0,
     createdAt: row.created_at ?? row.createdAt ?? new Date().toISOString(),
     image: initials(row.name),
@@ -197,6 +206,12 @@ function communityFromRow(row: CommunityRow): Community {
     saccoLicenseStatus: row.sacco_license_status ?? row.saccoLicenseStatus ?? undefined,
     isPayoutFrozen: row.is_payout_frozen ?? row.isPayoutFrozen ?? false,
     communityStatus: row.status === 'paused' || row.communityStatus === 'paused' ? 'paused' : 'active',
+    settlement: {
+      chain,
+      contracts_state: chain === 'stellar' || chain === 'base' ? 'DEPLOYED' : 'NOT_DEPLOYED',
+      treasury_address: (row.operational_address as string) || (row.chain_config?.treasury_address as string) || undefined,
+      gasless_eligible: chain === 'stellar' || chain === 'base',
+    } satisfies CommunitySettlement,
   };
 }
 
@@ -306,11 +321,11 @@ export async function createCommunityRecord(input: CommunityInsert): Promise<Com
     saccoRegistrationNumber: input.saccoRegistrationNumber || undefined,
   };
 
-  try {
-    const res = await fetch('/api/communities', {
+  if (isSupabaseConfigured()) {
+    const res = await apiFetch<{ persisted: boolean; community?: CommunityRow }>('/api/communities', {
       method: 'POST',
-      headers: { 'content-type': 'application/json', ...(input.walletProofHeaders ?? {}) },
-      body: JSON.stringify({
+      headers: input.walletProofHeaders,
+      body: {
         name: input.name,
         type: input.type,
         description: input.description,
@@ -327,20 +342,62 @@ export async function createCommunityRecord(input: CommunityInsert): Promise<Com
         paybillNumber: input.paybillNumber,
         ussdShortcode: input.ussdShortcode,
         createdBy: input.createdBy,
-      }),
+      },
     });
 
-    if (res.ok) {
-      const payload = await res.json() as { persisted: boolean; community?: CommunityRow };
-      if (payload.persisted && payload.community) {
-        return communityFromRow(payload.community);
-      }
+    if (!res.ok) {
+      throw new Error(res.error.message || 'Failed to create group on Baraza protocol.');
     }
-  } catch {
-    // Network/CORS/local-dev fallback — fall through to localStorage
+    if (res.data?.community) {
+      return communityFromRow(res.data.community);
+    }
+  } else if (!import.meta.env.DEV) {
+    throw new Error(
+      'Database persistence is not configured. Communities cannot be created offline in production. Please contact support.',
+    );
   }
 
   const communities = readLocalCommunities();
   writeLocalCommunities([localCommunity, ...communities]);
   return localCommunity;
+}
+
+export interface CommunityMemberRecord {
+  memberId: string;
+  walletAddress: string;
+  role: string;
+  activationStatus: string;
+  displayName: string;
+  avatarUrl: string;
+  votingWeight: number;
+  joinedAt: string;
+  activatedAt?: string | null;
+}
+
+export async function fetchCommunityMembers(communityId: string): Promise<Member[]> {
+  try {
+    const res = await apiFetch<{ ok: boolean; members: CommunityMemberRecord[]; total: number }>(
+      `/api/communities/members?communityId=${encodeURIComponent(communityId)}&limit=100`,
+    );
+    if (res.ok && res.data?.members) {
+      return res.data.members.map((r): Member => ({
+        id: r.memberId,
+        communityId,
+        name: r.displayName || 'Anonymous Member',
+        walletKey: r.walletAddress,
+        joinedAt: r.joinedAt ? new Date(r.joinedAt).getTime() : Date.now(),
+        role: r.role === 'founder' || r.role === 'admin' ? r.role : 'member',
+        status: r.activationStatus === 'active' ? 'active' : 'inactive',
+        totalContributed: 0,
+        contributionCount: 0,
+        lastContributionAt: r.activatedAt ? new Date(r.activatedAt).getTime() : Date.now(),
+        contributions: [],
+        votesCount: 0,
+        proposalsCount: 0,
+      }));
+    }
+  } catch {
+    // fall through
+  }
+  return [];
 }

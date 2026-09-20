@@ -75,7 +75,7 @@ export function ReceiptCard({
         {disputeHref && status !== 'failed' ? (
           <Link
             to={disputeHref}
-            className="inline-flex min-h-11 items-center text-sm font-semibold text-foreground underline-offset-4 hover:underline sm:ml-auto"
+            className="inline-flex min-h-12 items-center text-sm font-semibold text-foreground underline-offset-4 hover:underline sm:ml-auto"
           >
             File a Dispute
           </Link>

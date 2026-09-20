@@ -23,7 +23,7 @@ function PhoneMockup() {
             <div className="relative overflow-hidden rounded-[2rem] bg-background">
               <span className="absolute left-1/2 top-2.5 z-10 h-[1.25rem] w-[6.25rem] -translate-x-1/2 rounded-full bg-foreground" />
               <img
-                src="/gallery/gallery-vote.jpg"
+                src="/gallery/gallery-vote.webp"
                 alt="Two members checking a vote on a phone"
                 width={720}
                 height={900}
