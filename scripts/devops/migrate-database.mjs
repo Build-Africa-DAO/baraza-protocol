@@ -4,7 +4,8 @@
 // Sequentially executes SQL migrations 000 through 043 with SHA-256 tracking and role quarantine.
 
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 
 console.log('='.repeat(78));
@@ -15,7 +16,10 @@ console.log('='.repeat(78));
 const args = process.argv.slice(2);
 const isDryRun = args.includes('--dry-run');
 
-const migrationsDir = resolve('supabase/migrations');
+const __filename = fileURLToPath(import.meta.url);
+const ROOT_DIR = resolve(dirname(__filename), '../..');
+
+const migrationsDir = resolve(ROOT_DIR, 'supabase/migrations');
 if (!existsSync(migrationsDir)) {
   console.error(`❌ Migrations directory not found at: ${migrationsDir}`);
   process.exit(1);

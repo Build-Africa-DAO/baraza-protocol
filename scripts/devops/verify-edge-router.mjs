@@ -5,15 +5,19 @@
 // Prevents Edge Router drift (such as BLK-01) from ever reaching staging or production.
 
 import { readdirSync, statSync, readFileSync, existsSync } from 'node:fs';
-import { resolve, relative, sep } from 'node:path';
+import { resolve, relative, sep, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 console.log('='.repeat(78));
 console.log('   BARAZA PROTOCOL — CLOUDFLARE EDGE ROUTER 100% COVERAGE AUDIT');
 console.log('   Standard: S&P 500 Enterprise Fintech / NIST SP 800-64 Shift-Left Gate');
 console.log('='.repeat(78));
 
-const apiDir = resolve('app/api');
-const edgeRouterPath = resolve('cloudflare/edgeRouter.ts');
+const __filename = fileURLToPath(import.meta.url);
+const ROOT_DIR = resolve(dirname(__filename), '../..');
+
+const apiDir = resolve(ROOT_DIR, 'app/api');
+const edgeRouterPath = resolve(ROOT_DIR, 'cloudflare/edgeRouter.ts');
 
 if (!existsSync(edgeRouterPath)) {
   console.error(`❌ Edge router not found at: ${edgeRouterPath}`);
