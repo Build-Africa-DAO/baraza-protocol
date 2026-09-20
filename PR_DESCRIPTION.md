@@ -1,15 +1,29 @@
-# PR: PR #95 Integration Bridges, Invariant I1 Dues Enforcement, Object Storage, Phase P0 DevOps & 10-Stage Pre-PR Quality Gate
+# Baraza Protocol: Production Branching & Promotion Pipeline
 
-**Source Branch:** `backend-dev`  
-**Target Branch:** `main`
-**PR Creation URL:** [https://github.com/Build-Africa-DAO/baraza-protocol/compare/main...backend-dev?expand=1](https://github.com/Build-Africa-DAO/baraza-protocol/compare/main...backend-dev?expand=1)
+**Branch Promotion Model:**
+- **Feature / Backend Convergence:** `backend-dev` ➔ `dev` (Staging Integration & Verification)
+  - **PR Compare URL:** [https://github.com/Build-Africa-DAO/baraza-protocol/compare/dev...backend-dev?expand=1](https://github.com/Build-Africa-DAO/baraza-protocol/compare/dev...backend-dev?expand=1)
+- **Production Release Gate:** `dev` ➔ `main` (Cloudflare Pages Production Deployment)
+  - **PR Compare URL:** [https://github.com/Build-Africa-DAO/baraza-protocol/compare/main...dev?expand=1](https://github.com/Build-Africa-DAO/baraza-protocol/compare/main...dev?expand=1)
+- **Direct Backend-to-Main Compare:** [https://github.com/Build-Africa-DAO/baraza-protocol/compare/main...backend-dev?expand=1](https://github.com/Build-Africa-DAO/baraza-protocol/compare/main...backend-dev?expand=1)
+
 **Governing Documents:** [Baraza Protocol SAD v1.0](file:///home/nothim/HIM/baraza-work/baraza-private/02-architecture/Baraza%20Protocol%20%20SAD.md), [SAD v1.1 CR-007 Addendum](file:///home/nothim/HIM/baraza-work/baraza-internal-qa-reports/requests/SAD-v1.1-CR-007-AMENDMENT.md), [Launch Direction Memo 3](file:///home/nothim/HIM/baraza-work/baraza-internal-qa-reports/qa/SAD_V1_BACKEND_AUDIT_AND_WORK_LEDGER.md), [BACKEND_SCOPE_OF_WORK.md](file:///home/nothim/HIM/baraza-work/baraza-protocol/docs/BACKEND_SCOPE_OF_WORK.md)
+
+---
+
+## Branching Architecture & Convergence Protocol
+
+In accordance with S&P 500 Enterprise GitFlow and Cloudflare Pages continuous deployment standards:
+1. **`main` (Production):** The protected, immutable deployed production branch serving `https://barazaprotocol.com`.
+2. **`dev` (Staging / Convergence):** The primary integration branch where frontend feature PRs, backend PRs (`backend-dev`), and smart contract updates converge. Runs automated CI and CT staging deployments to `https://staging.baraza-protocol.pages.dev`.
+3. **`backend-dev` (Backend Development):** The active engineering branch containing PR #95 integration bridges, Invariant I1 server-side dues enforcement, object storage, and the Phase P0 DevOps / CI/CT quality framework.
+4. **Reconciliation & Synchronization:** Both `dev` and `backend-dev` have reconciled `origin/main` commit `598f34d` (PR #97 squash merge) and are aligned with 0 merge conflicts.
 
 ---
 
 ## Summary of Changes
 
-This Pull Request merges `backend-dev` directly into `main`, delivering the complete backend bridge for frontend **PR #95**, hardening multi-rail payment ingress against **Invariant I1 (Server-Side Dues Derivation)**, implementing production **Supabase Object Storage** for member avatars and community logos, locking **ADR-013 Soroban Smart Contract Multisig Thresholds**, and establishing the **Phase P0 DevOps Automation, CI/CT Pipeline Hardening, and the 10-Stage Meticulous Pre-PR Quality Gate**.
+This Pull Request suite delivers the complete backend bridge for frontend **PR #95**, hardening multi-rail payment ingress against **Invariant I1 (Server-Side Dues Derivation)**, implementing production **Supabase Object Storage** for member avatars and community logos, locking **ADR-013 Soroban Smart Contract Multisig Thresholds**, and establishing the **Phase P0 DevOps Automation, CI/CT Pipeline Hardening, and the 10-Stage Meticulous Pre-PR Quality Gate**.
 
 It cleanly integrates on top of `origin/main` while strictly adhering to the frontend boundary directive (**zero modifications inside `app/src`**).
 
