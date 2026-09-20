@@ -76,10 +76,12 @@ jobs:
         run: npm audit --audit-level=critical
 
       - name: Verify 100% Cloudflare Edge Router Route Coverage
-        run: node ../scripts/devops/verify-edge-router.mjs
+        run: node scripts/devops/verify-edge-router.mjs
+        working-directory: .
 
       - name: Transactional Database Migration DDL Check (Dry-Run)
-        run: node ../scripts/devops/migrate-database.mjs --dry-run
+        run: node scripts/devops/migrate-database.mjs --dry-run
+        working-directory: .
 
   test:
     name: Unit tests
