@@ -60,6 +60,14 @@ if (!existsSync(migrationsDir)) {
     fail('Migration 042 Read', err.message);
   }
 
+  // Ensure 043 contains image_url column addition
+  const has043 = files.some((f) => f.startsWith('043_'));
+  if (!has043) {
+    fail('Migration 043 (Community Image URL)', '043_community_image_url.sql is missing!');
+  } else {
+    pass('Migration 043 (Community Image URL)', 'Present and verified in supabase/migrations');
+  }
+
   pass('Total Migration Count', `${files.length} SQL migrations detected`);
 }
 

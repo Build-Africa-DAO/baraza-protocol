@@ -23,3 +23,27 @@ id = "baraza-supabase-hyperdrive-id"
 [triggers]
 crons = ["*/5 * * * *", "*/10 * * * *"]
 
+# Staging Environment Profile
+[env.staging]
+name = "baraza-protocol-staging"
+pages_build_output_dir = "app/dist"
+
+[env.staging.vars]
+STELLAR_NETWORK = "testnet"
+STELLAR_HORIZON_URL = "https://horizon-testnet.stellar.org"
+STELLAR_SOROBAN_RPC = "https://soroban-testnet.stellar.org"
+VITE_SITE_URL = "https://staging.baraza-protocol.pages.dev"
+ENVIRONMENT = "staging"
+
+# Production Environment Profile
+[env.production]
+name = "baraza-protocol"
+pages_build_output_dir = "app/dist"
+
+[env.production.vars]
+STELLAR_NETWORK = "public"
+STELLAR_HORIZON_URL = "https://horizon.stellar.org"
+STELLAR_SOROBAN_RPC = "https://soroban-rpc.mainnet.stellar.org"
+VITE_SITE_URL = "https://barazaprotocol.com"
+ENVIRONMENT = "production"
+
