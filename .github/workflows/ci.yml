@@ -12,8 +12,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  protocol-and-hygiene:
-    name: Protocol & Git Hygiene Gate
+  protocol:
+    name: Protocol Drift
     runs-on: ubuntu-latest
 
     steps:
@@ -47,8 +47,8 @@ jobs:
       - name: Pre-flight Production Readiness Verification
         run: node scripts/validate-production-readiness.mjs
 
-  static-analysis-and-security:
-    name: Static Analysis & Security Gate
+  check:
+    name: Typecheck & Lint
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -82,7 +82,7 @@ jobs:
         run: node ../scripts/devops/migrate-database.mjs --dry-run
 
   test:
-    name: Database Integration & Unit Tests
+    name: Unit tests
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -116,9 +116,9 @@ jobs:
         run: npm test
 
   build:
-    name: Build & Package Bundle
+    name: Build
     runs-on: ubuntu-latest
-    needs: [protocol-and-hygiene, static-analysis-and-security, test]
+    needs: [protocol, check, test]
     defaults:
       run:
         working-directory: app
