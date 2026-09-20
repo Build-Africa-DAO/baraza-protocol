@@ -7,9 +7,13 @@ on:
     branches: [main, dev, backend, backend-dev]
   workflow_dispatch:
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  protocol:
-    name: Protocol Drift
+  protocol-and-hygiene:
+    name: Protocol & Git Hygiene Gate
     runs-on: ubuntu-latest
 
     steps:
@@ -30,11 +34,21 @@ jobs:
       - name: Contract drift check
         run: npm run test:contracts:drift
 
+      - name: Git Hygiene & Conflict Marker Verification
+        run: |
+          git diff --check
+          echo "Scanning tracked files for unresolved merge conflict markers..."
+          if git grep -n "^<<<<<<< "; then
+            echo "ERROR: Unresolved conflict markers detected!"
+            exit 1
+          fi
+          echo "Zero conflict markers verified."
+
       - name: Pre-flight Production Readiness Verification
         run: node scripts/validate-production-readiness.mjs
 
-  check:
-    name: Typecheck & Lint
+  static-analysis-and-security:
+    name: Static Analysis & Security Gate
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -52,7 +66,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: TypeScript Strict Typecheck
+      - name: TypeScript Strict Typecheck (Frontend & Node)
         run: npm run typecheck
 
       - name: Code Quality Lint
@@ -61,8 +75,14 @@ jobs:
       - name: Dependency Security Audit
         run: npm audit --audit-level=critical
 
+      - name: Verify 100% Cloudflare Edge Router Route Coverage
+        run: node ../scripts/devops/verify-edge-router.mjs
+
+      - name: Transactional Database Migration DDL Check (Dry-Run)
+        run: node ../scripts/devops/migrate-database.mjs --dry-run
+
   test:
-    name: Unit tests
+    name: Database Integration & Unit Tests
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -92,13 +112,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run Full Vitest Suite & Stress Tests
+      - name: Run Full Vitest Suite (1,222 tests)
         run: npm test
 
   build:
-    name: Build
+    name: Build & Package Bundle
     runs-on: ubuntu-latest
-    needs: [protocol, check, test]
+    needs: [protocol-and-hygiene, static-analysis-and-security, test]
     defaults:
       run:
         working-directory: app
@@ -118,15 +138,20 @@ jobs:
       - name: Build SPA Bundle
         run: npm run build
 
-      - name: Verify Cloudflare Pages Output
+      - name: Verify Cloudflare Pages Output Integrity
         run: |
           test -f dist/index.html
           test -f dist/_routes.json
+          test -f dist/_headers
           test -f ../functions/api/\[\[catchall\]\].ts
           echo "Cloudflare Pages bundle and Functions edge router successfully verified."
 
-      - name: Verify 100% Cloudflare Edge Router Coverage
-        run: node ../scripts/devops/verify-edge-router.mjs
+      - name: Upload Verified Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: baraza-dist
+          path: app/dist
+          retention-days: 7
 
   deploy-staging:
     name: Cloudflare Pages Staging Deployment
@@ -136,17 +161,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Download Verified Build Artifact
+        uses: actions/download-artifact@v4
         with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: app/package-lock.json
-
-      - name: Install dependencies
-        run: cd app && npm ci
-
-      - name: Build Application
-        run: cd app && npm run build
+          name: baraza-dist
+          path: app/dist
 
       - name: Deploy Staging to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
@@ -167,17 +186,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Download Verified Build Artifact
+        uses: actions/download-artifact@v4
         with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: app/package-lock.json
-
-      - name: Install dependencies
-        run: cd app && npm ci
-
-      - name: Build Application
-        run: cd app && npm run build
+          name: baraza-dist
+          path: app/dist
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3

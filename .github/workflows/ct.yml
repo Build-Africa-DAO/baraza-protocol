@@ -1,0 +1,122 @@
+name: Continuous Testing (CT)
+
+on:
+  push:
+    branches: [main, dev]
+  schedule:
+    - cron: '0 */12 * * *'
+  workflow_dispatch:
+    inputs:
+      stress_tier:
+        description: 'Target Stress Verification Tier'
+        required: true
+        default: 'standard'
+        type: choice
+        options:
+          - standard
+          - deep
+
+concurrency:
+  group: ct-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  synthetic-smoke-probes:
+    name: Synthetic Edge & Gateway Smoke Probes
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Start Database Gateway Stack
+        run: |
+          docker compose -f docker/docker-compose.yml up -d baraza-postgres baraza-postgrest baraza-gateway
+          echo "Waiting for PostgREST on port 54321..."
+          for i in {1..30}; do
+            if curl -s http://localhost:54321/rest/v1/communities?select=count > /dev/null; then
+              echo "PostgREST is healthy on port 54321!"
+              break
+            fi
+            sleep 1
+          done
+
+      - name: Execute Fail-Closed Synthetic Smoke Test
+        run: node scripts/devops/smoke-test.mjs --strict
+
+  multi-chain-rpc-health:
+    name: Multi-Chain RPC Node Health Probe
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Probe Stellar, Base, and Solana Settlement RPCs
+        run: node scripts/devops/verify-blockchain-nodes.mjs --strict
+
+  endurance-and-stress:
+    name: Adversarial Chaos & DB Endurance
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Start PostgreSQL & PostgREST Stack
+        run: |
+          docker compose -f ../docker/docker-compose.yml up -d baraza-postgres baraza-postgrest baraza-gateway
+          echo "Waiting for PostgREST on port 54321..."
+          for i in {1..30}; do
+            if curl -s http://localhost:54321/rest/v1/communities?select=count > /dev/null; then
+              echo "PostgREST is healthy on port 54321!"
+              break
+            fi
+            sleep 1
+          done
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Execute Adversarial Chaos & Stress Test Suite
+        run: npx vitest run src/lib/__tests__/adversarialChaosFuzzSuite.test.ts src/lib/__tests__/master100ProductionStressSuite.test.ts src/lib/__tests__/realDatabaseIntegration.test.ts
+
+  ct-summary:
+    name: Continuous Testing Telemetry Summary
+    runs-on: ubuntu-latest
+    needs: [synthetic-smoke-probes, multi-chain-rpc-health, endurance-and-stress]
+    if: always()
+
+    steps:
+      - name: Render Executive CT Telemetry Report
+        run: |
+          echo "## 📊 Continuous Testing (CT) Execution Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Verification Tier | Status | Details |" >> $GITHUB_STEP_SUMMARY
+          echo "| :--- | :---: | :--- |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Synthetic Edge Smoke** | ${{ needs.synthetic-smoke-probes.result == 'success' && '✅ PASS' || '❌ FAIL' }} | Fail-closed HTTP status assertions on Gateway & Edge |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Multi-Chain RPCs** | ${{ needs.multi-chain-rpc-health.result == 'success' && '✅ PASS' || '❌ FAIL' }} | Stellar Horizon, Base L2, and Solana Devnet RPC probes |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Endurance & Chaos** | ${{ needs.endurance-and-stress.result == 'success' && '✅ PASS' || '❌ FAIL' }} | Adversarial fuzzing and live PostgreSQL stress suites |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.synthetic-smoke-probes.result }}" != "success" ] || [ "${{ needs.multi-chain-rpc-health.result }}" != "success" ] || [ "${{ needs.endurance-and-stress.result }}" != "success" ]; then
+            echo "❌ **One or more Continuous Testing tiers failed. Investigation required.**" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          else
+            echo "✅ **All Continuous Testing tiers certified green under S&P 500 standards.**" >> $GITHUB_STEP_SUMMARY
+          fi

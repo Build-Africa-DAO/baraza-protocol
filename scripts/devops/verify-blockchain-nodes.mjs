@@ -82,7 +82,10 @@ async function probeEndpoint(net) {
   });
 }
 
-console.log('\nDispatching synthetic latency probes to all 3 settlement networks...\n');
+const args = process.argv.slice(2);
+const isStrict = args.includes('--strict');
+
+console.log(`\nDispatching synthetic latency probes to all ${NETWORKS.length} settlement networks (Mode: ${isStrict ? 'STRICT' : 'DIAGNOSTIC'})...\n`);
 
 Promise.all(NETWORKS.map(probeEndpoint)).then((results) => {
   let healthyCount = 0;
@@ -91,12 +94,18 @@ Promise.all(NETWORKS.map(probeEndpoint)).then((results) => {
       healthyCount++;
       console.log(`  [HEALTHY] ✅ ${r.name.padEnd(28)} : ${r.latency}ms RTT (HTTP ${r.code}) -> ${r.url}`);
     } else {
-      console.warn(`  [${r.status}] ⚠️  ${r.name.padEnd(28)} : ${r.latency}ms RTT -> ${r.error || `HTTP ${r.code}`}`);
+      console.error(`  [${r.status}] ❌ ${r.name.padEnd(28)} : ${r.latency}ms RTT -> ${r.error || `HTTP ${r.code}`}`);
     }
   }
 
   console.log('\n' + '-'.repeat(78));
   console.log(`Multi-Chain Health: ${healthyCount}/${results.length} networks reachable.`);
   console.log('-'.repeat(78) + '\n');
+
+  if (isStrict && healthyCount < results.length) {
+    console.error(`❌ CRITICAL: ${results.length - healthyCount} settlement networks degraded or unreachable. Failing closed.`);
+    process.exit(1);
+  }
+
   process.exit(0);
 });
