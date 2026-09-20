@@ -1,0 +1,53 @@
+name: Database Migration Runner
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target Deployment Environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      dry_run:
+        description: 'Execute in Dry-Run Mode (validate only)'
+        required: false
+        default: true
+        type: boolean
+  push:
+    branches:
+      - main
+    paths:
+      - 'supabase/migrations/**'
+
+jobs:
+  migrate:
+    name: Transactional Database Migrations
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || 'production' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Verify Migration Sequence & DDL Syntax
+        run: node scripts/devops/migrate-database.mjs --dry-run
+
+      - name: Execute Live Transactional Migrations
+        if: ${{ inputs.dry_run == false || github.event_name == 'push' }}
+        run: |
+          echo "Executing migrations against target database..."
+          node scripts/devops/migrate-database.mjs
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          POSTGRES_URL: ${{ secrets.POSTGRES_URL }}

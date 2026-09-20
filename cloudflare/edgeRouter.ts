@@ -16,6 +16,7 @@ import authVerify from '../app/api/auth/verify';
 import communitiesIndex from '../app/api/communities/index';
 import communitiesInvitesAccept from '../app/api/communities/invites/accept';
 import communitiesInvitesIndex from '../app/api/communities/invites/index';
+import communitiesLogo from '../app/api/communities/logo';
 import communitiesMembers from '../app/api/communities/members';
 import communitiesOfficers from '../app/api/communities/officers';
 import communitiesRetroAllocations from '../app/api/communities/retro-allocations';
@@ -51,7 +52,9 @@ import paymentOrdersDispute from '../app/api/payment-orders/dispute';
 import paymentOrdersStatus from '../app/api/payment-orders/status';
 import paymentOrdersStreak from '../app/api/payment-orders/streak';
 import paymentOrdersStreakBatch from '../app/api/payment-orders/streak-batch';
+import paymentsAirtelStk from '../app/api/payments/airtel/stk';
 import paymentsBrzaMembership from '../app/api/payments/brza-membership';
+import paymentsCardCheckout from '../app/api/payments/card/checkout';
 import paymentsExceptionsResolve from '../app/api/payments/exceptions/resolve';
 import paymentsKotani from '../app/api/payments/kotani';
 import paymentsMinisend from '../app/api/payments/minisend';
@@ -61,6 +64,7 @@ import paymentsReconcileBrzaMembership from '../app/api/payments/reconcile-brza-
 import stellarCreatePaymentIntent from '../app/api/stellar/create-payment-intent';
 import stellarVerifyPayment from '../app/api/stellar/verify-payment';
 import treasuryInitialize from '../app/api/treasury/initialize';
+import userAvatar from '../app/api/user/avatar';
 import userMemberships from '../app/api/user/memberships';
 import userPushSubscribe from '../app/api/user/notifications/push-subscribe';
 import userProfile from '../app/api/user/profile';
@@ -85,6 +89,7 @@ export const routeTable: Record<string, ApiHandler> = {
   '/api/communities': communitiesIndex,
   '/api/communities/invites': communitiesInvitesIndex,
   '/api/communities/invites/accept': communitiesInvitesAccept,
+  '/api/communities/logo': communitiesLogo,
   '/api/communities/members': communitiesMembers,
   '/api/communities/officers': communitiesOfficers,
   '/api/communities/retro-allocations': communitiesRetroAllocations,
@@ -119,7 +124,9 @@ export const routeTable: Record<string, ApiHandler> = {
   '/api/payment-orders/status': paymentOrdersStatus,
   '/api/payment-orders/streak': paymentOrdersStreak,
   '/api/payment-orders/streak-batch': paymentOrdersStreakBatch,
+  '/api/payments/airtel/stk': paymentsAirtelStk,
   '/api/payments/brza-membership': paymentsBrzaMembership,
+  '/api/payments/card/checkout': paymentsCardCheckout,
   '/api/payments/exceptions/resolve': paymentsExceptionsResolve,
   '/api/payments/kotani': paymentsKotani,
   '/api/payments/minisend': paymentsMinisend,
@@ -129,6 +136,7 @@ export const routeTable: Record<string, ApiHandler> = {
   '/api/stellar/create-payment-intent': stellarCreatePaymentIntent,
   '/api/stellar/verify-payment': stellarVerifyPayment,
   '/api/treasury/initialize': treasuryInitialize,
+  '/api/user/avatar': userAvatar,
   '/api/user/memberships': userMemberships,
   '/api/user/notifications/push-subscribe': userPushSubscribe,
   '/api/user/profile': userProfile,
@@ -161,7 +169,13 @@ export async function dispatchApiRoute(req: Request): Promise<Response> {
     return dynamicCommunityInvites(req);
   }
 
-  // 3. Fallback 404 for unknown /api/* endpoints
+  // 3. Dynamic Route Pattern Match: /api/communities/:id/logo
+  const dynamicLogoMatch = pathname.match(/^\/api\/communities\/([^/]+)\/logo$/);
+  if (dynamicLogoMatch) {
+    return communitiesLogo(req);
+  }
+
+  // 4. Fallback 404 for unknown /api/* endpoints
   return new Response(
     JSON.stringify({
       error: 'not_found',

@@ -1,0 +1,74 @@
+# evolution-api/docker-compose.prod.yml
+# Standard: S&P 500 Enterprise Fintech / Evolution API Multi-Device WhatsApp Gateway
+# Hardened Production Configuration with Dedicated PostgreSQL & Redis State Storage
+
+version: '3.8'
+
+services:
+  evolution-api:
+    image: atendai/evolution-api:v2.1.2
+    container_name: baraza-evolution-api
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - SERVER_URL=https://whatsapp.barazaprotocol.com
+      - AUTHENTICATION_API_KEY=${EVOLUTION_API_KEY:-evolution_prod_secret_key_change_me}
+      - DATABASE_ENABLED=true
+      - DATABASE_CONNECTION_URI=postgresql://postgres:${POSTGRES_PASSWORD:-postgrespassword}@postgres:5432/evolution
+      - DATABASE_CLIENT_NAME=baraza_evolution
+      - CACHE_REDIS_ENABLED=true
+      - CACHE_REDIS_URI=redis://redis:6379/1
+      - CACHE_REDIS_PREFIX_KEY=baraza_evolution
+      - WEBHOOK_GLOBAL_URL=https://barazaprotocol.com/api/webhooks/whatsapp
+      - WEBHOOK_GLOBAL_ENABLED=true
+      - WEBHOOK_GLOBAL_WEBHOOK_BY_EVENTS=true
+      - WEBHOOK_EVENTS_MESSAGES_UPSERT=true
+      - WEBHOOK_EVENTS_MESSAGES_UPDATE=true
+      - QRCODE_LIMIT=30
+    depends_on:
+      - redis
+      - postgres
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 1536M
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: baraza-evolution-redis
+    restart: always
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redispassword}
+    volumes:
+      - evolution_redis_data:/data
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: baraza-evolution-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgrespassword}
+      POSTGRES_DB: evolution
+    volumes:
+      - evolution_pg_data:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+
+volumes:
+  evolution_redis_data:
+  evolution_pg_data:

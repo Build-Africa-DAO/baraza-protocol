@@ -116,8 +116,10 @@ export default {
 
       const apiBase = env.API_BASE_URL || env.VITE_SITE_URL || 'http://127.0.0.1:3000';
       const results: CronDispatchResult[] = await Promise.all([
-        executeCronTask('/api/cron/sweep-stale-orders', 'GET', apiBase, secret),
-        executeCronTask('/api/compliance/sasra-monitoring', 'POST', apiBase, secret),
+        executeCronTask('/api/cron/promote-orders', 'POST', apiBase, secret),
+        executeCronTask('/api/cron/reconcile-treasury', 'POST', apiBase, secret),
+        executeCronTask('/api/cron/monitor-compliance', 'POST', apiBase, secret),
+        executeCronTask('/api/cron/settle-retro-allocations', 'POST', apiBase, secret),
       ]);
 
       return new Response(JSON.stringify({ ok: true, results }), {

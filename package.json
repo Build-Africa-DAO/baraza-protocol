@@ -7,7 +7,9 @@
     "protocol:artifacts:sync": "node scripts/sync-protocol-artifacts.mjs",
     "protocol:artifacts:check": "node scripts/sync-protocol-artifacts.mjs --check",
     "test:contracts:smoke": "node tests/anchor-smoke.mjs",
-    "test:contracts:drift": "node tests/anchor-smoke.mjs --drift-only"
+    "test:contracts:drift": "node tests/anchor-smoke.mjs --drift-only",
+    "verify:pr": "node scripts/devops/verify-pr.mjs",
+    "devops:preprocurement": "node scripts/devops/run-all-preprocurement.mjs"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",
