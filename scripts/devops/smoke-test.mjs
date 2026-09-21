@@ -41,12 +41,14 @@ async function runSmokeTests() {
       }
     }
 
-    const isGateway = baseUrl.includes('54321') || baseUrl.includes('/rest/v1');
+    const isGateway = baseUrl.includes('54321') || baseUrl.includes('supabase.co') || baseUrl.includes('/rest/v1');
+    const cleanBaseUrl = baseUrl.replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '');
+    const authKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || 'test';
     const routes = isGateway
       ? [
-          { path: '/rest/v1/communities?select=count', headers: { apikey: process.env.SUPABASE_ANON_KEY || 'test' }, expected: 200 },
-          { path: '/rest/v1/payment_orders?select=count', headers: { apikey: process.env.SUPABASE_ANON_KEY || 'test' }, expected: 200 },
-          { path: '/rest/v1/nonexistent_table_probe', headers: { apikey: process.env.SUPABASE_ANON_KEY || 'test' }, expected: [400, 404] },
+          { path: '/rest/v1/communities?select=count', headers: { apikey: authKey, Authorization: `Bearer ${authKey}` }, expected: 200 },
+          { path: '/rest/v1/payment_orders?select=count', headers: { apikey: authKey, Authorization: `Bearer ${authKey}` }, expected: 200 },
+          { path: '/rest/v1/nonexistent_table_probe', headers: { apikey: authKey, Authorization: `Bearer ${authKey}` }, expected: [400, 404] },
         ]
       : [
           { path: '/api/health/live', expected: 200 },
@@ -61,7 +63,7 @@ async function runSmokeTests() {
         signal: AbortSignal.timeout(5000),
         headers: r.headers || {},
       };
-      const res = await fetch(`${baseUrl}${r.path}`, fetchOpts).catch((e) => ({ status: 0, error: e.message }));
+      const res = await fetch(`${cleanBaseUrl}${r.path}`, fetchOpts).catch((e) => ({ status: 0, error: e.message }));
       const expected = Array.isArray(r.expected) ? r.expected : [r.expected];
       if (expected.includes(res.status)) {
         passed++;
