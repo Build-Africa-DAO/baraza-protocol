@@ -52,7 +52,7 @@ Before deploying production services, DevOps must provision and configure the fo
 | # | Provider / Service | Tier / Plan | Purpose in Protocol | Dashboard / Console Link | Status |
 | :- | :--- | :---: | :--- | :--- | :---: |
 | **1** | **Cloudflare** | Free / Standard | Apex DNS, WAF, Workers Static Assets, Edge Functions, Email Routing | [dash.cloudflare.com](https://dash.cloudflare.com) | **✅ LIVE** (`barazaprotocol.com`, `www`) |
-| **2** | **Supabase** | Free Tier (`eu-west-1`) | PostgreSQL 16 Managed DB (`jwoibelpyvemhzazccym`), RLS, PostgREST | [app.supabase.com](https://app.supabase.com) | **✅ PROVISIONED** (42 Migrations Ready) |
+| **2** | **Supabase** | Free Tier (`eu-west-1`) | PostgreSQL 16 Managed DB (`jwoibelpyvemhzazccym`), 39 Tables, RLS Enabled, PostgREST | [app.supabase.com](https://app.supabase.com) | **✅ LIVE & MIGRATED** (Migrations 000–043 Applied & Certified) |
 | **3** | **Safaricom Daraja** | Production Go-Live | Inbound M-Pesa STK Push, C2B Paybill, B2C Disbursal, Status Queries | [developer.safaricom.co.ke](https://developer.safaricom.co.ke) | `[ ] PENDING` |
 | **4** | **Minisend** | Production Enterprise | USDC-to-M-Pesa B2C instant settlement off-ramp | [minisend.xyz](https://minisend.xyz) | `[ ] PENDING` |
 | **5** | **Kotani Pay** | Production | Multi-rail crypto-to-fiat bridge & IPN callbacks | [kotanipay.com](https://kotanipay.com) | `[ ] PENDING` |
@@ -191,14 +191,15 @@ node scripts/devops/migrate-database.mjs --dry-run
     [x] 6. Supabase PostgreSQL 16 project provisioned (jwoibelpyvemhzazccym in eu-west-1).
     [x] 7. 42 sequential SQL migrations certified in dry-run mode.
 
-[ ] PHASE 0B: PRODUCTION DATABASE MIGRATION EXECUTION
-    [ ] 8. Execute migrate-database.mjs with live DATABASE_URL to create all 38 tables & RLS.
+[x] PHASE 0B: PRODUCTION DATABASE MIGRATION EXECUTION
+    [x] 8. Execute consolidated_schema.sql on live Supabase instance: all 39 tables created, RLS enabled, atomic saga stored procedures compiled, storage buckets initialized, and circuit breaker active.
 
 [ ] PHASE 1: FREE DEVELOPER INTEGRATION SERVICES (PROGRESSIVE ONBOARDING)
-    [ ] 9. Google Cloud Console OAuth 2.0 Web Client ID generated.
-    [ ] 10. Privy Free Developer App ID configured for embedded MPC wallets.
-    [ ] 11. Upstash Redis Free instance created for rate-limiting mutexes.
-    [ ] 12. WalletConnect Reown Project ID generated for mobile Web3 deep linking.
+    [ ] 9. Wire live Supabase credentials (VITE_SUPABASE_URL & anon key) into app production environment & Cloudflare runtime.
+    [ ] 10. Google Cloud Console OAuth 2.0 Web Client ID generated (Sign-In with Google).
+    [ ] 11. Privy Free Developer App ID configured for embedded MPC wallets.
+    [ ] 12. Upstash Redis Free instance created for rate-limiting mutexes.
+    [ ] 13. WalletConnect Reown Project ID generated for mobile Web3 deep linking.
 ```
 
 ---
