@@ -60,7 +60,7 @@ Before deploying production services, DevOps must provision and configure the fo
 | **7** | **Paystack** | Live Merchant | Card & International Bank Ingress | [dashboard.paystack.com](https://dashboard.paystack.com) | `[ ] PENDING` |
 | **8** | **Privy** | Growth / Dev Plan | Embedded Web3 non-custodial MPC wallet generation & phone OTP | [dashboard.privy.io](https://dashboard.privy.io) | **✅ CONFIGURED** (App ID Verified) |
 | **9** | **Stellar Horizon / RPC** | Dedicated / Gateway.fm | Soroban RPC mainnet queries, ledger ingestion, sequence synchronization | [stellar.org](https://stellar.org) | `[ ] PENDING` |
-| **10**| **Base L2 / Alchemy** | Growth Plan | Base EVM Mainnet RPC & Gnosis Safe 1.4.1 execution | [alchemy.com](https://alchemy.com) | `[ ] PENDING` |
+| **10**| **Base L2 / Alchemy** | Free / Growth | Base EVM Mainnet RPC & Gnosis Safe 1.4.1 execution | [alchemy.com](https://alchemy.com) | **✅ CONFIGURED** (Base Mainnet Live RPC Verified) |
 | **11**| **Anthropic** | Commercial API | Claude 3.5 Sonnet token inference for Akili AI Copilot & legal filings | [console.anthropic.com](https://console.anthropic.com) | `[ ] PENDING` |
 | **12**| **Google Cloud Platform**| Free / Standard | Google Identity Services OAuth 2.0 Web Client for Sign-In with Google | [console.cloud.google.com](https://console.cloud.google.com) | **✅ CONFIGURED** (Client ID Verified) |
 | **13**| **SendGrid (Twilio)** | Essentials ($19/mo) | Domain-authenticated transactional email delivery (`no-reply@barazaprotocol.com`) | [app.sendgrid.com](https://app.sendgrid.com) | `[ ] PENDING` |
@@ -200,6 +200,7 @@ node scripts/devops/migrate-database.mjs --dry-run
     [x] 11. Google Cloud Console OAuth 2.0 Web Client ID generated (Sign-In with Google).
     [x] 12. Privy Free Developer App ID configured for embedded MPC wallets.
     [x] 13. WalletConnect Reown Project ID generated and live RPC authenticated.
+    [x] 14. Alchemy Base L2 RPC configured and live verified (HTTP 200 Block Height Authenticated).
 ```
 
 ---
