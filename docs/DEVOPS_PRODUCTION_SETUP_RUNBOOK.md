@@ -65,7 +65,7 @@ Before deploying production services, DevOps must provision and configure the fo
 | **12**| **Google Cloud Platform**| Free / Standard | Google Identity Services OAuth 2.0 Web Client for Sign-In with Google | [console.cloud.google.com](https://console.cloud.google.com) | **✅ CONFIGURED** (Client ID Verified) |
 | **13**| **SendGrid (Twilio)** | Essentials ($19/mo) | Domain-authenticated transactional email delivery (`no-reply@barazaprotocol.com`) | [app.sendgrid.com](https://app.sendgrid.com) | `[ ] PENDING` |
 | **14**| **Upstash / Redis** | Free Tier (10k cmds/day) | Distributed leaky-bucket rate limiter, payout mutex locks, bot state caching | [console.upstash.com](https://console.upstash.com) | **✅ LIVE & CERTIFIED** (`baraza-redis-prod` in `eu-west-1`) |
-| **15**| **WalletConnect Cloud** | Free / Standard | AppKit / Web3Modal project ID for multi-wallet mobile deep linking | [cloud.walletconnect.com](https://cloud.walletconnect.com) | `[ ] PENDING` |
+| **15**| **WalletConnect Cloud** | Free / Standard | AppKit / Web3Modal project ID for multi-wallet mobile deep linking | [cloud.walletconnect.com](https://cloud.walletconnect.com) | **✅ CONFIGURED** (Project ID Live RPC Verified) |
 
 ---
 
@@ -194,12 +194,12 @@ node scripts/devops/migrate-database.mjs --dry-run
 [x] PHASE 0B: PRODUCTION DATABASE MIGRATION EXECUTION
     [x] 8. Execute consolidated_schema.sql on live Supabase instance: all 39 tables created, RLS enabled, atomic saga stored procedures compiled, storage buckets initialized, and circuit breaker active.
 
-[ ] PHASE 1: FREE DEVELOPER INTEGRATION SERVICES (PROGRESSIVE ONBOARDING)
+[x] PHASE 1: FREE DEVELOPER INTEGRATION SERVICES (PROGRESSIVE ONBOARDING)
     [x] 9. Wire live Supabase credentials (VITE_SUPABASE_URL & anon key) into app production environment & Cloudflare runtime.
     [x] 10. Upstash Redis Free instance created and certified for distributed token-bucket rate limiting.
     [x] 11. Google Cloud Console OAuth 2.0 Web Client ID generated (Sign-In with Google).
     [x] 12. Privy Free Developer App ID configured for embedded MPC wallets.
-    [ ] 13. WalletConnect Reown Project ID generated for mobile Web3 deep linking.
+    [x] 13. WalletConnect Reown Project ID generated and live RPC authenticated.
 ```
 
 ---
