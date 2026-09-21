@@ -1,7 +1,8 @@
 name = "baraza-protocol"
 compatibility_date = "2026-08-01"
 compatibility_flags = ["nodejs_compat"]
-pages_build_output_dir = "app/dist"
+[assets]
+directory = "app/dist"
 
 [vars]
 STELLAR_NETWORK = "testnet"
@@ -22,7 +23,8 @@ id = "baraza-supabase-hyperdrive-id"
 # Preview / Staging Environment Profile (Cloudflare Pages uses 'preview' for non-production branches)
 [env.preview]
 name = "baraza-protocol-staging"
-pages_build_output_dir = "app/dist"
+[env.preview.assets]
+directory = "app/dist"
 
 [env.preview.vars]
 STELLAR_NETWORK = "testnet"
@@ -34,7 +36,8 @@ ENVIRONMENT = "staging"
 # Production Environment Profile
 [env.production]
 name = "baraza-protocol"
-pages_build_output_dir = "app/dist"
+[env.production.assets]
+directory = "app/dist"
 
 [env.production.vars]
 STELLAR_NETWORK = "public"
