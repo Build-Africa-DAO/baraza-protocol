@@ -59,7 +59,7 @@ Before deploying production services, DevOps must provision and configure the fo
 | **6** | **Africa's Talking** | Production Prepaid | USSD Gateway (`*384*...#`), High-throughput SMS OTP, Alphanumeric Sender ID | [account.africastalking.com](https://account.africastalking.com) | `[ ] PENDING` |
 | **7** | **Paystack** | Live Merchant | Card & International Bank Ingress | [dashboard.paystack.com](https://dashboard.paystack.com) | `[ ] PENDING` |
 | **8** | **Privy** | Growth / Dev Plan | Embedded Web3 non-custodial MPC wallet generation & phone OTP | [dashboard.privy.io](https://dashboard.privy.io) | **✅ CONFIGURED** (App ID Verified) |
-| **9** | **Stellar Horizon / RPC** | Dedicated / Gateway.fm | Soroban RPC mainnet queries, ledger ingestion, sequence synchronization | [stellar.org](https://stellar.org) | `[ ] PENDING` |
+| **9** | **Stellar Horizon / RPC** | Dedicated / Gateway.fm | Soroban RPC mainnet queries, ledger ingestion, sequence synchronization | [stellar.org](https://stellar.org) | **✅ CONFIGURED** (Mainnet Horizon & Soroban Gateway.fm RPC Verified) |
 | **10**| **Base L2 / Alchemy** | Free / Growth | Base EVM Mainnet RPC & Gnosis Safe 1.4.1 execution | [alchemy.com](https://alchemy.com) | **✅ CONFIGURED** (Base Mainnet Live RPC Verified) |
 | **11**| **Anthropic** | Commercial API | Claude 3.5 Sonnet token inference for Akili AI Copilot & legal filings | [console.anthropic.com](https://console.anthropic.com) | `[ ] PENDING` |
 | **12**| **Google Cloud Platform**| Free / Standard | Google Identity Services OAuth 2.0 Web Client for Sign-In with Google | [console.cloud.google.com](https://console.cloud.google.com) | **✅ CONFIGURED** (Client ID Verified) |
@@ -201,6 +201,7 @@ node scripts/devops/migrate-database.mjs --dry-run
     [x] 12. Privy Free Developer App ID configured for embedded MPC wallets.
     [x] 13. WalletConnect Reown Project ID generated and live RPC authenticated.
     [x] 14. Alchemy Base L2 RPC configured and live verified (HTTP 200 Block Height Authenticated).
+    [x] 15. Stellar Mainnet Horizon & Soroban RPC configured and live verified (HTTP 200 & Gateway.fm Healthy).
 ```
 
 ---
