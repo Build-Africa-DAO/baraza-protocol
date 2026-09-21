@@ -7,12 +7,57 @@
 
 -- ========================================================
 -- PRE-MIGRATION: ENSURE AUTH SCHEMA AND JWT HELPERS EXIST
--- Idempotent: Compatible with Supabase Cloud & Local Postgres
+-- Idempotent & Privilege-Safe: Compatible with Supabase Cloud & Local Postgres
+-- (Supabase Cloud manages the auth schema natively with supabase_admin;
+--  these guards safely bypass creation when running as unprivileged postgres)
 -- ========================================================
-CREATE SCHEMA IF NOT EXISTS auth;
-CREATE OR REPLACE FUNCTION auth.role() RETURNS text LANGUAGE sql STABLE AS $$ SELECT coalesce(current_setting('request.jwt.claim.role', true), 'anon'); $$;
-CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT coalesce(nullif(current_setting('request.jwt.claim.sub', true), ''), '00000000-0000-0000-0000-000000000000')::uuid; $$;
-CREATE OR REPLACE FUNCTION auth.jwt() RETURNS jsonb LANGUAGE sql STABLE AS $$ SELECT coalesce(nullif(current_setting('request.jwt.claims', true), ''), '{}')::jsonb; $$;
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'auth') THEN
+    EXECUTE 'CREATE SCHEMA auth';
+  END IF;
+EXCEPTION WHEN insufficient_privilege THEN
+  NULL;
+END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_proc p 
+    JOIN pg_namespace n ON p.pronamespace = n.oid 
+    WHERE n.nspname = 'auth' AND p.proname = 'role'
+  ) THEN
+    EXECUTE 'CREATE FUNCTION auth.role() RETURNS text LANGUAGE sql STABLE AS ''SELECT coalesce(current_setting(''''request.jwt.claim.role'''', true), ''''anon'''');''';
+  END IF;
+EXCEPTION WHEN insufficient_privilege THEN
+  NULL;
+END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_proc p 
+    JOIN pg_namespace n ON p.pronamespace = n.oid 
+    WHERE n.nspname = 'auth' AND p.proname = 'uid'
+  ) THEN
+    EXECUTE 'CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS ''SELECT coalesce(nullif(current_setting(''''request.jwt.claim.sub'''', true), '''''''')::uuid, ''''00000000-0000-0000-0000-000000000000''''::uuid);''';
+  END IF;
+EXCEPTION WHEN insufficient_privilege THEN
+  NULL;
+END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_proc p 
+    JOIN pg_namespace n ON p.pronamespace = n.oid 
+    WHERE n.nspname = 'auth' AND p.proname = 'jwt'
+  ) THEN
+    EXECUTE 'CREATE FUNCTION auth.jwt() RETURNS jsonb LANGUAGE sql STABLE AS ''SELECT coalesce(nullif(current_setting(''''request.jwt.claims'''', true), '''''''')::jsonb, ''''{}''''::jsonb);''';
+  END IF;
+EXCEPTION WHEN insufficient_privilege THEN
+  NULL;
+END $$;
 
 -- >>> START MIGRATION: 000_base_communities.sql <<<
 -- 000_base_communities.sql
@@ -2279,16 +2324,18 @@ BEGIN;
 --    Wraps current_setting('request.jwt.claims') into JSONB, returning
 --    empty object if the setting is absent (safe fallback for local dev).
 -- ---------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION auth.jwt()
-RETURNS jsonb
-LANGUAGE sql
-STABLE
-AS $$
-  SELECT COALESCE(
-    current_setting('request.jwt.claims', true)::jsonb,
-    '{}'::jsonb
-  );
-$$;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_proc p 
+    JOIN pg_namespace n ON p.pronamespace = n.oid 
+    WHERE n.nspname = 'auth' AND p.proname = 'jwt'
+  ) THEN
+    EXECUTE 'CREATE FUNCTION auth.jwt() RETURNS jsonb LANGUAGE sql STABLE AS ''SELECT COALESCE(current_setting(''''request.jwt.claims'''', true)::jsonb, ''''{}''''::jsonb);''';
+  END IF;
+EXCEPTION WHEN insufficient_privilege THEN
+  NULL;
+END $$;
 
 -- ---------------------------------------------------------------------------
 -- 1. Expand public.members role domain to include 'secretary'
