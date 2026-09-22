@@ -58,7 +58,8 @@ Before deploying production services, DevOps must provision and configure the fo
 | **5** | **Kotani Pay** | Production | Multi-rail crypto-to-fiat bridge & IPN callbacks | [kotanipay.com](https://kotanipay.com) | `[ ] PENDING` |
 | **6** | **Africa's Talking** | Production Prepaid | USSD Gateway (`*384*...#`), High-throughput SMS OTP, Alphanumeric Sender ID (`BarazaProto`) | [account.africastalking.com](https://account.africastalking.com) | **✅ CONFIGURED & LIVE CERTIFIED** (Username `barazaprotocol`, ATPR-0005887 Submitted) |
 
-| **7** | **Paystack** | Live Merchant | Card & International Bank Ingress | [dashboard.paystack.com](https://dashboard.paystack.com) | `[ ] PENDING` |
+| **7** | **Paystack** | Live Merchant | Card & International Bank Ingress | [dashboard.paystack.com](https://dashboard.paystack.com) | **✅ CONFIGURED & LIVE CERTIFIED** (KES Balance HTTP 200 Authenticated) |
+
 | **8** | **Privy** | Growth / Dev Plan | Embedded Web3 non-custodial MPC wallet generation & phone OTP | [dashboard.privy.io](https://dashboard.privy.io) | **✅ CONFIGURED** (App ID Verified) |
 | **9** | **Stellar Horizon / RPC** | Dedicated / Gateway.fm | Soroban RPC mainnet queries, ledger ingestion, sequence synchronization | [stellar.org](https://stellar.org) | **✅ CONFIGURED** (Mainnet Horizon & Soroban Gateway.fm RPC Verified) |
 | **10**| **Base L2 / Alchemy** | Free / Growth | Base EVM Mainnet RPC & Gnosis Safe 1.4.1 execution | [alchemy.com](https://alchemy.com) | **✅ CONFIGURED** (Base Mainnet Live RPC Verified) |
@@ -209,6 +210,7 @@ node scripts/devops/migrate-database.mjs --dry-run
     [x] 19. All 10 Pre-Merge PR Verification stages passed with 100% clean Vitest suite execution (1,222 tests certified).
     [x] 20. Twilio API credentials provisioned and live authenticated (`AC58fb6b...`, Account `Baraza Protocol Production`).
     [x] 21. Africa's Talking API credentials provisioned and live authenticated (HTTP/2 201, App `barazaprotocol`, Sender ID `BarazaProto` submitted).
+    [x] 22. Paystack Card & Pan-African Ingress configured and live verified (HTTP 200 KES Balance authenticated, test keys active).
 ```
 
 ---
