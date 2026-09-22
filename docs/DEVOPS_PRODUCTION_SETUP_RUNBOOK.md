@@ -56,7 +56,8 @@ Before deploying production services, DevOps must provision and configure the fo
 | **3** | **Safaricom Daraja** | Production Go-Live | Inbound M-Pesa STK Push, C2B Paybill, B2C Disbursal, Status Queries | [developer.safaricom.co.ke](https://developer.safaricom.co.ke) | `[ ] PENDING` |
 | **4** | **Minisend** | Production Enterprise | USDC-to-M-Pesa B2C instant settlement off-ramp | [minisend.xyz](https://minisend.xyz) | `[ ] PENDING` |
 | **5** | **Kotani Pay** | Production | Multi-rail crypto-to-fiat bridge & IPN callbacks | [kotanipay.com](https://kotanipay.com) | `[ ] PENDING` |
-| **6** | **Africa's Talking** | Production Prepaid | USSD Gateway (`*384*...#`), High-throughput SMS OTP, Alphanumeric Sender ID | [account.africastalking.com](https://account.africastalking.com) | `[ ] PENDING` |
+| **6** | **Africa's Talking** | Production Prepaid | USSD Gateway (`*384*...#`), High-throughput SMS OTP, Alphanumeric Sender ID (`BarazaProto`) | [account.africastalking.com](https://account.africastalking.com) | **✅ CONFIGURED & LIVE CERTIFIED** (Username `barazaprotocol`, ATPR-0005887 Submitted) |
+
 | **7** | **Paystack** | Live Merchant | Card & International Bank Ingress | [dashboard.paystack.com](https://dashboard.paystack.com) | `[ ] PENDING` |
 | **8** | **Privy** | Growth / Dev Plan | Embedded Web3 non-custodial MPC wallet generation & phone OTP | [dashboard.privy.io](https://dashboard.privy.io) | **✅ CONFIGURED** (App ID Verified) |
 | **9** | **Stellar Horizon / RPC** | Dedicated / Gateway.fm | Soroban RPC mainnet queries, ledger ingestion, sequence synchronization | [stellar.org](https://stellar.org) | **✅ CONFIGURED** (Mainnet Horizon & Soroban Gateway.fm RPC Verified) |
@@ -206,6 +207,8 @@ node scripts/devops/migrate-database.mjs --dry-run
     [x] 17. Cloudflare Worker Edge Gateway router deployed with static assets (`cloudflare/worker.ts` + `edgeRouter.ts` at Version ID 10bda8a5).
     [x] 18. Synthetic Edge Smoke Probes live certified on barazaprotocol.com (`/api/health/live` 200, `/api/health/ready` 200 with database/stellar/redis healthy, `/api/health/metrics` 200).
     [x] 19. All 10 Pre-Merge PR Verification stages passed with 100% clean Vitest suite execution (1,222 tests certified).
+    [x] 20. Twilio API credentials provisioned and live authenticated (`AC58fb6b...`, Account `Baraza Protocol Production`).
+    [x] 21. Africa's Talking API credentials provisioned and live authenticated (HTTP/2 201, App `barazaprotocol`, Sender ID `BarazaProto` submitted).
 ```
 
 ---
