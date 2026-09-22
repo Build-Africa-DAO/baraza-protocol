@@ -56,7 +56,7 @@ Before deploying production services, DevOps must provision and configure the fo
 | **3** | **Safaricom Daraja** | Production Go-Live | Inbound M-Pesa STK Push, C2B Paybill, B2C Disbursal, Status Queries | [developer.safaricom.co.ke](https://developer.safaricom.co.ke) | `[ ] PENDING` |
 | **4** | **Minisend** | Production Enterprise | USDC-to-M-Pesa B2C instant settlement off-ramp | [minisend.xyz](https://minisend.xyz) | **✅ CONFIGURED & LIVE CERTIFIED** (Merchant API HTTP 201 Checkout Verified) |
 
-| **5** | **Kotani Pay** | Production | Multi-rail crypto-to-fiat bridge & IPN callbacks | [kotanipay.com](https://kotanipay.com) | `[ ] PENDING` |
+| **5** | **Kotani Pay** | Sandbox / Pre-Prod | Multi-rail crypto-to-fiat bridge & IPN callbacks | [kotanipay.com](https://kotanipay.com) | **✅ CONFIGURED** (Sandbox Integrator `6ab2ec14dc11802412901c4b` Active, Key & Secret Injected) |
 | **6** | **Africa's Talking** | Production Prepaid | USSD Gateway (`*384*...#`), High-throughput SMS OTP, Alphanumeric Sender ID (`BarazaProto`) | [account.africastalking.com](https://account.africastalking.com) | **✅ CONFIGURED & LIVE CERTIFIED** (Username `barazaprotocol`, ATPR-0005887 Submitted) |
 
 | **7** | **Paystack** | Live Merchant | Card & International Bank Ingress | [dashboard.paystack.com](https://dashboard.paystack.com) | **✅ CONFIGURED & LIVE CERTIFIED** (KES Balance HTTP 200 Authenticated) |
