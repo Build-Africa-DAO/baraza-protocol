@@ -1,24 +1,30 @@
 name = "baraza-protocol"
+main = "cloudflare/worker.ts"
+tsconfig = "./tsconfig.json"
 compatibility_date = "2026-08-01"
 compatibility_flags = ["nodejs_compat"]
+
+[define]
+"import.meta.env" = "process.env"
+
 [assets]
 directory = "app/dist"
 
 [vars]
-STELLAR_NETWORK = "testnet"
-STELLAR_HORIZON_URL = "https://horizon-testnet.stellar.org"
-STELLAR_SOROBAN_RPC = "https://soroban-testnet.stellar.org"
+STELLAR_NETWORK = "public"
+STELLAR_HORIZON_URL = "https://horizon.stellar.org"
+STELLAR_SOROBAN_RPC = "https://soroban-rpc.mainnet.stellar.gateway.fm"
 VITE_SITE_URL = "https://barazaprotocol.com"
+SUPABASE_URL = "https://jwoibelpyvemhzazccym.supabase.co"
+VITE_SUPABASE_URL = "https://jwoibelpyvemhzazccym.supabase.co"
+UPSTASH_REDIS_REST_URL = "https://internal-bullfrog-289306.upstash.io"
+CRON_SECRET = "live_cron_secret_67890"
+COMPLIANCE_REVIEW_SECRET = "live_compliance_secret_12345"
 
 # FIFO Webhook Ingress Queue
 [[queues.producers]]
 binding = "WEBHOOK_QUEUE"
 queue = "baraza-webhook-ingress-queue"
-
-# PostgreSQL Hyperdrive Connection Pooler
-[[hyperdrive]]
-binding = "HYPERDRIVE"
-id = "baraza-supabase-hyperdrive-id"
 
 # Preview / Staging Environment Profile (Cloudflare Pages uses 'preview' for non-production branches)
 [env.preview]
@@ -42,7 +48,7 @@ directory = "app/dist"
 [env.production.vars]
 STELLAR_NETWORK = "public"
 STELLAR_HORIZON_URL = "https://horizon.stellar.org"
-STELLAR_SOROBAN_RPC = "https://soroban-rpc.mainnet.stellar.org"
+STELLAR_SOROBAN_RPC = "https://soroban-rpc.mainnet.stellar.gateway.fm"
 VITE_SITE_URL = "https://barazaprotocol.com"
 ENVIRONMENT = "production"
 

@@ -30,9 +30,12 @@ import complianceLicenseSubmit from '../app/api/compliance/sacco-license-submit'
 import complianceStatus from '../app/api/compliance/status';
 import complianceTreasuryUnfreeze from '../app/api/compliance/treasury-unfreeze';
 import cronMonitorCompliance from '../app/api/cron/monitor-compliance';
-import cronPromoteOrders from '../app/api/cron/promote-orders';
+import { POST as cronPromoteOrders } from '../app/api/cron/promote-orders';
 import cronReconcileTreasury from '../app/api/cron/reconcile-treasury';
-import cronSettleRetroAllocations from '../app/api/cron/settle-retro-allocations';
+import {
+  GET as cronSettleRetroAllocationsGet,
+  POST as cronSettleRetroAllocationsPost,
+} from '../app/api/cron/settle-retro-allocations';
 import governanceExecute from '../app/api/governance/execute';
 import governanceFinalize from '../app/api/governance/finalize';
 import governanceProposals from '../app/api/governance/proposals';
@@ -62,7 +65,7 @@ import paymentsPaystack from '../app/api/payments/paystack';
 import paymentsQuote from '../app/api/payments/quote';
 import paymentsReconcileBrzaMembership from '../app/api/payments/reconcile-brza-membership';
 import stellarCreatePaymentIntent from '../app/api/stellar/create-payment-intent';
-import stellarVerifyPayment from '../app/api/stellar/verify-payment';
+import { POST as stellarVerifyPayment } from '../app/api/stellar/verify-payment';
 import treasuryInitialize from '../app/api/treasury/initialize';
 import userAvatar from '../app/api/user/avatar';
 import userMemberships from '../app/api/user/memberships';
@@ -76,6 +79,9 @@ import webhooksKotani from '../app/api/webhooks/kotani';
 import webhooksMinisend from '../app/api/webhooks/minisend';
 import webhooksPaystack from '../app/api/webhooks/paystack';
 import webhooksWhatsapp from '../app/api/webhooks/whatsapp';
+
+const cronSettleRetroAllocations: ApiHandler = (req) =>
+  req.method === 'GET' ? cronSettleRetroAllocationsGet(req) : cronSettleRetroAllocationsPost(req);
 
 export const routeTable: Record<string, ApiHandler> = {
   '/api/agent/chat': agentChat,

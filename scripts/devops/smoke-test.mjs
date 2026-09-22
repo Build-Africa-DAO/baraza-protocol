@@ -41,9 +41,17 @@ async function runSmokeTests() {
       }
     }
 
+    const DEFAULT_LOCAL_SERVICE_KEY =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE2MDAwMDAwMDAsImV4cCI6MjUwMDAwMDAwMH0.YEHFlsDyYXjxJ5oIZyJ6HuS62T6qaal7bGnWI5GxbRs';
+
     const isGateway = baseUrl.includes('54321') || baseUrl.includes('supabase.co') || baseUrl.includes('/rest/v1');
     const cleanBaseUrl = baseUrl.replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '');
-    const authKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || 'test';
+    const authKey =
+      process.env.SUPABASE_SERVICE_ROLE_KEY ||
+      process.env.SUPABASE_ANON_KEY ||
+      process.env.VITE_SUPABASE_ANON_KEY ||
+      process.env.SUPABASE_PUBLISHABLE_KEY ||
+      DEFAULT_LOCAL_SERVICE_KEY;
     const routes = isGateway
       ? [
           { path: '/rest/v1/communities?select=count', headers: { apikey: authKey, Authorization: `Bearer ${authKey}` }, expected: 200 },

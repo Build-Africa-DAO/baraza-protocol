@@ -16,9 +16,7 @@ export interface Env {
     send(message: unknown): Promise<void>;
   };
   HYPERDRIVE?: unknown;
-  ASSETS?: {
-    fetch(req: Request): Promise<Response>;
-  };
+  [key: string]: unknown;
 }
 
 export interface ScheduledController {
@@ -80,6 +78,15 @@ export default {
    * HTTP Gateway Handler: Edge health checking, security headers, and request forwarding
    */
   async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    // Populate process.env with runtime env bindings for API routes
+    if (typeof process !== 'undefined' && process.env) {
+      for (const [k, v] of Object.entries(env)) {
+        if (typeof v === 'string') {
+          process.env[k] = v;
+        }
+      }
+    }
+
     const url = new URL(req.url);
 
     // Edge Health Check Endpoint
