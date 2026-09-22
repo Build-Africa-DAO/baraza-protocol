@@ -93,9 +93,9 @@ All production secrets must be populated in **Cloudflare Workers/Pages → Setti
 | `VITE_STELLAR_NETWORK` | **YES** | `mainnet` | Target Stellar network (`mainnet` or `testnet`). |
 | `VITE_STELLAR_HORIZON_URL` | **YES** | `https://horizon.stellar.org` | Public Stellar Horizon REST API. |
 | `VITE_STELLAR_NETWORK_PASSPHRASE`| **YES**| `Public Global Stellar Network ; September 2015` | Canonical Stellar Mainnet passphrase. |
-| `VITE_STELLAR_TREASURY_ACCOUNT`| **YES**| `G...` | Primary community dues clearing G-Account on Stellar. |
-| `VITE_BRZA_ISSUER_ADDRESS` | **YES** | `G...` | Stellar public key of the BRZA governance asset issuer. |
-| `VITE_BRZA_DISTRIBUTOR_ADDRESS`| **YES**| `G...` | Stellar public key of the liquid BRZA distributor. |
+| `VITE_STELLAR_TREASURY_ACCOUNT`| **YES**| `GBWYEKMRTZNAICRW5MMZ4SI4EVSKOGYJSI35B3ZFAAUZBIGQV5D2W5DP` | Primary community dues clearing G-Account on Stellar. |
+| `VITE_BRZA_ISSUER_ADDRESS` | **YES** | `GBBF2LCAN2OWPCSZ5QD3NCJGIRPUPLJLBOP4WUWVJE7M5QFXECIVG7WK` | Stellar public key of the BRZA governance asset issuer. |
+| `VITE_BRZA_DISTRIBUTOR_ADDRESS`| **YES**| `GATORJYDPE37QEE2ZV57SRTFLDJQWVDG3EO2DRJTKMOCBJSXYNZ4WOZ7` | Stellar public key of the liquid BRZA distributor. |
 | `VITE_STELLAR_TREASURY_VAULT_ID`| **YES**| `C...` (56 chars) | Soroban contract ID for `treasury_vault`. |
 | `VITE_STELLAR_GOVERNANCE_ID` | **YES** | `C...` (56 chars) | Soroban contract ID for `governance`. |
 | `VITE_STELLAR_MEMBERSHIP_ID` | **YES** | `C...` (56 chars) | Soroban contract ID for `membership`. |
@@ -103,7 +103,7 @@ All production secrets must be populated in **Cloudflare Workers/Pages → Setti
 | `VITE_STELLAR_PAYMENT_ATTESTATION_ID`| **YES**| `C...` (56 chars) | Soroban contract ID for `payment_attestation`. |
 | `VITE_BASE_MANAGER_ADDRESS` | NO | `0x3ac0e64fe2931f8e082c6bb29283540de9b5371c` | Base mainnet Baraza Manager factory address. |
 | `VITE_BASE_TESTNET` | **YES** | `false` | Set to `false` for Base mainnet (Chain ID 8453). |
-| `VITE_ADMIN_WALLETS` | **YES** | `G...,0x...` | Comma-delimited list of system architect and root admin wallets. |
+| `VITE_ADMIN_WALLETS` | **YES** | `GBWYEKMRTZNAICRW5MMZ4SI4EVSKOGYJSI35B3ZFAAUZBIGQV5D2W5DP` | Comma-delimited list of system architect and root admin wallets. |
 
 ---
 
