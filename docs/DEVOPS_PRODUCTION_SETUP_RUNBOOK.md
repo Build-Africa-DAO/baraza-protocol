@@ -202,6 +202,10 @@ node scripts/devops/migrate-database.mjs --dry-run
     [x] 13. WalletConnect Reown Project ID generated and live RPC authenticated.
     [x] 14. Alchemy Base L2 RPC configured and live verified (HTTP 200 Block Height Authenticated).
     [x] 15. Stellar Mainnet Horizon & Soroban RPC configured and live verified (HTTP 200 & Gateway.fm Healthy).
+    [x] 16. Stellar Protocol Accounts & NIST SP 800-63B ed25519 Keypairs provisioned (Treasury G-Account, BRZA Issuer, BRZA Distributor, CSPRNG secrets, RFC 8292 VAPID).
+    [x] 17. Cloudflare Worker Edge Gateway router deployed with static assets (`cloudflare/worker.ts` + `edgeRouter.ts` at Version ID 10bda8a5).
+    [x] 18. Synthetic Edge Smoke Probes live certified on barazaprotocol.com (`/api/health/live` 200, `/api/health/ready` 200 with database/stellar/redis healthy, `/api/health/metrics` 200).
+    [x] 19. All 10 Pre-Merge PR Verification stages passed with 100% clean Vitest suite execution (1,222 tests certified).
 ```
 
 ---
