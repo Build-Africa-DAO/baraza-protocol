@@ -54,7 +54,8 @@ Before deploying production services, DevOps must provision and configure the fo
 | **1** | **Cloudflare** | Free / Standard | Apex DNS, WAF, Workers Static Assets, Edge Functions, Email Routing | [dash.cloudflare.com](https://dash.cloudflare.com) | **✅ LIVE** (`barazaprotocol.com`, `www`) |
 | **2** | **Supabase** | Free Tier (`eu-west-1`) | PostgreSQL 16 Managed DB (`jwoibelpyvemhzazccym`), 39 Tables, RLS Enabled, PostgREST | [app.supabase.com](https://app.supabase.com) | **✅ LIVE & MIGRATED** (Migrations 000–043 Applied & Certified) |
 | **3** | **Safaricom Daraja** | Production Go-Live | Inbound M-Pesa STK Push, C2B Paybill, B2C Disbursal, Status Queries | [developer.safaricom.co.ke](https://developer.safaricom.co.ke) | `[ ] PENDING` |
-| **4** | **Minisend** | Production Enterprise | USDC-to-M-Pesa B2C instant settlement off-ramp | [minisend.xyz](https://minisend.xyz) | `[ ] PENDING` |
+| **4** | **Minisend** | Production Enterprise | USDC-to-M-Pesa B2C instant settlement off-ramp | [minisend.xyz](https://minisend.xyz) | **✅ CONFIGURED & LIVE CERTIFIED** (Merchant API HTTP 201 Checkout Verified) |
+
 | **5** | **Kotani Pay** | Production | Multi-rail crypto-to-fiat bridge & IPN callbacks | [kotanipay.com](https://kotanipay.com) | `[ ] PENDING` |
 | **6** | **Africa's Talking** | Production Prepaid | USSD Gateway (`*384*...#`), High-throughput SMS OTP, Alphanumeric Sender ID (`BarazaProto`) | [account.africastalking.com](https://account.africastalking.com) | **✅ CONFIGURED & LIVE CERTIFIED** (Username `barazaprotocol`, ATPR-0005887 Submitted) |
 
@@ -211,6 +212,7 @@ node scripts/devops/migrate-database.mjs --dry-run
     [x] 20. Twilio API credentials provisioned and live authenticated (`AC58fb6b...`, Account `Baraza Protocol Production`).
     [x] 21. Africa's Talking API credentials provisioned and live authenticated (HTTP/2 201, App `barazaprotocol`, Sender ID `BarazaProto` submitted).
     [x] 22. Paystack Card & Pan-African Ingress configured and live verified (HTTP 200 KES Balance authenticated, test keys active).
+    [x] 23. Minisend Off-Ramp API configured and live verified (HTTP/2 201 Checkout Session generated on Base mainnet, live key active).
 ```
 
 ---
