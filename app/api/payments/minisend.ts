@@ -142,7 +142,7 @@ export default async function handler(req: Request): Promise<Response> {
     // 3.6 S&P 500 RBAC Gate: Verify Caller Authorization (Vulnerability V13 Fix)
     if (!isServiceSecret) {
       let hasAdminAuth = false;
-      const callerWallet = identity?.walletAddress || body.callerWallet;
+      const callerWallet = identity?.walletAddress;
       const authUserId = identity?.privyDid || identity?.userProfileId;
 
       if (callerWallet || authUserId) {
