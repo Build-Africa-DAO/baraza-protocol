@@ -1042,5 +1042,95 @@ describe('Baraza Protocol — Pre-Merge Production Security Hardening Penetratio
       // Cleanup
       await supabase.from('communities').delete().eq('id', commId);
     });
+
+    it('PEN-36: Rejects authenticated session caller attempting to impersonate founder address (HTTP 403 IDOR)', async () => {
+      const founderKp = Keypair.random();
+      const commId = `comm_treasury_idor_${Date.now()}`;
+      const founderAddress = founderKp.publicKey();
+
+      const insertRes = await supabase.from('communities').insert({
+        id: commId,
+        name: 'Treasury IDOR Test Community',
+        currency: 'KES',
+        chain: 'stellar',
+        type: 'chama',
+        tier: 'mtaa',
+        treasury_address: `0xTR_${Date.now()}_3`,
+        operational_address: `0xOP_${Date.now()}_3`,
+        steward_address: `0xST_${Date.now()}_3`,
+        clearing_rail_type: 'OFF_CHAIN_KES',
+        withdrawable_deposits_minor: 1000000,
+        minimum_reserve_ratio_bps: 1500,
+        created_by: founderAddress,
+        status: 'active',
+      });
+      expect(insertRes.error).toBeNull();
+
+      // Attacker has an authenticated session (unrelated user), but specifies founderAddress in body
+      const req = new Request('http://localhost:3000/api/treasury/initialize', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'authorization': 'Bearer test_baraza_token_attacker_profile_unauthorized',
+        },
+        body: JSON.stringify({
+          communityId: commId,
+          adminAddress: founderAddress,
+        }),
+      });
+
+      const res = await treasuryInitializeHandler(req);
+      expect(res.status).toBe(403);
+      const data = await res.json();
+      expect(data.error).toBe('forbidden');
+
+      // Cleanup
+      await supabase.from('communities').delete().eq('id', commId);
+    });
+
+    it('PEN-37: Rejects unauthorized caller without proof or role on unassigned community (HTTP 401/403)', async () => {
+      const commId = `comm_treasury_orphan_${Date.now()}`;
+      const attackerKp = Keypair.random();
+      const attackerAddress = attackerKp.publicKey();
+
+      const insertRes = await supabase.from('communities').insert({
+        id: commId,
+        name: 'Treasury Orphan Test Community',
+        currency: 'KES',
+        chain: 'stellar',
+        type: 'chama',
+        tier: 'mtaa',
+        treasury_address: `0xTR_${Date.now()}_4`,
+        operational_address: `0xOP_${Date.now()}_4`,
+        steward_address: `0xST_${Date.now()}_4`,
+        clearing_rail_type: 'OFF_CHAIN_KES',
+        withdrawable_deposits_minor: 1000000,
+        minimum_reserve_ratio_bps: 1500,
+        created_by: null,
+        status: 'active',
+      });
+      expect(insertRes.error).toBeNull();
+
+      // Attacker without wallet proof attempts to initialize orphan community via unprivileged session
+      const req = new Request('http://localhost:3000/api/treasury/initialize', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'authorization': 'Bearer test_baraza_token_random_user_no_role',
+        },
+        body: JSON.stringify({
+          communityId: commId,
+          adminAddress: attackerAddress,
+        }),
+      });
+
+      const res = await treasuryInitializeHandler(req);
+      expect(res.status).toBe(403);
+      const data = await res.json();
+      expect(data.error).toBe('forbidden');
+
+      // Cleanup
+      await supabase.from('communities').delete().eq('id', commId);
+    });
   });
 });

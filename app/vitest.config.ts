@@ -16,6 +16,16 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
     testTimeout: 15000,
+    env: {
+      NODE_ENV: 'test',
+      VITE_BRZA_ISSUER_ADDRESS: '',
+      BRZA_ISSUER_ADDRESS: '',
+      STELLAR_NETWORK: 'testnet',
+      VITE_STELLAR_NETWORK: 'testnet',
+      SUPABASE_URL: '',
+      VITE_SUPABASE_URL: '',
+      SUPABASE_SERVICE_ROLE_KEY: '',
+    },
     // Database-dependent integration suites share a mutable Supabase instance.
     // Running them in parallel causes cascade-delete cross-pollution between
     // suites' beforeAll/afterAll hooks. Serialize file execution so each suite

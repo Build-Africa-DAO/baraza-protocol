@@ -1,34 +1,53 @@
 name = "baraza-protocol"
+main = "cloudflare/worker.ts"
+tsconfig = "./tsconfig.json"
 compatibility_date = "2026-08-01"
 compatibility_flags = ["nodejs_compat"]
-pages_build_output_dir = "app/dist"
+
+[define]
+"import.meta.env" = "process.env"
+
+[assets]
+directory = "app/dist"
 
 [vars]
-STELLAR_NETWORK = "testnet"
-STELLAR_HORIZON_URL = "https://horizon-testnet.stellar.org"
-STELLAR_SOROBAN_RPC = "https://soroban-testnet.stellar.org"
+STELLAR_NETWORK = "public"
+STELLAR_HORIZON_URL = "https://horizon.stellar.org"
+STELLAR_SOROBAN_RPC = "https://soroban-rpc.mainnet.stellar.gateway.fm"
 VITE_SITE_URL = "https://barazaprotocol.com"
+SUPABASE_URL = "https://jwoibelpyvemhzazccym.supabase.co"
+VITE_SUPABASE_URL = "https://jwoibelpyvemhzazccym.supabase.co"
+UPSTASH_REDIS_REST_URL = "https://internal-bullfrog-289306.upstash.io"
+CRON_SECRET = "live_cron_secret_67890"
+COMPLIANCE_REVIEW_SECRET = "live_compliance_secret_12345"
+MINISEND_API_BASE = "https://merchant.minisend.xyz"
+MINISEND_PAYMENT_LINK = "https://merchant.minisend.xyz/pay/bad-dao-africa-limited"
+MINISEND_WEBHOOK_URL = "https://barazaprotocol.com/api/webhooks/minisend"
+KOTANI_API_BASE = "https://sandbox-api.kotanipay.io/api/v3"
+KOTANI_INTEGRATOR_ID = "6ab2ec14dc11802412901c4b"
+KOTANI_WEBHOOK_URL = "https://barazaprotocol.com/api/webhooks/kotani"
+PAYSTACK_PUBLIC_KEY = "pk_test_f0b73ed3e527a5be43ef62bcd2c37ae0323c2bd7"
+VITE_PAYSTACK_PUBLIC_KEY = "pk_test_f0b73ed3e527a5be43ef62bcd2c37ae0323c2bd7"
+PAYSTACK_CALLBACK_URL = "https://barazaprotocol.com"
+PAYSTACK_WEBHOOK_URL = "https://barazaprotocol.com/api/webhooks/paystack"
+AFRICASTALKING_USERNAME = "barazaprotocol"
+AFRICASTALKING_APP_NAME = "Baraza Protocol Production"
+AFRICASTALKING_SENDER_ID = "BarazaProto"
+AT_USERNAME = "barazaprotocol"
+AT_SENDER_ID = "BarazaProto"
 
 # FIFO Webhook Ingress Queue
 [[queues.producers]]
 binding = "WEBHOOK_QUEUE"
 queue = "baraza-webhook-ingress-queue"
 
-# PostgreSQL Hyperdrive Connection Pooler
-[[hyperdrive]]
-binding = "HYPERDRIVE"
-id = "baraza-supabase-hyperdrive-id"
-
-# Edge Cron Triggers for Continuous Reconciliation
-[triggers]
-crons = ["*/5 * * * *", "*/10 * * * *"]
-
-# Staging Environment Profile
-[env.staging]
+# Preview / Staging Environment Profile (Cloudflare Pages uses 'preview' for non-production branches)
+[env.preview]
 name = "baraza-protocol-staging"
-pages_build_output_dir = "app/dist"
+[env.preview.assets]
+directory = "app/dist"
 
-[env.staging.vars]
+[env.preview.vars]
 STELLAR_NETWORK = "testnet"
 STELLAR_HORIZON_URL = "https://horizon-testnet.stellar.org"
 STELLAR_SOROBAN_RPC = "https://soroban-testnet.stellar.org"
@@ -38,12 +57,33 @@ ENVIRONMENT = "staging"
 # Production Environment Profile
 [env.production]
 name = "baraza-protocol"
-pages_build_output_dir = "app/dist"
+[env.production.assets]
+directory = "app/dist"
 
 [env.production.vars]
 STELLAR_NETWORK = "public"
 STELLAR_HORIZON_URL = "https://horizon.stellar.org"
-STELLAR_SOROBAN_RPC = "https://soroban-rpc.mainnet.stellar.org"
+STELLAR_SOROBAN_RPC = "https://soroban-rpc.mainnet.stellar.gateway.fm"
 VITE_SITE_URL = "https://barazaprotocol.com"
 ENVIRONMENT = "production"
+SUPABASE_URL = "https://jwoibelpyvemhzazccym.supabase.co"
+VITE_SUPABASE_URL = "https://jwoibelpyvemhzazccym.supabase.co"
+UPSTASH_REDIS_REST_URL = "https://internal-bullfrog-289306.upstash.io"
+CRON_SECRET = "live_cron_secret_67890"
+COMPLIANCE_REVIEW_SECRET = "live_compliance_secret_12345"
+MINISEND_API_BASE = "https://merchant.minisend.xyz"
+MINISEND_PAYMENT_LINK = "https://merchant.minisend.xyz/pay/bad-dao-africa-limited"
+MINISEND_WEBHOOK_URL = "https://barazaprotocol.com/api/webhooks/minisend"
+KOTANI_API_BASE = "https://sandbox-api.kotanipay.io/api/v3"
+KOTANI_INTEGRATOR_ID = "6ab2ec14dc11802412901c4b"
+KOTANI_WEBHOOK_URL = "https://barazaprotocol.com/api/webhooks/kotani"
+PAYSTACK_PUBLIC_KEY = "pk_test_f0b73ed3e527a5be43ef62bcd2c37ae0323c2bd7"
+VITE_PAYSTACK_PUBLIC_KEY = "pk_test_f0b73ed3e527a5be43ef62bcd2c37ae0323c2bd7"
+PAYSTACK_CALLBACK_URL = "https://barazaprotocol.com"
+PAYSTACK_WEBHOOK_URL = "https://barazaprotocol.com/api/webhooks/paystack"
+AFRICASTALKING_USERNAME = "barazaprotocol"
+AFRICASTALKING_APP_NAME = "Baraza Protocol Production"
+AFRICASTALKING_SENDER_ID = "BarazaProto"
+AT_USERNAME = "barazaprotocol"
+AT_SENDER_ID = "BarazaProto"
 

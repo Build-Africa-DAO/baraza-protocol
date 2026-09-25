@@ -19,16 +19,18 @@ BEGIN;
 --    Wraps current_setting('request.jwt.claims') into JSONB, returning
 --    empty object if the setting is absent (safe fallback for local dev).
 -- ---------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION auth.jwt()
-RETURNS jsonb
-LANGUAGE sql
-STABLE
-AS $$
-  SELECT COALESCE(
-    current_setting('request.jwt.claims', true)::jsonb,
-    '{}'::jsonb
-  );
-$$;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_proc p 
+    JOIN pg_namespace n ON p.pronamespace = n.oid 
+    WHERE n.nspname = 'auth' AND p.proname = 'jwt'
+  ) THEN
+    EXECUTE 'CREATE FUNCTION auth.jwt() RETURNS jsonb LANGUAGE sql STABLE AS ''SELECT COALESCE(current_setting(''''request.jwt.claims'''', true)::jsonb, ''''{}''''::jsonb);''';
+  END IF;
+EXCEPTION WHEN insufficient_privilege THEN
+  NULL;
+END $$;
 
 -- ---------------------------------------------------------------------------
 -- 1. Expand public.members role domain to include 'secretary'

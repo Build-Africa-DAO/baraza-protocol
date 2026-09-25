@@ -37,6 +37,8 @@ id_rsa*
 id_ed25519*
 id_ecdsa*
 secp256k1*
+credentials/
+*.vault.json
 credentials.json
 service-account*.json
 

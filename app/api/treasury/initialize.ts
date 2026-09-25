@@ -115,10 +115,46 @@ async function handler(req: Request): Promise<Response> {
     }
 
     const adminLower = adminAddress.toLowerCase();
-    const isFounder = Boolean(comm.created_by && comm.created_by.toLowerCase() === adminLower);
+    const isCallerWalletMatch = Boolean(
+      caller?.walletAddress && caller.walletAddress.toLowerCase() === adminLower
+    );
 
-    let isOfficer = false;
-    if (!isFounder) {
+    // Check if the authenticated session caller is an active officer of this community
+    let isCallerOfficer = false;
+    if (caller) {
+      let officerQuery = supabase
+        .from('members')
+        .select('role, activation_status')
+        .eq('community_id', communityId)
+        .in('role', ['founder', 'admin', 'treasurer'])
+        .in('activation_status', ['active', 'ACTIVE']);
+
+      if (caller.walletAddress) {
+        officerQuery = officerQuery.eq('wallet_address', caller.walletAddress);
+      } else if (caller.privyDid) {
+        officerQuery = officerQuery.eq('auth_user_id', caller.privyDid);
+      } else if (caller.userProfileId) {
+        officerQuery = officerQuery.or(`auth_user_id.eq.${caller.userProfileId},wallet_address.eq.${caller.userProfileId}`);
+      }
+
+      const { data: callerMember } = await officerQuery.maybeSingle();
+      if (callerMember) {
+        isCallerOfficer = true;
+      }
+    }
+
+    // Require caller to have cryptographic proof for adminAddress, or session matching adminAddress, or be an active officer
+    if (!isProofValid && !isCallerWalletMatch && !isCallerOfficer) {
+      return json({ error: 'forbidden', message: 'Caller is not authorized to initialize treasury for this admin address.' }, { status: 403 }, req);
+    }
+
+    // A caller is founder if matching created_by, or establishing initial founder on unassigned community via wallet proof
+    const isFounder = comm.created_by
+      ? comm.created_by.toLowerCase() === adminLower
+      : isProofValid;
+
+    let isOfficer = isCallerOfficer;
+    if (!isFounder && !isOfficer) {
       const { data: member } = await supabase
         .from('members')
         .select('role')
@@ -132,18 +168,23 @@ async function handler(req: Request): Promise<Response> {
       }
     }
 
-    // If community has a creator/founder assigned, enforce role authorization
-    if (!isFounder && !isOfficer && comm.created_by) {
+    // Strictly enforce role authorization
+    if (!isFounder && !isOfficer) {
       return json({ error: 'forbidden', message: 'Only community founders or officers can initialize treasury.' }, { status: 403 }, req);
     }
 
-    // Persist vault configuration to community record with schema-compliant check constraint value
+    // Persist vault configuration and lock created_by if previously unassigned
+    const updatePayload: Record<string, unknown> = {
+      treasury_policy: 'multisig-ready',
+      updated_at: new Date().toISOString(),
+    };
+    if (!comm.created_by) {
+      updatePayload.created_by = adminAddress;
+    }
+
     await supabase
       .from('communities')
-      .update({
-        treasury_policy: 'multisig-ready',
-        updated_at: new Date().toISOString(),
-      })
+      .update(updatePayload)
       .eq('id', communityId);
   } catch {
     // Non-fatal if database is unreachable in isolated test environments
