@@ -32,9 +32,9 @@ PAYSTACK_CALLBACK_URL = "https://barazaprotocol.com"
 PAYSTACK_WEBHOOK_URL = "https://barazaprotocol.com/api/webhooks/paystack"
 AFRICASTALKING_USERNAME = "barazaprotocol"
 AFRICASTALKING_APP_NAME = "Baraza Protocol Production"
-AFRICASTALKING_SENDER_ID = "BarazaProto"
+AFRICASTALKING_SENDER_ID = "BADDAO"
 AT_USERNAME = "barazaprotocol"
-AT_SENDER_ID = "BarazaProto"
+AT_SENDER_ID = "BADDAO"
 
 # FIFO Webhook Ingress Queue
 [[queues.producers]]
@@ -83,7 +83,7 @@ PAYSTACK_CALLBACK_URL = "https://barazaprotocol.com"
 PAYSTACK_WEBHOOK_URL = "https://barazaprotocol.com/api/webhooks/paystack"
 AFRICASTALKING_USERNAME = "barazaprotocol"
 AFRICASTALKING_APP_NAME = "Baraza Protocol Production"
-AFRICASTALKING_SENDER_ID = "BarazaProto"
+AFRICASTALKING_SENDER_ID = "BADDAO"
 AT_USERNAME = "barazaprotocol"
-AT_SENDER_ID = "BarazaProto"
+AT_SENDER_ID = "BADDAO"
 
