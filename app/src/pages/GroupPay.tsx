@@ -68,7 +68,6 @@ function receiptStatus(status: PaymentOrderStatus | null): ReceiptStatus {
 function PayPanel({ community, membership }: { community: Community; membership: GroupMembership }) {
   const account = useAccount();
   const currency = membership.currency ?? groupCurrency(community);
-  const knowsDues = membership.source === 'api';
   const duesOwedMinor = membership.duesOwedMinor;
 
   const [phone, setPhone] = useState('');
@@ -78,6 +77,7 @@ function PayPanel({ community, membership }: { community: Community; membership:
   const [orderStatus, setOrderStatus] = useState<PaymentOrderStatus | null>(null);
   const [orderAt, setOrderAt] = useState<string | null>(null);
   const [streak, setStreak] = useState<number | null>(null);
+  const [mountedAt] = useState(() => Date.now());
 
   // Streak comes from the server or not at all (§13.13).
   useEffect(() => {
@@ -148,13 +148,28 @@ function PayPanel({ community, membership }: { community: Community; membership:
       />
     );
   }
+  const CANVA_LAUNCH_DATE_MS = 1791590400000; // 2026-10-10T00:00:00Z
 
-  const owesNothing = knowsDues && (duesOwedMinor === null || duesOwedMinor <= 0);
+  // Effective dues owed: either individual member record or standard community rate
+  const fallbackDuesMinor = community.membershipFee ? Math.round(community.membershipFee * 100) : 0;
+  const effectiveDuesMinor = duesOwedMinor !== null ? duesOwedMinor : fallbackDuesMinor;
+
+  const isNonMonetary = community.feeType === 'free' || (!community.membershipFee && (duesOwedMinor === null || duesOwedMinor === 0));
+  const isContributionsGated = Boolean(
+    community.contributionsGated ||
+    (community.type === 'creative' && mountedAt < CANVA_LAUNCH_DATE_MS)
+  );
+
+  const owesNothing = isNonMonetary || effectiveDuesMinor <= 0;
   if (owesNothing && stage === 'amount') {
     return (
       <EmptyState
-        title="You Are Up to Date"
-        body={`Nothing is outstanding for ${community.name} right now.`}
+        title={isNonMonetary ? 'No Dues Required' : 'You Are Up to Date'}
+        body={
+          isNonMonetary
+            ? `${community.name} does not collect mandatory dues. Your membership and voting seat are active.`
+            : `Nothing is outstanding for ${community.name} right now.`
+        }
         secondary={{ label: 'Go Home', to: `/dashboard/${community.id}` }}
       >
         {streak ? <StatusChip kind="confirmed" label={`${streak} ${streak === 1 ? 'Month' : 'Months'} On Time`} /> : null}
@@ -163,10 +178,10 @@ function PayPanel({ community, membership }: { community: Community; membership:
   }
 
   const normalisedPhone = normaliseKenyanPhone(phone);
-  const canPay = knowsDues && duesOwedMinor !== null && duesOwedMinor > 0 && normalisedPhone !== null && stage === 'amount';
+  const canPay = !isContributionsGated && effectiveDuesMinor > 0 && normalisedPhone !== null && stage === 'amount';
 
   async function pay() {
-    if (!canPay || !normalisedPhone || duesOwedMinor === null) return;
+    if (!canPay || !normalisedPhone || effectiveDuesMinor <= 0) return;
     setError(null);
     const endpoint = isPaymentSimulatorEnabled() ? '/api/mpesa/simulate' : '/api/mpesa/stk-push';
     setStage('sending');
@@ -176,7 +191,7 @@ function PayPanel({ community, membership }: { community: Community; membership:
         body: {
           phone: `+254${normalisedPhone}`,
           communityId: community.id,
-          amount: Math.round(duesOwedMinor / 100),
+          amount: Math.round(effectiveDuesMinor / 100),
           currency,
         },
         auth: 'omit',
@@ -233,9 +248,13 @@ function PayPanel({ community, membership }: { community: Community; membership:
             <div className="flex items-start justify-between gap-4">
               <AmountBlock
                 label="Amount Due"
-                amountMinor={knowsDues ? duesOwedMinor : null}
+                amountMinor={effectiveDuesMinor}
                 currency={currency}
-                note={knowsDues && duesOwedMinor !== null ? undefined : 'We could not read what you owe from your membership record yet. Ask an officer for the amount before paying.'}
+                note={
+                  isContributionsGated
+                    ? 'Dues collections open 10 October 2026.'
+                    : (duesOwedMinor !== null ? undefined : 'Standard community dues schedule.')
+                }
               />
               {streak ? <StatusChip kind="confirmed" label={`${streak} ${streak === 1 ? 'Month' : 'Months'} On Time`} /> : null}
             </div>
@@ -254,19 +273,29 @@ function PayPanel({ community, membership }: { community: Community; membership:
                 value={phone}
                 onChange={(event) => setPhone(event.target.value)}
                 placeholder="7XX XXX XXX"
-                disabled={stage !== 'amount'}
+                disabled={stage !== 'amount' || isContributionsGated}
                 aria-invalid={phone.length > 0 && !normalisedPhone}
               />
             </Field>
 
             {error ? <InlineError className="mt-4" message={error} /> : null}
 
-            <Button type="button" onClick={() => void pay()} disabled={!canPay} fullWidth className="mt-5">
-              {stage !== 'amount' ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
-              {stage === 'amount' ? 'Pay With M-Pesa' : 'Check Your Phone'}
-            </Button>
+            {isContributionsGated ? (
+              <Button type="button" disabled fullWidth className="mt-5">
+                Contributions Open 10 October
+              </Button>
+            ) : (
+              <Button type="button" onClick={() => void pay()} disabled={!canPay} fullWidth className="mt-5">
+                {stage !== 'amount' ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
+                {stage === 'amount' ? 'Pay With M-Pesa' : 'Check Your Phone'}
+              </Button>
+            )}
 
-            {stage === 'confirming' ? (
+            {isContributionsGated ? (
+              <p className="mt-3 text-xs text-muted-foreground">
+                Contributions for this community launch on 10 October 2026. Your voting seat and membership are active today.
+              </p>
+            ) : stage === 'confirming' ? (
               <p className="mt-3 text-sm text-muted-foreground">
                 Enter your M-Pesa PIN on your phone. This page updates when the provider confirms.
               </p>

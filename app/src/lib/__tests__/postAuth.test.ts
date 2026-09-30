@@ -10,6 +10,7 @@ import {
 describe('isStayPath', () => {
   it('keeps the member in join, dashboard, and create flows', () => {
     expect(isStayPath('/join/abc')).toBe(true);
+    expect(isStayPath('/invite?code=abc')).toBe(true);
     expect(isStayPath('/dashboard/abc?tab=governance')).toBe(true);
     expect(isStayPath('/create/purpose')).toBe(true);
     expect(isStayPath('/communities')).toBe(true);

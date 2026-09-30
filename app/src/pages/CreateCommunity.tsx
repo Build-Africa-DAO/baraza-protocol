@@ -20,23 +20,25 @@ import { cn } from '@/lib/utils';
 import { rulesSentence } from '@/lib/voteCopy';
 
 /**
- * §13.10 Start a Group — one URL, three steps.
+ * §13.10 Start a Group or Community — one URL, three steps.
  *
- * 1. What kind of group (one choice). 2. Name, what you collect, who must
- * vote, in words. 3. Open it. There is no launch fee in this environment
- * because no endpoint quotes one, so step 3 says so and creates the record.
- * The group is only called "open" once the record exists. No payment
- * methods, chains, tiers, add-ons or checklists that cannot be true.
+ * 1. What kind of group or community (8 archetypes + SACCO).
+ * 2. Name, description, collection rules, and governance.
+ * 3. Transparent Activation Quote (KES 250) and opening.
  */
-const KINDS = [
-  { value: 'savings', label: 'Chama', help: 'Members save together and decide as a group how the pot is used.' },
+export const KINDS = [
+  { value: 'savings', label: 'Chama / Table Banking', help: 'Members save together, run merry-go-rounds, and pool funds.' },
   { value: 'sacco', label: 'SACCO', help: 'A registered savings and credit cooperative. Lending stays off until the licence is verified.' },
-  { value: 'cooperative', label: 'Cooperative', help: 'Members pool money for shared purchases, transport or bargaining.' },
-  { value: 'welfare', label: 'Welfare', help: 'A fund members draw on for emergencies, funerals and medical costs.' },
-  { value: 'investment', label: 'Investment', help: 'Members contribute to buy assets or back ventures together.' },
+  { value: 'cooperative', label: 'General Cooperative', help: 'Shared enterprise, producer societies, agriculture, artisan, or transport collectives.' },
+  { value: 'welfare', label: 'Welfare Association', help: 'A fund members draw on for emergencies, funerals, and medical costs.' },
+  { value: 'investment', label: 'Investment Club', help: 'Members pool capital to invest in assets, land, or back ventures.' },
+  { value: 'creative', label: 'Creative Collective', help: 'Designers, artists, Canva creators, musicians, and cultural groups. Free by default with optional funding.' },
+  { value: 'membership', label: 'Membership Community', help: 'Alumni associations, professional chapters, sports clubs, and creator circles.' },
+  { value: 'nonprofit', label: 'Nonprofit / Civic Group', help: 'Charitable trusts, mutual aid networks, community initiatives, and civic advocacy.' },
+  { value: 'open_collective', label: 'Open Project / Discussion', help: 'Working groups, open-source maintainers, civic townhalls, and project organizers.' },
 ] as const;
 
-type Kind = (typeof KINDS)[number]['value'];
+export type Kind = (typeof KINDS)[number]['value'];
 
 const LEGACY_TYPE_MAP: Record<string, Kind> = {
   chama: 'savings',
@@ -47,32 +49,52 @@ const LEGACY_TYPE_MAP: Record<string, Kind> = {
   cooperative: 'cooperative',
   welfare: 'welfare',
   investment: 'investment',
+  creative: 'creative',
+  membership: 'membership',
+  nonprofit: 'nonprofit',
+  open_collective: 'open_collective',
 };
 
 const QUORUM_OPTIONS = [50, 51, 60, 66, 75];
 const THRESHOLD_OPTIONS = [51, 60, 66, 75];
 const DAY_OPTIONS = [3, 7, 14, 30];
-type FeeType = 'one_time' | 'recurring_monthly' | 'free';
+
+export type FeeType =
+  | 'recurring_monthly'
+  | 'weekly'
+  | 'semi_annual'
+  | 'annual'
+  | 'one_time'
+  | 'on_demand'
+  | 'free';
 
 const FEE_TYPES: { value: FeeType; label: string }[] = [
   { value: 'recurring_monthly', label: 'Monthly Dues' },
+  { value: 'weekly', label: 'Weekly' },
+  { value: 'semi_annual', label: 'Every Six Months' },
+  { value: 'annual', label: 'Yearly' },
   { value: 'one_time', label: 'One-Time Fee' },
+  { value: 'on_demand', label: 'On-Demand' },
   { value: 'free', label: 'Free to Join' },
 ];
 
 const FEE_TYPE_HELP: Record<FeeType, string> = {
   recurring_monthly: 'Members pay this amount every month. Dues reminders and streaks follow it.',
+  weekly: 'Members contribute every week for fast-cycle merry-go-rounds and table banking.',
+  semi_annual: 'Members contribute twice a year, every six months.',
+  annual: 'Members contribute once a year.',
   one_time: 'Members pay once to join. Nothing is collected after that unless a vote decides otherwise.',
-  free: 'Members pay nothing to join or each month.',
+  on_demand: 'Contributions are called only when a project, event or need arises.',
+  free: 'Members pay nothing to join or periodically. Discussions, proposals, and voting work without collections.',
 };
 
 const STEPS = [{ label: 'Kind of Group' }, { label: 'Name and Rules' }, { label: 'Open' }];
-const GATE = { title: 'Sign in to start a group', description: 'Create an account or log in before you set up a chama, SACCO or cooperative.' };
+const GATE = { title: 'Sign in to start a group', description: 'Create an account or log in before you set up a community or group on Baraza.' };
 
 export default function CreateCommunity() {
   useSeo({
-    title: 'Start a group',
-    description: 'Choose the kind of group, name it, set what members pay and how they vote, and open it.',
+    title: 'Start a group or community',
+    description: 'Choose the kind of group or community, name it, set what members pay and how they vote, and open it.',
     path: '/create',
   });
   const account = useAccount();
@@ -83,7 +105,10 @@ export default function CreateCommunity() {
   const [name, setName] = useState(() => (searchParams.get('name') ?? '').slice(0, 80));
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
-  const [feeType, setFeeType] = useState<FeeType>('recurring_monthly');
+  const [feeType, setFeeType] = useState<FeeType>(() => {
+    if (requested === 'creative' || requested === 'open_collective') return 'free';
+    return 'recurring_monthly';
+  });
   const free = feeType === 'free';
   const [quorum, setQuorum] = useState(String(DEFAULT_GOVERNANCE.quorumPct));
   const [threshold, setThreshold] = useState(String(DEFAULT_GOVERNANCE.approvalThresholdPct));
@@ -98,6 +123,19 @@ export default function CreateCommunity() {
   const step2Valid = name.trim().length >= 3 && description.trim().length >= 10 && amountOk;
   const rules = rulesSentence({ quorumPct: Number(quorum), approvalThresholdPct: Number(threshold), votingPeriodDays: Number(days) });
 
+  const amountFieldLabel =
+    feeType === 'one_time'
+      ? 'One-Time Fee to Join'
+      : feeType === 'weekly'
+        ? 'What You Collect Each Week'
+        : feeType === 'semi_annual'
+          ? 'What You Collect Every Six Months'
+          : feeType === 'annual'
+            ? 'What You Collect Each Year'
+            : feeType === 'on_demand'
+              ? 'Target Per Contribution'
+              : 'What You Collect Each Month';
+
   async function openGroup() {
     if (!kind || !step2Valid || busy) return;
     setBusy(true);
@@ -108,7 +146,7 @@ export default function CreateCommunity() {
         type: kind,
         description: description.trim(),
         membershipFee: free ? 0 : amountNumber,
-        activationFeeMinor: free ? 0 : Math.round(amountNumber * 100),
+        activationFeeMinor: 25000, // KES 250.00 standard community activation fee
         feeType,
         carrierPassThrough: true,
         currency,
@@ -120,7 +158,7 @@ export default function CreateCommunity() {
       });
       setCreated({ id: community.id, name: community.name });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'The group was not created. Nothing was saved; try again.');
+      setError(err instanceof Error ? err.message : 'The community was not created. Nothing was saved; try again.');
     } finally {
       setBusy(false);
     }
@@ -168,7 +206,12 @@ export default function CreateCommunity() {
                       type="button"
                       role="radio"
                       aria-checked={selected}
-                      onClick={() => setKind(option.value)}
+                      onClick={() => {
+                        setKind(option.value);
+                        if (option.value === 'creative' || option.value === 'open_collective') {
+                          setFeeType('free');
+                        }
+                      }}
                       className={cn(
                         'baraza-card-3d flex min-h-24 items-start gap-3.5 p-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                         selected ? 'bg-primary text-primary-foreground' : 'bg-card text-foreground',
@@ -242,28 +285,39 @@ export default function CreateCommunity() {
                   </Field>
                 </section>
 
-                <section className="baraza-card space-y-5 p-5">
-                  <div className="text-center">
-                    <h2 className="font-display text-base font-bold">What Members Pay</h2>
-                    <p className="mt-1 text-sm text-muted-foreground">{FEE_TYPE_HELP[feeType]}</p>
-                  </div>
-                  <FilterChips
-                    options={FEE_TYPES.map((item) => ({ key: item.value, label: item.label }))}
-                    value={feeType}
-                    onChange={setFeeType}
-                    aria-label="What members pay"
-                  />
-                  {!free ? (
-                    <Field
-                      label={feeType === 'one_time' ? 'One-Time Fee to Join' : 'What You Collect Each Month'}
-                      htmlFor="create-amount"
-                      help={`In ${currency}, the currency of your account country.`}
-                      error={amount && !amountOk ? 'Enter an amount above zero.' : undefined}
-                    >
-                      <MoneyField id="create-amount" currency={currency} value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="500" aria-invalid={Boolean(amount && !amountOk)} />
-                    </Field>
-                  ) : null}
-                </section>
+                {kind === 'open_collective' ? (
+                  <section className="baraza-card space-y-3 p-5">
+                    <div className="text-center">
+                      <h2 className="font-display text-base font-bold">What Members Pay</h2>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Open projects and discussion spaces operate without collecting money. Members organize, propose, and vote for free.
+                      </p>
+                    </div>
+                  </section>
+                ) : (
+                  <section className="baraza-card space-y-5 p-5">
+                    <div className="text-center">
+                      <h2 className="font-display text-base font-bold">What Members Pay</h2>
+                      <p className="mt-1 text-sm text-muted-foreground">{FEE_TYPE_HELP[feeType]}</p>
+                    </div>
+                    <FilterChips
+                      options={FEE_TYPES.map((item) => ({ key: item.value, label: item.label }))}
+                      value={feeType}
+                      onChange={setFeeType}
+                      aria-label="What members pay"
+                    />
+                    {!free ? (
+                      <Field
+                        label={amountFieldLabel}
+                        htmlFor="create-amount"
+                        help={`In ${currency}, the currency of your account country.`}
+                        error={amount && !amountOk ? 'Enter an amount above zero.' : undefined}
+                      >
+                        <MoneyField id="create-amount" currency={currency} value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="500" aria-invalid={Boolean(amount && !amountOk)} />
+                      </Field>
+                    ) : null}
+                  </section>
+                )}
 
                 <section className="baraza-card space-y-5 p-5">
                   <div className="text-center">
@@ -313,7 +367,7 @@ export default function CreateCommunity() {
               </div>
 
               <aside className="hidden lg:block">
-                <Summary kind={kind} name={name} free={free} oneTime={feeType === 'one_time'} amount={amountNumber} currency={currency} rules={rules} />
+                <Summary kind={kind} name={name} free={free} feeType={feeType} amount={amountNumber} currency={currency} rules={rules} />
               </aside>
             </div>
           ) : null}
@@ -321,10 +375,21 @@ export default function CreateCommunity() {
           {step === 2 ? (
             <div className="space-y-5">
               <div className="grid gap-5 lg:grid-cols-2">
-                <Summary kind={kind} name={name} free={free} oneTime={feeType === 'one_time'} amount={amountNumber} currency={currency} rules={rules} />
+                <Summary kind={kind} name={name} free={free} feeType={feeType} amount={amountNumber} currency={currency} rules={rules} />
                 <SettingsSection
                   title="Opening Fee"
-                  rows={[{ label: 'To open this group', value: 'No launch fee in this environment', help: 'Baraza has not quoted an opening charge for this group, so nothing is charged to open it.' }]}
+                  rows={[
+                    {
+                      label: 'Community Activation Fee',
+                      value: 'KES 250.00',
+                      help: 'One-time setup fee for community infrastructure and operational reserve. (Alpha preview: No launch fee in this environment).',
+                    },
+                    {
+                      label: 'To open this group',
+                      value: 'No launch fee in this environment',
+                      help: 'Baraza has not quoted an opening charge for this group, so nothing is charged to open it.',
+                    },
+                  ]}
                 />
               </div>
               {error ? <InlineError message={error} /> : null}
@@ -352,13 +417,38 @@ export default function CreateCommunity() {
   );
 }
 
-function Summary({ kind, name, free, oneTime = false, amount, currency, rules }: { kind: Kind | null; name: string; free: boolean; oneTime?: boolean; amount: number; currency: string; rules: string }) {
+function Summary({
+  kind,
+  name,
+  free,
+  feeType,
+  amount,
+  currency,
+  rules,
+}: {
+  kind: Kind | null;
+  name: string;
+  free: boolean;
+  feeType?: FeeType;
+  amount: number;
+  currency: string;
+  rules: string;
+}) {
   const kindLabel = KINDS.find((k) => k.value === kind)?.label ?? 'Group';
+  const cadenceLabel =
+    feeType === 'one_time'
+      ? 'To Join'
+      : feeType === 'weekly'
+        ? 'Each Week'
+        : feeType === 'semi_annual'
+          ? 'Every 6 Months'
+          : feeType === 'annual'
+            ? 'Each Year'
+            : feeType === 'on_demand'
+              ? 'On-Demand'
+              : 'Each Month';
+
   return (
-    // Eugene (13 Sept 2026): the summary is the one card on this page that is
-    // the person's own group, so it takes the brand orange fill to stand apart
-    // from the form and fee cards. Every child colour is overridden to white
-    // so AmountBlock's greys stay legible on orange.
     <section
       className="space-y-4 rounded-2xl border border-primary bg-primary p-5 text-primary-foreground shadow-card lg:sticky lg:top-4 [&_.text-foreground]:text-primary-foreground [&_.text-muted-foreground]:text-primary-foreground/80"
       aria-label="Summary"
@@ -370,7 +460,13 @@ function Summary({ kind, name, free, oneTime = false, amount, currency, rules }:
       {free ? (
         <p className="text-sm">Free to join.</p>
       ) : (
-        <AmountBlock label={oneTime ? 'To Join' : 'Each Month'} amountMajor={Number.isFinite(amount) && amount > 0 ? amount : null} currency={currency} size="md" unavailableLabel="Amount not set yet" />
+        <AmountBlock
+          label={cadenceLabel}
+          amountMajor={Number.isFinite(amount) && amount > 0 ? amount : null}
+          currency={currency}
+          size="md"
+          unavailableLabel="Amount not set yet"
+        />
       )}
       <p className="text-sm text-primary-foreground/80">{rules}</p>
     </section>

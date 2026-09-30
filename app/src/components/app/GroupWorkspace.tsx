@@ -149,7 +149,7 @@ export default function GroupWorkspace({
               className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground shrink-0"
             >
               <ArrowLeft className="h-4 w-4" />
-              {account.authenticated ? 'My Groups' : 'All Groups'}
+              {account.authenticated ? 'My Groups & Communities' : 'All Groups & Communities'}
             </Link>
 
             {!hideBanner ? (
@@ -171,7 +171,7 @@ export default function GroupWorkspace({
                 </div>
                 {!membership.isMember && !membership.isLoading && !hideJoinCta && (
                   <Link to={`/join/${community.id}`} className="btn-wipe hidden shrink-0 md:inline-flex ml-2">
-                    Join This Group
+                    Join This Community
                   </Link>
                 )}
               </div>
@@ -201,7 +201,7 @@ export default function GroupWorkspace({
                 to={`/join/${community.id}`}
                 className="btn-wipe w-full justify-center shadow-deep"
               >
-                Join This Group
+                Join This Community
               </Link>
             </div>
           )}
@@ -226,13 +226,17 @@ export default function GroupWorkspace({
 }
 
 const TYPE_LABELS: Record<string, string> = {
-  savings: 'Savings chama',
+  creative: 'Creative Collective',
+  membership: 'Membership Community',
+  nonprofit: 'Nonprofit / Civic Group',
+  open_collective: 'Open Project / Discussion',
+  savings: 'Chama / Table Banking',
   sacco: 'SACCO',
-  cooperative: 'Cooperative',
-  welfare: 'Welfare group',
-  investment: 'Investment club',
+  cooperative: 'General Cooperative',
+  welfare: 'Welfare Association',
+  investment: 'Investment Club',
   housing: 'Housing SACCO',
-  professional: 'Professional network',
+  professional: 'Professional Network',
 };
 
 function formatType(type: string): string {

@@ -16,6 +16,7 @@ import authVerify from '../app/api/auth/verify';
 import communitiesIndex from '../app/api/communities/index';
 import communitiesInvitesAccept from '../app/api/communities/invites/accept';
 import communitiesInvitesIndex from '../app/api/communities/invites/index';
+import communitiesInvitesResolve from '../app/api/communities/invites/resolve';
 import communitiesLogo from '../app/api/communities/logo';
 import communitiesMembers from '../app/api/communities/members';
 import communitiesOfficers from '../app/api/communities/officers';
@@ -95,6 +96,7 @@ export const routeTable: Record<string, ApiHandler> = {
   '/api/communities': communitiesIndex,
   '/api/communities/invites': communitiesInvitesIndex,
   '/api/communities/invites/accept': communitiesInvitesAccept,
+  '/api/communities/invites/resolve': communitiesInvitesResolve,
   '/api/communities/logo': communitiesLogo,
   '/api/communities/members': communitiesMembers,
   '/api/communities/officers': communitiesOfficers,

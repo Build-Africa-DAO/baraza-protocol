@@ -5,13 +5,49 @@ export function extractInviteCode(input: string): string | null {
   if (!trimmed) return null;
   try {
     const url = new URL(trimmed, 'https://barazaprotocol.com');
-    const fromQuery = url.searchParams.get('invite');
+    const fromQuery = url.searchParams.get('code') || url.searchParams.get('invite');
     if (fromQuery && /^[a-zA-Z0-9_-]{6,32}$/.test(fromQuery)) return fromQuery;
   } catch {
     // Fall through to a raw code.
   }
   if (/^[a-zA-Z0-9_-]{6,32}$/.test(trimmed)) return trimmed;
   return null;
+}
+
+export interface ResolvedInviteCommunity {
+  id: string;
+  name: string;
+  type: string;
+  description: string;
+  imageUrl?: string;
+  memberCount: number;
+  currency: string;
+  membershipFee: number;
+  feeType: string;
+}
+
+export interface ResolvedInvite {
+  ok: boolean;
+  invite: {
+    code: string;
+    communityId: string;
+    maxUses: number;
+    usesCount: number;
+    expiresAt: string | null;
+  };
+  community: ResolvedInviteCommunity;
+}
+
+export async function resolveInviteCode(code: string): Promise<{
+  ok: boolean;
+  data?: ResolvedInvite;
+  message?: string;
+}> {
+  const result = await apiFetch<ResolvedInvite>(`/api/communities/invites/resolve?code=${encodeURIComponent(code)}`);
+  if (!result.ok) {
+    return { ok: false, message: result.error.message || 'That invite could not be found or has expired.' };
+  }
+  return { ok: true, data: result.data };
 }
 
 export async function acceptInviteCode(
