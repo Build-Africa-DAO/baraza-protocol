@@ -68,6 +68,14 @@ if (!existsSync(migrationsDir)) {
     pass('Migration 043 (Community Image URL)', 'Present and verified in supabase/migrations');
   }
 
+  // Ensure 044 contains launch pricing and pilot exemptions
+  const has044 = files.some((f) => f.startsWith('044_'));
+  if (!has044) {
+    fail('Migration 044 (Launch Pricing & Pilot Exemptions)', '044_launch_pricing_and_pilot_exemptions.sql is missing!');
+  } else {
+    pass('Migration 044 (Launch Pricing & Pilot Exemptions)', 'Present and verified in supabase/migrations');
+  }
+
   pass('Total Migration Count', `${files.length} SQL migrations detected`);
 }
 

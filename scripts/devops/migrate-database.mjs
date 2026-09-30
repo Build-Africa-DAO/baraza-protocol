@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // scripts/devops/migrate-database.mjs
 // Standard: S&P 500 Enterprise Fintech / Transactional Database Migration Harness
-// Sequentially executes SQL migrations 000 through 043 with SHA-256 tracking and role quarantine.
+// Sequentially executes SQL migrations 000 through 044 with SHA-256 tracking and role quarantine.
 
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';

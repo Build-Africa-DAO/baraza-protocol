@@ -47,7 +47,7 @@ const STAGES = [
     name: 'Transactional Database Migration DDL Check',
     cmd: 'node scripts/devops/migrate-database.mjs --dry-run',
     cwd: '.',
-    desc: 'Validates sequential integrity, naming syntax, and atomic DDL across migrations 000 through 043.',
+    desc: 'Validates sequential integrity, naming syntax, and atomic DDL across migrations 000 through 044.',
   },
   {
     id: 7,

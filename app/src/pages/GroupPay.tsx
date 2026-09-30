@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import GroupWorkspace from '@/components/app/GroupWorkspace';
 import { ReceiptCard, type ReceiptStatus } from '@/components/app/ReceiptCard';
-import { AmountBlock } from '@/components/ui/amount-block';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Field, PhoneField } from '@/components/ui/field';
@@ -17,7 +16,8 @@ import { apiFetch, submitGuard } from '@/lib/api';
 import { isPaymentSimulatorEnabled } from '@/lib/devMode';
 import { nextPollDelay } from '@/lib/polling';
 import { fetchDuesStreak } from '@/lib/duesStreak';
-import { groupCurrency } from '@/lib/money';
+import { formatMoney, groupCurrency } from '@/lib/money';
+import { calculateDynamicFee } from '@/lib/payments/feeEngine';
 import {
   fetchPaymentOrder,
   isFailureStatus,
@@ -153,6 +153,7 @@ function PayPanel({ community, membership }: { community: Community; membership:
   // Effective dues owed: either individual member record or standard community rate
   const fallbackDuesMinor = community.membershipFee ? Math.round(community.membershipFee * 100) : 0;
   const effectiveDuesMinor = duesOwedMinor !== null ? duesOwedMinor : fallbackDuesMinor;
+  const feeBreakdown = calculateDynamicFee(effectiveDuesMinor, currency, true);
 
   const isNonMonetary = community.feeType === 'free' || (!community.membershipFee && (duesOwedMinor === null || duesOwedMinor === 0));
   const isContributionsGated = Boolean(
@@ -191,7 +192,7 @@ function PayPanel({ community, membership }: { community: Community; membership:
         body: {
           phone: `+254${normalisedPhone}`,
           communityId: community.id,
-          amount: Math.round(effectiveDuesMinor / 100),
+          amount: Math.round(feeBreakdown.totalExpectedMinor / 100),
           currency,
         },
         auth: 'omit',
@@ -218,7 +219,7 @@ function PayPanel({ community, membership }: { community: Community; membership:
 
       {stage === 'done' && orderId ? (
         <ReceiptCard
-          amountMinor={duesOwedMinor}
+          amountMinor={feeBreakdown.totalExpectedMinor}
           currency={currency}
           reference={orderId.split('_').pop() ?? orderId}
           date={formatAccountDate(orderAt ?? new Date(), undefined, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
@@ -244,20 +245,56 @@ function PayPanel({ community, membership }: { community: Community; membership:
 
       {stage !== 'done' ? (
         <>
-          <section className="baraza-card p-5">
-            <div className="flex items-start justify-between gap-4">
-              <AmountBlock
-                label="Amount Due"
-                amountMinor={effectiveDuesMinor}
-                currency={currency}
-                note={
-                  isContributionsGated
+          <section className="baraza-card p-5" aria-labelledby="pay-amount">
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div>
+                <h3 id="pay-amount" className="font-display text-base font-bold">Contribution Breakdown</h3>
+                <p className="text-xs text-muted-foreground">
+                  {isContributionsGated
                     ? 'Dues collections open 10 October 2026.'
-                    : (duesOwedMinor !== null ? undefined : 'Standard community dues schedule.')
-                }
-              />
+                    : (duesOwedMinor !== null ? 'Individual dues schedule.' : 'Standard community dues schedule.')}
+                </p>
+              </div>
               {streak ? <StatusChip kind="confirmed" label={`${streak} ${streak === 1 ? 'Month' : 'Months'} On Time`} /> : null}
             </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+              <div className="baraza-card flex flex-col items-center justify-center p-3 md:p-4 text-center min-h-20">
+                <p className="text-xs font-medium text-muted-foreground">Dues to Vault</p>
+                <p className="mt-1 font-display text-base md:text-lg font-bold tabular-nums tracking-tight text-foreground">
+                  {formatMoney(feeBreakdown.baseAmountMinor, currency)}
+                </p>
+              </div>
+              <div className="baraza-card flex flex-col items-center justify-center p-3 md:p-4 text-center min-h-20">
+                <p className="text-xs font-medium text-muted-foreground">Platform fee (1.5%)</p>
+                <p className="mt-1 font-display text-base md:text-lg font-bold tabular-nums tracking-tight text-foreground">
+                  {formatMoney(feeBreakdown.platformFeeMinor, currency)}
+                </p>
+              </div>
+              <div className="baraza-card flex flex-col items-center justify-center p-3 md:p-4 text-center min-h-20">
+                <p className="text-xs font-medium text-muted-foreground">Carrier processing</p>
+                <p className="mt-1 font-display text-base md:text-lg font-bold tabular-nums tracking-tight text-foreground">
+                  {formatMoney(feeBreakdown.carrierCostMinor, currency)}
+                </p>
+              </div>
+              <div className="baraza-card !bg-primary text-primary-foreground border-0 ring-0 outline-none flex flex-col items-center justify-center p-3 md:p-4 text-center min-h-20 shadow-sm">
+                <p className="text-xs font-semibold text-primary-foreground/90">Total</p>
+                <p className="mt-1 font-display text-lg md:text-xl font-black tabular-nums tracking-tight text-primary-foreground">
+                  {formatMoney(feeBreakdown.totalExpectedMinor, currency)}
+                </p>
+              </div>
+            </div>
+
+            {feeBreakdown.activationFeeMinor > 0 && (
+              <div className="mt-3 flex items-center justify-between text-xs px-3 py-2 bg-muted/40 rounded-md border border-border">
+                <span className="text-muted-foreground">First-Time Member Protocol Activation:</span>
+                <span className="font-semibold text-foreground">{formatMoney(feeBreakdown.activationFeeMinor, currency)}</span>
+              </div>
+            )}
+
+            <p className="mt-3 text-xs text-muted-foreground text-center">
+              100% of your {formatMoney(feeBreakdown.netCreditedMinor, currency)} dues goes directly into {community.name}&apos;s sovereign treasury.
+            </p>
           </section>
 
           <section className="baraza-card p-5">
