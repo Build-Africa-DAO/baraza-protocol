@@ -19,5 +19,8 @@
   },
   "engines": {
     "node": ">=20.19.0"
+  },
+  "devDependencies": {
+    "pg": "^8.23.1"
   }
 }
