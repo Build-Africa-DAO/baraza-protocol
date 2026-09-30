@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import GroupWorkspace from '@/components/app/GroupWorkspace';
 import { ReceiptCard, type ReceiptStatus } from '@/components/app/ReceiptCard';
-import { AmountBlock } from '@/components/ui/amount-block';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Field, PhoneField } from '@/components/ui/field';
@@ -17,7 +16,8 @@ import { apiFetch, submitGuard } from '@/lib/api';
 import { isPaymentSimulatorEnabled } from '@/lib/devMode';
 import { nextPollDelay } from '@/lib/polling';
 import { fetchDuesStreak } from '@/lib/duesStreak';
-import { groupCurrency } from '@/lib/money';
+import { formatMoney, groupCurrency } from '@/lib/money';
+import { calculateDynamicFee } from '@/lib/payments/feeEngine';
 import {
   fetchPaymentOrder,
   isFailureStatus,
@@ -68,7 +68,6 @@ function receiptStatus(status: PaymentOrderStatus | null): ReceiptStatus {
 function PayPanel({ community, membership }: { community: Community; membership: GroupMembership }) {
   const account = useAccount();
   const currency = membership.currency ?? groupCurrency(community);
-  const knowsDues = membership.source === 'api';
   const duesOwedMinor = membership.duesOwedMinor;
 
   const [phone, setPhone] = useState('');
@@ -78,6 +77,7 @@ function PayPanel({ community, membership }: { community: Community; membership:
   const [orderStatus, setOrderStatus] = useState<PaymentOrderStatus | null>(null);
   const [orderAt, setOrderAt] = useState<string | null>(null);
   const [streak, setStreak] = useState<number | null>(null);
+  const [mountedAt] = useState(() => Date.now());
 
   // Streak comes from the server or not at all (§13.13).
   useEffect(() => {
@@ -148,13 +148,29 @@ function PayPanel({ community, membership }: { community: Community; membership:
       />
     );
   }
+  const CANVA_LAUNCH_DATE_MS = 1791590400000; // 2026-10-10T00:00:00Z
 
-  const owesNothing = knowsDues && (duesOwedMinor === null || duesOwedMinor <= 0);
+  // Effective dues owed: either individual member record or standard community rate
+  const fallbackDuesMinor = community.membershipFee ? Math.round(community.membershipFee * 100) : 0;
+  const effectiveDuesMinor = duesOwedMinor !== null ? duesOwedMinor : fallbackDuesMinor;
+  const feeBreakdown = calculateDynamicFee(effectiveDuesMinor, currency, true);
+
+  const isNonMonetary = community.feeType === 'free' || (!community.membershipFee && (duesOwedMinor === null || duesOwedMinor === 0));
+  const isContributionsGated = Boolean(
+    community.contributionsGated ||
+    (community.type === 'creative' && mountedAt < CANVA_LAUNCH_DATE_MS)
+  );
+
+  const owesNothing = isNonMonetary || effectiveDuesMinor <= 0;
   if (owesNothing && stage === 'amount') {
     return (
       <EmptyState
-        title="You Are Up to Date"
-        body={`Nothing is outstanding for ${community.name} right now.`}
+        title={isNonMonetary ? 'No Dues Required' : 'You Are Up to Date'}
+        body={
+          isNonMonetary
+            ? `${community.name} does not collect mandatory dues. Your membership and voting seat are active.`
+            : `Nothing is outstanding for ${community.name} right now.`
+        }
         secondary={{ label: 'Go Home', to: `/dashboard/${community.id}` }}
       >
         {streak ? <StatusChip kind="confirmed" label={`${streak} ${streak === 1 ? 'Month' : 'Months'} On Time`} /> : null}
@@ -163,10 +179,10 @@ function PayPanel({ community, membership }: { community: Community; membership:
   }
 
   const normalisedPhone = normaliseKenyanPhone(phone);
-  const canPay = knowsDues && duesOwedMinor !== null && duesOwedMinor > 0 && normalisedPhone !== null && stage === 'amount';
+  const canPay = !isContributionsGated && effectiveDuesMinor > 0 && normalisedPhone !== null && stage === 'amount';
 
   async function pay() {
-    if (!canPay || !normalisedPhone || duesOwedMinor === null) return;
+    if (!canPay || !normalisedPhone || effectiveDuesMinor <= 0) return;
     setError(null);
     const endpoint = isPaymentSimulatorEnabled() ? '/api/mpesa/simulate' : '/api/mpesa/stk-push';
     setStage('sending');
@@ -176,7 +192,7 @@ function PayPanel({ community, membership }: { community: Community; membership:
         body: {
           phone: `+254${normalisedPhone}`,
           communityId: community.id,
-          amount: Math.round(duesOwedMinor / 100),
+          amount: Math.round(feeBreakdown.totalExpectedMinor / 100),
           currency,
         },
         auth: 'omit',
@@ -203,7 +219,7 @@ function PayPanel({ community, membership }: { community: Community; membership:
 
       {stage === 'done' && orderId ? (
         <ReceiptCard
-          amountMinor={duesOwedMinor}
+          amountMinor={feeBreakdown.totalExpectedMinor}
           currency={currency}
           reference={orderId.split('_').pop() ?? orderId}
           date={formatAccountDate(orderAt ?? new Date(), undefined, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
@@ -229,16 +245,56 @@ function PayPanel({ community, membership }: { community: Community; membership:
 
       {stage !== 'done' ? (
         <>
-          <section className="baraza-card p-5">
-            <div className="flex items-start justify-between gap-4">
-              <AmountBlock
-                label="Amount Due"
-                amountMinor={knowsDues ? duesOwedMinor : null}
-                currency={currency}
-                note={knowsDues && duesOwedMinor !== null ? undefined : 'We could not read what you owe from your membership record yet. Ask an officer for the amount before paying.'}
-              />
+          <section className="baraza-card p-5" aria-labelledby="pay-amount">
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div>
+                <h3 id="pay-amount" className="font-display text-base font-bold">Contribution Breakdown</h3>
+                <p className="text-xs text-muted-foreground">
+                  {isContributionsGated
+                    ? 'Dues collections open 10 October 2026.'
+                    : (duesOwedMinor !== null ? 'Individual dues schedule.' : 'Standard community dues schedule.')}
+                </p>
+              </div>
               {streak ? <StatusChip kind="confirmed" label={`${streak} ${streak === 1 ? 'Month' : 'Months'} On Time`} /> : null}
             </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+              <div className="baraza-card flex flex-col items-center justify-center p-3 md:p-4 text-center min-h-20">
+                <p className="text-xs font-medium text-muted-foreground">Dues to Vault</p>
+                <p className="mt-1 font-display text-base md:text-lg font-bold tabular-nums tracking-tight text-foreground">
+                  {formatMoney(feeBreakdown.baseAmountMinor, currency)}
+                </p>
+              </div>
+              <div className="baraza-card flex flex-col items-center justify-center p-3 md:p-4 text-center min-h-20">
+                <p className="text-xs font-medium text-muted-foreground">Platform fee (1.5%)</p>
+                <p className="mt-1 font-display text-base md:text-lg font-bold tabular-nums tracking-tight text-foreground">
+                  {formatMoney(feeBreakdown.platformFeeMinor, currency)}
+                </p>
+              </div>
+              <div className="baraza-card flex flex-col items-center justify-center p-3 md:p-4 text-center min-h-20">
+                <p className="text-xs font-medium text-muted-foreground">Carrier processing</p>
+                <p className="mt-1 font-display text-base md:text-lg font-bold tabular-nums tracking-tight text-foreground">
+                  {formatMoney(feeBreakdown.carrierCostMinor, currency)}
+                </p>
+              </div>
+              <div className="baraza-card !bg-primary text-primary-foreground border-0 ring-0 outline-none flex flex-col items-center justify-center p-3 md:p-4 text-center min-h-20 shadow-sm">
+                <p className="text-xs font-semibold text-primary-foreground/90">Total</p>
+                <p className="mt-1 font-display text-lg md:text-xl font-black tabular-nums tracking-tight text-primary-foreground">
+                  {formatMoney(feeBreakdown.totalExpectedMinor, currency)}
+                </p>
+              </div>
+            </div>
+
+            {feeBreakdown.activationFeeMinor > 0 && (
+              <div className="mt-3 flex items-center justify-between text-xs px-3 py-2 bg-muted/40 rounded-md border border-border">
+                <span className="text-muted-foreground">First-Time Member Protocol Activation:</span>
+                <span className="font-semibold text-foreground">{formatMoney(feeBreakdown.activationFeeMinor, currency)}</span>
+              </div>
+            )}
+
+            <p className="mt-3 text-xs text-muted-foreground text-center">
+              100% of your {formatMoney(feeBreakdown.netCreditedMinor, currency)} dues goes directly into {community.name}&apos;s sovereign treasury.
+            </p>
           </section>
 
           <section className="baraza-card p-5">
@@ -254,19 +310,29 @@ function PayPanel({ community, membership }: { community: Community; membership:
                 value={phone}
                 onChange={(event) => setPhone(event.target.value)}
                 placeholder="7XX XXX XXX"
-                disabled={stage !== 'amount'}
+                disabled={stage !== 'amount' || isContributionsGated}
                 aria-invalid={phone.length > 0 && !normalisedPhone}
               />
             </Field>
 
             {error ? <InlineError className="mt-4" message={error} /> : null}
 
-            <Button type="button" onClick={() => void pay()} disabled={!canPay} fullWidth className="mt-5">
-              {stage !== 'amount' ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
-              {stage === 'amount' ? 'Pay With M-Pesa' : 'Check Your Phone'}
-            </Button>
+            {isContributionsGated ? (
+              <Button type="button" disabled fullWidth className="mt-5">
+                Contributions Open 10 October
+              </Button>
+            ) : (
+              <Button type="button" onClick={() => void pay()} disabled={!canPay} fullWidth className="mt-5">
+                {stage !== 'amount' ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
+                {stage === 'amount' ? 'Pay With M-Pesa' : 'Check Your Phone'}
+              </Button>
+            )}
 
-            {stage === 'confirming' ? (
+            {isContributionsGated ? (
+              <p className="mt-3 text-xs text-muted-foreground">
+                Contributions for this community launch on 10 October 2026. Your voting seat and membership are active today.
+              </p>
+            ) : stage === 'confirming' ? (
               <p className="mt-3 text-sm text-muted-foreground">
                 Enter your M-Pesa PIN on your phone. This page updates when the provider confirms.
               </p>

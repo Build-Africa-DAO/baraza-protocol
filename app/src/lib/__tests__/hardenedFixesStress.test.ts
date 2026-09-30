@@ -158,14 +158,14 @@ describe('Hardened Fixes & Defensive Invariants Stress Suite', () => {
         };
       };
 
-      // 75,000 base + 1,500 (2% platform) + 375 (0.5% carrier) = 76,875 cents = KES 768.75
+      // 75,000 base + 1,125 (1.5% platform) + 375 (0.5% carrier) = 76,500 cents = KES 765.00
       expect(data.feeBreakdown.baseAmountMinor).toBe(75000);
-      expect(data.feeBreakdown.platformFeeMinor).toBe(1500);
+      expect(data.feeBreakdown.platformFeeMinor).toBe(1125);
       expect(data.feeBreakdown.carrierCostMinor).toBe(375);
-      expect(data.feeBreakdown.totalExpectedMinor).toBe(76875);
+      expect(data.feeBreakdown.totalExpectedMinor).toBe(76500);
 
-      // Verify dynamic amountXlm is computed correctly: (768.75 / 130) / 0.10 = 59.1346 XLM
-      expect(data.amountXlm).toBeCloseTo(59.1346, 2);
+      // Verify dynamic amountXlm is computed correctly: (765.00 / 130) / 0.10 = 58.8462 XLM
+      expect(data.amountXlm).toBeCloseTo(58.8462, 2);
     });
 
     it('executes zero-fee instant bypass for free communities', async () => {

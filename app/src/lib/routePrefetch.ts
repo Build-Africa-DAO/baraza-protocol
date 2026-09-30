@@ -13,6 +13,7 @@ export const ROUTE_CHUNKS = {
   status: () => import('@/pages/StatusDashboard'),
   join: () => import('@/pages/JoinDao'),
   joinStatus: () => import('@/pages/JoinStatus'),
+  invite: () => import('@/pages/InviteLanding'),
   groupHome: () => import('@/pages/CommunityDashboard'),
   groupPay: () => import('@/pages/GroupPay'),
   groupVotes: () => import('@/pages/GroupVotes'),
@@ -34,6 +35,7 @@ export function chunkForPath(path: string): RouteChunk | null {
   if (clean === '/home') return 'home';
   if (clean.startsWith('/groups')) return 'groups';
   if (clean.startsWith('/create')) return 'create';
+  if (clean.startsWith('/invite')) return 'invite';
   if (clean.startsWith('/help')) return 'help';
   if (clean.startsWith('/account')) return 'account';
   if (clean.startsWith('/status')) return 'status';

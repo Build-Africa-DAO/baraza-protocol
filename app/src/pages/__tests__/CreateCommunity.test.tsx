@@ -40,10 +40,10 @@ function renderCreate(path = '/create') {
 }
 
 describe('CreateCommunity wizard', () => {
-  it('needs one kind of group before continuing, and offers five kinds', () => {
+  it('needs one kind of group before continuing, and offers nine kinds', () => {
     renderCreate();
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('What Kind of Group?');
-    expect(screen.getAllByRole('radio')).toHaveLength(5);
+    expect(screen.getAllByRole('radio')).toHaveLength(9);
     const next = screen.getByRole('button', { name: 'Continue' });
     expect(next).toBeDisabled();
     fireEvent.click(screen.getByRole('radio', { name: /Chama/ }));
@@ -63,6 +63,7 @@ describe('CreateCommunity wizard', () => {
 
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Open This Group');
     expect(screen.getByText('No launch fee in this environment')).toBeInTheDocument();
+    expect(screen.getByText('KES 250.00')).toBeInTheDocument();
     expect(screen.queryByText(/6,500/)).toBeNull();
     expect(screen.queryByText(/SWIFT|WhatsApp|Privy|Solana|Paybill/)).toBeNull();
 
@@ -80,6 +81,20 @@ describe('CreateCommunity wizard', () => {
     fireEvent.click(screen.getByRole('button', { name: /Free to Join/ }));
     expect(screen.queryByLabelText('What You Collect Each Month')).toBeNull();
     expect(screen.getByText('Free to join.')).toBeInTheDocument();
+  });
+
+  it('defaults creative collectives to free to join', () => {
+    renderCreate('/create?type=creative');
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    expect(screen.getByText('Free to join.')).toBeInTheDocument();
+    expect(screen.queryByLabelText('What You Collect Each Month')).toBeNull();
+  });
+
+  it('offers every six months cadence option', () => {
+    renderCreate('/create?type=cooperative');
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    fireEvent.click(screen.getByRole('button', { name: /Every Six Months/ }));
+    expect(screen.getByLabelText('What You Collect Every Six Months')).toBeInTheDocument();
   });
 
   it('offers a one-time fee and relabels the amount', () => {

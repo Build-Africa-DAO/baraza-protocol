@@ -79,7 +79,7 @@ Every external provider is cataloged below, explicitly distinguishing **what is 
 | # | Provider / Subsystem | Current Blocker / Pending Item | Assigned Owner | Action Required / Reference Ticket |
 | :- | :--- | :--- | :--- | :--- |
 | **1** | **Kotani Pay** | **KES Fiat Sandbox Wallet Creation** | Kotani Developer Support | Support must enable and provision the KES fiat wallet for Integrator `6ab2ec14dc11802412901c4b` so initial end-to-end sandbox deposits can settle. |
-| **2** | **Africa's Talking** | **Alphanumeric Sender ID (`BarazaProto`)** | Mobile Network Operators (Safaricom / Airtel) | Application submitted; awaiting regulatory carrier sign-off for branded SMS sender ID.<br>**Carrier Ticket Ref:** `ATPR-0005887`. |
+| **2** | **Africa's Talking** | **Alphanumeric Sender ID (`BADDAO`)** | Mobile Network Operators (Safaricom / Airtel) | Application updated to match Certificate of Incorporation (Bad Dao Africa Limited); awaiting final carrier review.<br>**Carrier Ticket Ref:** `ATPR-0005887`. |
 | **3** | **Paystack** | **Live Merchant Account Activation** | Paystack Compliance Review | Corporate registration and business compliance documents submitted; awaiting final sign-off to switch from test keys to live settlement keys. |
 | **4** | **Safaricom Direct Daraja 3.0**| **Direct M-Pesa Paybill / B2C Shortcode** | Executive Director & Safaricom Enterprise | Direct telco contract required for dedicated 6-digit Paybill. (Minisend and Kotani currently cover M-Pesa offramp/onramp in the interim). |
 | **5** | **Anthropic** | **Commercial Claude 3.5 Sonnet API Tier** | Protocol Treasury / DevOps | Provision a dedicated commercial API key for high-volume legal and regulatory SACCO document generation via the Akili Copilot. |
@@ -111,7 +111,7 @@ All production configuration is maintained under strict environment parity betwe
 | `PAYSTACK_CALLBACK_URL`| Global | `https://barazaprotocol.com` | Card Redirect Callback |
 | `PAYSTACK_WEBHOOK_URL` | Global | `https://barazaprotocol.com/api/webhooks/paystack` | Paystack Event Receiver |
 | `AFRICASTALKING_USERNAME`| Global | `barazaprotocol` | Africa's Talking App Identifier |
-| `AFRICASTALKING_SENDER_ID`| Global | `BarazaProto` | Alphanumeric SMS Sender ID |
+| `AFRICASTALKING_SENDER_ID`| Global | `BADDAO` | Alphanumeric SMS Sender ID |
 | `CRON_SECRET` | Global | `live_cron_secret_67890` | Authenticated Cron Trigger Secret |
 | `COMPLIANCE_REVIEW_SECRET`| Global | `live_compliance_secret_12345` | SASRA Compliance Review Secret |
 

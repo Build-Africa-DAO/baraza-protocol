@@ -79,12 +79,24 @@ export function InviteSheet({ open, onClose, communityId, communityName }: Invit
     }
   }
 
+  const publicInviteUrl = `${window.location.origin}/invite?code=${communityId}`;
+
+  function shareWhatsApp() {
+    const text = `Join ${communityName} on Baraza: ${publicInviteUrl}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  }
+
+  function shareSms() {
+    const text = `Join ${communityName} on Baraza: ${publicInviteUrl}`;
+    window.open(`sms:?body=${encodeURIComponent(text)}`, '_blank');
+  }
+
   return (
     <Sheet
       open={open}
       onClose={onClose}
       title="Invite People"
-      description="Anyone with the link can ask to join. They pay dues and become a member once the payment is confirmed."
+      description="Anyone with the link can ask to join. They become a member once their invitation is confirmed."
       footer={
         <Button type="button" variant="outline" onClick={onClose}>
           Close
@@ -93,16 +105,25 @@ export function InviteSheet({ open, onClose, communityId, communityName }: Invit
     >
       <div className="space-y-6">
         <section className="space-y-3">
-          <h3 className="text-sm font-semibold">Join Link</h3>
-          <p className="break-all rounded-md border border-border bg-surface px-3 py-2 font-mono text-xs">{joinUrl}</p>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <Button type="button" onClick={() => void share(joinUrl)}>
-              <Share2 className="h-4 w-4" aria-hidden />
-              Share
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold">Public Invitation Link</h3>
+            <span className="text-xs text-muted-foreground">Direct & Shareable</span>
+          </div>
+          <p className="break-all rounded-md border border-border bg-surface px-3 py-2 font-mono text-xs">{publicInviteUrl}</p>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <Button type="button" onClick={() => void copy(publicInviteUrl)} variant="default">
+              <Copy className="h-4 w-4 mr-1.5" aria-hidden />
+              Copy
             </Button>
-            <Button type="button" variant="outline" onClick={() => void copy(joinUrl)}>
-              <Copy className="h-4 w-4" aria-hidden />
-              Copy Link
+            <Button type="button" onClick={shareWhatsApp} variant="outline" className="text-green-600 border-green-600/30 hover:bg-green-500/10">
+              WhatsApp
+            </Button>
+            <Button type="button" onClick={shareSms} variant="outline">
+              SMS
+            </Button>
+            <Button type="button" variant="outline" onClick={() => void share(publicInviteUrl)}>
+              <Share2 className="h-4 w-4 mr-1.5" aria-hidden />
+              More
             </Button>
           </div>
         </section>

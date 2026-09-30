@@ -9,7 +9,9 @@
     "test:contracts:smoke": "node tests/anchor-smoke.mjs",
     "test:contracts:drift": "node tests/anchor-smoke.mjs --drift-only",
     "verify:pr": "node scripts/devops/verify-pr.mjs",
-    "devops:preprocurement": "node scripts/devops/run-all-preprocurement.mjs"
+    "devops:preprocurement": "node scripts/devops/run-all-preprocurement.mjs",
+    "db:migrate:remote": "node scripts/devops/apply-remote-migration.mjs",
+    "db:verify:044": "node scripts/devops/verify-migration-044.mjs"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",
@@ -17,5 +19,8 @@
   },
   "engines": {
     "node": ">=20.19.0"
+  },
+  "devDependencies": {
+    "pg": "^8.23.1"
   }
 }

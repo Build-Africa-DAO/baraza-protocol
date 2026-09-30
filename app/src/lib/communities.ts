@@ -14,7 +14,7 @@ export type CommunityInsert = {
   description: string;
   membershipFee: number;
   activationFeeMinor?: number;
-  feeType?: 'one_time' | 'recurring_monthly' | 'free';
+  feeType?: 'free' | 'recurring_monthly' | 'one_time' | 'weekly' | 'semi_annual' | 'annual' | 'on_demand' | string;
   carrierPassThrough?: boolean;
   currency?: string;
   chain?: Chain;
@@ -206,6 +206,7 @@ function communityFromRow(row: CommunityRow): Community {
     saccoLicenseStatus: row.sacco_license_status ?? row.saccoLicenseStatus ?? undefined,
     isPayoutFrozen: row.is_payout_frozen ?? row.isPayoutFrozen ?? false,
     communityStatus: row.status === 'paused' || row.communityStatus === 'paused' ? 'paused' : 'active',
+    feeType: (row.fee_type ?? row.feeType ?? undefined) as Community['feeType'],
     settlement: {
       chain,
       contracts_state: chain === 'stellar' || chain === 'base' ? 'DEPLOYED' : 'NOT_DEPLOYED',
@@ -319,6 +320,7 @@ export async function createCommunityRecord(input: CommunityInsert): Promise<Com
     verificationTier: input.verificationTier ?? 'activation',
     vouchThreshold: input.vouchThreshold,
     saccoRegistrationNumber: input.saccoRegistrationNumber || undefined,
+    feeType: input.feeType || (input.membershipFee === 0 ? 'free' : 'recurring_monthly'),
   };
 
   if (isSupabaseConfigured()) {

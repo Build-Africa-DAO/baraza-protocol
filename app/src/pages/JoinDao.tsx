@@ -385,7 +385,7 @@ export default function JoinDao() {
                   </p>
                 </div>
                 <div className="baraza-card flex flex-col items-center justify-center p-4 md:p-5 text-center min-h-24">
-                  <p className="text-xs font-medium text-muted-foreground">Baraza platform fee (2.0%)</p>
+                  <p className="text-xs font-medium text-muted-foreground">Baraza platform fee (1.5%)</p>
                   <p className="mt-1.5 font-display text-lg md:text-xl font-black tabular-nums tracking-tight text-foreground">
                     {formatMoney(fee.platformFeeMinor, currency)}
                   </p>
@@ -403,6 +403,15 @@ export default function JoinDao() {
                   </p>
                 </div>
               </div>
+              {fee.activationFeeMinor > 0 && (
+                <div className="mt-3 flex items-center justify-between text-xs px-3 py-2 bg-muted/40 rounded-md border border-border">
+                  <span className="text-muted-foreground">First-Time Member Protocol Activation:</span>
+                  <span className="font-semibold text-foreground">{formatMoney(fee.activationFeeMinor, currency)}</span>
+                </div>
+              )}
+              <p className="mt-2 text-xs text-muted-foreground text-center">
+                100% of your {formatMoney(fee.netCreditedMinor, currency)} activation dues goes directly into {community.name}&apos;s sovereign treasury.
+              </p>
               <div className="flex justify-center">
                 <AskAkili
                   prompt={`Why is joining ${community.name} ${formatMoney(fee.totalExpectedMinor, currency)}?`}

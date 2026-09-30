@@ -596,9 +596,9 @@ describe('Baraza Protocol — End-to-End Client Onboarding & HTTP Stress Suite',
       for (const r of results) {
         expect(r.status).toBe(201);
         expect(r.data).toHaveProperty('intentToken');
-        // Assert server derived exact dues (KES 500 base dues + 2.5% platform fee = 512.50 KES = 51250 minor)
+        // Assert server derived exact dues (KES 500 base dues + 1.5% platform fee (750) + 0.5% carrier (250) = 510.00 KES = 51000 minor)
         expect(r.data.feeBreakdown.baseAmountMinor).toBe(50000);
-        expect(r.data.feeBreakdown.totalExpectedMinor).toBe(51250);
+        expect(r.data.feeBreakdown.totalExpectedMinor).toBe(51000);
         expect(r.data.amountXlm).toBeGreaterThan(35); // Derived XLM amount
       }
     });

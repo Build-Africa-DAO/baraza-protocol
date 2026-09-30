@@ -33,6 +33,7 @@ const GroupMore = lazy(ROUTE_CHUNKS.groupMore);
 const CreateDecision = lazy(ROUTE_CHUNKS.groupPropose);
 const JoinDao = lazy(ROUTE_CHUNKS.join);
 const JoinStatus = lazy(ROUTE_CHUNKS.joinStatus);
+const InviteLanding = lazy(ROUTE_CHUNKS.invite);
 const Profile = lazy(ROUTE_CHUNKS.account);
 const ProposalDetail = lazy(ROUTE_CHUNKS.groupVote);
 const AdminReconciliation = lazy(() => import('./pages/AdminReconciliation'));
@@ -72,7 +73,8 @@ const App: React.FC = () => {
               {/* ── Launch ── */}
               <Route path="/create" element={<CreateCommunity />} />
 
-              {/* ── Join ── */}
+              {/* ── Join & Invites ── */}
+              <Route path="/invite" element={<InviteLanding />} />
               <Route path="/join/:id" element={<JoinDao />} />
               <Route path="/join/:id/status" element={<JoinStatus />} />
 

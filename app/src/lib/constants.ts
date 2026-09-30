@@ -4,6 +4,7 @@ export interface Community {
   type: string;
   description: string;
   membershipFee: number;
+  feeType?: 'free' | 'recurring_monthly' | 'one_time' | 'weekly' | 'semi_annual' | 'annual' | 'on_demand' | string;
   /** ISO 4217 code the group's money is shown in. KES when absent. */
   currency?: string;
   memberCount: number;
@@ -45,6 +46,8 @@ export interface Community {
   saccoLicenseStatus?: string;
   isPayoutFrozen?: boolean;
   communityStatus?: 'active' | 'paused';
+  contributionsGated?: boolean;
+  contributionsOpenAt?: string;
   settlement?: CommunitySettlement;
 }
 

@@ -8,6 +8,7 @@ const STAY_PREFIXES = [
   '/profile',
   '/create',
   '/join',
+  '/invite',
   '/dashboard',
   '/dao',
   '/communities',

@@ -72,7 +72,7 @@ describe('JoinDao', () => {
     renderJoin();
 
     expect(screen.getByText('Activation fee')).toBeInTheDocument();
-    expect(screen.getByText('Baraza platform fee (2.0%)')).toBeInTheDocument();
+    expect(screen.getByText('Baraza platform fee (1.5%)')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /sign in to pay/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /request m-pesa prompt/i })).not.toBeInTheDocument();
 

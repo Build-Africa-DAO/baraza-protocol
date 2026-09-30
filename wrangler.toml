@@ -32,9 +32,11 @@ PAYSTACK_CALLBACK_URL = "https://barazaprotocol.com"
 PAYSTACK_WEBHOOK_URL = "https://barazaprotocol.com/api/webhooks/paystack"
 AFRICASTALKING_USERNAME = "barazaprotocol"
 AFRICASTALKING_APP_NAME = "Baraza Protocol Production"
-AFRICASTALKING_SENDER_ID = "BarazaProto"
+AFRICASTALKING_SENDER_ID = "BADDAO"
 AT_USERNAME = "barazaprotocol"
-AT_SENDER_ID = "BarazaProto"
+AT_SENDER_ID = "BADDAO"
+VITE_PRIVY_APP_ID = "cmubre17w00b20bl23be8hj69"
+VITE_GOOGLE_CLIENT_ID = "295032701781-hpf7m8gd8jk9u3ol7soekadnev5dtdve.apps.googleusercontent.com"
 
 # FIFO Webhook Ingress Queue
 [[queues.producers]]
@@ -53,6 +55,8 @@ STELLAR_HORIZON_URL = "https://horizon-testnet.stellar.org"
 STELLAR_SOROBAN_RPC = "https://soroban-testnet.stellar.org"
 VITE_SITE_URL = "https://staging.baraza-protocol.pages.dev"
 ENVIRONMENT = "staging"
+VITE_PRIVY_APP_ID = "cmubre17w00b20bl23be8hj69"
+VITE_GOOGLE_CLIENT_ID = "295032701781-hpf7m8gd8jk9u3ol7soekadnev5dtdve.apps.googleusercontent.com"
 
 # Production Environment Profile
 [env.production]
@@ -83,7 +87,9 @@ PAYSTACK_CALLBACK_URL = "https://barazaprotocol.com"
 PAYSTACK_WEBHOOK_URL = "https://barazaprotocol.com/api/webhooks/paystack"
 AFRICASTALKING_USERNAME = "barazaprotocol"
 AFRICASTALKING_APP_NAME = "Baraza Protocol Production"
-AFRICASTALKING_SENDER_ID = "BarazaProto"
+AFRICASTALKING_SENDER_ID = "BADDAO"
 AT_USERNAME = "barazaprotocol"
-AT_SENDER_ID = "BarazaProto"
+AT_SENDER_ID = "BADDAO"
+VITE_PRIVY_APP_ID = "cmubre17w00b20bl23be8hj69"
+VITE_GOOGLE_CLIENT_ID = "295032701781-hpf7m8gd8jk9u3ol7soekadnev5dtdve.apps.googleusercontent.com"
 

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, CreditCard, ReceiptText, UserPlus, Vote as VoteIcon } from 'lucide-react';
+import { ArrowRight, CreditCard, Lightbulb, ReceiptText, UserPlus, Vote as VoteIcon } from 'lucide-react';
 import GroupWorkspace from '@/components/app/GroupWorkspace';
 import { ListRow } from '@/components/app/ListRow';
 import { AmountBlock } from '@/components/ui/amount-block';
@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { StatusChip } from '@/components/ui/status-chip';
 import { useCommunityActivity, useProposals } from '@/hooks/useProposals';
 import type { GroupMembership } from '@/hooks/useGroupMembership';
+import type { Community } from '@/lib/constants';
 import { formatMajor, formatMoney } from '@/lib/money';
 import { proposalBucket } from '@/lib/proposalStatus';
 import { formatAccountDate } from '@/lib/accountLocale';
@@ -15,17 +16,20 @@ import { isVotingOpen, participationPct, voteTimeLabel } from '@/lib/voteCopy';
 import type { ActivityEvent, Decision } from '@/lib/dataStore';
 
 /**
- * §13.12 Group Home.
+ * §13.12 Group and Community Home — Identity-First Architecture.
  *
- * Same URL for a visitor, a pending member, an active member and an officer —
- * the composition changes, not the route. The page answers one question first:
- * what do I do now? Then, only if there is data: open votes, money, movement.
+ * Answers the core identity questions:
+ * 1. Who are we? (Logo, Name, Mission, About)
+ * 2. What are we doing? (Community Goals, Latest Updates, Events)
+ * 3. How can I participate? (Make a Proposal CTA, Open Votes, Active Discussions)
+ * 4. Financial transparency (Ledger, Treasury, only where applicable)
  */
 export default function CommunityDashboard() {
   return (
     <GroupWorkspace hideJoinCta>
       {({ community, membership, isOfficer }) => (
         <HomePanel
+          community={community}
           communityId={community.id}
           currency={community.currency}
           memberCount={community.memberCount}
@@ -41,7 +45,49 @@ export default function CommunityDashboard() {
   );
 }
 
+function getGoalsForType(type: string): string[] {
+  switch (type) {
+    case 'creative':
+      return [
+        'Showcase and elevate local creative talent and cultural artifacts.',
+        'Fund community-voted design, music, and multimedia projects.',
+        'Retain sovereign collective ownership of all creative assets.',
+      ];
+    case 'savings':
+      return [
+        'Cultivate disciplined group savings and table banking capital.',
+        'Provide instant, low-friction emergency micro-credit for members.',
+        'Distribute transparent dividends and pooled returns annually.',
+      ];
+    case 'welfare':
+      return [
+        'Support member families during medical and bereavement emergencies.',
+        'Ensure rapid, transparent disbursement of emergency benevolence funds.',
+        'Keep an indisputable, tamper-proof record of all contributions.',
+      ];
+    case 'investment':
+      return [
+        'Pool collective capital for high-yield ventures, equities, and real estate.',
+        'Conduct rigorous group due diligence on all investment proposals.',
+        'Distribute returns proportionally based on member equity stakes.',
+      ];
+    case 'cooperative':
+      return [
+        'Strengthen collective bargaining power for shared produce and supplies.',
+        'Pool resources to invest in communal equipment and logistics.',
+        'Ensure fair member dividends and democratic representation.',
+      ];
+    default:
+      return [
+        'Foster collaboration, mutual aid, and active member participation.',
+        'Propose and vote on community initiatives with transparent quorum.',
+        'Coordinate shared treasury resources with zero central gatekeepers.',
+      ];
+  }
+}
+
 function HomePanel({
+  community,
   communityId,
   currency,
   memberCount,
@@ -52,6 +98,7 @@ function HomePanel({
   membership,
   isOfficer,
 }: {
+  community: Community;
   communityId: string;
   currency?: string;
   memberCount: number;
@@ -67,9 +114,11 @@ function HomePanel({
   const awaitingSend = all.filter((decision) => proposalBucket(decision) === 'passed');
   const { events: activities } = useCommunityActivity(communityId);
   const hasBalance = typeof fundBalance === 'number';
+  const goals = getGoalsForType(community.type);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
+      {/* 1. Next Action Banner / Urgent Notice */}
       <NextAction
         communityId={communityId}
         currency={membership.currency ?? currency}
@@ -80,6 +129,95 @@ function HomePanel({
         memberCount={memberCount}
       />
 
+      {/* 2. About the Community */}
+      <section className="baraza-card p-6 space-y-3" aria-labelledby="home-about">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">About Community</span>
+          <span className="text-xs text-muted-foreground">{memberCount} {memberCount === 1 ? 'member' : 'members'}</span>
+        </div>
+        <h2 id="home-about" className="font-display text-xl font-bold">
+          {community.name}
+        </h2>
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          {community.description || 'A community operating on Baraza Protocol.'}
+        </p>
+      </section>
+
+      {/* 3. Community Goals */}
+      <section className="baraza-card p-6 space-y-4" aria-labelledby="home-goals">
+        <div>
+          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Mission & Pillars</span>
+          <h2 id="home-goals" className="mt-1 font-display text-lg font-bold">
+            Community Goals
+          </h2>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {goals.map((goal, idx) => (
+            <div key={idx} className="rounded-xl border border-border bg-surface p-4 text-xs space-y-1.5">
+              <span className="inline-block rounded-full bg-primary/10 px-2 py-0.5 font-semibold text-primary">
+                0{idx + 1}
+              </span>
+              <p className="font-medium text-foreground leading-snug">{goal}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 4. Latest Updates & Upcoming Events */}
+      <div className="grid gap-6 sm:grid-cols-2">
+        <section className="baraza-card p-5 space-y-3" aria-labelledby="home-updates">
+          <div className="flex items-center justify-between">
+            <h2 id="home-updates" className="font-display text-base font-bold">
+              Latest Updates
+            </h2>
+            <span className="text-xs text-muted-foreground">Live Feed</span>
+          </div>
+          <div className="rounded-lg border border-border/60 bg-surface/50 p-3.5 text-xs space-y-1">
+            <p className="font-semibold text-foreground">Welcome to {community.name}</p>
+            <p className="text-muted-foreground">
+              Official community space on Baraza. Propose initiatives, coordinate projects, and vote democratically.
+            </p>
+          </div>
+        </section>
+
+        <section className="baraza-card p-5 space-y-3" aria-labelledby="home-events">
+          <div className="flex items-center justify-between">
+            <h2 id="home-events" className="font-display text-base font-bold">
+              Upcoming Events
+            </h2>
+            <span className="text-xs text-muted-foreground">Schedule</span>
+          </div>
+          <div className="rounded-lg border border-border/60 bg-surface/50 p-3.5 text-xs space-y-1">
+            <p className="font-semibold text-foreground">Weekly Community Gathering</p>
+            <p className="text-muted-foreground">
+              Every Saturday · Open member session for new proposals and project updates.
+            </p>
+          </div>
+        </section>
+      </div>
+
+      {/* 5. Prominent Make a Proposal CTA (Issue 9) */}
+      <section className="baraza-card border-primary/30 bg-primary/5 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5" aria-labelledby="home-proposal-cta">
+        <div className="space-y-1.5 min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <Lightbulb className="h-4 w-4 text-primary" aria-hidden />
+            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Have an Idea?</span>
+          </div>
+          <h2 id="home-proposal-cta" className="font-display text-xl font-bold text-foreground">
+            Make a Proposal for {community.name}
+          </h2>
+          <p className="text-sm text-muted-foreground max-w-xl">
+            Members can propose new initiatives, spending requests, or rule updates. Everything passes through transparent quorum voting.
+          </p>
+        </div>
+        <Button asChild size="lg" className="shrink-0 font-semibold shadow-md sm:w-auto">
+          <Link to={`/dashboard/${communityId}/votes/new`}>
+            Make a Proposal
+          </Link>
+        </Button>
+      </section>
+
+      {/* 6. Open Votes */}
       {openVotes.length > 0 && (
         <section aria-labelledby="home-open-votes">
           <div className="mb-3 flex items-center justify-between gap-3">
@@ -104,6 +242,7 @@ function HomePanel({
         </section>
       )}
 
+      {/* 7. Money & Financial Information */}
       <section className="baraza-card p-5 text-center" aria-labelledby="home-money">
         <div className="relative mb-4 flex items-center justify-center">
           <div className="text-center">
@@ -122,7 +261,6 @@ function HomePanel({
             </div>
           ) : null}
         </div>
-        {/* Reserved and available come from the community row when the backend has them; otherwise "Not available yet". */}
         <div className="mt-4 grid gap-4 text-center sm:grid-cols-3">
           <AmountBlock className="text-center" label="Total" amountMajor={hasBalance ? fundBalance : null} currency={currency} />
           <AmountBlock className="text-center" label="Reserved" amountMinor={encumberedBalanceMinor ?? null} currency={currency} size="md" />
@@ -130,6 +268,7 @@ function HomePanel({
         </div>
       </section>
 
+      {/* 8. Recent Movement */}
       <section aria-labelledby="home-movement">
         <div className="relative mb-3 flex items-center justify-center">
           <h2 id="home-movement" className="font-display text-base font-bold text-center">

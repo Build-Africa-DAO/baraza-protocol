@@ -118,4 +118,14 @@ describe('CommunityDashboard next action', () => {
     const movementHeading = screen.getByRole('heading', { name: 'Recent Movement' });
     expect(movementHeading).toHaveClass('text-center');
   });
+
+  it('renders identity-first sections including About, Community Goals, and Make a Proposal CTA', () => {
+    renderHome();
+    expect(screen.getByText('About Community')).toBeInTheDocument();
+    expect(screen.getByText('A savings group.')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Community Goals' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Make a Proposal for Kibera Youth/i })).toBeInTheDocument();
+    const proposeLink = screen.getByRole('link', { name: 'Make a Proposal' });
+    expect(proposeLink).toHaveAttribute('href', '/dashboard/1/votes/new');
+  });
 });

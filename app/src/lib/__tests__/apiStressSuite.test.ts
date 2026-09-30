@@ -435,13 +435,13 @@ describe('Database-Integrated Real HTTP Stress & Correctness Suite', () => {
 
       // Verify itemized calculations:
       // Base: 40,000 cents (KES 400)
-      // Platform (2%): 800 cents (KES 8.00)
+      // Platform (1.5%): 600 cents (KES 6.00)
       // Carrier (0.5%): 200 cents (KES 2.00)
-      // Total Expected: 41,000 cents (KES 410.00)
+      // Total Expected: 40,800 cents (KES 408.00)
       expect(intentData.feeBreakdown.baseAmountMinor).toBe(40000);
-      expect(intentData.feeBreakdown.platformFeeMinor).toBe(800);
+      expect(intentData.feeBreakdown.platformFeeMinor).toBe(600);
       expect(intentData.feeBreakdown.carrierCostMinor).toBe(200);
-      expect(intentData.feeBreakdown.totalExpectedMinor).toBe(41000);
+      expect(intentData.feeBreakdown.totalExpectedMinor).toBe(40800);
 
       // Step 3: Webhook Settlement via Paystack
       const orderId = 'ord_amani_lifecycle_001';
@@ -776,7 +776,7 @@ describe('Database-Integrated Real HTTP Stress & Correctness Suite', () => {
       expect(res.status).toBe(201);
       const data = await res.json() as { amountXlm: number; feeBreakdown: { totalExpectedMinor: number } };
       expect(data.amountXlm).toBeGreaterThan(0);
-      expect(data.feeBreakdown.totalExpectedMinor).toBe(41000);
+      expect(data.feeBreakdown.totalExpectedMinor).toBe(40800);
     });
 
     it('handles USSD gateway interactive session', async () => {
