@@ -26,6 +26,12 @@ export function formatPrivyAuthError(err: unknown): string {
   if (/\[Input error\]/i.test(raw)) {
     return raw.replace(/^\[Input error\]\s*`[^`]+`:\s*/i, '').trim() || raw;
   }
+  if (/sms not allowed/i.test(raw)) {
+    return 'Phone & SMS verification is coming soon. Please continue with Google or Email.';
+  }
+  if (/google not allowed/i.test(raw)) {
+    return 'Google Sign-In is being activated in the developer console. Please use Email or try again in a moment.';
+  }
   return raw;
 }
 
