@@ -81,11 +81,12 @@ export default async function handler(req: Request): Promise<Response> {
     message: process.env.MINISEND_API_KEY ? undefined : 'Minisend API key not configured',
   };
 
+  const kotaniKey = process.env.KOTANI_API_KEY || process.env.KOTANI_PAY_API_KEY;
   const kotaniHealth: ComponentHealth = {
     tier: 'soft',
-    status: process.env.KOTANI_API_KEY ? 'healthy' : 'degraded',
+    status: kotaniKey ? 'healthy' : 'degraded',
     latency_ms: 1,
-    message: process.env.KOTANI_API_KEY ? undefined : 'Kotani API key not configured',
+    message: kotaniKey ? undefined : 'Kotani API key not configured',
   };
 
   const airtelHealth: ComponentHealth = {
