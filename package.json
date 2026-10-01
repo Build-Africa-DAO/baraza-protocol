@@ -11,7 +11,8 @@
     "verify:pr": "node scripts/devops/verify-pr.mjs",
     "devops:preprocurement": "node scripts/devops/run-all-preprocurement.mjs",
     "db:migrate:remote": "node scripts/devops/apply-remote-migration.mjs",
-    "db:verify:044": "node scripts/devops/verify-migration-044.mjs"
+    "db:verify:044": "node scripts/devops/verify-migration-044.mjs",
+    "test:ux": "node scripts/devops/browser-experience-bot.mjs"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",
@@ -21,6 +22,7 @@
     "node": ">=20.19.0"
   },
   "devDependencies": {
-    "pg": "^8.23.1"
+    "pg": "^8.23.1",
+    "puppeteer-core": "^25.12.0"
   }
 }
