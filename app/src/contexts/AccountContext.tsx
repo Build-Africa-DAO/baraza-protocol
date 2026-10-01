@@ -24,9 +24,17 @@ const PrivyAccountProvider = lazy(() => import('@/contexts/PrivyAccountProvider'
 export function hasPrivySessionHint(): boolean {
   if (typeof window === 'undefined') return false;
   try {
+    // 1. Returning from an OAuth callback (e.g. Google redirect with privy_oauth_code)
+    const search = window.location.search;
+    const hash = window.location.hash;
+    if (search.includes('privy_') || hash.includes('privy_') || search.includes('oauth') || hash.includes('oauth')) {
+      return true;
+    }
+
+    // 2. Stored session in localStorage
     for (let i = 0; i < window.localStorage.length; i += 1) {
       const key = window.localStorage.key(i) ?? '';
-      if (key.startsWith('privy:') && (key.includes('token') || key.includes('session'))) return true;
+      if (key.startsWith('privy:') && (key.includes('token') || key.includes('session') || key.includes('caid') || key.includes('user'))) return true;
     }
   } catch {
     // Storage blocked: treat as a visitor.
