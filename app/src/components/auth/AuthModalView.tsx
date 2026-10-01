@@ -253,7 +253,7 @@ export function AuthModalView({ actions, intent, onIntentChange, onClose, notice
               >
                 <span className="inline-flex items-center gap-1.5">
                   <Phone className="h-3.5 w-3.5" /> Phone
-                  <span className="rounded bg-primary/20 px-1 py-0.5 text-[9px] font-semibold text-primary uppercase tracking-wider">Soon</span>
+                  <span className="rounded bg-primary/20 px-1 py-0.5 text-xs font-semibold text-primary uppercase tracking-wider">Soon</span>
                 </span>
               </button>
             </div>
