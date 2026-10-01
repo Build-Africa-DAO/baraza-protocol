@@ -207,6 +207,70 @@ async function run() {
     // =========================================================================
     console.log('\n--- DOMAIN 1: PUBLIC MARKETING & DISCOVERY ---');
 
+    await recordResult('Flow 0: Auth Modal Email-First, Phone Soon Badge & Google Button', 'Domain 1', async () => {
+      await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' });
+      await clearAuthSession();
+      await page.goto(`${BASE_URL}/`, { waitUntil: 'networkidle2' });
+
+      // Click Sign In button in header
+      await page.evaluate(() => {
+        const btn = Array.from(document.querySelectorAll('button')).find(b => b.innerText.trim() === 'Sign In');
+        if (btn) btn.click();
+      });
+      await page.waitForSelector('[role="dialog"]', { timeout: 12000 });
+
+      // Verify Email is default
+      const dialogText = await page.evaluate(() => document.querySelector('[role="dialog"]').innerText);
+      if (!dialogText.includes('Email') || !dialogText.includes('Send Code')) {
+        throw new Error('Auth modal does not default to email identifier input');
+      }
+      if (!dialogText.includes('Continue with Google')) {
+        throw new Error('Auth modal is missing Continue with Google button');
+      }
+
+      // Click Phone [Soon] tab
+      await page.evaluate(() => {
+        const dialog = document.querySelector('[role="dialog"]');
+        const phoneBtn = Array.from(dialog.querySelectorAll('button')).find(b => b.innerText.includes('Phone'));
+        if (phoneBtn) phoneBtn.click();
+      });
+      await page.waitForFunction(() => {
+        const text = document.querySelector('[role="dialog"]')?.innerText ?? '';
+        return text.includes('Phone & SMS Verification Coming Soon');
+      }, { timeout: 3000 });
+
+      // Click Continue with Email from inside the card
+      await page.evaluate(() => {
+        const dialog = document.querySelector('[role="dialog"]');
+        const emailBtn = Array.from(dialog.querySelectorAll('button')).find(b => b.innerText.includes('Continue with Email'));
+        if (emailBtn) emailBtn.click();
+      });
+      await page.waitForFunction(() => {
+        const text = document.querySelector('[role="dialog"]')?.innerText ?? '';
+        return text.includes('Send Code');
+      }, { timeout: 3000 });
+
+      // Toggle to Create an account
+      await page.evaluate(() => {
+        const dialog = document.querySelector('[role="dialog"]');
+        const signupBtn = Array.from(dialog.querySelectorAll('button')).find(b => b.innerText.includes('Create an account'));
+        if (signupBtn) signupBtn.click();
+      });
+      await page.waitForFunction(() => {
+        const text = document.querySelector('[role="dialog"]')?.innerText ?? '';
+        return text.includes('Create Your Account');
+      }, { timeout: 3000 });
+
+      await snap('flow_00_auth_modal_interactive');
+
+      // Close modal
+      await page.keyboard.press('Escape');
+      await page.waitForFunction(() => !document.querySelector('[role="dialog"]'));
+
+      // Re-inject member session for authenticated flows
+      await injectAuthSession();
+    });
+
     await recordResult('Flow 1: Landing Page Desktop & Mobile Responsiveness', 'Domain 1', async () => {
       await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' });
       await page.waitForSelector('h1');
@@ -216,8 +280,8 @@ async function run() {
     });
 
     await recordResult('Flow 2: Communities Explorer Real-Time Search & Kind Filtering', 'Domain 1', async () => {
-      await page.goto(`${BASE_URL}/groups`, { waitUntil: 'domcontentloaded' });
-      await page.waitForFunction(() => document.body.innerText.includes('Showing'), { timeout: 8000 });
+      await page.goto(`${BASE_URL}/groups`, { waitUntil: 'networkidle2' });
+      await page.waitForFunction(() => document.body.innerText.includes('Showing'), { timeout: 12000 });
       await page.waitForSelector('input[type="search"]');
       await page.click('input[type="search"]');
       await page.type('input[type="search"]', 'Milele', { delay: 30 });
