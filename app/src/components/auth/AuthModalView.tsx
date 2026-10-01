@@ -3,7 +3,6 @@ import { Loader2, Mail, Phone, X } from 'lucide-react';
 import { BrandLogo } from '@/components/BrandLogo';
 import { GoogleIdentityButton } from '@/components/auth/GoogleIdentityButton';
 import { Button } from '@/components/ui/button';
-import { hasStoredAccountCountry } from '@/lib/accountLocale';
 import { requestCode, signInWithGoogle, verifyCode } from '@/lib/auth/baraza';
 import { getGoogleClientId } from '@/lib/auth/provider';
 import { isValidEmail } from '@/lib/phoneAuth';
@@ -29,23 +28,6 @@ export interface AuthActions {
   /** A provider-rendered Google control (Google Identity Services) instead of our button. */
   renderGoogle?: (input: { isSignUp: boolean; disabled: boolean; onError: (message: string) => void }) => ReactNode;
   formatError: (err: unknown) => string;
-}
-
-const DIAL_CODES: { code: string; label: string; country: AccountCountryCode }[] = [
-  { code: '+254', label: 'KE +254', country: 'KE' },
-  { code: '+250', label: 'RW +250', country: 'RW' },
-  { code: '+255', label: 'TZ +255', country: 'TZ' },
-  { code: '+256', label: 'UG +256', country: 'UG' },
-  { code: '+251', label: 'ET +251', country: 'ET' },
-  { code: '+234', label: 'NG +234', country: 'NG' },
-  { code: '+233', label: 'GH +233', country: 'GH' },
-  { code: '+27', label: 'ZA +27', country: 'ZA' },
-  { code: '+44', label: 'GB +44', country: 'GB' },
-  { code: '+1', label: 'US +1', country: 'US' },
-];
-
-function dialForCountry(country: AccountCountryCode): string {
-  return DIAL_CODES.find((item) => item.country === country)?.code ?? '+254';
 }
 
 const INCOMPLETE_OTP_MESSAGE = 'Enter all 6 digits, including a 0 at the start if there is one.';
@@ -80,18 +62,14 @@ export interface AuthModalProps {
   notice?: string;
 }
 
-export function AuthModalView({ actions, intent, countryCode, onIntentChange, onClose, notice }: AuthModalProps & { actions: AuthActions }) {
+export function AuthModalView({ actions, intent, onIntentChange, onClose, notice }: AuthModalProps & { actions: AuthActions }) {
   const titleId = useId();
   const phoneEnabled = actions.phoneEnabled;
   const googleLoading = Boolean(actions.googleLoading);
 
-  const [method, setMethod] = useState<AuthMethod>(phoneEnabled ? 'phone' : 'email');
+  const [method, setMethod] = useState<AuthMethod>('email');
   const [step, setStep] = useState<'identifier' | 'code'>('identifier');
   const [email, setEmail] = useState('');
-  // Kenya first unless the person chose a country themselves; an inferred
-  // locale must not put a chama member on US +1.
-  const [dial, setDial] = useState(dialForCountry(hasStoredAccountCountry() ? countryCode : 'KE'));
-  const [localNumber, setLocalNumber] = useState('');
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -99,8 +77,7 @@ export function AuthModalView({ actions, intent, countryCode, onIntentChange, on
   const previouslyFocused = useRef<HTMLElement | null>(null);
   const verifyingRef = useRef(false);
 
-  const e164 = `${dial}${localNumber.replace(/\s/g, '').replace(/^0+/, '')}`;
-  const destination = method === 'email' ? email.trim() : e164;
+  const destination = email.trim();
   const isSignUp = intent === 'signup';
 
   useEffect(() => {
@@ -154,8 +131,8 @@ export function AuthModalView({ actions, intent, countryCode, onIntentChange, on
       setError('Enter a valid email address.');
       return;
     }
-    if (method === 'phone' && !/^\+\d{10,15}$/.test(e164)) {
-      setError('Enter a valid phone number.');
+    if (method === 'phone') {
+      setError('Phone & SMS verification is coming soon. Please continue with Google or Email.');
       return;
     }
 
@@ -252,37 +229,45 @@ export function AuthModalView({ actions, intent, countryCode, onIntentChange, on
 
           {phoneEnabled && step === 'identifier' && (
             <div className="mt-6 grid grid-cols-2 gap-1 rounded-full border border-border bg-surface p-1">
-              {(['phone', 'email'] as const).map((next) => (
-                <button
-                  key={next}
-                  type="button"
-                  onClick={() => { setMethod(next); setError(null); }}
-                  className={cn(
-                    'rounded-full px-3 py-2 text-xs font-bold transition-colors',
-                    method === next
-                      ? 'bg-foreground text-background'
-                      : 'text-muted-foreground hover:text-foreground',
-                  )}
-                >
-                  {next === 'phone' ? (
-                    <span className="inline-flex items-center gap-1.5"><Phone className="h-3.5 w-3.5" /> Phone</span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" /> Email</span>
-                  )}
-                </button>
-              ))}
+              <button
+                type="button"
+                onClick={() => { setMethod('email'); setError(null); }}
+                className={cn(
+                  'rounded-full px-3 py-2 text-xs font-bold transition-colors',
+                  method === 'email'
+                    ? 'bg-foreground text-background'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
+              >
+                <span className="inline-flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" /> Email</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setMethod('phone'); setError(null); }}
+                className={cn(
+                  'rounded-full px-3 py-2 text-xs font-bold transition-colors',
+                  method === 'phone'
+                    ? 'bg-foreground text-background'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  <Phone className="h-3.5 w-3.5" /> Phone
+                  <span className="rounded bg-primary/20 px-1 py-0.5 text-[9px] font-semibold text-primary uppercase tracking-wider">Soon</span>
+                </span>
+              </button>
             </div>
           )}
 
           {step === 'identifier' ? (
-            <form
-              onSubmit={(event) => {
-                event.preventDefault();
-                void sendOtp();
-              }}
-              className="mt-6 space-y-4"
-            >
-              {method === 'email' ? (
+            method === 'email' ? (
+              <form
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void sendOtp();
+                }}
+                className="mt-6 space-y-4"
+              >
                 <label className="block">
                   <span className="mb-2 block text-sm font-semibold text-foreground">
                     Email
@@ -297,46 +282,36 @@ export function AuthModalView({ actions, intent, countryCode, onIntentChange, on
                     className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none ring-offset-background focus:border-foreground focus:ring-2 focus:ring-ring"
                   />
                 </label>
-              ) : (
-                <div>
-                  <span className="mb-2 block text-sm font-semibold text-foreground">
-                    Phone number
-                  </span>
-                  <div className="flex overflow-hidden rounded-xl border border-border focus-within:border-foreground focus-within:ring-2 focus-within:ring-ring">
-                    <select
-                      value={dial}
-                      onChange={(event) => setDial(event.target.value)}
-                      aria-label="Country code"
-                      className="border-r border-border bg-surface px-3 py-3 text-sm outline-none"
-                    >
-                      {DIAL_CODES.map((item) => (
-                        <option key={item.code} value={item.code}>
-                          {item.label}
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      type="tel"
-                      inputMode="numeric"
-                      autoComplete="tel-national"
-                      autoFocus
-                      aria-label="Phone number"
-                      value={localNumber}
-                      onChange={(event) => { setLocalNumber(event.target.value); setError(null); }}
-                      placeholder="712 345 678"
-                      className="min-w-0 flex-1 bg-background px-4 py-3 text-sm outline-none"
-                    />
-                  </div>
+
+                {error && <p className="text-xs text-destructive">{error}</p>}
+
+                <Button type="submit" disabled={busy} fullWidth>
+                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  {busy ? 'Sending code…' : 'Send code'}
+                </Button>
+              </form>
+            ) : (
+              <div className="mt-6 rounded-2xl border border-dashed border-border bg-surface/50 p-5 text-center space-y-3">
+                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <Phone className="h-5 w-5" />
                 </div>
-              )}
-
-              {error && <p className="text-xs text-destructive">{error}</p>}
-
-              <Button type="submit" disabled={busy} fullWidth>
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                {busy ? 'Sending code…' : 'Send code'}
-              </Button>
-            </form>
+                <div className="space-y-1">
+                  <p className="text-sm font-bold text-foreground">Phone & SMS Verification Coming Soon</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Carrier SMS authentication is undergoing final telco certification. Please sign in or register with <strong>Google</strong> or <strong>Email</strong> to access Baraza Protocol today.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => { setMethod('email'); setError(null); }}
+                  className="w-full text-xs font-semibold"
+                >
+                  Continue with Email
+                </Button>
+              </div>
+            )
           ) : (
             <form onSubmit={(event) => void handleVerify(event)} className="mt-6 space-y-4">
               <p className="text-sm text-muted-foreground">

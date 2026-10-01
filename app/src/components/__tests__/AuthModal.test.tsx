@@ -56,7 +56,8 @@ describe('AuthModal', () => {
     expect(dialog.className).toMatch(/overflow-y-auto/);
 
     expect(dialog.querySelector('img')).toBeNull();
-    expect(screen.getByLabelText('Phone number')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('you@email.com')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /phone/i })).toBeInTheDocument();
     expect(screen.getByText(/You do not need a crypto wallet/)).toBeInTheDocument();
   });
 
