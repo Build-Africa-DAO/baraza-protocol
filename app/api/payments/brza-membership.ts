@@ -102,7 +102,7 @@ export default async function handler(req: Request): Promise<Response> {
 
   const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/$/, '');
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const kotaniKey = process.env.KOTANI_PAY_API_KEY;
+  const kotaniKey = process.env.KOTANI_PAY_API_KEY || process.env.KOTANI_API_KEY;
   const hashPepper = process.env.PAYMENT_PHONE_HASH_PEPPER;
   if (!supabaseUrl || !serviceKey || !kotaniKey || !hashPepper) {
     return bad('BRZA membership payment orchestration is not configured.', 503);

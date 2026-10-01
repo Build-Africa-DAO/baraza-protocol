@@ -67,7 +67,7 @@ export default async function handler(req: Request): Promise<Response> {
   }
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, { status: 405 });
   if (!isAuthorized(req)) return bad('Payment adapter proxy is restricted to trusted server calls.', 401);
-  const key = process.env.KOTANI_PAY_API_KEY;
+  const key = process.env.KOTANI_PAY_API_KEY || process.env.KOTANI_API_KEY;
   if (!key) return bad('Kotani is not configured.', 503);
 
   let body: KotaniRequest;
