@@ -159,6 +159,42 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
   /** While the Privy chunk downloads after a tap: same as visitor but not ready, so gates show a spinner rather than a second Sign In. */
   const loadingValue = useMemo<AccountContextValue>(() => ({ ...visitorValue, ready: false }), [visitorValue]);
 
+  // Dev-only E2E test harness session bypass (dead-code eliminated in production)
+  const e2eSession = typeof window !== 'undefined' && import.meta.env.DEV ? window.localStorage.getItem('baraza.e2e.test_session') : null;
+  const e2eValue = useMemo<AccountContextValue | null>(() => {
+    if (!e2eSession) return null;
+    try {
+      const parsed = JSON.parse(e2eSession) as { accountId?: string; displayName?: string };
+      return {
+        configured: true,
+        ready: true,
+        authenticated: true,
+        accountId: parsed.accountId ?? 'did:privy:e2e_test_user',
+        displayName: parsed.displayName ?? 'E2E Test Member',
+        country,
+        setCountry,
+        login: () => undefined,
+        createAccount: () => undefined,
+        consumeAuthHandoff: () => EMPTY_HANDOFF,
+        getAccessToken: async () => 'e2e_mock_jwt_token',
+        logout: async () => {
+          window.localStorage.removeItem('baraza.e2e.test_session');
+          window.location.reload();
+        },
+      };
+    } catch {
+      return null;
+    }
+  }, [country, e2eSession, setCountry]);
+
+  if (e2eValue) {
+    return (
+      <AccountContext.Provider value={e2eValue}>
+        {children}
+      </AccountContext.Provider>
+    );
+  }
+
   if (provider === 'baraza') {
     return (
       <BarazaAccountProvider country={country} setCountry={setCountry}>
