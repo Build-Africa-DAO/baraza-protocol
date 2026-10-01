@@ -38,6 +38,7 @@ AFRICASTALKING_APP_NAME = "Baraza Protocol Production"
 AFRICASTALKING_SENDER_ID = "BADDAO"
 AT_USERNAME = "barazaprotocol"
 AT_SENDER_ID = "BADDAO"
+PRIVY_APP_ID = "cmubre17w00b20bl23be8hj69"
 VITE_PRIVY_APP_ID = "cmubre17w00b20bl23be8hj69"
 VITE_GOOGLE_CLIENT_ID = "295032701781-hpf7m8gd8jk9u3ol7soekadnev5dtdve.apps.googleusercontent.com"
 
@@ -61,6 +62,7 @@ STELLAR_HORIZON_URL = "https://horizon-testnet.stellar.org"
 STELLAR_SOROBAN_RPC = "https://soroban-testnet.stellar.org"
 VITE_SITE_URL = "https://staging.baraza-protocol.pages.dev"
 ENVIRONMENT = "staging"
+PRIVY_APP_ID = "cmubre17w00b20bl23be8hj69"
 VITE_PRIVY_APP_ID = "cmubre17w00b20bl23be8hj69"
 VITE_GOOGLE_CLIENT_ID = "295032701781-hpf7m8gd8jk9u3ol7soekadnev5dtdve.apps.googleusercontent.com"
 
@@ -69,6 +71,9 @@ VITE_GOOGLE_CLIENT_ID = "295032701781-hpf7m8gd8jk9u3ol7soekadnev5dtdve.apps.goog
 name = "baraza-protocol"
 [env.production.assets]
 directory = "app/dist"
+not_found_handling = "single-page-application"
+binding = "ASSETS"
+run_worker_first = ["/api/*"]
 
 [env.production.vars]
 STELLAR_NETWORK = "public"
@@ -96,6 +101,7 @@ AFRICASTALKING_APP_NAME = "Baraza Protocol Production"
 AFRICASTALKING_SENDER_ID = "BADDAO"
 AT_USERNAME = "barazaprotocol"
 AT_SENDER_ID = "BADDAO"
+PRIVY_APP_ID = "cmubre17w00b20bl23be8hj69"
 VITE_PRIVY_APP_ID = "cmubre17w00b20bl23be8hj69"
 VITE_GOOGLE_CLIENT_ID = "295032701781-hpf7m8gd8jk9u3ol7soekadnev5dtdve.apps.googleusercontent.com"
 

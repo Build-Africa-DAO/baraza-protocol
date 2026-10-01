@@ -85,6 +85,9 @@ export default {
           process.env[k] = v;
         }
       }
+      if (!process.env.PRIVY_APP_ID) {
+        process.env.PRIVY_APP_ID = (env.PRIVY_APP_ID as string) || (env.VITE_PRIVY_APP_ID as string) || 'cmubre17w00b20bl23be8hj69';
+      }
     }
 
     const url = new URL(req.url);
