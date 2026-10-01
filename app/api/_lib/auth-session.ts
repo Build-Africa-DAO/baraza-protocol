@@ -135,7 +135,7 @@ export async function resolveCallerIdentity(
 
   // Path C: Privy Bearer Session Token
   if (bearerToken) {
-    const appId = process.env.PRIVY_APP_ID || 'cm1234567890';
+    const appId = process.env.PRIVY_APP_ID || process.env.VITE_PRIVY_APP_ID || 'cmubre17w00b20bl23be8hj69';
 
     // Support mock verification strictly in test environments (Invariant I-AUTH-1)
     if (isTestEnv && bearerToken.startsWith('test_privy_token_')) {
@@ -159,7 +159,8 @@ export async function resolveCallerIdentity(
       if (payload.sub) {
         return { privyDid: payload.sub, authMethod: 'PRIVY_BEARER' };
       }
-    } catch {
+    } catch (err) {
+      console.error('[auth-session] Privy JWT verification failed for app:', appId, err);
       return null;
     }
   }

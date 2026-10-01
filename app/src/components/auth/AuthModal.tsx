@@ -25,8 +25,8 @@ export default function AuthModal(props: AuthModalProps) {
         if (method === 'email') await loginWithEmailCode({ code });
         else await loginWithSmsCode({ code });
       },
-      continueWithGoogle: async (isSignUp) => {
-        await initOAuth({ provider: 'google', disableSignup: !isSignUp });
+      continueWithGoogle: async () => {
+        await initOAuth({ provider: 'google' });
       },
       googleLoading,
       formatError: formatPrivyAuthError,

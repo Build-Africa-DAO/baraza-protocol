@@ -387,13 +387,19 @@ export function AuthModalView({ actions, intent, onIntentChange, onClose, notice
                   fullWidth
                   disabled={busy || googleLoading}
                   onClick={() => void continueWithGoogle()}
+                  className="relative flex items-center justify-center gap-2"
                 >
-                  {googleLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                  {busy || googleLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                      <span>Connecting to Google…</span>
+                    </>
                   ) : (
-                    <GoogleMark className="h-4 w-4 shrink-0" />
+                    <>
+                      <GoogleMark className="h-4 w-4 shrink-0" />
+                      <span>Continue with Google</span>
+                    </>
                   )}
-                  Continue with Google
                 </Button>
               )}
             </div>
