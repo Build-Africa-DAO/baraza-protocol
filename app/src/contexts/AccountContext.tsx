@@ -31,10 +31,21 @@ export function hasPrivySessionHint(): boolean {
       return true;
     }
 
-    // 2. Stored session in localStorage
+    // 2. Cookies (Privy sets privy-token, privy-session, privy-refresh-token)
+    if (typeof document !== 'undefined' && document.cookie && document.cookie.includes('privy')) {
+      return true;
+    }
+
+    // 3. Stored session in localStorage
     for (let i = 0; i < window.localStorage.length; i += 1) {
       const key = window.localStorage.key(i) ?? '';
-      if (key.startsWith('privy:') && (key.includes('token') || key.includes('session') || key.includes('caid') || key.includes('user'))) return true;
+      if (key.startsWith('privy') || key.includes('privy')) return true;
+    }
+
+    // 4. Stored session in sessionStorage
+    for (let i = 0; i < window.sessionStorage.length; i += 1) {
+      const key = window.sessionStorage.key(i) ?? '';
+      if (key.startsWith('privy') || key.includes('privy')) return true;
     }
   } catch {
     // Storage blocked: treat as a visitor.
