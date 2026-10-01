@@ -23,6 +23,7 @@ build/
 !.env.example
 !**/.env.example
 !**/.env.local.example
+!app/.env.production
 
 # Cryptographic Keys & Certificates
 *.pem
