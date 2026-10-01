@@ -140,9 +140,18 @@ export default {
       return dispatchApiRoute(req);
     }
 
-    // Cloudflare Pages Advanced Mode static asset fallback
+    // Cloudflare Static Assets & SPA Client Route Fallback
     if (env.ASSETS && typeof env.ASSETS.fetch === 'function') {
-      return env.ASSETS.fetch(req);
+      const assetRes = await env.ASSETS.fetch(req);
+      if (assetRes.status === 404 && req.method === 'GET' && !url.pathname.startsWith('/api/')) {
+        const accept = req.headers.get('Accept') || '';
+        const lastSegment = url.pathname.slice(url.pathname.lastIndexOf('/'));
+        if (accept.includes('text/html') || !lastSegment.includes('.')) {
+          const indexUrl = new URL('/', req.url);
+          return env.ASSETS.fetch(new Request(indexUrl.toString(), req));
+        }
+      }
+      return assetRes;
     }
 
     // Pass through to origin

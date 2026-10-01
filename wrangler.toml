@@ -9,6 +9,9 @@ compatibility_flags = ["nodejs_compat"]
 
 [assets]
 directory = "app/dist"
+not_found_handling = "single-page-application"
+binding = "ASSETS"
+run_worker_first = ["/api/*"]
 
 [vars]
 STELLAR_NETWORK = "public"
@@ -48,6 +51,9 @@ queue = "baraza-webhook-ingress-queue"
 name = "baraza-protocol-staging"
 [env.preview.assets]
 directory = "app/dist"
+not_found_handling = "single-page-application"
+binding = "ASSETS"
+run_worker_first = ["/api/*"]
 
 [env.preview.vars]
 STELLAR_NETWORK = "testnet"
