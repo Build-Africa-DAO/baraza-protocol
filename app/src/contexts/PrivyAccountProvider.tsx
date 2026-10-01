@@ -1,5 +1,5 @@
 import '@/polyfill';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { PrivyProvider, usePrivy } from '@privy-io/react-auth';
 import AuthModal, { type AuthIntent } from '@/components/auth/AuthModal';
 import { useTheme } from '@/hooks/useTheme';
@@ -13,8 +13,25 @@ import { AccountContext, useAuthHandoff, type AccountBridgeProps, type AccountCo
  * WalletConnect dependency (about 1 MB gzipped) to read a group page.
  */
 function AccountBridge({ country, setCountry, children, initialIntent, initialReturnTo }: AccountBridgeProps & { initialIntent: AuthIntent | null; initialReturnTo?: string }) {
-  const { ready, authenticated, user, logout, getAccessToken } = usePrivy();
+  const { ready: privyReady, authenticated, user, logout, getAccessToken } = usePrivy();
   const { authIntent, setAuthIntent, closeAuth, captureHandoff, consumeAuthHandoff, notice, promptReauth, settleReauth } = useAuthHandoff();
+  const [oauthTimedOut, setOauthTimedOut] = useState(false);
+
+  const isOAuthPending = typeof window !== 'undefined' && (
+    window.location.search.includes('privy_') ||
+    window.location.hash.includes('privy_')
+  );
+
+  useEffect(() => {
+    if (isOAuthPending && !authenticated) {
+      const timer = setTimeout(() => setOauthTimedOut(true), 15000);
+      return () => clearTimeout(timer);
+    }
+  }, [isOAuthPending, authenticated]);
+
+  // While an OAuth redirect exchange is actively in-flight, the account is not
+  // "ready" to render unauthenticated visitor gates until Privy finishes resolving.
+  const ready = privyReady && (!isOAuthPending || authenticated || oauthTimedOut);
 
   // A tap on Sign In before this chunk loaded is carried in as `initialIntent`.
   useEffect(() => {

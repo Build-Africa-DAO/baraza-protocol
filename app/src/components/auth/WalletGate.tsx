@@ -18,10 +18,18 @@ const WalletGate: React.FC<WalletGateProps> = ({
   const account = useAccount();
 
   if (!account.ready) {
+    const isOAuth = typeof window !== 'undefined' && (
+      window.location.search.includes('privy_') ||
+      window.location.hash.includes('privy_') ||
+      window.location.search.includes('oauth') ||
+      window.location.hash.includes('oauth')
+    );
     return (
-      <div className="flex min-h-[50vh] items-center justify-center gap-2 px-4 text-sm text-muted-foreground">
-        <Loader2 className="h-4 w-4 animate-spin" />
-        Loading your account
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 px-4 text-sm text-muted-foreground">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <span className="font-medium text-foreground">
+          {isOAuth ? 'Completing your sign-in with Google…' : 'Loading your account'}
+        </span>
       </div>
     );
   }
