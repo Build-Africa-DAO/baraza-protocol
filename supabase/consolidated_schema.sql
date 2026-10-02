@@ -2536,6 +2536,10 @@ BEGIN
 
             -- Serialize admin changes on community row lock (Dijkstra's Resource Hierarchy)
             PERFORM 1 FROM public.communities WHERE id = v_target_comm_id FOR UPDATE;
+            IF NOT FOUND THEN
+                -- Community row is already deleted (cascading community drop)
+                RETURN OLD;
+            END IF;
 
             SELECT COUNT(*) INTO v_admin_count
             FROM public.members
@@ -2557,6 +2561,9 @@ BEGIN
 
             -- Serialize admin changes on community row lock (Dijkstra's Resource Hierarchy)
             PERFORM 1 FROM public.communities WHERE id = v_target_comm_id FOR UPDATE;
+            IF NOT FOUND THEN
+                RETURN NEW;
+            END IF;
 
             SELECT COUNT(*) INTO v_admin_count
             FROM public.members
