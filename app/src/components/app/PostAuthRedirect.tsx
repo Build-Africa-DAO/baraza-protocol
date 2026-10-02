@@ -32,8 +32,12 @@ export default function PostAuthRedirect() {
     if (pendingLogin.current) {
       pendingLogin.current = false;
       const handoff = account.consumeAuthHandoff();
+      const currentPath = location.pathname;
+      const effectiveEntry = (handoff.entryPath && handoff.entryPath !== '/')
+        ? handoff.entryPath
+        : currentPath;
       const dest = resolvePostAuthPath({
-        entryPath: handoff.entryPath || `${location.pathname}${location.search}`,
+        entryPath: effectiveEntry,
         returnTo: handoff.returnTo,
         memberships,
       });
