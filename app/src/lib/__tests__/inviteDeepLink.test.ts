@@ -14,6 +14,8 @@ describe('Invite Deep Linking & Code Extraction', () => {
   it('extracts raw alphanumeric invite codes', () => {
     expect(extractInviteCode('1234567890ab')).toBe('1234567890ab');
     expect(extractInviteCode('  valid_code-123  ')).toBe('valid_code-123');
+    expect(extractInviteCode('402b4ed6-fa5e-47a9-869d-d4a0de0740b6')).toBe('402b4ed6-fa5e-47a9-869d-d4a0de0740b6');
+    expect(extractInviteCode('https://barazaprotocol.com/invite?code=402b4ed6-fa5e-47a9-869d-d4a0de0740b6')).toBe('402b4ed6-fa5e-47a9-869d-d4a0de0740b6');
   });
 
   it('rejects malformed or short invite codes', () => {
