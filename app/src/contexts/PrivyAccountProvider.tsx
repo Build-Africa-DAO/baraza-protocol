@@ -1,6 +1,6 @@
 import '@/polyfill';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { PrivyProvider, usePrivy } from '@privy-io/react-auth';
+import { PrivyProvider, usePrivy, useLoginWithOAuth } from '@privy-io/react-auth';
 import AuthModal, { type AuthIntent } from '@/components/auth/AuthModal';
 import { useTheme } from '@/hooks/useTheme';
 import { isPrivyPhoneAuthEnabled } from '@/lib/wallet/mpc';
@@ -16,6 +16,16 @@ function AccountBridge({ country, setCountry, children, initialIntent, initialRe
   const { ready: privyReady, authenticated, user, logout, getAccessToken } = usePrivy();
   const { authIntent, setAuthIntent, closeAuth, captureHandoff, consumeAuthHandoff, notice, promptReauth, settleReauth } = useAuthHandoff();
   const [oauthTimedOut, setOauthTimedOut] = useState(false);
+
+  // Critical: Privy requires `useLoginWithOAuth` to be mounted on the page
+  // that the OAuth provider redirects back to in order to process the callback.
+  // Mounting it here ensures it is active on redirect even when AuthModal is unmounted.
+  useLoginWithOAuth({
+    onError: (err) => {
+      console.error('[PrivyAccountProvider] OAuth callback failed:', err);
+      setOauthTimedOut(true);
+    },
+  });
 
   const isOAuthPending = typeof window !== 'undefined' && (
     window.location.search.includes('privy_') ||
