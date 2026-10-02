@@ -28,6 +28,8 @@ export type CommunityInsert = {
   verificationTier?: VerificationTier;
   vouchThreshold?: number;
   saccoRegistrationNumber?: string;
+  isPilotExempt?: boolean;
+  platformFeeBps?: number;
   walletProofHeaders?: Record<string, string>;
 };
 
@@ -344,6 +346,8 @@ export async function createCommunityRecord(input: CommunityInsert): Promise<Com
         paybillNumber: input.paybillNumber,
         ussdShortcode: input.ussdShortcode,
         createdBy: input.createdBy,
+        isPilotExempt: input.isPilotExempt ?? true,
+        platformFeeBps: input.platformFeeBps ?? 150,
       },
     });
 

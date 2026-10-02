@@ -67,6 +67,7 @@ import paymentsQuote from '../app/api/payments/quote';
 import paymentsReconcileBrzaMembership from '../app/api/payments/reconcile-brza-membership';
 import stellarCreatePaymentIntent from '../app/api/stellar/create-payment-intent';
 import { POST as stellarVerifyPayment } from '../app/api/stellar/verify-payment';
+import systemPricing from '../app/api/system/pricing';
 import treasuryInitialize from '../app/api/treasury/initialize';
 import userAvatar from '../app/api/user/avatar';
 import userMemberships from '../app/api/user/memberships';
@@ -143,6 +144,7 @@ export const routeTable: Record<string, ApiHandler> = {
   '/api/payments/reconcile-brza-membership': paymentsReconcileBrzaMembership,
   '/api/stellar/create-payment-intent': stellarCreatePaymentIntent,
   '/api/stellar/verify-payment': stellarVerifyPayment,
+  '/api/system/pricing': systemPricing,
   '/api/treasury/initialize': treasuryInitialize,
   '/api/user/avatar': userAvatar,
   '/api/user/memberships': userMemberships,

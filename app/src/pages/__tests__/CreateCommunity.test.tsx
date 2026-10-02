@@ -70,7 +70,15 @@ describe('CreateCommunity wizard', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create Group' }));
     await waitFor(() => expect(screen.getByText('Your Group Is Open')).toBeInTheDocument());
     expect(createCommunityRecord).toHaveBeenCalledWith(
-      expect.objectContaining({ name: 'Milele Chama', type: 'savings', membershipFee: 500, currency: 'KES', feeType: 'recurring_monthly' }),
+      expect.objectContaining({
+        name: 'Milele Chama',
+        type: 'savings',
+        membershipFee: 500,
+        activationFeeMinor: 50000,
+        isPilotExempt: true,
+        currency: 'KES',
+        feeType: 'recurring_monthly',
+      }),
     );
     expect(screen.getByRole('link', { name: 'Invite People' })).toHaveAttribute('href', '/dashboard/new-1/people');
   });

@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Check, Loader2 } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { AskAkili } from '@/akili/AskAkili';
+import { apiFetch } from '@/lib/api';
 import { SettingsSection } from '@/components/app/SettingsSection';
 import { AmountBlock } from '@/components/ui/amount-block';
 import { Button } from '@/components/ui/button';
@@ -116,6 +117,25 @@ export default function CreateCommunity() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<{ id: string; name: string } | null>(null);
+  const [pricing, setPricing] = useState({
+    communityActivationMinor: 25000,
+    waiverActive: true,
+    waiverExpiresAt: '2026-10-10T00:00:00Z',
+  });
+
+  useEffect(() => {
+    let active = true;
+    void apiFetch<{ ok: boolean; pricing?: { communityActivationMinor: number; waiverActive: boolean; waiverExpiresAt: string } }>('/api/system/pricing', { auth: 'omit' }).then((res) => {
+      if (active && res.ok && res.data?.pricing) {
+        setPricing({
+          communityActivationMinor: res.data.pricing.communityActivationMinor,
+          waiverActive: res.data.pricing.waiverActive,
+          waiverExpiresAt: res.data.pricing.waiverExpiresAt,
+        });
+      }
+    });
+    return () => { active = false; };
+  }, []);
 
   const [chosenCurrency, setChosenCurrency] = useState<string | null>(null);
   const currency = chosenCurrency || (kind === 'savings' || kind === 'sacco' ? 'KES' : account.country.currency || 'KES');
@@ -142,12 +162,13 @@ export default function CreateCommunity() {
     setBusy(true);
     setError(null);
     try {
+      const calculatedDuesMinor = Math.round((free ? 0 : amountNumber) * 100);
       const community = await createCommunityRecord({
         name: name.trim(),
         type: kind,
         description: description.trim(),
         membershipFee: free ? 0 : amountNumber,
-        activationFeeMinor: 25000, // KES 250.00 standard community activation fee
+        activationFeeMinor: calculatedDuesMinor,
         feeType,
         carrierPassThrough: true,
         currency,
@@ -156,6 +177,7 @@ export default function CreateCommunity() {
         votingPeriodDays: Number(days),
         createdBy: account.accountId ?? undefined,
         verificationTier: 'activation',
+        isPilotExempt: pricing.waiverActive,
       });
       setCreated({ id: community.id, name: community.name });
     } catch (err) {
@@ -411,24 +433,30 @@ export default function CreateCommunity() {
                       label: 'Community Activation Fee',
                       value: (
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="line-through text-muted-foreground">
-                            {currency === 'KES' ? 'KES 250.00' : `${currency} equivalent of KES 250.00 (~$1.90 USD)`}
+                          <span className={cn(pricing.waiverActive && "line-through text-muted-foreground")}>
+                            {currency === 'KES'
+                              ? `KES ${(pricing.communityActivationMinor / 100).toFixed(2)}`
+                              : `${currency} equivalent of KES ${(pricing.communityActivationMinor / 100).toFixed(2)} (~$1.90 USD)`}
                           </span>
-                          <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-500 border border-emerald-500/20">
-                            100% Waived
-                          </span>
+                          {pricing.waiverActive ? (
+                            <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-500 border border-emerald-500/20">
+                              100% Waived
+                            </span>
+                          ) : null}
                         </div>
                       ),
-                      help: 'Standard one-time setup fee for infrastructure and operational reserve is KES 250.00 (not KES 2,500).',
+                      help: `Standard one-time setup fee for infrastructure and operational reserve is KES ${(pricing.communityActivationMinor / 100).toFixed(2)} (not KES 2,500).`,
                     },
                     {
                       label: 'To open this group',
                       value: (
                         <span className="font-semibold text-emerald-500">
-                          No launch fee in this environment
+                          {pricing.waiverActive ? 'No launch fee in this environment' : `KES ${(pricing.communityActivationMinor / 100).toFixed(2)}`}
                         </span>
                       ),
-                      help: 'Pilot Exemption Applied: In accordance with the executive launch directive, all communities created during this phase are 100% exempt from opening charges. Zero funds are charged today.',
+                      help: pricing.waiverActive
+                        ? 'Pilot Exemption Applied: In accordance with the executive launch directive, all communities created during this phase are 100% exempt from opening charges. Zero funds are charged today.'
+                        : 'Standard community infrastructure and sovereign reserve setup fee.',
                     },
                   ]}
                 />
