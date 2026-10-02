@@ -23,7 +23,14 @@ export default function GroupPeople() {
                   Invite People
                 </Button>
               </div>
-              <InviteSheet open={inviteOpen} onClose={() => setInviteOpen(false)} communityId={community.id} communityName={community.name} />
+              <InviteSheet
+                open={inviteOpen}
+                onClose={() => setInviteOpen(false)}
+                communityId={community.id}
+                communityName={community.name}
+                membershipFee={community.membershipFee}
+                currency={community.currency}
+              />
             </>
           ) : null}
 

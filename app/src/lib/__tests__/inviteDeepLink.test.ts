@@ -60,4 +60,38 @@ describe('Invite Deep Linking & Code Extraction', () => {
 
     vi.unstubAllGlobals();
   });
+
+  it('extracts invite codes from join and group pathnames', () => {
+    expect(extractInviteCode('https://barazaprotocol.com/join/402b4ed6-fa5e-47a9-869d-d4a0de0740b6')).toBe('402b4ed6-fa5e-47a9-869d-d4a0de0740b6');
+    expect(extractInviteCode('https://barazaprotocol.com/invite/comm_canva_123')).toBe('comm_canva_123');
+  });
+
+  it('handles payment requirement responses in acceptInviteCode', async () => {
+    const { acceptInviteCode } = await import('@/lib/inviteAccept');
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        ok: true,
+        joined: true,
+        alreadyMember: false,
+        requiresPayment: true,
+        duesAmount: 500,
+        currency: 'KES',
+        communityId: 'chama_alpha_1',
+        role: 'member',
+        message: 'Joined community. Payment of membership dues is required to activate your voting seat.',
+      }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await acceptInviteCode('chama_alpha_1');
+    expect(result.ok).toBe(true);
+    expect(result.requiresPayment).toBe(true);
+    expect(result.duesAmount).toBe(500);
+    expect(result.currency).toBe('KES');
+    expect(result.communityId).toBe('chama_alpha_1');
+
+    vi.unstubAllGlobals();
+  });
 });

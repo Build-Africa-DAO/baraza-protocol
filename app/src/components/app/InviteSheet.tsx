@@ -20,9 +20,11 @@ export interface InviteSheetProps {
   onClose: () => void;
   communityId: string;
   communityName: string;
+  membershipFee?: number;
+  currency?: string;
 }
 
-export function InviteSheet({ open, onClose, communityId, communityName }: InviteSheetProps) {
+export function InviteSheet({ open, onClose, communityId, communityName, membershipFee, currency = 'KES' }: InviteSheetProps) {
   const { toast } = useToast();
   const joinUrl = `${window.location.origin}/join/${communityId}`;
   const [days, setDays] = useState('14');
@@ -79,7 +81,8 @@ export function InviteSheet({ open, onClose, communityId, communityName }: Invit
     }
   }
 
-  const publicInviteUrl = `${window.location.origin}/invite?code=${communityId}`;
+  const hasFee = (membershipFee ?? 0) > 0;
+  const publicInviteUrl = hasFee ? joinUrl : `${window.location.origin}/invite?code=${communityId}`;
 
   function shareWhatsApp() {
     const text = `Join ${communityName} on Baraza: ${publicInviteUrl}`;
@@ -96,7 +99,9 @@ export function InviteSheet({ open, onClose, communityId, communityName }: Invit
       open={open}
       onClose={onClose}
       title="Invite People"
-      description="Anyone with the link can ask to join. They become a member once their invitation is confirmed."
+      description={hasFee
+        ? "Anyone with this link can join and pay their membership dues. They become a full member once payment is confirmed."
+        : "Anyone with the link can ask to join. They become a member once their invitation is confirmed."}
       footer={
         <Button type="button" variant="outline" onClick={onClose}>
           Close
@@ -106,8 +111,8 @@ export function InviteSheet({ open, onClose, communityId, communityName }: Invit
       <div className="space-y-6">
         <section className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold">Public Invitation Link</h3>
-            <span className="text-xs text-muted-foreground">Direct & Shareable</span>
+            <h3 className="text-sm font-semibold">{hasFee ? 'Public Join & Dues Payment Link' : 'Public Invitation Link'}</h3>
+            <span className="text-xs text-muted-foreground">{hasFee ? `${membershipFee} ${currency} Dues` : 'Direct & Shareable'}</span>
           </div>
           <p className="break-all rounded-md border border-border bg-surface px-3 py-2 font-mono text-xs">{publicInviteUrl}</p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">

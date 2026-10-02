@@ -7,6 +7,8 @@ export function extractInviteCode(input: string): string | null {
     const url = new URL(trimmed, 'https://barazaprotocol.com');
     const fromQuery = url.searchParams.get('code') || url.searchParams.get('invite');
     if (fromQuery && /^[a-zA-Z0-9_-]{6,64}$/.test(fromQuery)) return fromQuery;
+    const match = url.pathname.match(/\/(?:join|groups|invite)\/([a-f0-9-]{36}|[a-zA-Z0-9_-]{6,64})/i);
+    if (match && match[1]) return match[1];
   } catch {
     // Fall through to a raw code.
   }
@@ -59,11 +61,23 @@ export async function acceptInviteCode(
   communityId?: string;
   alreadyMember?: boolean;
   joined?: boolean;
+  requiresPayment?: boolean;
+  duesAmount?: number;
+  currency?: string;
   message?: string;
   error?: ApiError;
 }> {
   const token = getAccessToken ? await getAccessToken().catch(() => null) : null;
-  const result = await apiFetch<{ ok?: boolean; communityId?: string; alreadyMember?: boolean; joined?: boolean; message?: string }>(
+  const result = await apiFetch<{
+    ok?: boolean;
+    communityId?: string;
+    alreadyMember?: boolean;
+    joined?: boolean;
+    requiresPayment?: boolean;
+    duesAmount?: number;
+    currency?: string;
+    message?: string;
+  }>(
     '/api/communities/invites/accept',
     { method: 'POST', body: { code }, headers: token ? { Authorization: `Bearer ${token}` } : undefined },
   );
@@ -77,6 +91,9 @@ export async function acceptInviteCode(
     communityId: data.communityId,
     alreadyMember: data.alreadyMember,
     joined: data.joined,
+    requiresPayment: data.requiresPayment,
+    duesAmount: data.duesAmount,
+    currency: data.currency,
     message: data.message,
   };
 }

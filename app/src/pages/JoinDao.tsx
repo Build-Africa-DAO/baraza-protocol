@@ -129,7 +129,7 @@ export default function JoinDao() {
   // An invite code in the URL is accepted as soon as the person is signed in.
   useEffect(() => {
     const code = searchParams.get('invite');
-    if (!code || !/^[a-zA-Z0-9_-]{6,32}$/.test(code) || !account.authenticated) return;
+    if (!code || !/^[a-zA-Z0-9_-]{6,64}$/.test(code) || !account.authenticated) return;
     let cancelled = false;
     void acceptInviteCode(code, account.getAccessToken).then((accepted) => {
       if (cancelled || !accepted.ok || !accepted.communityId) return;

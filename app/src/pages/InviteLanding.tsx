@@ -8,7 +8,7 @@ import { InlineError } from '@/components/ui/inline-error';
 import { StatusChip } from '@/components/ui/status-chip';
 import { useAccount } from '@/contexts/AccountContext';
 import { useToast } from '@/hooks/use-toast';
-import { acceptInviteCode, resolveInviteCode, type ResolvedInvite } from '@/lib/inviteAccept';
+import { acceptInviteCode, extractInviteCode, resolveInviteCode, type ResolvedInvite } from '@/lib/inviteAccept';
 import { useSeo } from '@/lib/seo';
 
 /**
@@ -23,13 +23,17 @@ export default function InviteLanding() {
   const account = useAccount();
   const { toast } = useToast();
 
-  const codeParam = (searchParams.get('code') || searchParams.get('invite') || '').trim();
+  const rawParam = (searchParams.get('code') || searchParams.get('invite') || '').trim();
+  const codeParam = extractInviteCode(rawParam) || rawParam;
   const [inputCode, setInputCode] = useState(() => {
     if (codeParam) return codeParam;
     if (typeof window !== 'undefined') {
       try {
         const stored = window.sessionStorage.getItem('baraza_pending_invite_code');
-        if (stored && /^[a-zA-Z0-9_-]{6,64}$/.test(stored)) return stored;
+        if (stored) {
+          const cleaned = extractInviteCode(stored) || stored;
+          if (/^[a-zA-Z0-9_-]{6,64}$/.test(cleaned)) return cleaned;
+        }
       } catch {
         // Ignore
       }
@@ -129,6 +133,15 @@ export default function InviteLanding() {
         // Ignore
       }
 
+      if (res.requiresPayment) {
+        toast({
+          title: 'Membership Reserved',
+          description: `Please complete payment of ${res.duesAmount ?? resolved.community.membershipFee} ${res.currency ?? resolved.community.currency} dues to activate your seat.`,
+        });
+        navigate(`/join/${resolved.community.id}?invite=${encodeURIComponent(activeCode)}`);
+        return;
+      }
+
       toast({
         title: res.alreadyMember ? 'Already a Member' : "You're In!",
         description: res.alreadyMember
@@ -170,14 +183,14 @@ export default function InviteLanding() {
               </div>
               <h1 className="mt-4 font-display text-2xl font-bold tracking-tight">Claim Your Invite</h1>
               <p className="mt-2 text-sm text-muted-foreground">
-                Enter the 12-character invite code from your card or link to access your community.
+                Enter your invite code or paste your invitation link to join your community.
               </p>
             </div>
 
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                const trimmed = inputCode.trim();
+                const trimmed = (extractInviteCode(inputCode) || inputCode).trim();
                 if (trimmed) {
                   setActiveCode(trimmed);
                   void runResolve(trimmed);
@@ -185,13 +198,18 @@ export default function InviteLanding() {
               }}
               className="space-y-4"
             >
-              <Field label="Invite Code" htmlFor="invite-code-input" help="Example: a1b2c3d4e5f6">
+              <Field label="Invite Code or Link" htmlFor="invite-code-input" help="Enter code or paste your full invitation link">
                 <Input
                   id="invite-code-input"
-                  placeholder="Enter 12-character code"
+                  placeholder="Enter code or paste link"
                   value={inputCode}
-                  onChange={(e) => setInputCode(e.target.value)}
-                  className="font-mono text-center uppercase tracking-widest text-lg"
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const extracted = extractInviteCode(val);
+                    setInputCode(extracted || val);
+                    if (resolvingError) setResolvingError(null);
+                  }}
+                  className="font-mono text-center tracking-widest text-lg"
                   autoFocus
                 />
               </Field>
@@ -228,13 +246,27 @@ export default function InviteLanding() {
                 </h1>
 
                 <p className="mt-2 text-sm text-muted-foreground sm:text-base leading-relaxed">
-                  {resolved.community.description || 'Welcome to our collective governance and creative community on Baraza.'}
+                  {resolved.community.description || 'Welcome to our collective governance and community on Baraza.'}
                 </p>
 
-                <div className="mt-4 rounded-lg bg-surface/60 border border-border p-3.5 flex items-center justify-between text-xs text-muted-foreground">
-                  <span>Invite Code Verified</span>
-                  <span className="font-mono font-bold text-foreground">{resolved.invite.code}</span>
-                </div>
+                {resolved.community.membershipFee > 0 ? (
+                  <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-4 text-left space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-primary">Membership Contribution</span>
+                      <span className="font-mono text-base font-bold text-foreground">
+                        {resolved.community.membershipFee} {resolved.community.currency}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      This group requires a {resolved.community.feeType === 'one_time' ? 'one-time' : 'periodic'} dues payment of {resolved.community.membershipFee} {resolved.community.currency} to activate your voting seat and treasury participation.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="mt-4 rounded-lg bg-surface/60 border border-border p-3.5 flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Invite Code Verified</span>
+                    <span className="font-mono font-bold text-foreground">{resolved.invite.code}</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -246,9 +278,12 @@ export default function InviteLanding() {
                     <Sparkles className="h-6 w-6" aria-hidden />
                   </div>
                   <div>
-                    <h2 className="font-display text-xl font-bold">Sign In to Claim Your Seat</h2>
+                    <h2 className="font-display text-xl font-bold">Sign In to Join</h2>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Sign in with your phone or email to activate your voting seat in {resolved.community.name}. No crypto wallet or fees required.
+                      Sign in with your phone or email to access {resolved.community.name}.
+                      {resolved.community.membershipFee > 0
+                        ? ` Membership dues of ${resolved.community.membershipFee} ${resolved.community.currency} can be paid via M-Pesa or card.`
+                        : ' No crypto wallet or fees required.'}
                     </p>
                   </div>
                   <Button onClick={handleSignIn} size="lg" className="w-full">
@@ -319,40 +354,58 @@ export default function InviteLanding() {
                     <CheckCircle2 className="h-6 w-6" aria-hidden />
                   </div>
                   <div>
-                    <h2 className="font-display text-xl font-bold">Ready to Join</h2>
+                    <h2 className="font-display text-xl font-bold">
+                      {resolved.community.membershipFee > 0 ? 'Pay Dues & Join' : 'Ready to Join'}
+                    </h2>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Signed in as <span className="font-semibold text-foreground">{account.displayName}</span>. Claim your seat to vote on proposals and participate.
+                      Signed in as <span className="font-semibold text-foreground">{account.displayName}</span>.{' '}
+                      {resolved.community.membershipFee > 0
+                        ? `Contribute ${resolved.community.membershipFee} ${resolved.community.currency} membership dues to activate your seat and voting rights.`
+                        : 'Claim your seat to vote on proposals and participate.'}
                     </p>
                   </div>
 
                   {acceptError && <InlineError message={acceptError} />}
 
                   <div className="flex flex-col gap-2.5">
-                    <Button
-                      size="lg"
-                      className="w-full"
-                      onClick={() => {
-                        // If creative collective or membership, offer optional creator questions
-                        if (resolved.community.type === 'creative' || resolved.community.type === 'membership') {
-                          setShowSurvey(true);
-                        } else {
-                          void handleAccept(true);
-                        }
-                      }}
-                      disabled={accepting}
-                    >
-                      {accepting ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
-                          Claiming Seat...
-                        </>
-                      ) : (
-                        <>
-                          Claim My Seat
-                          <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
-                        </>
-                      )}
-                    </Button>
+                    {resolved.community.membershipFee > 0 ? (
+                      <Button
+                        size="lg"
+                        className="w-full"
+                        onClick={() => {
+                          navigate(`/join/${resolved.community.id}?invite=${encodeURIComponent(activeCode)}`);
+                        }}
+                      >
+                        Proceed to Pay Dues ({resolved.community.membershipFee} {resolved.community.currency})
+                        <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
+                      </Button>
+                    ) : (
+                      <Button
+                        size="lg"
+                        className="w-full"
+                        onClick={() => {
+                          // If creative collective or membership, offer optional creator questions
+                          if (resolved.community.type === 'creative' || resolved.community.type === 'membership') {
+                            setShowSurvey(true);
+                          } else {
+                            void handleAccept(true);
+                          }
+                        }}
+                        disabled={accepting}
+                      >
+                        {accepting ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+                            Claiming Seat...
+                          </>
+                        ) : (
+                          <>
+                            Claim My Seat
+                            <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
+                          </>
+                        )}
+                      </Button>
+                    )}
                   </div>
                 </div>
               )}

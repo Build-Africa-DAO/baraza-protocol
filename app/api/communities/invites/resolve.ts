@@ -27,10 +27,11 @@ export default async function handler(req: Request): Promise<Response> {
   const code = (url.searchParams.get('code') || '').trim();
 
   if (!code || !/^[a-zA-Z0-9_-]{6,64}$/.test(code)) {
-    return jsonResponse({ error: 'invalid_code', message: 'Valid invite code required.' }, { status: 400 });
+    return jsonResponse({ error: 'invalid_code', message: 'Please enter a valid invite code or link.' }, { status: 400 });
   }
 
   const supabase = getSupabaseAdmin();
+  const normalizedCode = code.toLowerCase();
 
   const { data: invite, error: inviteErr } = await supabase
     .from('community_invites')
@@ -47,7 +48,7 @@ export default async function handler(req: Request): Promise<Response> {
     const { data: directComm, error: directCommErr } = await supabase
       .from('communities')
       .select('id, name, type, description, image_url, member_count, currency, membership_fee, fee_type')
-      .eq('id', code)
+      .eq('id', normalizedCode)
       .maybeSingle();
 
     if (!directCommErr && directComm) {
@@ -74,7 +75,10 @@ export default async function handler(req: Request): Promise<Response> {
       });
     }
 
-    return jsonResponse({ error: 'not_found', message: 'Invite code does not exist.' }, { status: 404 });
+    return jsonResponse({
+      error: 'not_found',
+      message: 'Invite code does not exist or has expired. Please check your link or ask an officer.',
+    }, { status: 404 });
   }
 
   const isExpired = invite.expires_at ? new Date(invite.expires_at).getTime() < Date.now() : false;
