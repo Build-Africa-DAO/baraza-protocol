@@ -117,7 +117,8 @@ export default function CreateCommunity() {
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<{ id: string; name: string } | null>(null);
 
-  const currency = account.country.currency;
+  const [chosenCurrency, setChosenCurrency] = useState<string | null>(null);
+  const currency = chosenCurrency || (kind === 'savings' || kind === 'sacco' ? 'KES' : account.country.currency || 'KES');
   const amountNumber = Number(amount);
   const amountOk = free || (amount.trim() !== '' && Number.isFinite(amountNumber) && amountNumber > 0);
   const step2Valid = name.trim().length >= 3 && description.trim().length >= 10 && amountOk;
@@ -307,15 +308,42 @@ export default function CreateCommunity() {
                       aria-label="What members pay"
                     />
                     {!free ? (
-                      <Field
-                        label={amountFieldLabel}
-                        htmlFor="create-amount"
-                        help={`In ${currency}, the currency of your account country.`}
-                        error={amount && !amountOk ? 'Enter an amount above zero.' : undefined}
-                      >
-                        <MoneyField id="create-amount" currency={currency} value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="500" aria-invalid={Boolean(amount && !amountOk)} />
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <Field
+                          label={amountFieldLabel}
+                          htmlFor="create-amount"
+                          help={`In ${currency}, the currency of your group.`}
+                          error={amount && !amountOk ? 'Enter an amount above zero.' : undefined}
+                        >
+                          <MoneyField id="create-amount" currency={currency} value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="500" aria-invalid={Boolean(amount && !amountOk)} />
+                        </Field>
+                        <Field label="Group Currency" htmlFor="create-currency" help="Primary currency for collections and treasury.">
+                          <Select id="create-currency" value={currency} onChange={(event) => setChosenCurrency(event.target.value)}>
+                            <option value="KES">KES — Kenyan Shilling</option>
+                            <option value="USD">USD — US Dollar</option>
+                            <option value="UGX">UGX — Ugandan Shilling</option>
+                            <option value="TZS">TZS — Tanzanian Shilling</option>
+                            <option value="RWF">RWF — Rwandan Franc</option>
+                            <option value="NGN">NGN — Nigerian Naira</option>
+                            <option value="GHS">GHS — Ghanaian Cedi</option>
+                            <option value="GBP">GBP — British Pound</option>
+                          </Select>
+                        </Field>
+                      </div>
+                    ) : (
+                      <Field label="Group Currency" htmlFor="create-currency" help="Primary currency for treasury balances and proposals.">
+                        <Select id="create-currency" value={currency} onChange={(event) => setChosenCurrency(event.target.value)}>
+                          <option value="KES">KES — Kenyan Shilling</option>
+                          <option value="USD">USD — US Dollar</option>
+                          <option value="UGX">UGX — Ugandan Shilling</option>
+                          <option value="TZS">TZS — Tanzanian Shilling</option>
+                          <option value="RWF">RWF — Rwandan Franc</option>
+                          <option value="NGN">NGN — Nigerian Naira</option>
+                          <option value="GHS">GHS — Ghanaian Cedi</option>
+                          <option value="GBP">GBP — British Pound</option>
+                        </Select>
                       </Field>
-                    ) : null}
+                    )}
                   </section>
                 )}
 
@@ -381,7 +409,7 @@ export default function CreateCommunity() {
                   rows={[
                     {
                       label: 'Community Activation Fee',
-                      value: 'KES 250.00',
+                      value: currency === 'KES' ? 'KES 250.00' : `${currency} equivalent of KES 250.00 (~$1.90 USD)`,
                       help: 'One-time setup fee for community infrastructure and operational reserve. (Alpha preview: No launch fee in this environment).',
                     },
                     {
