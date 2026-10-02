@@ -146,23 +146,31 @@ export default async function handler(req: Request): Promise<Response> {
           return jsonResponse({ error: 'database_error', message: insMemErr.message }, { status: 500 });
         }
 
-        await supabase
-          .from('memberships')
-          .insert({
-            community_id: directComm.id,
-            wallet_address: walletAddr,
-            status: 'ACTIVE',
-            joined_at: new Date().toISOString(),
-            voting_weight: 1,
-          })
-          .catch(() => {});
+        try {
+          await supabase
+            .from('memberships')
+            .insert({
+              member_id: memberId,
+              community_id: directComm.id,
+              user_id_hash: authUid,
+              wallet_address: walletAddr,
+              status: 'ACTIVE',
+              joined_at: new Date().toISOString(),
+              voting_weight: 1,
+            });
+        } catch {
+          // Ignore secondary membership table error
+        }
 
         // Increment member_count
-        await supabase
-          .from('communities')
-          .update({ member_count: (directComm.member_count ?? 0) + 1 })
-          .eq('id', directComm.id)
-          .catch(() => {});
+        try {
+          await supabase
+            .from('communities')
+            .update({ member_count: (directComm.member_count ?? 0) + 1 })
+            .eq('id', directComm.id);
+        } catch {
+          // Ignore counter update failure
+        }
 
         return jsonResponse({
           ok: true,

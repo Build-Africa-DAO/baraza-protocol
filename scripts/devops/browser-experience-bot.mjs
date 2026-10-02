@@ -316,10 +316,10 @@ async function run() {
       await page.waitForFunction(() => document.body.innerText.includes('Showing'), { timeout: 12000 });
       await page.waitForSelector('input[type="search"]');
       await page.click('input[type="search"]');
-      await page.type('input[type="search"]', 'Milele', { delay: 30 });
+      await page.type('input[type="search"]', 'Welfare', { delay: 30 });
       await page.waitForFunction(() => {
         const text = document.body.innerText;
-        return text.includes('Milele') && text.includes('Showing 1 of');
+        return text.includes('Welfare') && text.includes('Showing 1 of');
       }, { timeout: 6000 });
       await snap('flow_02_explorer_search');
     });
