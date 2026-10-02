@@ -147,6 +147,7 @@ async function handler(req: Request): Promise<Response> {
     voting_period_days: votingPeriodDays,
     treasury_policy: treasuryPolicy,
     created_by: body.createdBy ?? null,
+    status: 'active',
     ...(body.imageUrl ? { image_url: body.imageUrl } : {}),
   };
 
