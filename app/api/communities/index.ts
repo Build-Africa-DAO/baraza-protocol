@@ -148,6 +148,8 @@ async function handler(req: Request): Promise<Response> {
     treasury_policy: treasuryPolicy,
     created_by: body.createdBy ?? null,
     status: 'active',
+    is_pilot_exempt: body.isPilotExempt !== undefined ? Boolean(body.isPilotExempt) : true,
+    platform_fee_bps: body.platformFeeBps !== undefined ? Number(body.platformFeeBps) : 150,
     ...(body.imageUrl ? { image_url: body.imageUrl } : {}),
   };
 
