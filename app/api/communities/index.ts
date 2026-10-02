@@ -109,8 +109,8 @@ async function handler(req: Request): Promise<Response> {
     }
   }
 
-  const supabaseUrl = process.env.SUPABASE_URL?.trim();
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  const supabaseUrl = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL)?.trim();
+  const serviceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY)?.trim();
 
   // M1-C2: Phase 1 requires an explicit backend failure here instead of a
   // success-shaped fallback. /api/README.md only governs routing; this route

@@ -3,6 +3,18 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 
+// Ensure edgeApiDevPlugin has access to server environment variables in dev mode
+const envFilePath = path.resolve(import.meta.dirname, '.env');
+if (existsSync(envFilePath)) {
+  const envContent = readFileSync(envFilePath, 'utf8');
+  for (const line of envContent.split('\n')) {
+    const match = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)?\s*$/);
+    if (match && !process.env[match[1]]) {
+      process.env[match[1]] = (match[2] || '').trim().replace(/^['"]|['"]$/g, '');
+    }
+  }
+}
+
 /**
  * Which named vendor chunk a module belongs to, or undefined for the default
  * splitting. Vite 8 runs this through rolldown's manualChunks shim, which also
@@ -198,7 +210,7 @@ export default defineConfig({
     },
   },
   define: {
-    'process.env': {},
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
     global: 'globalThis',
   },
   server: {

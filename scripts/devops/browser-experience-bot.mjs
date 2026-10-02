@@ -29,6 +29,7 @@ const FIXTURE_USER_DID = 'did:privy:e2e_test_user';
 
 const results = [];
 let dbClient = null;
+let LIVE_CREATED_COMMUNITY_ID = null;
 
 function copyToArtifacts(sourceFile, destName) {
   const destPath = resolve(ARTIFACTS_DIR, destName);
@@ -171,6 +172,37 @@ async function run() {
     copyToArtifacts(localPath, filename);
   };
 
+  const consoleErrors = [];
+  page.on('console', (msg) => {
+    if (msg.type() === 'error') {
+      const text = msg.text();
+      if (!text.includes('React Router') && !text.includes('favicon') && !text.includes('status of 404')) {
+        consoleErrors.push(text);
+        console.warn(`  ⚠️ [Browser Console Error]: ${text}`);
+      }
+    }
+  });
+
+  const networkErrors = [];
+  page.on('response', (response) => {
+    const status = response.status();
+    const url = response.url();
+    if (status >= 400 && url.includes('/api/') && !url.includes('/api/test-expected-failure')) {
+      networkErrors.push({ url, status });
+      console.warn(`  ⚠️ [API Error Response]: HTTP ${status} from ${url}`);
+    }
+  });
+
+  const assertNoVisualErrors = async (label) => {
+    const alerts = await page.$$('[role="alert"]');
+    for (const alert of alerts) {
+      const text = await alert.evaluate(el => el.textContent || '');
+      if (text.includes("can't reach the brain") || text.toLowerCase().includes('fatal error') || text.includes('unhandled')) {
+        throw new Error(`[Visual Error in ${label}]: ${text}`);
+      }
+    }
+  };
+
   // Helper to inject authenticated E2E session into localStorage
   const injectAuthSession = async () => {
     await page.evaluate(({ communityId, userDid }) => {
@@ -309,16 +341,17 @@ async function run() {
     // =========================================================================
     console.log('\n--- DOMAIN 2: ONBOARDING & COMMUNITY CREATION ---');
 
-    await recordResult('Flow 5: Multi-Step Community Creation Wizard', 'Domain 2', async () => {
+    await recordResult('Flow 5: Multi-Step Community Creation Wizard & Deep DB Invariants', 'Domain 2', async () => {
       await page.goto(`${BASE_URL}/create`, { waitUntil: 'domcontentloaded' });
       await injectAuthSession();
-      await page.goto(`${BASE_URL}/create`, { waitUntil: 'domcontentloaded' });
+      await page.goto(`${BASE_URL}/create`, { waitUntil: 'networkidle2' });
 
+      // Step 0: Kind Selection
       await page.waitForSelector('div[role="radiogroup"] button');
-      // Step 0: Kind
       await page.evaluate(() => {
-        const btn = document.querySelector('div[role="radiogroup"] button');
-        if (btn) btn.click();
+        const btns = Array.from(document.querySelectorAll('div[role="radiogroup"] button'));
+        const chamaBtn = btns.find(b => b.innerText.includes('Chama') || b.innerText.includes('Savings')) || btns[0];
+        if (chamaBtn) chamaBtn.click();
       });
       await page.evaluate(() => {
         const btns = Array.from(document.querySelectorAll('button'));
@@ -326,20 +359,149 @@ async function run() {
         if (btn) btn.click();
       });
 
-      // Step 1: Details
-      await page.waitForSelector('#create-name');
-      await page.type('#create-name', `Live Wizard ${RUN_ID}`);
-      await page.type('#create-description', 'Automated collective for software engineers in East Africa.');
-      await page.type('#create-amount', '2000');
+      // Step 1: Details & Currency Selection
+      await page.waitForSelector('#create-name', { timeout: 8000 });
+      const liveName = `E2E Live Chama ${RUN_ID}`;
+      await page.type('#create-name', liveName);
+      await page.type('#create-description', 'Automated collective for software engineers and creatives in East Africa.');
+      await page.type('#create-amount', '1500');
+
+      // Assert Currency Selector defaults to KES for Chamas
+      const initialCurrency = await page.$eval('#create-currency', el => el.value);
+      if (initialCurrency !== 'KES') {
+        throw new Error(`Expected default Chama currency to be KES, but got '${initialCurrency}'`);
+      }
+
+      // Test currency selector reactivity (KES -> USD -> KES)
+      await page.select('#create-currency', 'USD');
+      await page.waitForFunction(() => document.body.innerText.includes('In USD, the currency of your group.'));
+      await page.select('#create-currency', 'KES');
+      await page.waitForFunction(() => document.body.innerText.includes('In KES, the currency of your group.'));
+
+      await snap('flow_05_step2_details_currency');
       await page.evaluate(() => {
         const btns = Array.from(document.querySelectorAll('button'));
         const btn = btns.find(b => b.innerText.includes('Continue'));
         if (btn) btn.click();
       });
 
-      // Step 2: Review & Opening Fee
-      await page.waitForFunction(() => document.body.innerText.includes('Opening Fee') || document.body.innerText.includes('Open This Group'));
-      await snap('flow_05_create_wizard');
+      // Step 2: Governance, Akili Advisory & Activation Fee Review
+      await page.waitForFunction(() => document.body.innerText.includes('Open This Group') || document.body.innerText.includes('Community Activation Fee'));
+
+      // Assert Activation Fee formatting reflects KES standard rate
+      const reviewText = await page.evaluate(() => document.body.innerText);
+      if (!reviewText.includes('KES 250.00')) {
+        throw new Error('Step 3 activation fee does not reflect KES 250.00 standard rate');
+      }
+
+      // Test Auxiliary Feature: Ask Akili AI Governance Advisor Drawer
+      const akiliChip = await page.$('button[aria-label*="Suggest a Setup"]');
+      if (akiliChip) {
+        console.log('  🤖 Testing Ask Akili AI Governance Advisor drawer...');
+        await akiliChip.click();
+        await page.waitForSelector('button[aria-label="Close chat"]', { timeout: 6000 });
+
+        // Wait for Akili response chunk to arrive and render in the bubble
+        await page.waitForFunction(() => {
+          const text = document.body.innerText;
+          return text.includes('Quorum') || text.includes('50%') || text.includes('supermajority') || text.includes('Akili');
+        }, { timeout: 8000 });
+
+        // Assert NO error banner rendered in Akili chat
+        await assertNoVisualErrors('Akili Chat Drawer');
+        await snap('flow_05_akili_advisor_response');
+
+        // Close Akili drawer
+        const closeBtn = await page.$('button[aria-label="Close chat"]');
+        if (closeBtn) {
+          await closeBtn.click();
+          await page.waitForFunction(() => !document.querySelector('button[aria-label="Close chat"]'));
+        }
+      }
+
+      // Click "Create Group" button to trigger real front-door creation
+      console.log('  🚀 Submitting Community Creation form through browser front door...');
+      await page.evaluate(() => {
+        const btns = Array.from(document.querySelectorAll('button'));
+        const createBtn = btns.find(b => b.innerText.includes('Create Group'));
+        if (createBtn) createBtn.click();
+      });
+
+      // Wait for success screen: "Your Group Is Open"
+      await page.waitForFunction(() => document.body.innerText.includes('Your Group Is Open'), { timeout: 15000 });
+      await snap('flow_05_create_wizard_live_success');
+
+      // Extract newly created community ID from "Go to Group" link on the success screen
+      const groupLink = await page.evaluate(() => {
+        const links = Array.from(document.querySelectorAll('a'));
+        const target = links.find(l => l.innerText.includes('Go to Group'));
+        return target ? target.getAttribute('href') : null;
+      });
+      if (!groupLink) {
+        throw new Error('Could not find "Go to Group" link on success screen');
+      }
+      const match = groupLink.match(/\/dashboard\/([a-zA-Z0-9_-]+)/);
+      if (!match || !match[1]) {
+        throw new Error(`Failed to extract created community ID from dashboard link: ${groupLink}`);
+      }
+      LIVE_CREATED_COMMUNITY_ID = match[1];
+      console.log(`  🎉 Successfully created live community: ${LIVE_CREATED_COMMUNITY_ID}`);
+
+      // =======================================================================
+      // DEEP POSTGRESQL INVARIANT ASSERTIONS
+      // =======================================================================
+      console.log('  🔍 Asserting deep PostgreSQL invariants on live community...');
+
+      // 1. Assert community row in public.communities
+      const commQuery = await dbClient.query(
+        'SELECT id, name, status, currency, created_by FROM public.communities WHERE id = $1',
+        [LIVE_CREATED_COMMUNITY_ID]
+      );
+      if (commQuery.rows.length === 0) {
+        throw new Error(`[DB Invariant Failure] Community ${LIVE_CREATED_COMMUNITY_ID} not found in public.communities`);
+      }
+      const liveComm = commQuery.rows[0];
+      if (liveComm.status !== 'active') {
+        throw new Error(`[DB Invariant Failure] Expected community.status='active', found '${liveComm.status}'`);
+      }
+      if (liveComm.currency !== 'KES') {
+        throw new Error(`[DB Invariant Failure] Expected community.currency='KES', found '${liveComm.currency}'`);
+      }
+      if (liveComm.created_by !== FIXTURE_USER_DID) {
+        throw new Error(`[DB Invariant Failure] Expected community.created_by='${FIXTURE_USER_DID}', found '${liveComm.created_by}'`);
+      }
+      console.log(`    ✅ public.communities invariant passed (status='${liveComm.status}', currency='${liveComm.currency}')`);
+
+      // 2. Assert founder member in public.members
+      const memQuery = await dbClient.query(
+        'SELECT role, activation_status FROM public.members WHERE community_id = $1 AND wallet_address = $2',
+        [LIVE_CREATED_COMMUNITY_ID, FIXTURE_USER_DID]
+      );
+      if (memQuery.rows.length === 0) {
+        throw new Error(`[DB Invariant Failure] Creator not found in public.members for community ${LIVE_CREATED_COMMUNITY_ID}`);
+      }
+      const liveMem = memQuery.rows[0];
+      if (liveMem.role !== 'founder') {
+        throw new Error(`[DB Invariant Failure] Expected creator role='founder', found '${liveMem.role}'`);
+      }
+      if (liveMem.activation_status !== 'active') {
+        throw new Error(`[DB Invariant Failure] Expected creator activation_status='active', found '${liveMem.activation_status}'`);
+      }
+      console.log(`    ✅ public.members invariant passed (role='${liveMem.role}', activation_status='${liveMem.activation_status}')`);
+
+      // 3. Assert membership in public.memberships
+      const mshipQuery = await dbClient.query(
+        'SELECT status, voting_weight FROM public.memberships WHERE community_id = $1 AND wallet_address = $2',
+        [LIVE_CREATED_COMMUNITY_ID, FIXTURE_USER_DID]
+      );
+      if (mshipQuery.rows.length === 0) {
+        throw new Error(`[DB Invariant Failure] Creator not found in public.memberships for community ${LIVE_CREATED_COMMUNITY_ID}`);
+      }
+      const liveMship = mshipQuery.rows[0];
+      if (liveMship.status !== 'ACTIVE') {
+        throw new Error(`[DB Invariant Failure] Expected membership status='ACTIVE', found '${liveMship.status}'`);
+      }
+      console.log(`    ✅ public.memberships invariant passed (status='${liveMship.status}', voting_weight=${liveMship.voting_weight})`);
     });
 
     await recordResult('Flow 6: Invite Code Deep Link Ingestion', 'Domain 2', async () => {
@@ -568,9 +730,18 @@ async function run() {
         );
         DELETE FROM public.proposals WHERE community_id LIKE '${FIXTURE_PREFIX}%';
         DELETE FROM public.payment_orders WHERE community_id LIKE '${FIXTURE_PREFIX}%';
+        DELETE FROM public.members WHERE community_id LIKE '${FIXTURE_PREFIX}%';
         DELETE FROM public.memberships WHERE community_id LIKE '${FIXTURE_PREFIX}%';
         DELETE FROM public.communities WHERE id LIKE '${FIXTURE_PREFIX}%';
       `);
+
+      if (LIVE_CREATED_COMMUNITY_ID) {
+        await dbClient.query(`
+          DELETE FROM public.communities WHERE id = '${LIVE_CREATED_COMMUNITY_ID}';
+          DELETE FROM public.memberships WHERE community_id = '${LIVE_CREATED_COMMUNITY_ID}';
+          DELETE FROM public.members WHERE community_id = '${LIVE_CREATED_COMMUNITY_ID}';
+        `);
+      }
       console.log('  ✨ Ephemeral fixtures successfully purged from all database tables.');
 
       // Final audit count verification
