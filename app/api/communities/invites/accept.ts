@@ -74,7 +74,7 @@ export default async function handler(req: Request): Promise<Response> {
   }
 
   const code = body.code?.trim();
-  if (!code || !/^[a-zA-Z0-9_-]{6,32}$/.test(code)) {
+  if (!code || !/^[a-zA-Z0-9_-]{6,64}$/.test(code)) {
     return jsonResponse({ error: 'invalid_code', message: 'Invalid invite code format.' }, { status: 400 });
   }
 
@@ -98,6 +98,82 @@ export default async function handler(req: Request): Promise<Response> {
     const msg = rpcErr.message || '';
 
     if (msg.includes('INVITE_NOT_FOUND')) {
+      // Check if code directly matches a public community id
+      const { data: directComm } = await supabase
+        .from('communities')
+        .select('id, name, status, member_count')
+        .eq('id', code)
+        .maybeSingle();
+
+      if (directComm) {
+        if (directComm.status && directComm.status !== 'active') {
+          return jsonResponse({ error: 'forbidden', message: 'Community is not currently active.' }, { status: 403 });
+        }
+
+        // Check if caller is already a member
+        const { data: existingMember } = await supabase
+          .from('members')
+          .select('member_id, role')
+          .eq('community_id', directComm.id)
+          .or(`auth_user_id.eq.${authUid},wallet_address.eq.${walletAddr}`)
+          .maybeSingle();
+
+        if (existingMember) {
+          return jsonResponse({
+            ok: true,
+            joined: false,
+            alreadyMember: true,
+            communityId: directComm.id,
+            role: existingMember.role,
+            message: 'Caller is already an active member of this community.',
+          });
+        }
+
+        // Insert member & membership
+        const { error: insMemErr } = await supabase
+          .from('members')
+          .insert({
+            member_id: memberId,
+            community_id: directComm.id,
+            auth_user_id: authUid,
+            wallet_address: walletAddr,
+            role: 'member',
+            activation_status: 'active',
+            activated_at: new Date().toISOString(),
+          });
+
+        if (insMemErr) {
+          return jsonResponse({ error: 'database_error', message: insMemErr.message }, { status: 500 });
+        }
+
+        await supabase
+          .from('memberships')
+          .insert({
+            community_id: directComm.id,
+            wallet_address: walletAddr,
+            status: 'ACTIVE',
+            joined_at: new Date().toISOString(),
+            voting_weight: 1,
+          })
+          .catch(() => {});
+
+        // Increment member_count
+        await supabase
+          .from('communities')
+          .update({ member_count: (directComm.member_count ?? 0) + 1 })
+          .eq('id', directComm.id)
+          .catch(() => {});
+
+        return jsonResponse({
+          ok: true,
+          joined: true,
+          alreadyMember: false,
+          communityId: directComm.id,
+          role: 'member',
+          message: 'Successfully joined community via direct invite link.',
+        });
+      }
+
       return jsonResponse({ error: 'not_found', message: 'Invite link not found or invalid.' }, { status: 404 });
     }
     if (msg.includes('COMMUNITY_NOT_ACTIVE')) {

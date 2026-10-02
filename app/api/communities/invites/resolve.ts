@@ -26,7 +26,7 @@ export default async function handler(req: Request): Promise<Response> {
   const url = new URL(req.url);
   const code = (url.searchParams.get('code') || '').trim();
 
-  if (!code || !/^[a-zA-Z0-9_-]{6,32}$/.test(code)) {
+  if (!code || !/^[a-zA-Z0-9_-]{6,64}$/.test(code)) {
     return jsonResponse({ error: 'invalid_code', message: 'Valid invite code required.' }, { status: 400 });
   }
 
@@ -43,6 +43,37 @@ export default async function handler(req: Request): Promise<Response> {
   }
 
   if (!invite) {
+    // Fallback: Check if code directly matches a public community id (e.g. from public share link)
+    const { data: directComm, error: directCommErr } = await supabase
+      .from('communities')
+      .select('id, name, type, description, image_url, member_count, currency, membership_fee, fee_type')
+      .eq('id', code)
+      .maybeSingle();
+
+    if (!directCommErr && directComm) {
+      return jsonResponse({
+        ok: true,
+        invite: {
+          code: directComm.id,
+          communityId: directComm.id,
+          maxUses: 0,
+          usesCount: directComm.member_count ?? 0,
+          expiresAt: null,
+        },
+        community: {
+          id: directComm.id,
+          name: directComm.name,
+          type: directComm.type,
+          description: directComm.description,
+          imageUrl: directComm.image_url,
+          memberCount: directComm.member_count ?? 0,
+          currency: directComm.currency ?? 'KES',
+          membershipFee: directComm.membership_fee ?? 0,
+          feeType: directComm.fee_type ?? 'free',
+        },
+      });
+    }
+
     return jsonResponse({ error: 'not_found', message: 'Invite code does not exist.' }, { status: 404 });
   }
 

@@ -6,11 +6,11 @@ export function extractInviteCode(input: string): string | null {
   try {
     const url = new URL(trimmed, 'https://barazaprotocol.com');
     const fromQuery = url.searchParams.get('code') || url.searchParams.get('invite');
-    if (fromQuery && /^[a-zA-Z0-9_-]{6,32}$/.test(fromQuery)) return fromQuery;
+    if (fromQuery && /^[a-zA-Z0-9_-]{6,64}$/.test(fromQuery)) return fromQuery;
   } catch {
     // Fall through to a raw code.
   }
-  if (/^[a-zA-Z0-9_-]{6,32}$/.test(trimmed)) return trimmed;
+  if (/^[a-zA-Z0-9_-]{6,64}$/.test(trimmed)) return trimmed;
   return null;
 }
 

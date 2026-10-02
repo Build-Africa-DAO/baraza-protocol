@@ -29,7 +29,7 @@ export default function InviteLanding() {
     if (typeof window !== 'undefined') {
       try {
         const stored = window.sessionStorage.getItem('baraza_pending_invite_code');
-        if (stored && /^[a-zA-Z0-9_-]{6,32}$/.test(stored)) return stored;
+        if (stored && /^[a-zA-Z0-9_-]{6,64}$/.test(stored)) return stored;
       } catch {
         // Ignore
       }
@@ -58,39 +58,43 @@ export default function InviteLanding() {
     path: '/invite',
   });
 
-  // Resolve invite on code change
-  useEffect(() => {
-    if (!activeCode) return;
+  const runResolve = async (codeToResolve: string) => {
+    const trimmed = codeToResolve.trim();
+    if (!trimmed) {
+      setLoading(false);
+      return;
+    }
 
-    let cancelled = false;
+    setLoading(true);
+    setResolvingError(null);
 
-    resolveInviteCode(activeCode)
-      .then((res) => {
-        if (cancelled) return;
-        if (res.ok && res.data) {
-          setResolved(res.data);
-          // Persist code in case sign-in redirects
-          try {
-            window.sessionStorage.setItem('baraza_pending_invite_code', activeCode);
-          } catch {
-            // Ignore sessionStorage unavailability
-          }
-        } else {
-          setResolvingError(res.message || 'That invite could not be found or has expired.');
-          setResolved(null);
+    try {
+      const res = await resolveInviteCode(trimmed);
+      if (res.ok && res.data) {
+        setResolved(res.data);
+        try {
+          window.sessionStorage.setItem('baraza_pending_invite_code', trimmed);
+        } catch {
+          // Ignore sessionStorage unavailability
         }
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        setResolvingError((err as Error).message || 'Unable to resolve invite.');
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+      } else {
+        setResolvingError(res.message || 'That invite could not be found or has expired.');
+        setResolved(null);
+      }
+    } catch (err: unknown) {
+      setResolvingError((err as Error).message || 'Unable to resolve invite.');
+      setResolved(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    return () => {
-      cancelled = true;
-    };
+  // Resolve invite on initial mount if code exists
+  useEffect(() => {
+    if (activeCode) {
+      void runResolve(activeCode);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeCode]);
 
   async function handleAccept(skipSurvey = false) {
@@ -175,9 +179,8 @@ export default function InviteLanding() {
                 e.preventDefault();
                 const trimmed = inputCode.trim();
                 if (trimmed) {
-                  setResolvingError(null);
-                  setLoading(true);
                   setActiveCode(trimmed);
+                  void runResolve(trimmed);
                 }
               }}
               className="space-y-4"
