@@ -405,17 +405,30 @@ export default function CreateCommunity() {
               <div className="grid gap-5 lg:grid-cols-2">
                 <Summary kind={kind} name={name} free={free} feeType={feeType} amount={amountNumber} currency={currency} rules={rules} />
                 <SettingsSection
-                  title="Opening Fee"
+                  title="Opening Fee & Launch Waiver"
                   rows={[
                     {
                       label: 'Community Activation Fee',
-                      value: currency === 'KES' ? 'KES 250.00' : `${currency} equivalent of KES 250.00 (~$1.90 USD)`,
-                      help: 'One-time setup fee for community infrastructure and operational reserve. (Alpha preview: No launch fee in this environment).',
+                      value: (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="line-through text-muted-foreground">
+                            {currency === 'KES' ? 'KES 250.00' : `${currency} equivalent of KES 250.00 (~$1.90 USD)`}
+                          </span>
+                          <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-500 border border-emerald-500/20">
+                            100% Waived
+                          </span>
+                        </div>
+                      ),
+                      help: 'Standard one-time setup fee for infrastructure and operational reserve is KES 250.00 (not KES 2,500).',
                     },
                     {
                       label: 'To open this group',
-                      value: 'No launch fee in this environment',
-                      help: 'Baraza has not quoted an opening charge for this group, so nothing is charged to open it.',
+                      value: (
+                        <span className="font-semibold text-emerald-500">
+                          No launch fee in this environment
+                        </span>
+                      ),
+                      help: 'Pilot Exemption Applied: In accordance with the executive launch directive, all communities created during this phase are 100% exempt from opening charges. Zero funds are charged today.',
                     },
                   ]}
                 />
