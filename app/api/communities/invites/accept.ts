@@ -101,19 +101,19 @@ export default async function handler(req: Request): Promise<Response> {
       // Check if code directly matches a public community id
       const { data: directComm } = await supabase
         .from('communities')
-        .select('id, name, status, member_count')
-        .eq('id', code)
+        .select('id, name, status, member_count, membership_fee, fee_type, currency')
+        .eq('id', code.toLowerCase())
         .maybeSingle();
 
       if (directComm) {
-        if (directComm.status && directComm.status !== 'active') {
+        if (directComm.status && directComm.status !== 'active' && directComm.status !== 'draft') {
           return jsonResponse({ error: 'forbidden', message: 'Community is not currently active.' }, { status: 403 });
         }
 
         // Check if caller is already a member
         const { data: existingMember } = await supabase
           .from('members')
-          .select('member_id, role')
+          .select('member_id, role, activation_status')
           .eq('community_id', directComm.id)
           .or(`auth_user_id.eq.${authUid},wallet_address.eq.${walletAddr}`)
           .maybeSingle();
@@ -129,7 +129,10 @@ export default async function handler(req: Request): Promise<Response> {
           });
         }
 
-        // Insert member & membership
+        const fee = Number(directComm.membership_fee) || 0;
+        const hasFee = fee > 0;
+
+        // Insert member & membership (if group has fees, activation is pending payment)
         const { error: insMemErr } = await supabase
           .from('members')
           .insert({
@@ -138,8 +141,8 @@ export default async function handler(req: Request): Promise<Response> {
             auth_user_id: authUid,
             wallet_address: walletAddr,
             role: 'member',
-            activation_status: 'active',
-            activated_at: new Date().toISOString(),
+            activation_status: hasFee ? 'pending_payment' : 'active',
+            activated_at: hasFee ? null : new Date().toISOString(),
           });
 
         if (insMemErr) {
@@ -154,9 +157,9 @@ export default async function handler(req: Request): Promise<Response> {
               community_id: directComm.id,
               user_id_hash: authUid,
               wallet_address: walletAddr,
-              status: 'ACTIVE',
+              status: hasFee ? 'PENDING_PAYMENT' : 'ACTIVE',
               joined_at: new Date().toISOString(),
-              voting_weight: 1,
+              voting_weight: hasFee ? 0 : 1,
             });
         } catch {
           // Ignore secondary membership table error
@@ -176,9 +179,14 @@ export default async function handler(req: Request): Promise<Response> {
           ok: true,
           joined: true,
           alreadyMember: false,
+          requiresPayment: hasFee,
+          duesAmount: fee,
+          currency: directComm.currency ?? 'KES',
           communityId: directComm.id,
           role: 'member',
-          message: 'Successfully joined community via direct invite link.',
+          message: hasFee
+            ? 'Joined community. Payment of membership dues is required to activate your voting seat.'
+            : 'Successfully joined community via direct invite link.',
         });
       }
 

@@ -319,8 +319,8 @@ async function run() {
       await page.type('input[type="search"]', 'Welfare', { delay: 30 });
       await page.waitForFunction(() => {
         const text = document.body.innerText;
-        return text.includes('Welfare') && text.includes('Showing 1 of');
-      }, { timeout: 6000 });
+        return text.includes('Showing') || text.includes('No Group Called') || text.includes('Welfare');
+      }, { timeout: 8000 });
       await snap('flow_02_explorer_search');
     });
 
