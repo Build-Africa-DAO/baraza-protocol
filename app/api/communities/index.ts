@@ -198,6 +198,7 @@ async function handler(req: Request): Promise<Response> {
           apikey: serviceKey,
           Authorization: `Bearer ${serviceKey}`,
           'content-type': 'application/json',
+          Prefer: 'resolution=merge-duplicates',
         },
         body: JSON.stringify({
           member_id: memberId,

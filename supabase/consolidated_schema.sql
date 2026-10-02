@@ -3471,7 +3471,18 @@ ALTER TABLE public.members ALTER COLUMN phone_hash DROP NOT NULL;
 -- ---------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.sync_membership_to_member()
 RETURNS trigger AS $$
+DECLARE
+  v_role text := 'member';
 BEGIN
+  -- If this member is the community creator, assign founder role
+  IF EXISTS (
+    SELECT 1 FROM public.communities
+    WHERE id = NEW.community_id
+      AND created_by = NEW.wallet_address
+  ) THEN
+    v_role := 'founder';
+  END IF;
+
   INSERT INTO public.members (
     member_id,
     auth_user_id,
@@ -3490,7 +3501,7 @@ BEGIN
     NEW.community_id,
     NEW.phone_hash,
     NEW.wallet_address,
-    'member',
+    v_role,
     LOWER(NEW.status),
     NEW.payment_order_id,
     NEW.activated_at,
@@ -3499,6 +3510,10 @@ BEGIN
   )
   ON CONFLICT (member_id) DO UPDATE SET
     wallet_address = EXCLUDED.wallet_address,
+    role = CASE 
+      WHEN EXCLUDED.role = 'founder' OR public.members.role = 'founder' THEN 'founder' 
+      ELSE EXCLUDED.role 
+    END,
     activation_status = EXCLUDED.activation_status,
     activated_at = EXCLUDED.activated_at,
     phone_hash = COALESCE(EXCLUDED.phone_hash, public.members.phone_hash),
