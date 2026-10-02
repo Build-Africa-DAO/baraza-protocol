@@ -5,6 +5,7 @@ import AuthModal, { type AuthIntent } from '@/components/auth/AuthModal';
 import { useTheme } from '@/hooks/useTheme';
 import { isPrivyPhoneAuthEnabled } from '@/lib/wallet/mpc';
 import { noteSessionState, registerAccessTokenProvider, registerAuthExpiredHandler } from '@/lib/auth/tokenProvider';
+import { fetchUserProfile } from '@/lib/userProfile';
 import { AccountContext, useAuthHandoff, type AccountBridgeProps, type AccountContextValue } from '@/contexts/accountShared';
 
 /**
@@ -71,9 +72,10 @@ function AccountBridge({ country, setCountry, children, initialIntent, initialRe
     if (authenticated) {
       setAuthIntent(null);
       settleReauth();
+      void fetchUserProfile(readAccessToken);
     }
     noteSessionState(authenticated);
-  }, [authenticated, setAuthIntent, settleReauth]);
+  }, [authenticated, readAccessToken, setAuthIntent, settleReauth]);
 
   // The API client asks this provider for the bearer token on every call, and
   // for a sign-in prompt when a call comes back 401 mid-session.
